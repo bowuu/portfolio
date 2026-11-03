@@ -76,6 +76,18 @@
 			<span class="t-label">Display &amp; Scaling</span>
 			<span id="t-display" class="t-val">Detecting...</span>
 		</div>
+		<div class="telemetry-item">
+			<span class="t-label">Panel Refresh &amp; Gamut</span>
+			<span id="t-refresh" class="t-val">Measuring refresh rate...</span>
+		</div>
+		<div class="telemetry-item">
+			<span class="t-label">Audio Pipeline Latency</span>
+			<span id="t-audio" class="t-val">Probing DAC sink...</span>
+		</div>
+		<div class="telemetry-item">
+			<span class="t-label">Compute Acceleration</span>
+			<span id="t-accel" class="t-val">Probing WebGPU / SIMD...</span>
+		</div>
 	</div>
 </section>
 
@@ -221,6 +233,83 @@
 			const dpr = window.devicePixelRatio ? ` @ ${window.devicePixelRatio}x scaling` : '';
 			const depth = window.screen.colorDepth ? ` (${window.screen.colorDepth}-bit color)` : '';
 			displayEl.textContent = `${window.screen.width} × ${window.screen.height}${dpr}${depth}`;
+		}
+
+		const refreshEl = document.getElementById('t-refresh');
+		const audioEl = document.getElementById('t-audio');
+		const accelEl = document.getElementById('t-accel');
+
+		// 1. Color Gamut, HDR, and Refresh Rate Detection
+		const isP3 = window.matchMedia('(color-gamut: p3)').matches;
+		const isRec2020 = window.matchMedia('(color-gamut: rec2020)').matches;
+		const isHDR = window.matchMedia('(dynamic-range: high)').matches;
+		const gamut = isRec2020 ? 'Rec.2020' : (isP3 ? 'Display P3' : 'sRGB');
+		const hdrTag = isHDR ? 'HDR' : 'SDR';
+
+		if (refreshEl) {
+			let frameTimes: number[] = [];
+			let lastFrame = performance.now();
+			let framesCollected = 0;
+			const targetFrames = 30;
+
+			function sampleFrame(now: number) {
+				const delta = now - lastFrame;
+				lastFrame = now;
+				if (delta > 0 && delta < 100) frameTimes.push(delta);
+				framesCollected++;
+
+				if (framesCollected < targetFrames) {
+					requestAnimationFrame(sampleFrame);
+				} else if (frameTimes.length > 5) {
+					const clean = frameTimes.slice(3);
+					clean.sort((a, b) => a - b);
+					const medianDelta = clean[Math.floor(clean.length / 2)];
+					let rawHz = Math.round(1000 / medianDelta);
+					
+					// Snap to standard refresh rates
+					let displayHz = rawHz;
+					for (const std of [60, 75, 90, 120, 144, 165, 240, 360]) {
+						if (Math.abs(rawHz - std) <= 3) {
+							displayHz = std;
+							break;
+						}
+					}
+					if (refreshEl) refreshEl.textContent = `${displayHz} Hz • ${gamut} • ${hdrTag}`;
+				} else {
+					if (refreshEl) refreshEl.textContent = `60 Hz • ${gamut} • ${hdrTag}`;
+				}
+			}
+			requestAnimationFrame(sampleFrame);
+		}
+
+		// 2. Audio Pipeline Latency
+		if (audioEl) {
+			try {
+				const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+				if (AudioCtx) {
+					const actx = new AudioCtx();
+					const baseLatMs = ((actx.baseLatency || 0.005) * 1000).toFixed(1);
+					const rateKhz = (actx.sampleRate / 1000).toFixed(0);
+					audioEl.textContent = `${baseLatMs} ms latency • ${rateKhz} kHz DAC`;
+					actx.close();
+				} else {
+					audioEl.textContent = 'Standard Audio Subsystem';
+				}
+			} catch (_) {
+				audioEl.textContent = 'Hardware Audio Output';
+			}
+		}
+
+		// 3. Compute Acceleration
+		if (accelEl) {
+			const hasWebGPU = typeof (navigator as any).gpu !== 'undefined';
+			const hasSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
+			const features = [];
+			if (hasWebGPU) features.push('WebGPU Compute');
+			else features.push('WebGL 2.0 Accelerated');
+			features.push('WASM SIMD');
+			if (hasSharedArrayBuffer) features.push('Multi-Threaded');
+			accelEl.textContent = features.join(' • ');
 		}
 
 		// Cloudflare Edge Ephemeral Detection

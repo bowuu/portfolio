@@ -1,0 +1,514 @@
+---
+// CommandPalette.astro - Global Developer Command Palette (Ctrl + K / Cmd + K / /)
+---
+
+<div id="cmd-palette-backdrop" class="cmd-palette-backdrop" aria-hidden="true">
+	<div class="cmd-palette-modal" role="dialog" aria-modal="true" aria-label="Command Palette">
+		<!-- SEARCH INPUT HEADER -->
+		<div class="cmd-search-box">
+			<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" class="cmd-search-icon">
+				<circle cx="11" cy="11" r="8"/>
+				<line x1="21" y1="21" x2="16.65" y2="16.65"/>
+			</svg>
+			<input 
+				type="text" 
+				id="cmd-input" 
+				class="cmd-input" 
+				placeholder="Type a command or jump to section... (or ESC to exit)" 
+				autocomplete="off" 
+				spellcheck="false"
+			/>
+			<kbd class="cmd-esc-badge mono">ESC</kbd>
+		</div>
+
+		<!-- COMMAND LIST -->
+		<div class="cmd-list-wrap">
+			<ul class="cmd-list" id="cmd-list" role="listbox">
+				<!-- Injected by script -->
+			</ul>
+		</div>
+
+		<!-- FOOTER HINTS -->
+		<div class="cmd-footer mono">
+			<span><kbd class="key-hint">&uarr;</kbd><kbd class="key-hint">&darr;</kbd> Navigate</span>
+			<span><kbd class="key-hint">&crarr;</kbd> Select</span>
+			<span><kbd class="key-hint">ESC</kbd> Close</span>
+		</div>
+	</div>
+</div>
+
+<script>
+	interface CommandItem {
+		id: string;
+		title: string;
+		category: 'Navigation' | 'Action' | 'External';
+		shortcut?: string;
+		iconSvg: string;
+		action: () => void;
+	}
+
+	function initCommandPalette() {
+		const backdrop = document.getElementById('cmd-palette-backdrop');
+		const input = document.getElementById('cmd-input') as HTMLInputElement | null;
+		const list = document.getElementById('cmd-list');
+
+		if (!backdrop || !input || !list) return;
+
+		let isOpen = false;
+		let selectedIndex = 0;
+		let filteredCommands: CommandItem[] = [];
+
+		const commands: CommandItem[] = [
+			// ACTIONS
+			{
+				id: 'act-bench',
+				title: 'Run Edge Network Benchmark (Speed & Bufferbloat)',
+				category: 'Action',
+				shortcut: 'B',
+				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`,
+				action: () => {
+					document.getElementById('benchmark')?.scrollIntoView({ behavior: 'smooth' });
+					setTimeout(() => {
+						const btn = document.getElementById('run-speedtest-btn');
+						if (btn) btn.click();
+					}, 400);
+				}
+			},
+			{
+				id: 'act-compute',
+				title: 'Run Silicon Compute Benchmark (Multi-Core)',
+				category: 'Action',
+				shortcut: 'C',
+				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>`,
+				action: () => {
+					document.getElementById('compute')?.scrollIntoView({ behavior: 'smooth' });
+					setTimeout(() => {
+						const btn = document.getElementById('run-compute-btn');
+						if (btn) btn.click();
+					}, 400);
+				}
+			},
+			{
+				id: 'act-gamepad',
+				title: 'Simulate Hardware Gamepad Telemetry',
+				category: 'Action',
+				shortcut: 'G',
+				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="3"/><circle cx="15" cy="11" r="1" fill="currentColor"/><circle cx="18" cy="13" r="1" fill="currentColor"/></svg>`,
+				action: () => {
+					document.getElementById('peripherals')?.scrollIntoView({ behavior: 'smooth' });
+					setTimeout(() => {
+						const btn = document.getElementById('sim-gamepad-btn');
+						if (btn) btn.click();
+					}, 400);
+				}
+			},
+			{
+				id: 'act-theme',
+				title: 'Toggle Color Theme (Dark / Light)',
+				category: 'Action',
+				shortcut: 'T',
+				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>`,
+				action: () => {
+					const toggleBtn = document.getElementById('theme-toggle');
+					if (toggleBtn) toggleBtn.click();
+				}
+			},
+			// NAVIGATION
+			{
+				id: 'nav-system',
+				title: 'Jump to System Inspector & Edge Telemetry',
+				category: 'Navigation',
+				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+				action: () => document.getElementById('inspector')?.scrollIntoView({ behavior: 'smooth' })
+			},
+			{
+				id: 'nav-compute',
+				title: 'Jump to Silicon Compute Benchmark',
+				category: 'Navigation',
+				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>`,
+				action: () => document.getElementById('compute')?.scrollIntoView({ behavior: 'smooth' })
+			},
+			{
+				id: 'nav-benchmark',
+				title: 'Jump to Edge Network Benchmark',
+				category: 'Navigation',
+				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
+				action: () => document.getElementById('benchmark')?.scrollIntoView({ behavior: 'smooth' })
+			},
+			{
+				id: 'nav-peripherals',
+				title: 'Jump to Hardware Peripheral & Gamepad Lab',
+				category: 'Navigation',
+				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="3"/></svg>`,
+				action: () => document.getElementById('peripherals')?.scrollIntoView({ behavior: 'smooth' })
+			},
+			{
+				id: 'nav-cad',
+				title: 'Jump to 3D CAD Parametric Viewer',
+				category: 'Navigation',
+				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>`,
+				action: () => document.getElementById('cad-viewer')?.scrollIntoView({ behavior: 'smooth' })
+			},
+			{
+				id: 'nav-skills',
+				title: 'Jump to Engineering Skills & Architecture',
+				category: 'Navigation',
+				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>`,
+				action: () => document.getElementById('skills')?.scrollIntoView({ behavior: 'smooth' })
+			},
+			// EXTERNAL LINKS
+			{
+				id: 'ext-makerworld',
+				title: 'Open MakerWorld 3D Models (@brob)',
+				category: 'External',
+				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`,
+				action: () => window.open('https://makerworld.com/en/@brob', '_blank')
+			},
+			{
+				id: 'ext-github',
+				title: 'Open GitHub Repositories (@bowuu)',
+				category: 'External',
+				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>`,
+				action: () => window.open('https://github.com/bowuu', '_blank')
+			},
+			{
+				id: 'ext-linkedin',
+				title: 'Open LinkedIn Profile',
+				category: 'External',
+				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>`,
+				action: () => window.open('https://www.linkedin.com/in/bowu/', '_blank')
+			}
+		];
+
+		function openPalette() {
+			isOpen = true;
+			backdrop!.classList.add('visible');
+			backdrop!.setAttribute('aria-hidden', 'false');
+			input!.value = '';
+			filter('');
+			input!.focus();
+			document.body.style.overflow = 'hidden';
+		}
+
+		function closePalette() {
+			isOpen = false;
+			backdrop!.classList.remove('visible');
+			backdrop!.setAttribute('aria-hidden', 'true');
+			document.body.style.overflow = '';
+		}
+
+		function filter(query: string) {
+			const q = query.trim().toLowerCase();
+			if (!q) {
+				filteredCommands = [...commands];
+			} else {
+				filteredCommands = commands.filter(cmd => 
+					cmd.title.toLowerCase().includes(q) || 
+					cmd.category.toLowerCase().includes(q)
+				);
+			}
+			selectedIndex = 0;
+			render();
+		}
+
+		function render() {
+			if (filteredCommands.length === 0) {
+				list!.innerHTML = `
+					<div class="cmd-empty mono">
+						No matching commands found for "${input!.value}"
+					</div>
+				`;
+				return;
+			}
+
+			let html = '';
+			filteredCommands.forEach((cmd, idx) => {
+				const isSelected = idx === selectedIndex;
+				html += `
+					<li 
+						class="cmd-item ${isSelected ? 'selected' : ''}" 
+						role="option" 
+						aria-selected="${isSelected}"
+						data-index="${idx}"
+					>
+						<span class="cmd-item-icon">${cmd.iconSvg}</span>
+						<span class="cmd-item-title">${cmd.title}</span>
+						<span class="cmd-item-badge mono">${cmd.category}</span>
+						${cmd.shortcut ? `<kbd class="cmd-item-kbd mono">${cmd.shortcut}</kbd>` : ''}
+					</li>
+				`;
+			});
+			list!.innerHTML = html;
+
+			const selectedEl = list!.querySelector('.cmd-item.selected') as HTMLElement;
+			if (selectedEl) {
+				selectedEl.scrollIntoView({ block: 'nearest' });
+			}
+
+			// Add click events to items
+			const itemElements = list!.querySelectorAll('.cmd-item');
+			itemElements.forEach((el) => {
+				el.addEventListener('click', () => {
+					const idx = parseInt(el.getAttribute('data-index') || '0', 10);
+					executeCommand(idx);
+				});
+			});
+		}
+
+		function executeCommand(index: number) {
+			const cmd = filteredCommands[index];
+			if (cmd) {
+				closePalette();
+				cmd.action();
+			}
+		}
+
+		// Keyboard Event Handlers
+		window.addEventListener('keydown', (e) => {
+			// Trigger modal with Ctrl+K, Cmd+K, or "/"
+			const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+			const isCtrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
+
+			if ((isCtrlOrCmd && e.key.toLowerCase() === 'k') || (e.key === '/' && !isOpen && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA')) {
+				e.preventDefault();
+				if (isOpen) {
+					closePalette();
+				} else {
+					openPalette();
+				}
+				return;
+			}
+
+			if (!isOpen) return;
+
+			if (e.key === 'Escape') {
+				e.preventDefault();
+				closePalette();
+			} else if (e.key === 'ArrowDown') {
+				e.preventDefault();
+				selectedIndex = (selectedIndex + 1) % Math.max(1, filteredCommands.length);
+				render();
+			} else if (e.key === 'ArrowUp') {
+				e.preventDefault();
+				selectedIndex = (selectedIndex - 1 + filteredCommands.length) % Math.max(1, filteredCommands.length);
+				render();
+			} else if (e.key === 'Enter') {
+				e.preventDefault();
+				executeCommand(selectedIndex);
+			}
+		});
+
+		input.addEventListener('input', () => {
+			filter(input.value);
+		});
+
+		backdrop.addEventListener('click', (e) => {
+			if (e.target === backdrop) {
+				closePalette();
+			}
+		});
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initCommandPalette);
+	} else {
+		initCommandPalette();
+	}
+</script>
+
+<style>
+	.cmd-palette-backdrop {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: 100vh;
+		background: rgba(8, 10, 15, 0.7);
+		backdrop-filter: blur(6px);
+		-webkit-backdrop-filter: blur(6px);
+		z-index: 9999;
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		padding-top: 14vh;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.cmd-palette-backdrop.visible {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.cmd-palette-modal {
+		width: 90%;
+		max-width: 600px;
+		background: #ffffff;
+		border: 1px solid rgba(0, 0, 0, 0.12);
+		border-radius: 12px;
+		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		transform: scale(0.96) translateY(-8px);
+		transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	:global(html[data-theme="dark"]) .cmd-palette-modal {
+		background: #111218;
+		border-color: rgba(255, 255, 255, 0.14);
+		box-shadow: 0 24px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+	}
+
+	.cmd-palette-backdrop.visible .cmd-palette-modal {
+		transform: scale(1) translateY(0);
+	}
+
+	/* SEARCH BOX */
+	.cmd-search-box {
+		display: flex;
+		align-items: center;
+		padding: 0.9em 1.2em;
+		border-bottom: 1px solid var(--border-color);
+		gap: 0.75em;
+	}
+
+	.cmd-search-icon {
+		color: rgb(var(--gray));
+		flex-shrink: 0;
+	}
+
+	.cmd-input {
+		flex: 1;
+		background: transparent;
+		border: none;
+		outline: none;
+		font-size: 1rem;
+		color: var(--text-color);
+		font-family: inherit;
+	}
+
+	.cmd-esc-badge {
+		font-size: 0.7em;
+		background: rgba(0, 0, 0, 0.06);
+		color: rgb(var(--gray));
+		padding: 0.2em 0.5em;
+		border-radius: 4px;
+		border: 1px solid var(--border-color);
+	}
+	:global(html[data-theme="dark"]) .cmd-esc-badge {
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	/* LIST */
+	.cmd-list-wrap {
+		max-height: 340px;
+		overflow-y: auto;
+		padding: 0.5em 0.4em;
+	}
+
+	.cmd-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.2em;
+	}
+
+	.cmd-item {
+		display: flex;
+		align-items: center;
+		gap: 0.75em;
+		padding: 0.65em 0.9em;
+		border-radius: 8px;
+		cursor: pointer;
+		user-select: none;
+		transition: background 0.12s ease;
+	}
+
+	.cmd-item.selected {
+		background: rgba(234, 88, 12, 0.12);
+	}
+	:global(html[data-theme="dark"]) .cmd-item.selected {
+		background: rgba(234, 88, 12, 0.2);
+	}
+
+	.cmd-item-icon {
+		color: rgb(var(--gray));
+		display: flex;
+		align-items: center;
+		flex-shrink: 0;
+	}
+	.cmd-item.selected .cmd-item-icon {
+		color: var(--accent);
+	}
+
+	.cmd-item-title {
+		flex: 1;
+		font-size: 0.9em;
+		font-weight: 500;
+		color: var(--text-color);
+	}
+	.cmd-item.selected .cmd-item-title {
+		color: var(--accent);
+		font-weight: 600;
+	}
+
+	.cmd-item-badge {
+		font-size: 0.68em;
+		background: rgba(0, 0, 0, 0.05);
+		color: rgb(var(--gray));
+		padding: 0.15em 0.5em;
+		border-radius: 4px;
+	}
+	:global(html[data-theme="dark"]) .cmd-item-badge {
+		background: rgba(255, 255, 255, 0.06);
+	}
+
+	.cmd-item-kbd {
+		font-size: 0.7em;
+		background: rgba(0, 0, 0, 0.06);
+		color: rgb(var(--gray));
+		padding: 0.15em 0.5em;
+		border-radius: 4px;
+		border: 1px solid var(--border-color);
+	}
+	:global(html[data-theme="dark"]) .cmd-item-kbd {
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	.cmd-empty {
+		padding: 2em 1em;
+		text-align: center;
+		font-size: 0.85em;
+		color: rgb(var(--gray));
+	}
+
+	/* FOOTER */
+	.cmd-footer {
+		display: flex;
+		align-items: center;
+		gap: 1.2em;
+		padding: 0.6em 1.2em;
+		border-top: 1px solid var(--border-color);
+		background: rgba(0, 0, 0, 0.02);
+		font-size: 0.72em;
+		color: rgb(var(--gray));
+	}
+	:global(html[data-theme="dark"]) .cmd-footer {
+		background: rgba(255, 255, 255, 0.02);
+	}
+
+	.key-hint {
+		background: rgba(0, 0, 0, 0.06);
+		padding: 0.1em 0.35em;
+		border-radius: 3px;
+		margin-right: 0.25em;
+		border: 1px solid var(--border-color);
+	}
+	:global(html[data-theme="dark"]) .key-hint {
+		background: rgba(255, 255, 255, 0.08);
+	}
+</style>

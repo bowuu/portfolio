@@ -34,6 +34,13 @@ import ThemeToggle from './ThemeToggle.astro';
 			<a href="/#benchmark" class="nav-link">Benchmark</a>
 		</div>
 		<div class="actions-right">
+			<button id="cmd-palette-trigger" class="cmd-trigger-btn mono" type="button" aria-label="Open Command Palette" title="Command Palette (Ctrl+K or /)">
+				<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+					<circle cx="11" cy="11" r="8"/>
+					<line x1="21" y1="21" x2="16.65" y2="16.65"/>
+				</svg>
+				<span class="cmd-trigger-text">⌘K</span>
+			</button>
 			<div class="theme-wrapper">
 				<ThemeToggle />
 			</div>
@@ -95,6 +102,10 @@ import ThemeToggle from './ThemeToggle.astro';
 		} else {
 			setActive('about');
 		}
+
+		document.getElementById('cmd-palette-trigger')?.addEventListener('click', () => {
+			window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }));
+		});
 	}
 
 	initNavHighlight();
@@ -175,6 +186,33 @@ import ThemeToggle from './ThemeToggle.astro';
 	}
 	.social-links a:hover {
 		color: var(--accent);
+	}
+
+	.cmd-trigger-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35em;
+		background: rgba(0, 0, 0, 0.04);
+		border: 1px solid var(--border-color);
+		color: rgb(var(--gray));
+		font-size: 0.72em;
+		font-weight: 600;
+		padding: 0.35em 0.6em;
+		border-radius: 6px;
+		cursor: pointer;
+		margin-right: 0.6em;
+		transition: all 0.15s ease;
+		user-select: none;
+	}
+	:global(html[data-theme="dark"]) .cmd-trigger-btn {
+		background: rgba(255, 255, 255, 0.05);
+	}
+	.cmd-trigger-btn:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.cmd-trigger-text {
+		letter-spacing: -0.02em;
 	}
 
 	.theme-wrapper {

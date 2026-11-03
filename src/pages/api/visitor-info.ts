@@ -38,6 +38,8 @@ export const GET: APIRoute = async ({ request, locals }) => {
 			isp,
 			colo,
 			coloCode: rawColo,
+			latitude: cf.latitude || '',
+			longitude: cf.longitude || '',
 			protocol,
 			userAgent,
 		}),

@@ -59,6 +59,15 @@
 			</div>
 			<span id="speed-loss-sub" class="b-tile-sub">0 / 16 pkts lost</span>
 		</div>
+
+		<div class="b-tile">
+			<span class="b-tile-label">Bufferbloat</span>
+			<div class="b-tile-value-wrap">
+				<span id="speed-bloat" class="b-tile-num mono">--</span>
+				<span id="speed-bloat-unit" class="b-tile-unit">Grade</span>
+			</div>
+			<span id="speed-bloat-sub" class="b-tile-sub">Loaded Ping &Delta;</span>
+		</div>
 	</div>
 
 	<!-- PROGRESS TRACK & LIVE STATUS -->
@@ -106,8 +115,52 @@
 		SYD: 'Sydney, AU',
 	};
 
+	const COLO_COORDS: Record<string, { lat: number; lon: number }> = {
+		MIA: { lat: 25.7617, lon: -80.1918 },
+		TPA: { lat: 27.9506, lon: -82.4572 },
+		MCO: { lat: 28.5383, lon: -81.3792 },
+		ATL: { lat: 33.7490, lon: -84.3880 },
+		IAD: { lat: 38.9072, lon: -77.0369 },
+		DCA: { lat: 38.9072, lon: -77.0369 },
+		CLT: { lat: 35.2271, lon: -80.8431 },
+		RDU: { lat: 35.7796, lon: -78.6382 },
+		ORD: { lat: 41.8781, lon: -87.6298 },
+		DFW: { lat: 32.7767, lon: -96.7970 },
+		IAH: { lat: 29.7604, lon: -95.3698 },
+		DEN: { lat: 39.7392, lon: -104.9903 },
+		PHX: { lat: 33.4484, lon: -112.0740 },
+		LAX: { lat: 34.0522, lon: -118.2437 },
+		SFO: { lat: 37.7749, lon: -122.4194 },
+		SJC: { lat: 37.3382, lon: -121.8863 },
+		SEA: { lat: 47.6062, lon: -122.3321 },
+		PDX: { lat: 45.5152, lon: -122.6784 },
+		EWR: { lat: 40.7357, lon: -74.1724 },
+		JFK: { lat: 40.7128, lon: -74.0060 },
+		BOS: { lat: 42.3601, lon: -71.0589 },
+		YYZ: { lat: 43.6532, lon: -79.3832 },
+		LHR: { lat: 51.5074, lon: -0.1278 },
+		FRA: { lat: 50.1109, lon: 8.6821 },
+		AMS: { lat: 52.3676, lon: 4.9041 },
+		NRT: { lat: 35.6762, lon: 139.6503 },
+		SIN: { lat: 1.3521, lon: 103.8198 },
+		SYD: { lat: -33.8688, lon: 151.2093 },
+	};
+
+	let clientLat = 0;
+	let clientLon = 0;
 	let detectedColo = 'MIA';
 	let detectedCity = 'Miami, FL';
+
+	function getGreatCircleDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+		const R = 6371; // Earth radius in km
+		const dLat = (lat2 - lat1) * Math.PI / 180;
+		const dLon = (lon2 - lon1) * Math.PI / 180;
+		const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+		          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+		          Math.sin(dLon/2) * Math.sin(dLon/2);
+		const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+		return Math.round(R * c);
+	}
 
 	async function resolveEdgeDatacenter() {
 		try {
@@ -118,11 +171,16 @@
 					.catch(() => null);
 			}
 			const data = await win.__visitorInfoPromise;
-			if (data && data.coloCode) {
-				detectedColo = data.coloCode.toUpperCase();
-				detectedCity = COLO_MAP[detectedColo] || (data.city ? `${data.city}` : 'Edge Datacenter');
-
-				updateColoTargetUI();
+			if (data) {
+				if (data.coloCode) {
+					detectedColo = data.coloCode.toUpperCase();
+					detectedCity = COLO_MAP[detectedColo] || (data.city ? `${data.city}` : 'Edge Datacenter');
+					updateColoTargetUI();
+				}
+				if (data.latitude && data.longitude) {
+					clientLat = parseFloat(data.latitude);
+					clientLon = parseFloat(data.longitude);
+				}
 			}
 		} catch (_) {
 			// Fallback to Anycast defaults
@@ -154,6 +212,8 @@
 		const upSubEl = document.getElementById('speed-up-sub');
 		const lossEl = document.getElementById('speed-loss');
 		const lossSubEl = document.getElementById('speed-loss-sub');
+		const bloatEl = document.getElementById('speed-bloat');
+		const bloatSubEl = document.getElementById('speed-bloat-sub');
 
 		if (btn) btn.disabled = true;
 		if (btnText) btnText.textContent = 'Testing...';
@@ -168,6 +228,11 @@
 		if (upSubEl) upSubEl.textContent = 'Queued';
 		if (lossEl) lossEl.textContent = '--';
 		if (lossSubEl) lossSubEl.textContent = 'Probing...';
+		if (bloatEl) {
+			bloatEl.textContent = '--';
+			bloatEl.style.color = '';
+		}
+		if (bloatSubEl) bloatSubEl.textContent = 'Queued';
 
 		try {
 			// ==========================================
@@ -242,6 +307,8 @@
 			const downStreams = 4;
 			const chunkSize = 25000000; // 25MB per request
 			const downControllers: AbortController[] = [];
+			const loadedPings: number[] = [];
+			if (bloatSubEl) bloatSubEl.textContent = 'Probing queue...';
 
 			let downTotalBytes = 0;
 			let downSteadyBytes = 0;
@@ -262,6 +329,16 @@
 				const progressPct = 25 + Math.min(38, (elapsedTotal / downDurationSec) * 38);
 				if (progressBar) progressBar.style.width = `${progressPct.toFixed(0)}%`;
 			}, 80);
+
+			// Background loaded ping probe loop during download
+			const downBloatInterval = setInterval(async () => {
+				if (isDownDone) return;
+				const t0 = performance.now();
+				try {
+					const res = await fetch(`https://speed.cloudflare.com/__down?bytes=0&_bld=${Date.now()}`, { cache: 'no-store' });
+					if (res.ok) loadedPings.push(performance.now() - t0);
+				} catch (_) {}
+			}, 350);
 
 			const runDownWorker = async (streamId: number) => {
 				while (!isDownDone && (performance.now() - d0) / 1000 < downDurationSec) {
@@ -310,6 +387,7 @@
 			await Promise.allSettled(Array.from({ length: downStreams }, (_, i) => runDownWorker(i)));
 			clearTimeout(downTimeout);
 			clearInterval(downTicker);
+			clearInterval(downBloatInterval);
 
 			const finalDownElapsed = downSteadyStartTime > 0 ? (performance.now() - downSteadyStartTime) / 1000 : (performance.now() - d0) / 1000;
 			const finalDownMbps = (downSteadyBytes * 8) / (Math.max(finalDownElapsed, 0.001) * 1_000_000);
@@ -349,6 +427,16 @@
 				if (progressBar) progressBar.style.width = `${progressPct.toFixed(0)}%`;
 			}, 80);
 
+			// Background loaded ping probe loop during upload
+			const upBloatInterval = setInterval(async () => {
+				if (isUpDone) return;
+				const t0 = performance.now();
+				try {
+					const res = await fetch(`https://speed.cloudflare.com/__down?bytes=0&_blu=${Date.now()}`, { cache: 'no-store' });
+					if (res.ok) loadedPings.push(performance.now() - t0);
+				} catch (_) {}
+			}, 350);
+
 			const runUpWorker = async (workerId: number) => {
 				while (!isUpDone && (performance.now() - u0) / 1000 < upDurationSec) {
 					const ctrl = new AbortController();
@@ -384,6 +472,7 @@
 			await Promise.allSettled(Array.from({ length: upStreams }, (_, i) => runUpWorker(i)));
 			clearTimeout(upTimeout);
 			clearInterval(upTicker);
+			clearInterval(upBloatInterval);
 
 			const finalUpElapsed = upSteadyStartTime > 0 ? (performance.now() - upSteadyStartTime) / 1000 : (performance.now() - u0) / 1000;
 			const upBytesToCount = upSteadyBytes > 0 ? upSteadyBytes : upTotalBytes;
@@ -391,9 +480,41 @@
 			if (upEl) upEl.textContent = finalUpMbps > 0 ? finalUpMbps.toFixed(1) : '--';
 			const upSecDisplay = Math.max(1, Math.round((performance.now() - u0) / 1000));
 			if (upSubEl) upSubEl.textContent = `Sustained (${(upTotalBytes / (1024 * 1024)).toFixed(1)} MB / ${upSecDisplay}s)`;
+
+			// ==========================================
+			// STAGE 4: BUFFERBLOAT & FIBER OPTIC METRICS
+			// ==========================================
+			loadedPings.sort((a, b) => a - b);
+			const medianLoaded = loadedPings.length ? Math.round(loadedPings[Math.floor(loadedPings.length / 2)]) : medianPing;
+			const bloatDelta = Math.max(0, medianLoaded - medianPing);
+			let grade = 'A+';
+			let gradeColor = 'rgb(34, 197, 94)'; // green
+			if (bloatDelta > 75) { grade = 'D'; gradeColor = 'rgb(239, 68, 68)'; }
+			else if (bloatDelta > 40) { grade = 'C'; gradeColor = 'rgb(245, 158, 11)'; }
+			else if (bloatDelta > 20) { grade = 'B'; gradeColor = 'rgb(56, 189, 248)'; }
+			else if (bloatDelta > 6) { grade = 'A'; gradeColor = 'rgb(34, 197, 94)'; }
+
+			if (bloatEl) {
+				bloatEl.textContent = grade;
+				bloatEl.style.color = gradeColor;
+			}
+			if (bloatSubEl) {
+				bloatSubEl.textContent = `+${bloatDelta} ms loaded Δ`;
+			}
+
+			// Physics: Great-circle distance & speed of light in optical glass (c_glass ~ 204 km/ms)
+			let distanceKm = 0;
+			let fiberRttMs = '0';
+			const coloCoord = COLO_COORDS[detectedColo];
+			if (coloCoord && clientLat && clientLon) {
+				distanceKm = getGreatCircleDistance(clientLat, clientLon, coloCoord.lat, coloCoord.lon);
+				fiberRttMs = Math.max(0.1, (2 * distanceKm) / 204).toFixed(1);
+			}
+
 			if (progressBar) progressBar.style.width = '100%';
 			const targetSummary = detectedColo ? ` via Cloudflare ${detectedColo} Edge (${detectedCity})` : ' via Cloudflare Anycast';
-			if (statusText) statusText.textContent = `Benchmark complete. 0 host bandwidth consumed; all data routed${targetSummary}.`;
+			const physicsSummary = distanceKm > 0 ? ` &bull; Distance: ~${distanceKm} km (Physical fiber optical limit: ~${fiberRttMs} ms RTT)` : '';
+			if (statusText) statusText.innerHTML = `Benchmark complete. 0 host bandwidth consumed; all data routed${targetSummary}${physicsSummary}.`;
 
 		} catch (err: any) {
 			console.error('Speedtest encountered error:', err);

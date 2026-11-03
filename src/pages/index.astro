@@ -5,8 +5,7 @@ import Footer from '../components/Footer.astro';
 import CadModelViewer from '../components/CadModelViewer.astro';
 import SystemInspector from '../components/SystemInspector.astro';
 import NetworkBenchmark from '../components/NetworkBenchmark.astro';
-import ComputeBenchmark from '../components/ComputeBenchmark.astro';
-import PeripheralLab from '../components/PeripheralLab.astro';
+import InputLatencyLab from '../components/InputLatencyLab.astro';
 import CommandPalette from '../components/CommandPalette.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 ---
@@ -145,14 +144,11 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 			<!-- SYSTEM INSPECTOR -->
 			<SystemInspector />
 
-			<!-- SILICON COMPUTE BENCHMARK -->
-			<ComputeBenchmark />
-
 			<!-- EDGE NETWORK BENCHMARK -->
 			<NetworkBenchmark />
 
-			<!-- HARDWARE PERIPHERAL LAB -->
-			<PeripheralLab />
+			<!-- MOUSE POLLING & CLICK LATENCY LAB -->
+			<InputLatencyLab />
 		</main>
 
 		<Footer />

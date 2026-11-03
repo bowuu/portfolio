@@ -75,30 +75,26 @@
 				}
 			},
 			{
-				id: 'act-compute',
-				title: 'Run Silicon Compute Benchmark (Multi-Core)',
+				id: 'act-mouse',
+				title: 'Test Mouse Polling Rate & Click Latency',
 				category: 'Action',
-				shortcut: 'C',
-				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>`,
+				shortcut: 'M',
+				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="7"/><line x1="12" y1="6" x2="12" y2="10"/></svg>`,
 				action: () => {
-					document.getElementById('compute')?.scrollIntoView({ behavior: 'smooth' });
-					setTimeout(() => {
-						const btn = document.getElementById('run-compute-btn');
-						if (btn) btn.click();
-					}, 400);
+					document.getElementById('input-lab')?.scrollIntoView({ behavior: 'smooth' });
 				}
 			},
 			{
-				id: 'act-gamepad',
-				title: 'Simulate Hardware Gamepad Telemetry',
+				id: 'act-reaction',
+				title: 'Arm Click Latency & Reaction Test',
 				category: 'Action',
-				shortcut: 'G',
-				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="3"/><circle cx="15" cy="11" r="1" fill="currentColor"/><circle cx="18" cy="13" r="1" fill="currentColor"/></svg>`,
+				shortcut: 'R',
+				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
 				action: () => {
-					document.getElementById('peripherals')?.scrollIntoView({ behavior: 'smooth' });
+					document.getElementById('input-lab')?.scrollIntoView({ behavior: 'smooth' });
 					setTimeout(() => {
-						const btn = document.getElementById('sim-gamepad-btn');
-						if (btn) btn.click();
+						const box = document.getElementById('reaction-box');
+						if (box) box.dispatchEvent(new PointerEvent('pointerdown'));
 					}, 400);
 				}
 			},
@@ -122,13 +118,6 @@
 				action: () => document.getElementById('inspector')?.scrollIntoView({ behavior: 'smooth' })
 			},
 			{
-				id: 'nav-compute',
-				title: 'Jump to Silicon Compute Benchmark',
-				category: 'Navigation',
-				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>`,
-				action: () => document.getElementById('compute')?.scrollIntoView({ behavior: 'smooth' })
-			},
-			{
 				id: 'nav-benchmark',
 				title: 'Jump to Edge Network Benchmark',
 				category: 'Navigation',
@@ -136,11 +125,11 @@
 				action: () => document.getElementById('benchmark')?.scrollIntoView({ behavior: 'smooth' })
 			},
 			{
-				id: 'nav-peripherals',
-				title: 'Jump to Hardware Peripheral & Gamepad Lab',
+				id: 'nav-input',
+				title: 'Jump to Mouse Polling & Click Latency Lab',
 				category: 'Navigation',
-				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="3"/></svg>`,
-				action: () => document.getElementById('peripherals')?.scrollIntoView({ behavior: 'smooth' })
+				iconSvg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="7"/><line x1="12" y1="6" x2="12" y2="10"/></svg>`,
+				action: () => document.getElementById('input-lab')?.scrollIntoView({ behavior: 'smooth' })
 			},
 			{
 				id: 'nav-cad',

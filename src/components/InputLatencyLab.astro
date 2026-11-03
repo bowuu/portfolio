@@ -1,0 +1,687 @@
+---
+// InputLatencyLab.astro - Real-Time Mouse Polling Rate, Switch Debounce & Click Latency Inspector
+---
+
+<section class="card input-card" id="input-lab">
+	<div class="card-header-wrap">
+		<h2 class="card-title">
+			<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+				<rect x="5" y="2" width="14" height="20" rx="7"/>
+				<line x1="12" y1="6" x2="12" y2="10"/>
+			</svg>
+			Mouse Polling &amp; Click Latency Lab
+		</h2>
+
+		<div class="header-actions">
+			<button id="reset-input-lab-btn" class="telemetry-btn" title="Reset all polling and latency measurements">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+					<path d="M3 3v5h5"/>
+				</svg>
+				<span>Reset Metrics</span>
+			</button>
+		</div>
+	</div>
+
+	<p class="benchmark-desc">
+		Measure real-time USB mouse polling frequency (via raw coalesced OS input buffers), mechanical switch contact debounce time, and display-to-click reaction latency.
+	</p>
+
+	<!-- TWO-COLUMN BENCHMARK WORKBENCH -->
+	<div class="lab-grid">
+		<!-- COLUMN 1: MOUSE POLLING RATE TRACKER -->
+		<div class="lab-col">
+			<div class="col-head">
+				<span class="col-title">USB Polling Rate (Raw Buffer)</span>
+				<span class="badge mono" id="poll-tier-badge">Awaiting Movement</span>
+			</div>
+
+			<!-- INTERACTIVE POLLING CANVAS / HOVER ZONE -->
+			<div class="poll-zone" id="poll-zone" tabindex="0">
+				<canvas id="poll-sparkline" width="460" height="90"></canvas>
+				<div class="poll-overlay" id="poll-overlay">
+					<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" class="mouse-icon">
+						<rect x="5" y="2" width="14" height="20" rx="7"/>
+						<line x1="12" y1="6" x2="12" y2="10"/>
+					</svg>
+					<span class="poll-prompt">Move cursor rapidly inside this box</span>
+				</div>
+			</div>
+
+			<!-- POLLING TELEMETRY READOUTS -->
+			<div class="metrics-row">
+				<div class="metric-mini">
+					<span class="m-label">Current Rate</span>
+					<div class="m-val-wrap">
+						<span class="m-val mono" id="poll-current-hz">0</span>
+						<span class="m-unit">Hz</span>
+					</div>
+					<span class="m-sub mono" id="poll-interval-ms">Interval: -- ms</span>
+				</div>
+
+				<div class="metric-mini">
+					<span class="m-label">Peak Polling</span>
+					<div class="m-val-wrap">
+						<span class="m-val mono" id="poll-peak-hz">0</span>
+						<span class="m-unit">Hz</span>
+					</div>
+					<span class="m-sub mono" id="poll-stability">Jitter: &plusmn;0.0 ms</span>
+				</div>
+
+				<div class="metric-mini">
+					<span class="m-label">Raw Packets</span>
+					<div class="m-val-wrap">
+						<span class="m-val mono" id="poll-packet-count">0</span>
+						<span class="m-unit">pkts</span>
+					</div>
+					<span class="m-sub mono" id="poll-coalesced">Coalesced API active</span>
+				</div>
+			</div>
+		</div>
+
+		<!-- COLUMN 2: CLICK LATENCY & SWITCH DEBOUNCE -->
+		<div class="lab-col">
+			<div class="col-head">
+				<span class="col-title">Click Latency &amp; Switch Debounce</span>
+				<span class="badge mono" id="reaction-state-badge">Ready</span>
+			</div>
+
+			<!-- INTERACTIVE REACTION TARGET -->
+			<div class="reaction-box idle" id="reaction-box" role="button" tabindex="0">
+				<div class="reaction-content">
+					<span class="reaction-headline" id="reaction-headline">Click Here to Test Reaction</span>
+					<span class="reaction-sub" id="reaction-sub">Tests hardware visual-motor click response time</span>
+				</div>
+			</div>
+
+			<!-- CLICK & SWITCH TIMING READOUTS -->
+			<div class="metrics-row">
+				<div class="metric-mini">
+					<span class="m-label">Reaction Latency</span>
+					<div class="m-val-wrap">
+						<span class="m-val mono" id="reaction-time-val">--</span>
+						<span class="m-unit">ms</span>
+					</div>
+					<span class="m-sub mono" id="reaction-avg-val">Avg: -- ms (0 tries)</span>
+				</div>
+
+				<div class="metric-mini">
+					<span class="m-label">Switch Hold Time</span>
+					<div class="m-val-wrap">
+						<span class="m-val mono" id="debounce-time-val">--</span>
+						<span class="m-unit">ms</span>
+					</div>
+					<span class="m-sub mono">Down-to-up contact time</span>
+				</div>
+
+				<div class="metric-mini">
+					<span class="m-label">Double-Click Gap</span>
+					<div class="m-val-wrap">
+						<span class="m-val mono" id="doubleclick-val">--</span>
+						<span class="m-unit">ms</span>
+					</div>
+					<span class="m-sub mono" id="doubleclick-sub">Debounce chatter filter</span>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<script>
+	function initInputLatencyLab() {
+		// ==========================================
+		// 1. MOUSE POLLING RATE DETECTOR
+		// ==========================================
+		const pollZone = document.getElementById('poll-zone');
+		const pollOverlay = document.getElementById('poll-overlay');
+		const currentHzEl = document.getElementById('poll-current-hz');
+		const peakHzEl = document.getElementById('poll-peak-hz');
+		const intervalEl = document.getElementById('poll-interval-ms');
+		const stabilityEl = document.getElementById('poll-stability');
+		const packetCountEl = document.getElementById('poll-packet-count');
+		const tierBadgeEl = document.getElementById('poll-tier-badge');
+		const canvas = document.getElementById('poll-sparkline') as HTMLCanvasElement | null;
+		const ctx = canvas?.getContext('2d');
+
+		let peakHz = 0;
+		let totalPackets = 0;
+		let eventTimestamps: number[] = [];
+		let intervalHistory: number[] = [];
+		let sparklineData: number[] = new Array(50).fill(0);
+		let decayTimer: any = null;
+
+		function drawSparkline() {
+			if (!ctx || !canvas) return;
+			const w = canvas.width;
+			const h = canvas.height;
+			ctx.clearRect(0, 0, w, h);
+
+			// Grid lines
+			ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			ctx.moveTo(0, h * 0.25); ctx.lineTo(w, h * 0.25);
+			ctx.moveTo(0, h * 0.5); ctx.lineTo(w, h * 0.5);
+			ctx.moveTo(0, h * 0.75); ctx.lineTo(w, h * 0.75);
+			ctx.stroke();
+
+			// Sparkline curve
+			ctx.beginPath();
+			const maxVal = Math.max(1200, ...sparklineData);
+			for (let i = 0; i < sparklineData.length; i++) {
+				const x = (i / (sparklineData.length - 1)) * w;
+				const norm = Math.min(1, sparklineData[i] / maxVal);
+				const y = h - (norm * (h - 10)) - 5;
+				if (i === 0) ctx.moveTo(x, y);
+				else ctx.lineTo(x, y);
+			}
+
+			// Stroke
+			ctx.strokeStyle = '#ff6b00';
+			ctx.lineWidth = 2;
+			ctx.stroke();
+
+			// Gradient area fill
+			const lastX = w;
+			const firstX = 0;
+			ctx.lineTo(lastX, h);
+			ctx.lineTo(firstX, h);
+			ctx.closePath();
+			const grad = ctx.createLinearGradient(0, 0, 0, h);
+			grad.addColorStop(0, 'rgba(255, 107, 0, 0.25)');
+			grad.addColorStop(1, 'rgba(255, 107, 0, 0.0)');
+			ctx.fillStyle = grad;
+			ctx.fill();
+		}
+
+		function handlePointerMove(e: PointerEvent) {
+			if (pollOverlay) pollOverlay.style.opacity = '0';
+
+			// Leverage getCoalescedEvents for unthrottled raw USB packet timestamps
+			const events: PointerEvent[] = (typeof (e as any).getCoalescedEvents === 'function')
+				? (e as any).getCoalescedEvents()
+				: [e];
+
+			for (const evt of events) {
+				const t = evt.timeStamp;
+				totalPackets++;
+
+				if (eventTimestamps.length > 0) {
+					const dt = t - eventTimestamps[eventTimestamps.length - 1];
+					// Filter out duplicate OS frame timestamps (0ms) and pauses (> 100ms)
+					if (dt > 0.05 && dt < 80) {
+						intervalHistory.push(dt);
+						if (intervalHistory.length > 40) intervalHistory.shift();
+					}
+				}
+				eventTimestamps.push(t);
+				if (eventTimestamps.length > 50) eventTimestamps.shift();
+			}
+
+			if (intervalHistory.length >= 5) {
+				// Calculate median interval to eliminate OS scheduling jitter outliers
+				const sorted = [...intervalHistory].sort((a, b) => a - b);
+				const medianDt = sorted[Math.floor(sorted.length / 2)];
+				const hz = Math.round(1000 / medianDt);
+
+				if (hz > 40 && hz < 12000) {
+					if (currentHzEl) currentHzEl.textContent = `${hz}`;
+					if (intervalEl) intervalEl.textContent = `Interval: ${medianDt.toFixed(2)} ms`;
+
+					if (hz > peakHz) {
+						peakHz = hz;
+						if (peakHzEl) peakHzEl.textContent = `${peakHz}`;
+					}
+
+					// Standard deviation calculation
+					const mean = intervalHistory.reduce((a, b) => a + b, 0) / intervalHistory.length;
+					const variance = intervalHistory.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / intervalHistory.length;
+					const stdDev = Math.sqrt(variance);
+					if (stabilityEl) stabilityEl.textContent = `Jitter: \u00B1${stdDev.toFixed(2)} ms`;
+
+					// Update Tier Classification Badge
+					if (tierBadgeEl) {
+						if (peakHz >= 3500) {
+							tierBadgeEl.textContent = 'Esports Class (4000Hz - 8000Hz)';
+							tierBadgeEl.className = 'badge mono badge-orange';
+						} else if (peakHz >= 850) {
+							tierBadgeEl.textContent = 'High-Speed Gaming (1000Hz)';
+							tierBadgeEl.className = 'badge mono badge-orange';
+						} else if (peakHz >= 400) {
+							tierBadgeEl.textContent = 'Standard Gaming (500Hz)';
+							tierBadgeEl.className = 'badge mono';
+						} else if (peakHz >= 110) {
+							tierBadgeEl.textContent = 'Standard Office USB (125Hz)';
+							tierBadgeEl.className = 'badge mono';
+						} else {
+							tierBadgeEl.textContent = `${peakHz} Hz Active`;
+							tierBadgeEl.className = 'badge mono';
+						}
+					}
+
+					// Push to sparkline
+					sparklineData.push(hz);
+					if (sparklineData.length > 50) sparklineData.shift();
+					drawSparkline();
+				}
+			}
+
+			if (packetCountEl) packetCountEl.textContent = totalPackets.toLocaleString();
+
+			// Reset current rate decay
+			clearTimeout(decayTimer);
+			decayTimer = setTimeout(() => {
+				if (currentHzEl) currentHzEl.textContent = '0';
+				if (pollOverlay) pollOverlay.style.opacity = '1';
+			}, 350);
+		}
+
+		if (pollZone) {
+			pollZone.addEventListener('pointermove', handlePointerMove);
+		}
+
+		// ==========================================
+		// 2. CLICK REACTION & SWITCH DEBOUNCE
+		// ==========================================
+		const reactionBox = document.getElementById('reaction-box');
+		const reactionHeadline = document.getElementById('reaction-headline');
+		const reactionSub = document.getElementById('reaction-sub');
+		const reactionStateBadge = document.getElementById('reaction-state-badge');
+		const reactionTimeVal = document.getElementById('reaction-time-val');
+		const reactionAvgVal = document.getElementById('reaction-avg-val');
+		const debounceTimeVal = document.getElementById('debounce-time-val');
+		const doubleclickVal = document.getElementById('doubleclick-val');
+
+		type ReactionState = 'IDLE' | 'WAITING' | 'READY' | 'TOO_SOON' | 'RESULT';
+		let reactionState: ReactionState = 'IDLE';
+		let stateTimer: any = null;
+		let greenTimestamp = 0;
+		let reactionScores: number[] = [];
+
+		let lastPointerDownTime = 0;
+		let lastClickReleaseTime = 0;
+
+		function startReactionTest() {
+			reactionState = 'WAITING';
+			if (reactionBox) reactionBox.className = 'reaction-box waiting';
+			if (reactionHeadline) reactionHeadline.textContent = 'Wait for GREEN...';
+			if (reactionSub) reactionSub.textContent = 'Do not click yet!';
+			if (reactionStateBadge) reactionStateBadge.textContent = 'Armed...';
+
+			const randomDelay = 1500 + Math.random() * 2500; // 1.5s to 4.0s
+			clearTimeout(stateTimer);
+			stateTimer = setTimeout(() => {
+				reactionState = 'READY';
+				greenTimestamp = performance.now();
+				if (reactionBox) reactionBox.className = 'reaction-box ready';
+				if (reactionHeadline) reactionHeadline.textContent = 'CLICK NOW!';
+				if (reactionSub) reactionSub.textContent = 'Measure display-to-input response';
+				if (reactionStateBadge) reactionStateBadge.textContent = 'Active';
+			}, randomDelay);
+		}
+
+		if (reactionBox) {
+			reactionBox.addEventListener('pointerdown', (e) => {
+				const now = performance.now();
+				lastPointerDownTime = now;
+
+				// Double-click gap calculation
+				if (lastClickReleaseTime > 0) {
+					const gap = now - lastClickReleaseTime;
+					if (gap > 10 && gap < 800) {
+						if (doubleclickVal) doubleclickVal.textContent = `${Math.round(gap)}`;
+					}
+				}
+
+				if (reactionState === 'IDLE' || reactionState === 'RESULT' || reactionState === 'TOO_SOON') {
+					startReactionTest();
+				} else if (reactionState === 'WAITING') {
+					// Clicked too soon
+					clearTimeout(stateTimer);
+					reactionState = 'TOO_SOON';
+					if (reactionBox) reactionBox.className = 'reaction-box too-soon';
+					if (reactionHeadline) reactionHeadline.textContent = 'Too Soon!';
+					if (reactionSub) reactionSub.textContent = 'Clicked before screen turned green. Click to retry.';
+					if (reactionStateBadge) reactionStateBadge.textContent = 'False Start';
+				} else if (reactionState === 'READY') {
+					// Successful reaction
+					const reactionDelta = Math.round(now - greenTimestamp);
+					reactionState = 'RESULT';
+					reactionScores.push(reactionDelta);
+					if (reactionBox) reactionBox.className = 'reaction-box result';
+					if (reactionHeadline) reactionHeadline.textContent = `${reactionDelta} ms`;
+					if (reactionSub) reactionSub.textContent = 'Click to test again';
+					if (reactionStateBadge) reactionStateBadge.textContent = `${reactionDelta} ms`;
+
+					if (reactionTimeVal) reactionTimeVal.textContent = `${reactionDelta}`;
+					const avg = Math.round(reactionScores.reduce((a, b) => a + b, 0) / reactionScores.length);
+					if (reactionAvgVal) reactionAvgVal.textContent = `Avg: ${avg} ms (${reactionScores.length} tries)`;
+				}
+			});
+
+			reactionBox.addEventListener('pointerup', () => {
+				const upNow = performance.now();
+				lastClickReleaseTime = upNow;
+				if (lastPointerDownTime > 0) {
+					const holdDuration = upNow - lastPointerDownTime;
+					if (debounceTimeVal) debounceTimeVal.textContent = `${holdDuration.toFixed(1)}`;
+				}
+			});
+		}
+
+		// Reset Button
+		const resetBtn = document.getElementById('reset-input-lab-btn');
+		if (resetBtn) {
+			resetBtn.addEventListener('click', () => {
+				peakHz = 0;
+				totalPackets = 0;
+				eventTimestamps = [];
+				intervalHistory = [];
+				sparklineData = new Array(50).fill(0);
+				reactionScores = [];
+				clearTimeout(stateTimer);
+				reactionState = 'IDLE';
+
+				if (currentHzEl) currentHzEl.textContent = '0';
+				if (peakHzEl) peakHzEl.textContent = '0';
+				if (intervalEl) intervalEl.textContent = 'Interval: -- ms';
+				if (stabilityEl) stabilityEl.textContent = 'Jitter: \u00B10.0 ms';
+				if (packetCountEl) packetCountEl.textContent = '0';
+				if (tierBadgeEl) {
+					tierBadgeEl.textContent = 'Awaiting Movement';
+					tierBadgeEl.className = 'badge mono';
+				}
+				if (reactionBox) reactionBox.className = 'reaction-box idle';
+				if (reactionHeadline) reactionHeadline.textContent = 'Click Here to Test Reaction';
+				if (reactionSub) reactionSub.textContent = 'Tests hardware visual-motor click response time';
+				if (reactionTimeVal) reactionTimeVal.textContent = '--';
+				if (reactionAvgVal) reactionAvgVal.textContent = 'Avg: -- ms (0 tries)';
+				if (debounceTimeVal) debounceTimeVal.textContent = '--';
+				if (doubleclickVal) doubleclickVal.textContent = '--';
+				drawSparkline();
+			});
+		}
+
+		drawSparkline();
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initInputLatencyLab);
+	} else {
+		initInputLatencyLab();
+	}
+</script>
+
+<style>
+	.input-card {
+		margin-bottom: 2rem;
+	}
+
+	.card-header-wrap {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.75em;
+		margin-bottom: 0.5em;
+	}
+
+	.telemetry-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4em;
+		background: rgba(0, 0, 0, 0.04);
+		border: 1px solid var(--border-color);
+		color: rgb(var(--gray));
+		padding: 0.38em 0.8em;
+		border-radius: 6px;
+		font-size: 0.78em;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+	:global(html[data-theme="dark"]) .telemetry-btn {
+		background: rgba(255, 255, 255, 0.04);
+	}
+	.telemetry-btn:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+
+	.benchmark-desc {
+		font-size: 0.9em;
+		color: rgb(var(--gray));
+		margin-bottom: 1.25em;
+		line-height: 1.5;
+	}
+
+	/* TWO-COLUMN LAB WORKBENCH */
+	.lab-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1.25em;
+	}
+
+	@media (max-width: 780px) {
+		.lab-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.lab-col {
+		display: flex;
+		flex-direction: column;
+		background: rgba(0, 0, 0, 0.02);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		padding: 1.1em;
+	}
+	:global(html[data-theme="dark"]) .lab-col {
+		background: rgba(255, 255, 255, 0.015);
+	}
+
+	.col-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 0.85em;
+	}
+
+	.col-title {
+		font-size: 0.82em;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		color: var(--text-color);
+	}
+
+	.badge {
+		font-size: 0.68em;
+		padding: 0.18em 0.55em;
+		border-radius: 4px;
+		background: rgba(0, 0, 0, 0.05);
+		color: rgb(var(--gray));
+	}
+	:global(html[data-theme="dark"]) .badge {
+		background: rgba(255, 255, 255, 0.06);
+	}
+	.badge-orange {
+		background: rgba(234, 88, 12, 0.15);
+		color: var(--accent);
+		border: 1px solid rgba(234, 88, 12, 0.3);
+		font-weight: 600;
+	}
+
+	/* POLLING HOVER ZONE & SPARKLINE */
+	.poll-zone {
+		position: relative;
+		height: 120px;
+		border: 1px dashed var(--border-color);
+		border-radius: 6px;
+		background: rgba(0, 0, 0, 0.02);
+		overflow: hidden;
+		cursor: crosshair;
+		user-select: none;
+		margin-bottom: 1em;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	:global(html[data-theme="dark"]) .poll-zone {
+		background: rgba(255, 255, 255, 0.01);
+	}
+
+	#poll-sparkline {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+	}
+
+	.poll-overlay {
+		position: relative;
+		z-index: 2;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.4em;
+		color: rgb(var(--gray));
+		pointer-events: none;
+		transition: opacity 0.2s ease;
+	}
+	.mouse-icon {
+		opacity: 0.6;
+	}
+	.poll-prompt {
+		font-size: 0.78em;
+		font-weight: 500;
+	}
+
+	/* REACTION INTERACTIVE BOX */
+	.reaction-box {
+		height: 120px;
+		border-radius: 6px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		cursor: pointer;
+		user-select: none;
+		margin-bottom: 1em;
+		transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+		padding: 1em;
+	}
+
+	.reaction-box.idle {
+		background: rgba(0, 0, 0, 0.03);
+		border: 1px dashed var(--border-color);
+	}
+	:global(html[data-theme="dark"]) .reaction-box.idle {
+		background: rgba(255, 255, 255, 0.02);
+	}
+	.reaction-box.idle:hover {
+		border-color: var(--accent);
+		transform: translateY(-1px);
+	}
+
+	.reaction-box.waiting {
+		background: #854d0e;
+		color: #ffffff;
+		border: 1px solid #ca8a04;
+		box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3);
+	}
+
+	.reaction-box.ready {
+		background: #15803d;
+		color: #ffffff;
+		border: 1px solid #22c55e;
+		box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+		transform: scale(1.01);
+	}
+
+	.reaction-box.too-soon {
+		background: #991b1b;
+		color: #ffffff;
+		border: 1px solid #ef4444;
+	}
+
+	.reaction-box.result {
+		background: rgba(234, 88, 12, 0.12);
+		border: 1px solid var(--accent);
+	}
+
+	.reaction-content {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3em;
+	}
+
+	.reaction-headline {
+		font-size: 1.15em;
+		font-weight: 700;
+	}
+
+	.reaction-sub {
+		font-size: 0.75em;
+		opacity: 0.85;
+	}
+
+	/* MINI METRICS ROW */
+	.metrics-row {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.6em;
+	}
+
+	.metric-mini {
+		background: rgba(0, 0, 0, 0.03);
+		border: 1px solid var(--border-color);
+		border-radius: 6px;
+		padding: 0.6em 0.55em;
+		display: flex;
+		flex-direction: column;
+	}
+	:global(html[data-theme="dark"]) .metric-mini {
+		background: rgba(255, 255, 255, 0.02);
+	}
+
+	.m-label {
+		font-size: 0.68em;
+		font-weight: 600;
+		color: rgb(var(--gray));
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		margin-bottom: 0.25em;
+	}
+
+	.m-val-wrap {
+		display: flex;
+		align-items: baseline;
+		gap: 0.25em;
+		margin-bottom: 0.15em;
+	}
+
+	.m-val {
+		font-size: 1.25em;
+		font-weight: 700;
+		color: var(--text-color);
+		letter-spacing: -0.02em;
+	}
+
+	.m-unit {
+		font-size: 0.7em;
+		font-weight: 600;
+		color: rgb(var(--gray));
+	}
+
+	.m-sub {
+		font-size: 0.66em;
+		color: rgb(var(--gray));
+		opacity: 0.85;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+</style>

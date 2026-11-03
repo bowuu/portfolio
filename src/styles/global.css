@@ -189,8 +189,9 @@ html {
 #about,
 #skills,
 #projects,
-#inspector,
-#benchmark {
+#benchmark,
+#input-lab,
+#debug {
   scroll-margin-top: 75px;
 }
 
@@ -257,8 +258,9 @@ html {
 
   /* Hide interactive, client-only, and navigation UI */
   header,
-  #inspector,
+  #debug,
   #benchmark,
+  #input-lab,
   .canvas-wrapper,
   .cad-controls-top,
   .cad-viewer-footer,

@@ -2,7 +2,7 @@
 // SystemInspector.astro - Real-time client-side hardware & edge telemetry inspector
 ---
 
-<section class="card telemetry-card" id="inspector">
+<section class="card telemetry-card" id="debug">
 	<div class="telemetry-header">
 		<h2 class="card-title">
 			<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
@@ -10,7 +10,7 @@
 				<line x1="8" y1="21" x2="16" y2="21"/>
 				<line x1="12" y1="17" x2="12" y2="21"/>
 			</svg>
-			System Inspector
+			Debug
 		</h2>
 	</div>
 
@@ -431,11 +431,19 @@
 	.privacy-details:hover .privacy-icon,
 	.privacy-details:hover .privacy-title,
 	.privacy-details:hover .privacy-tag,
-	.privacy-details:hover .privacy-toggle {
-		color: var(--accent);
+	.privacy-details:hover .privacy-toggle,
+	.privacy-details:hover .privacy-toggle-label,
+	.privacy-details:hover .privacy-chevron,
+	:global(html[data-theme="dark"]) .privacy-details:hover .privacy-icon,
+	:global(html[data-theme="dark"]) .privacy-details:hover .privacy-title,
+	:global(html[data-theme="dark"]) .privacy-details:hover .privacy-tag,
+	:global(html[data-theme="dark"]) .privacy-details:hover .privacy-toggle,
+	:global(html[data-theme="dark"]) .privacy-details:hover .privacy-toggle-label,
+	:global(html[data-theme="dark"]) .privacy-details:hover .privacy-chevron {
+		color: var(--accent) !important;
 	}
 	.privacy-chevron {
-		transition: transform 0.2s ease;
+		transition: transform 0.2s ease, color 0.15s ease;
 	}
 	.privacy-details[open] .privacy-chevron {
 		transform: rotate(180deg);
@@ -486,6 +494,8 @@
 		align-items: center;
 		gap: 0.5em;
 		letter-spacing: -0.01em;
+		border-bottom: none;
+		padding-bottom: 0;
 	}
 	.card-icon {
 		color: var(--accent);

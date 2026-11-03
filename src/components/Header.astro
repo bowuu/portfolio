@@ -30,6 +30,7 @@ import ThemeToggle from './ThemeToggle.astro';
 			<a href="/#about" class="nav-link active">About</a>
 			<a href="/#projects" class="nav-link">Projects</a>
 			<a href="/#inspector" class="nav-link">Inspector</a>
+			<a href="/#benchmark" class="nav-link">Benchmark</a>
 		</div>
 		<div class="actions-right">
 			<div class="theme-wrapper">
@@ -44,7 +45,7 @@ import ThemeToggle from './ThemeToggle.astro';
 		const navLinks = document.querySelectorAll<HTMLAnchorElement>('.nav-link');
 		if (!navLinks.length) return;
 
-		const sectionIds = ['about', 'projects', 'inspector'];
+		const sectionIds = ['about', 'projects', 'inspector', 'benchmark'];
 
 		function setActive(id: string) {
 			navLinks.forEach((link) => {

@@ -1,5 +1,5 @@
 ---
-// SystemInspector.astro - Real-time client-side hardware & edge telemetry inspector + Edge Network Benchmark
+// SystemInspector.astro - Real-time client-side hardware & edge telemetry inspector
 ---
 
 <section class="card telemetry-card" id="inspector">
@@ -69,81 +69,9 @@
 			<span id="t-ua" class="t-val mono break-all">Detecting...</span>
 		</div>
 	</div>
-
-	<!-- EDGE NETWORK BENCHMARK SUBSECTION -->
-	<div class="benchmark-container">
-		<div class="benchmark-top-bar">
-			<div class="benchmark-title-group">
-				<h3 class="benchmark-heading">
-					<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" class="b-heading-icon">
-						<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-					</svg>
-					Edge Network Benchmark
-				</h3>
-				<span class="benchmark-subtext">Direct to Cloudflare Anycast edge &bull; 0 host bandwidth</span>
-			</div>
-			<button id="run-speedtest-btn" class="benchmark-btn" type="button" aria-label="Run Edge Network Benchmark">
-				<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon" id="btn-icon-play">
-					<polygon points="5 3 19 12 5 21 5 3"/>
-				</svg>
-				<span id="speedtest-btn-text">Run Benchmark</span>
-			</button>
-		</div>
-
-		<!-- BENCHMARK TILES -->
-		<div class="benchmark-tiles">
-			<div class="b-tile">
-				<span class="b-tile-label">Latency / Ping</span>
-				<div class="b-tile-value-wrap">
-					<span id="speed-ping" class="b-tile-num mono">--</span>
-					<span class="b-tile-unit">ms</span>
-				</div>
-				<span id="speed-jitter" class="b-tile-sub">Jitter: -- ms</span>
-			</div>
-
-			<div class="b-tile b-tile-highlight">
-				<span class="b-tile-label">Download Speed</span>
-				<div class="b-tile-value-wrap">
-					<span id="speed-down" class="b-tile-num mono">--</span>
-					<span class="b-tile-unit">Mbps</span>
-				</div>
-				<span id="speed-down-sub" class="b-tile-sub">Edge Throughput</span>
-			</div>
-
-			<div class="b-tile">
-				<span class="b-tile-label">Upload Speed</span>
-				<div class="b-tile-value-wrap">
-					<span id="speed-up" class="b-tile-num mono">--</span>
-					<span class="b-tile-unit">Mbps</span>
-				</div>
-				<span id="speed-up-sub" class="b-tile-sub">Return Pipeline</span>
-			</div>
-
-			<div class="b-tile">
-				<span class="b-tile-label">Edge PoP &amp; Protocol</span>
-				<div class="b-tile-value-wrap">
-					<span id="speed-colo" class="b-tile-text">Detecting...</span>
-				</div>
-				<span id="speed-protocol" class="b-tile-sub">Anycast Node</span>
-			</div>
-		</div>
-
-		<!-- PROGRESS TRACK & LIVE STATUS -->
-		<div class="benchmark-footer">
-			<div class="progress-track" id="benchmark-progress-track">
-				<div class="progress-bar" id="benchmark-progress-bar"></div>
-			</div>
-			<div class="status-wrap">
-				<span id="speedtest-status" class="status-text">Click "Run Benchmark" to measure real-time latency, jitter, and edge throughput.</span>
-			</div>
-		</div>
-	</div>
 </section>
 
 <script>
-	let edgeColoName = 'Cloudflare Edge';
-	let edgeProtocol = 'HTTP/2';
-
 	function detectGPU(): string {
 		try {
 			const canvas = document.createElement('canvas');
@@ -155,49 +83,44 @@
 			if (!debugInfo) {
 				return 'Hardware Accelerated GPU';
 			}
-			const unmasked = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-			if (!unmasked) return 'Hardware Accelerated GPU';
+			const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+			if (!renderer) return 'Hardware Accelerated GPU';
 
-			const angleMatch = unmasked.match(/ANGLE \([^,]+,\s*([^,]+)/);
+			// Format ANGLE strings cleanly
+			const angleMatch = renderer.match(/ANGLE \([^,]+,\s*([^,]+)/);
 			if (angleMatch && angleMatch[1]) {
-				return angleMatch[1]
-					.replace(/\sDirect3D.*$/, '')
-					.replace(/\s*\((?:0x)?[0-9a-fA-F]{4,8}\)/g, '')
-					.trim();
+				return angleMatch[1].replace(/\sDirect3D.*$/, '').replace(/\s*\((?:0x)?[0-9a-fA-F]{4,8}\)/g, '').trim();
 			}
-			return unmasked
-				.replace(/Direct3D.*$/, '')
-				.replace(/\s*\((?:0x)?[0-9a-fA-F]{4,8}\)/g, '')
-				.trim();
-		} catch (e) {
+			return renderer.replace(/Direct3D.*$/, '').replace(/\s*\((?:0x)?[0-9a-fA-F]{4,8}\)/g, '').trim();
+		} catch {
 			return 'Generic Graphics Accelerator';
 		}
 	}
 
 	function detectOS(): string {
 		const ua = navigator.userAgent;
-		const uaData = (navigator as any).userAgentData;
+		const navData = (navigator as any).userAgentData;
 
-		if (uaData && uaData.platform) {
-			const plat = uaData.platform;
-			if (plat === 'Windows') return 'Windows PC';
-			if (plat === 'macOS') return 'Apple macOS';
-			if (plat === 'Linux') return 'GNU/Linux';
-			if (plat === 'Android') return 'Android Device';
+		if (navData && navData.platform) {
+			const p = navData.platform;
+			if (p === 'Windows') return 'Windows PC';
+			if (p === 'macOS') return 'Apple macOS';
+			if (p === 'Linux') return 'GNU/Linux';
+			if (p === 'Android') return 'Android Device';
 		}
 
 		if (/Windows NT 10.0/.test(ua)) return 'Windows 10 / 11 (64-bit)';
 		if (/Macintosh; Intel Mac OS X (\d+[._]\d+)/.test(ua)) {
-			const ver = ua.match(/Macintosh; Intel Mac OS X (\d+[._]\d+)/);
-			return `macOS ${ver ? ver[1].replace('_', '.') : ''}`;
+			const match = ua.match(/Macintosh; Intel Mac OS X (\d+[._]\d+)/);
+			return `macOS ${match ? match[1].replace('_', '.') : ''}`;
 		}
 		if (/Android (\d+(\.\d+)?)/.test(ua)) {
-			const ver = ua.match(/Android (\d+(\.\d+)?)/);
-			return `Android ${ver ? ver[1] : ''}`;
+			const match = ua.match(/Android (\d+(\.\d+)?)/);
+			return `Android ${match ? match[1] : ''}`;
 		}
 		if (/iPhone OS (\d+[._]\d+)/.test(ua)) {
-			const v = ua.match(/iPhone OS (\d+[._]\d+)/);
-			return `iOS ${v ? v[1].replace('_', '.') : ''} (iPhone)`;
+			const match = ua.match(/iPhone OS (\d+[._]\d+)/);
+			return `iOS ${match ? match[1].replace('_', '.') : ''} (iPhone)`;
 		}
 		if (/Linux/.test(ua)) return 'GNU/Linux';
 		return navigator.platform || 'Unknown OS';
@@ -213,23 +136,20 @@
 		const gpuEl = document.getElementById('t-gpu');
 		const displayEl = document.getElementById('t-display');
 		const uaEl = document.getElementById('t-ua');
-		const speedColoEl = document.getElementById('speed-colo');
-		const speedProtoEl = document.getElementById('speed-protocol');
 
 		// Instant Client Detection
 		if (gpuEl) gpuEl.textContent = detectGPU();
-
 		if (osEl) {
 			osEl.textContent = detectOS();
-			const uaData = (navigator as any).userAgentData;
-			if (uaData && uaData.getHighEntropyValues) {
-				uaData.getHighEntropyValues(['platform', 'platformVersion', 'architecture', 'bitness', 'model'])
+			const navData = (navigator as any).userAgentData;
+			if (navData && navData.getHighEntropyValues) {
+				navData.getHighEntropyValues(['platform', 'platformVersion', 'architecture', 'bitness', 'model'])
 					.then((hints: any) => {
 						if (hints.platform === 'Windows') {
-							const majorVer = parseInt(hints.platformVersion?.split('.')[0] || '0', 10);
-							const winName = majorVer >= 13 ? 'Windows 11' : 'Windows 10';
+							const major = parseInt(hints.platformVersion?.split('.')[0] || '0', 10);
+							const winVer = major >= 13 ? 'Windows 11' : 'Windows 10';
 							const arch = hints.architecture ? ` (${hints.architecture}, ${hints.bitness || 64}-bit)` : '';
-							osEl.textContent = `${winName}${arch}`;
+							osEl.textContent = `${winVer}${arch}`;
 						}
 					})
 					.catch(() => {});
@@ -237,11 +157,14 @@
 		}
 
 		if (cpuEl) {
-			cpuEl.textContent = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} Logical CPU Cores` : 'Multi-core Processor';
+			cpuEl.textContent = navigator.hardwareConcurrency 
+				? `${navigator.hardwareConcurrency} Logical CPU Cores` 
+				: 'Multi-core Processor';
 		}
 
 		if (ramEl) {
-			ramEl.textContent = (navigator as any).deviceMemory ? `${(navigator as any).deviceMemory} GB RAM` : '64-bit Architecture';
+			const mem = (navigator as any).deviceMemory;
+			ramEl.textContent = mem ? `${mem} GB RAM` : '64-bit Architecture';
 		}
 
 		if (displayEl) {
@@ -254,7 +177,7 @@
 			uaEl.textContent = navigator.userAgent;
 		}
 
-		// Cloudflare Edge Data
+		// Cloudflare Edge Ephemeral Detection
 		try {
 			const res = await fetch('/api/visitor-info', { cache: 'no-store' });
 			if (res.ok) {
@@ -273,15 +196,6 @@
 					const isp = data.isp ? `${data.isp}` : 'Broadband Provider';
 					ispEl.textContent = asn ? `${isp} (${asn})` : isp;
 				}
-
-				if (data.colo) {
-					edgeColoName = data.colo.replace(/\s*Edge Datacenter$/i, '').trim();
-				}
-				if (data.protocol) {
-					edgeProtocol = data.protocol;
-				}
-				if (speedColoEl) speedColoEl.textContent = edgeColoName;
-				if (speedProtoEl) speedProtoEl.textContent = `Protocol: ${edgeProtocol}`;
 			} else {
 				throw new Error('Edge endpoint responded with non-200');
 			}
@@ -289,200 +203,38 @@
 			if (ipEl) ipEl.textContent = '127.0.0.1 (Local Edge)';
 			if (locEl) locEl.textContent = 'Direct Connection';
 			if (ispEl) ispEl.textContent = 'Cloudflare Protected';
-			if (speedColoEl) speedColoEl.textContent = 'Cloudflare Edge';
-		}
-	}
-
-	// ----------------------------------------------------
-	// EDGE NETWORK BENCHMARK (0-HOST BANDWIDTH ENGINE)
-	// ----------------------------------------------------
-	let isBenchmarking = false;
-
-	async function runBenchmark() {
-		if (isBenchmarking) return;
-		isBenchmarking = true;
-
-		const btn = document.getElementById('run-speedtest-btn') as HTMLButtonElement | null;
-		const btnText = document.getElementById('speedtest-btn-text');
-		const pingEl = document.getElementById('speed-ping');
-		const jitterEl = document.getElementById('speed-jitter');
-		const downEl = document.getElementById('speed-down');
-		const upEl = document.getElementById('speed-up');
-		const coloEl = document.getElementById('speed-colo');
-		const protoEl = document.getElementById('speed-protocol');
-		const statusEl = document.getElementById('speedtest-status');
-		const progressBar = document.getElementById('benchmark-progress-bar');
-
-		if (btn) btn.disabled = true;
-		if (btnText) btnText.textContent = 'Testing...';
-
-		const setProgress = (pct: number, status: string) => {
-			if (progressBar) progressBar.style.width = `${pct}%`;
-			if (statusEl) statusEl.textContent = status;
-		};
-
-		// Reset display
-		if (pingEl) pingEl.textContent = '...';
-		if (jitterEl) jitterEl.textContent = 'Jitter: ...';
-		if (downEl) downEl.textContent = '...';
-		if (upEl) upEl.textContent = '...';
-
-		try {
-			// Phase 1: Latency & Jitter (4 warm samples against speed.cloudflare.com)
-			setProgress(10, 'Establishing TLS connection to Cloudflare Anycast edge...');
-			await fetch('https://speed.cloudflare.com/__down?bytes=0', { cache: 'no-store' });
-
-			setProgress(20, 'Measuring round-trip ping and jitter (4 samples)...');
-			const pings: number[] = [];
-			for (let i = 0; i < 4; i++) {
-				const t0 = performance.now();
-				await fetch(`https://speed.cloudflare.com/__down?bytes=0&_t=${Date.now()}_${i}`, { cache: 'no-store' });
-				pings.push(performance.now() - t0);
-			}
-
-			pings.sort((a, b) => a - b);
-			const medianPing = Math.round(pings[Math.floor(pings.length / 2)]);
-			let diffSum = 0;
-			for (let i = 1; i < pings.length; i++) {
-				diffSum += Math.abs(pings[i] - pings[i - 1]);
-			}
-			const jitter = (diffSum / (pings.length - 1)).toFixed(1);
-
-			if (pingEl) pingEl.textContent = String(medianPing);
-			if (jitterEl) jitterEl.textContent = `Jitter: ±${jitter} ms`;
-
-			// Phase 2: Download Speed (Adaptive burst)
-			setProgress(40, 'Testing downstream throughput (Cloudflare Edge stream)...');
-			async function testDownload(bytes: number, maxMs: number): Promise<{ bytes: number; dur: number; mbps: number }> {
-				const controller = new AbortController();
-				const timeout = setTimeout(() => controller.abort(), maxMs);
-				const t0 = performance.now();
-				let readBytes = 0;
-				try {
-					const res = await fetch(`https://speed.cloudflare.com/__down?bytes=${bytes}&_t=${Date.now()}`, {
-						signal: controller.signal,
-						cache: 'no-store'
-					});
-					const reader = res.body?.getReader();
-					if (reader) {
-						while (true) {
-							const { done, value } = await reader.read();
-							if (done) break;
-							readBytes += value.byteLength;
-						}
-					}
-				} catch (e) {
-					// Abort expected on timeout
-				} finally {
-					clearTimeout(timeout);
-				}
-				const dur = (performance.now() - t0) / 1000;
-				return { bytes: readBytes, dur, mbps: (readBytes * 8) / (dur * 1e6) };
-			}
-
-			// Probe with 5MB
-			const downProbe = await testDownload(5000000, 3000);
-			let finalDownMbps = downProbe.mbps;
-
-			// If high-speed (> 50 Mbps), sample 25MB for wire-speed accuracy
-			if (downProbe.dur < 0.8) {
-				setProgress(55, 'Measuring peak downstream bandwidth (25MB stream)...');
-				const downHigh = await testDownload(25000000, 3000);
-				finalDownMbps = Math.max(downProbe.mbps, downHigh.mbps);
-			}
-
-			if (downEl) downEl.textContent = finalDownMbps.toFixed(1);
-
-			// Phase 3: Upload Speed (Adaptive burst)
-			setProgress(75, 'Testing upstream throughput (buffer return pipeline)...');
-			async function testUpload(bytes: number): Promise<{ dur: number; mbps: number }> {
-				const buf = new Uint8Array(bytes);
-				const t0 = performance.now();
-				const res = await fetch(`https://speed.cloudflare.com/__up?_t=${Date.now()}`, {
-					method: 'POST',
-					body: buf,
-					headers: { 'Content-Type': 'application/octet-stream' }
-				});
-				const dur = (performance.now() - t0) / 1000;
-				return { dur, mbps: (bytes * 8) / (dur * 1e6) };
-			}
-
-			// Probe 1MB
-			const upProbe = await testUpload(1024 * 1024);
-			let finalUpMbps = upProbe.mbps;
-
-			// If high-speed (> 25 Mbps), test 4MB
-			if (upProbe.dur < 0.5) {
-				setProgress(88, 'Measuring peak upstream bandwidth (4MB stream)...');
-				const upHigh = await testUpload(4 * 1024 * 1024);
-				finalUpMbps = Math.max(upProbe.mbps, upHigh.mbps);
-			}
-
-			if (upEl) upEl.textContent = finalUpMbps.toFixed(1);
-
-			// Update Edge Info
-			if (coloEl) coloEl.textContent = edgeColoName;
-			if (protoEl) protoEl.textContent = `Protocol: ${edgeProtocol}`;
-
-			setProgress(100, `Benchmark complete &bull; ${medianPing} ms RTT &bull; ${finalDownMbps.toFixed(1)} Mbps down &bull; ${finalUpMbps.toFixed(1)} Mbps up`);
-		} catch (err) {
-			console.error('Speedtest error:', err);
-			setProgress(100, 'Benchmark error: Unable to reach Cloudflare edge endpoints.');
-		} finally {
-			isBenchmarking = false;
-			if (btn) btn.disabled = false;
-			if (btnText) btnText.textContent = 'Run Again';
-		}
-	}
-
-	function setupBenchmarkBtn() {
-		const btn = document.getElementById('run-speedtest-btn');
-		if (btn) {
-			btn.removeEventListener('click', runBenchmark);
-			btn.addEventListener('click', runBenchmark);
 		}
 	}
 
 	initTelemetry();
-	setupBenchmarkBtn();
-	document.addEventListener('astro:page-load', () => {
-		initTelemetry();
-		setupBenchmarkBtn();
-	});
+	document.addEventListener('astro:page-load', initTelemetry);
 </script>
 
 <style>
-	/* TELEMETRY CARD */
 	.telemetry-card {
-		background: var(--bg-card);
-		border: 1px solid var(--border-color);
-		border-radius: 12px;
-		padding: clamp(1.2em, 3vw, 2em);
-		margin-top: 1.5em;
-		box-shadow: var(--box-shadow);
-		transition: background-color 0.2s ease, border-color 0.2s ease;
-		width: 100%;
-		text-align: left;
+		margin-top: 2.5em;
 	}
 
-	/* PROMINENT PRIVACY BANNER AT TOP */
+	/* PRIVACY ASSURANCE BANNER */
 	.telemetry-privacy-banner {
 		display: flex;
 		align-items: flex-start;
 		gap: 0.8em;
-		background: #f0fdf4;
-		border: 1.5px solid #86efac;
+		background: rgba(22, 101, 52, 0.06);
+		border: 1px solid rgba(22, 101, 52, 0.2);
 		border-radius: 8px;
-		padding: 0.9em 1.1em;
-		margin-bottom: 1.25em;
+		padding: 0.85em 1em;
+		margin-bottom: 1.4em;
 	}
 	:global(html[data-theme="dark"]) .telemetry-privacy-banner {
-		background: rgba(6, 78, 59, 0.25);
-		border-color: #059669;
+		background: rgba(16, 185, 129, 0.08);
+		border-color: rgba(16, 185, 129, 0.25);
 	}
 	.privacy-icon-box {
-		flex-shrink: 0;
 		color: #16a34a;
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
 		margin-top: 0.1em;
 	}
 	:global(html[data-theme="dark"]) .privacy-icon-box {
@@ -579,181 +331,6 @@
 		word-break: break-all;
 	}
 
-	/* ---------------------------------------------------- */
-	/* EDGE NETWORK BENCHMARK SUBSECTION                    */
-	/* ---------------------------------------------------- */
-	.benchmark-container {
-		margin-top: 1.6em;
-		padding-top: 1.4em;
-		border-top: 1px solid var(--border-color);
-	}
-	.benchmark-top-bar {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 0.8em;
-		margin-bottom: 1.1em;
-	}
-	.benchmark-title-group {
-		display: flex;
-		flex-direction: column;
-		gap: 0.2em;
-	}
-	.benchmark-heading {
-		font-size: 1.05em;
-		font-weight: 700;
-		margin: 0;
-		color: rgb(var(--black));
-		display: flex;
-		align-items: center;
-		gap: 0.45em;
-	}
-	.b-heading-icon {
-		color: var(--accent);
-		flex-shrink: 0;
-	}
-	.benchmark-subtext {
-		font-size: 0.76em;
-		color: rgb(var(--gray));
-	}
-
-	/* BENCHMARK BUTTON */
-	.benchmark-btn {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5em;
-		background: var(--accent);
-		color: #ffffff;
-		border: 1px solid transparent;
-		padding: 0.45em 1em;
-		border-radius: 6px;
-		font-size: 0.85em;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.15s ease;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-	}
-	.benchmark-btn:hover:not(:disabled) {
-		background: #c2410c;
-		transform: translateY(-1px);
-		box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-	}
-	.benchmark-btn:active:not(:disabled) {
-		transform: translateY(0);
-	}
-	.benchmark-btn:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-		transform: none;
-	}
-	.play-icon {
-		flex-shrink: 0;
-	}
-
-	/* TILES GRID */
-	.benchmark-tiles {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
-		gap: 0.9em;
-		margin-bottom: 1em;
-	}
-	.b-tile {
-		background: rgba(0, 0, 0, 0.02);
-		border: 1px solid var(--border-color);
-		border-radius: 8px;
-		padding: 0.8em 0.95em;
-		display: flex;
-		flex-direction: column;
-		gap: 0.2em;
-		transition: border-color 0.2s ease, background 0.2s ease;
-	}
-	:global(html[data-theme="dark"]) .b-tile {
-		background: rgba(255, 255, 255, 0.02);
-	}
-	.b-tile.b-tile-highlight {
-		border-color: rgba(234, 88, 12, 0.35);
-		background: rgba(234, 88, 12, 0.03);
-	}
-	:global(html[data-theme="dark"]) .b-tile.b-tile-highlight {
-		border-color: rgba(234, 88, 12, 0.4);
-		background: rgba(234, 88, 12, 0.06);
-	}
-	.b-tile-label {
-		font-size: 0.72em;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: rgb(var(--gray));
-	}
-	.b-tile-value-wrap {
-		display: flex;
-		align-items: baseline;
-		gap: 0.3em;
-	}
-	.b-tile-num {
-		font-size: 1.45em;
-		font-weight: 800;
-		color: rgb(var(--black));
-		line-height: 1.2;
-	}
-	.b-tile.b-tile-highlight .b-tile-num {
-		color: var(--accent);
-	}
-	.b-tile-unit {
-		font-size: 0.82em;
-		font-weight: 600;
-		color: rgb(var(--gray));
-	}
-	.b-tile-text {
-		font-size: 1em;
-		font-weight: 700;
-		color: rgb(var(--black));
-		line-height: 1.25;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	.b-tile-sub {
-		font-size: 0.73em;
-		color: rgb(var(--gray));
-		margin-top: 0.1em;
-	}
-
-	/* PROGRESS TRACK & STATUS */
-	.benchmark-footer {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5em;
-	}
-	.progress-track {
-		width: 100%;
-		height: 4px;
-		background: rgba(0, 0, 0, 0.06);
-		border-radius: 999px;
-		overflow: hidden;
-	}
-	:global(html[data-theme="dark"]) .progress-track {
-		background: rgba(255, 255, 255, 0.08);
-	}
-	.progress-bar {
-		width: 0%;
-		height: 100%;
-		background: var(--accent);
-		border-radius: 999px;
-		transition: width 0.25s ease;
-	}
-	.status-wrap {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-	.status-text {
-		font-size: 0.76em;
-		color: rgb(var(--gray));
-		line-height: 1.4;
-	}
-
 	@media (max-width: 600px) {
 		.telemetry-grid {
 			grid-template-columns: 1fr;
@@ -761,17 +338,6 @@
 		.telemetry-header {
 			flex-direction: column;
 			align-items: flex-start;
-		}
-		.benchmark-top-bar {
-			flex-direction: column;
-			align-items: flex-start;
-		}
-		.benchmark-btn {
-			width: 100%;
-			justify-content: center;
-		}
-		.benchmark-tiles {
-			grid-template-columns: repeat(2, 1fr);
 		}
 	}
 </style>

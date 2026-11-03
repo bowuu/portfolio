@@ -1,0 +1,553 @@
+---
+// NetworkBenchmark.astro - Real-time zero-host-bandwidth Cloudflare edge network benchmark
+---
+
+<section class="card benchmark-card" id="benchmark">
+	<div class="benchmark-header">
+		<div class="benchmark-title-group">
+			<h2 class="card-title">
+				<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+					<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+				</svg>
+				Edge Network Benchmark
+			</h2>
+			<span class="benchmark-badge">Cloudflare Anycast &bull; 0 Host Bandwidth</span>
+		</div>
+		<button id="run-speedtest-btn" class="benchmark-btn" type="button" aria-label="Run Edge Network Benchmark">
+			<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon" id="btn-icon-play">
+				<polygon points="5 3 19 12 5 21 5 3"/>
+			</svg>
+			<span id="speedtest-btn-text">Run Benchmark</span>
+		</button>
+	</div>
+
+	<p class="benchmark-desc">
+		Measure real-time round-trip latency, jitter, and wire-speed edge throughput directly against Cloudflare's global Anycast network. Tests execute point-to-point in browser memory &mdash; <strong>zero payload bandwidth is transferred through brob.uk.</strong>
+	</p>
+
+	<!-- BENCHMARK TILES -->
+	<div class="benchmark-tiles">
+		<div class="b-tile">
+			<span class="b-tile-label">Latency / Ping</span>
+			<div class="b-tile-value-wrap">
+				<span id="speed-ping" class="b-tile-num mono">--</span>
+				<span class="b-tile-unit">ms</span>
+			</div>
+			<span id="speed-jitter" class="b-tile-sub">Jitter: -- ms</span>
+		</div>
+
+		<div class="b-tile b-tile-highlight">
+			<span class="b-tile-label">Download Speed</span>
+			<div class="b-tile-value-wrap">
+				<span id="speed-down" class="b-tile-num mono">--</span>
+				<span class="b-tile-unit">Mbps</span>
+			</div>
+			<span id="speed-down-sub" class="b-tile-sub">Edge Throughput</span>
+		</div>
+
+		<div class="b-tile">
+			<span class="b-tile-label">Upload Speed</span>
+			<div class="b-tile-value-wrap">
+				<span id="speed-up" class="b-tile-num mono">--</span>
+				<span class="b-tile-unit">Mbps</span>
+			</div>
+			<span id="speed-up-sub" class="b-tile-sub">Return Pipeline</span>
+		</div>
+
+		<div class="b-tile">
+			<span class="b-tile-label">Edge PoP &amp; Protocol</span>
+			<div class="b-tile-value-wrap">
+				<span id="speed-colo" class="b-tile-text">Detecting...</span>
+			</div>
+			<span id="speed-protocol" class="b-tile-sub">Anycast Node</span>
+		</div>
+	</div>
+
+	<!-- PROGRESS TRACK & LIVE STATUS -->
+	<div class="benchmark-footer">
+		<div class="progress-track" id="benchmark-progress-track">
+			<div class="progress-bar" id="benchmark-progress-bar"></div>
+		</div>
+		<div class="status-wrap">
+			<span id="speedtest-status" class="status-text">Click "Run Benchmark" to measure real-time latency, jitter, and edge throughput.</span>
+		</div>
+	</div>
+</section>
+
+<script>
+	let edgeColoName = 'Cloudflare Edge';
+	let edgeProtocol = 'HTTP/2';
+
+	async function initBenchmarkMeta() {
+		const speedColoEl = document.getElementById('speed-colo');
+		const speedProtoEl = document.getElementById('speed-protocol');
+
+		try {
+			const res = await fetch('/api/visitor-info', { cache: 'no-store' });
+			if (res.ok) {
+				const data = await res.json();
+				if (data.colo) {
+					edgeColoName = data.colo.replace(/\s*Edge Datacenter$/i, '').trim();
+				}
+				if (data.protocol) {
+					edgeProtocol = data.protocol;
+				}
+				if (speedColoEl) speedColoEl.textContent = edgeColoName;
+				if (speedProtoEl) speedProtoEl.textContent = `Protocol: ${edgeProtocol}`;
+			}
+		} catch {
+			if (speedColoEl) speedColoEl.textContent = 'Cloudflare Anycast';
+			if (speedProtoEl) speedProtoEl.textContent = 'Edge Node';
+		}
+	}
+
+	let isBenchmarking = false;
+
+	async function runBenchmark() {
+		if (isBenchmarking) return;
+		isBenchmarking = true;
+
+		const btn = document.getElementById('run-speedtest-btn') as HTMLButtonElement | null;
+		const btnText = document.getElementById('speedtest-btn-text');
+		const progressBar = document.getElementById('benchmark-progress-bar');
+		const statusText = document.getElementById('speedtest-status');
+
+		const pingEl = document.getElementById('speed-ping');
+		const jitterEl = document.getElementById('speed-jitter');
+		const downEl = document.getElementById('speed-down');
+		const downSubEl = document.getElementById('speed-down-sub');
+		const upEl = document.getElementById('speed-up');
+		const upSubEl = document.getElementById('speed-up-sub');
+		const coloEl = document.getElementById('speed-colo');
+		const protoEl = document.getElementById('speed-protocol');
+
+		if (btn) btn.disabled = true;
+		if (btnText) btnText.textContent = 'Testing...';
+		if (progressBar) progressBar.style.width = '5%';
+
+		// Reset values
+		if (pingEl) pingEl.textContent = '--';
+		if (jitterEl) jitterEl.textContent = 'Jitter: -- ms';
+		if (downEl) downEl.textContent = '--';
+		if (downSubEl) downSubEl.textContent = 'Sampling...';
+		if (upEl) upEl.textContent = '--';
+		if (upSubEl) upSubEl.textContent = 'Sampling...';
+
+		try {
+			// ==========================================
+			// STAGE 1: LATENCY & JITTER
+			// ==========================================
+			if (statusText) statusText.textContent = 'Measuring round-trip latency to nearest Anycast edge...';
+			if (progressBar) progressBar.style.width = '15%';
+
+			// Warmup probe
+			try {
+				const warmupRes = await fetch(`https://speed.cloudflare.com/__down?bytes=0&_w=${Date.now()}`, { cache: 'no-store' });
+				const ray = warmupRes.headers.get('cf-ray');
+				if (ray && ray.includes('-')) {
+					const detectedColo = ray.split('-')[1].trim();
+					if (coloEl && (!edgeColoName || edgeColoName === 'Cloudflare Edge')) {
+						coloEl.textContent = `${detectedColo} Datacenter`;
+					}
+				}
+			} catch (_) {}
+
+			// 4 sequential pings
+			const pings: number[] = [];
+			for (let i = 0; i < 4; i++) {
+				const t0 = performance.now();
+				try {
+					const res = await fetch(`https://speed.cloudflare.com/__down?bytes=0&_t=${Date.now()}_${i}`, { cache: 'no-store' });
+					await res.blob();
+					const rtt = performance.now() - t0;
+					pings.push(rtt);
+					if (pingEl) pingEl.textContent = Math.round(rtt).toString();
+				} catch (e) {
+					console.warn('Ping sample failed:', e);
+				}
+				if (progressBar) progressBar.style.width = `${15 + (i + 1) * 5}%`;
+			}
+
+			if (pings.length > 0) {
+				pings.sort((a, b) => a - b);
+				const median = pings[Math.floor(pings.length / 2)];
+				let diffSum = 0;
+				for (let i = 1; i < pings.length; i++) {
+					diffSum += Math.abs(pings[i] - pings[i - 1]);
+				}
+				const jitter = pings.length > 1 ? diffSum / (pings.length - 1) : 0;
+
+				if (pingEl) pingEl.textContent = Math.round(median).toString();
+				if (jitterEl) jitterEl.textContent = `Jitter: ${jitter.toFixed(1)} ms`;
+			}
+
+			// ==========================================
+			// STAGE 2: DOWNLOAD THROUGHPUT
+			// ==========================================
+			if (statusText) statusText.textContent = 'Streaming download payload from edge CDN...';
+			if (progressBar) progressBar.style.width = '40%';
+
+			let totalBytes = 0;
+			const initialChunk = 5 * 1024 * 1024; // 5MB calibration
+			const d0 = performance.now();
+
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 3200);
+
+			try {
+				const downRes = await fetch(`https://speed.cloudflare.com/__down?bytes=${initialChunk}&_t=${Date.now()}`, {
+					cache: 'no-store',
+					signal: controller.signal,
+				});
+
+				if (downRes.body) {
+					const reader = downRes.body.getReader();
+					while (true) {
+						const { done, value } = await reader.read();
+						if (done) break;
+						if (value) {
+							totalBytes += value.length;
+							const elapsed = (performance.now() - d0) / 1000;
+							if (elapsed > 0.3) {
+								const curMbps = (totalBytes * 8) / (elapsed * 1_000_000);
+								if (downEl) downEl.textContent = curMbps.toFixed(1);
+							}
+						}
+					}
+				}
+			} catch (err: any) {
+				if (err.name !== 'AbortError') console.warn('Download probe error:', err);
+			} finally {
+				clearTimeout(timeoutId);
+			}
+
+			const elapsedDown = (performance.now() - d0) / 1000;
+			const initialMbps = (totalBytes * 8) / (Math.max(elapsedDown, 0.001) * 1_000_000);
+
+			// Fast connection burst (if >40 Mbps and took <1.2s)
+			if (initialMbps > 40 && elapsedDown < 1.2) {
+				if (progressBar) progressBar.style.width = '55%';
+				if (statusText) statusText.textContent = 'High-speed pipe detected: Bursting wire-speed test (25MB)...';
+
+				const burstBytes = 25 * 1024 * 1024;
+				const b0 = performance.now();
+				const bCtrl = new AbortController();
+				const bTimeout = setTimeout(() => bCtrl.abort(), 2800);
+
+				try {
+					const bRes = await fetch(`https://speed.cloudflare.com/__down?bytes=${burstBytes}&_t=${Date.now()}`, {
+						cache: 'no-store',
+						signal: bCtrl.signal,
+					});
+
+					let bBytes = 0;
+					if (bRes.body) {
+						const bReader = bRes.body.getReader();
+						while (true) {
+							const { done, value } = await bReader.read();
+							if (done) break;
+							if (value) {
+								bBytes += value.length;
+								const bElapsed = (performance.now() - b0) / 1000;
+								if (bElapsed > 0.25) {
+									const bMbps = (bBytes * 8) / (bElapsed * 1_000_000);
+									if (downEl) downEl.textContent = bMbps.toFixed(1);
+								}
+							}
+						}
+						const finalBElapsed = (performance.now() - b0) / 1000;
+						const finalBMbps = (bBytes * 8) / (Math.max(finalBElapsed, 0.001) * 1_000_000);
+						if (downEl) downEl.textContent = finalBMbps.toFixed(1);
+					}
+				} catch (_) {
+				} finally {
+					clearTimeout(bTimeout);
+				}
+			} else {
+				if (downEl) downEl.textContent = initialMbps.toFixed(1);
+			}
+
+			if (downSubEl) downSubEl.textContent = 'Direct Stream Complete';
+			if (progressBar) progressBar.style.width = '70%';
+
+			// ==========================================
+			// STAGE 3: UPLOAD THROUGHPUT
+			// ==========================================
+			if (statusText) statusText.textContent = 'Uploading test payload to edge return pipeline...';
+
+			const upSize1 = 1.5 * 1024 * 1024; // 1.5MB
+			const upBuf1 = new Uint8Array(upSize1);
+			const u0 = performance.now();
+
+			const upCtrl = new AbortController();
+			const upTimeout = setTimeout(() => upCtrl.abort(), 3000);
+
+			try {
+				await fetch('https://speed.cloudflare.com/__up', {
+					method: 'POST',
+					body: upBuf1,
+					headers: { 'Content-Type': 'application/octet-stream' },
+					signal: upCtrl.signal,
+				});
+
+				const upElapsed1 = (performance.now() - u0) / 1000;
+				const upMbps1 = (upSize1 * 8) / (Math.max(upElapsed1, 0.001) * 1_000_000);
+				if (upEl) upEl.textContent = upMbps1.toFixed(1);
+
+				// Fast connection burst for upload
+				if (upMbps1 > 35 && upElapsed1 < 0.9) {
+					if (progressBar) progressBar.style.width = '85%';
+					const upSize2 = 5 * 1024 * 1024; // 5MB burst
+					const upBuf2 = new Uint8Array(upSize2);
+					const u2_0 = performance.now();
+
+					const upCtrl2 = new AbortController();
+					const upTimeout2 = setTimeout(() => upCtrl2.abort(), 2800);
+
+					try {
+						await fetch('https://speed.cloudflare.com/__up', {
+							method: 'POST',
+							body: upBuf2,
+							headers: { 'Content-Type': 'application/octet-stream' },
+							signal: upCtrl2.signal,
+						});
+						const upElapsed2 = (performance.now() - u2_0) / 1000;
+						const upMbps2 = (upSize2 * 8) / (Math.max(upElapsed2, 0.001) * 1_000_000);
+						if (upEl) upEl.textContent = upMbps2.toFixed(1);
+					} catch (_) {
+					} finally {
+						clearTimeout(upTimeout2);
+					}
+				}
+			} catch (e: any) {
+				console.warn('Upload test error:', e);
+				if (upEl) upEl.textContent = 'N/A';
+			} finally {
+				clearTimeout(upTimeout);
+			}
+
+			if (upSubEl) upSubEl.textContent = 'Return Pipe Complete';
+			if (progressBar) progressBar.style.width = '100%';
+			if (statusText) statusText.textContent = 'Benchmark complete. 0 host bandwidth consumed; all data routed via Anycast.';
+		} catch (err: any) {
+			console.error('Speedtest encountered error:', err);
+			if (statusText) statusText.textContent = 'Benchmark interrupted or blocked by browser extensions.';
+		} finally {
+			isBenchmarking = false;
+			if (btn) btn.disabled = false;
+			if (btnText) btnText.textContent = 'Run Again';
+		}
+	}
+
+	function setupBenchmarkBtn() {
+		const btn = document.getElementById('run-speedtest-btn');
+		if (btn) {
+			btn.removeEventListener('click', runBenchmark);
+			btn.addEventListener('click', runBenchmark);
+		}
+	}
+
+	initBenchmarkMeta();
+	setupBenchmarkBtn();
+	document.addEventListener('astro:page-load', () => {
+		initBenchmarkMeta();
+		setupBenchmarkBtn();
+	});
+</script>
+
+<style>
+	.benchmark-card {
+		margin-top: 2.2em;
+	}
+
+	.benchmark-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.8em;
+		padding-bottom: 0.8em;
+		margin-bottom: 0.8em;
+		border-bottom: 1.5px solid var(--border-color);
+	}
+
+	.benchmark-title-group {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.75em;
+	}
+
+	.benchmark-badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.25em 0.7em;
+		border-radius: 999px;
+		font-size: 0.75em;
+		font-weight: 600;
+		background: rgba(234, 88, 12, 0.08);
+		color: var(--accent);
+		border: 1px solid rgba(234, 88, 12, 0.25);
+	}
+	:global(html[data-theme="dark"]) .benchmark-badge {
+		background: rgba(234, 88, 12, 0.15);
+		border-color: rgba(234, 88, 12, 0.35);
+	}
+
+	.benchmark-desc {
+		font-size: 0.88em;
+		line-height: 1.55;
+		color: rgb(var(--gray-dark));
+		margin: 0 0 1.25em 0;
+	}
+
+	/* BENCHMARK BUTTON */
+	.benchmark-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5em;
+		background: var(--accent);
+		color: #ffffff;
+		border: 1px solid transparent;
+		padding: 0.5em 1.15em;
+		border-radius: 8px;
+		font-size: 0.88em;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+	}
+	.benchmark-btn:hover:not(:disabled) {
+		background: #c2410c;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	}
+	.benchmark-btn:active:not(:disabled) {
+		transform: translateY(0);
+	}
+	.benchmark-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		transform: none;
+	}
+	.play-icon {
+		flex-shrink: 0;
+	}
+
+	/* TILES GRID */
+	.benchmark-tiles {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+		gap: 1em;
+		margin-bottom: 1.2em;
+	}
+	.b-tile {
+		background: rgba(0, 0, 0, 0.02);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		padding: 0.9em 1.05em;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25em;
+		transition: border-color 0.2s ease, background 0.2s ease;
+	}
+	:global(html[data-theme="dark"]) .b-tile {
+		background: rgba(255, 255, 255, 0.02);
+	}
+	.b-tile.b-tile-highlight {
+		border-color: rgba(234, 88, 12, 0.35);
+		background: rgba(234, 88, 12, 0.04);
+	}
+	:global(html[data-theme="dark"]) .b-tile.b-tile-highlight {
+		border-color: rgba(234, 88, 12, 0.45);
+		background: rgba(234, 88, 12, 0.08);
+	}
+	.b-tile-label {
+		font-size: 0.74em;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: rgb(var(--gray));
+	}
+	.b-tile-value-wrap {
+		display: flex;
+		align-items: baseline;
+		gap: 0.3em;
+	}
+	.b-tile-num {
+		font-size: 1.55em;
+		font-weight: 800;
+		color: rgb(var(--black));
+		line-height: 1.2;
+	}
+	.b-tile.b-tile-highlight .b-tile-num {
+		color: var(--accent);
+	}
+	.b-tile-unit {
+		font-size: 0.85em;
+		font-weight: 600;
+		color: rgb(var(--gray));
+	}
+	.b-tile-text {
+		font-size: 1.05em;
+		font-weight: 700;
+		color: rgb(var(--black));
+		line-height: 1.25;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.b-tile-sub {
+		font-size: 0.74em;
+		color: rgb(var(--gray));
+		margin-top: 0.1em;
+	}
+
+	/* PROGRESS TRACK & STATUS */
+	.benchmark-footer {
+		display: flex;
+		flex-direction: column;
+		gap: 0.55em;
+	}
+	.progress-track {
+		width: 100%;
+		height: 5px;
+		background: rgba(0, 0, 0, 0.06);
+		border-radius: 999px;
+		overflow: hidden;
+	}
+	:global(html[data-theme="dark"]) .progress-track {
+		background: rgba(255, 255, 255, 0.08);
+	}
+	.progress-bar {
+		width: 0%;
+		height: 100%;
+		background: var(--accent);
+		border-radius: 999px;
+		transition: width 0.25s ease;
+	}
+	.status-wrap {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+	.status-text {
+		font-size: 0.78em;
+		color: rgb(var(--gray));
+		line-height: 1.4;
+	}
+
+	@media (max-width: 600px) {
+		.benchmark-header {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+		.benchmark-btn {
+			width: 100%;
+			justify-content: center;
+		}
+		.benchmark-tiles {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+</style>

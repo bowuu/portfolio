@@ -1,5 +1,5 @@
 ---
-// KeyboardLab.astro - Interactive Switch Matrix, N-Key Rollover (NKRO), Input Latency & Switch Chatter Lab
+// KeyboardLab.astro - Full 104-Key Switch Matrix, N-Key Rollover (NKRO), Input Latency & Switch Chatter Lab
 ---
 
 <section class="card keyboard-card" id="keyboard-lab">
@@ -26,10 +26,10 @@
 	</div>
 
 	<p class="benchmark-desc">
-		Interactive switch matrix test, N-Key Rollover (NKRO) anti-ghosting analyzer, hardware-to-render event dispatch latency, and switch chatter detection.
+		Full 104-key switch matrix audit, N-Key Rollover (NKRO) anti-ghosting analyzer, hardware-to-render event dispatch latency, and mechanical switch chatter detection.
 	</p>
 
-	<!-- TELEMETRY METRICS ROW -->
+	<!-- TELEMETRY METRICS ROW (4 BALANCED CARDS) -->
 	<div class="metrics-grid">
 		<div class="metric-mini">
 			<span class="m-label">Rollover (Anti-Ghosting)</span>
@@ -50,15 +50,6 @@
 		</div>
 
 		<div class="metric-mini">
-			<span class="m-label">Min Keystroke Delta</span>
-			<div class="m-val-wrap">
-				<span class="m-val mono" id="kb-min-delta">--</span>
-				<span class="m-unit">ms</span>
-			</div>
-			<span class="m-sub mono" id="kb-delta-tier">USB Polling Quantization</span>
-		</div>
-
-		<div class="metric-mini">
 			<span class="m-label">Switch Chatter Monitor</span>
 			<div class="m-val-wrap">
 				<span class="m-val mono" id="kb-chatter-status">Clean</span>
@@ -70,161 +61,293 @@
 			<span class="m-label">Matrix Coverage</span>
 			<div class="m-val-wrap">
 				<span class="m-val mono" id="kb-tested-count">0</span>
-				<span class="m-unit">/ 68</span>
+				<span class="m-unit">/ 104</span>
 			</div>
-			<span class="m-sub mono" id="kb-coverage-pct">0% tested</span>
+			<span class="m-sub mono" id="kb-coverage-pct">0% matrix verified</span>
 		</div>
 	</div>
 
-	<!-- INTERACTIVE KEYBOARD TEST BENCH -->
-	<div class="keyboard-wrap" id="kb-container" tabindex="0" role="region" aria-label="Interactive Keyboard Matrix">
-		<div class="kb-focus-hint mono" id="kb-focus-hint">
-			<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-				<circle cx="12" cy="12" r="10"/>
-				<line x1="12" y1="8" x2="12" y2="12"/>
-				<line x1="12" y1="16" x2="12.01" y2="16"/>
-			</svg>
-			<span>Click inside or press any key to test matrix</span>
+	<!-- EXPANDABLE 104-KEY VISUAL MATRIX ACCORDION -->
+	<details class="kb-expandable" id="kb-details" open>
+		<summary class="kb-summary">
+			<div class="kb-summary-left">
+				<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="kb-summary-icon">
+					<rect x="2" y="4" width="20" height="16" rx="2.5"/>
+					<path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01"/>
+					<path d="M6 12h.01M10 12h.01M14 12h.01M18 12h.01"/>
+					<path d="M7 16h10"/>
+				</svg>
+				<span class="kb-summary-title">Full 104-Key Visual Matrix</span>
+				<span class="kb-summary-tag" id="kb-summary-tag">&bull; 0 / 104 keys tested</span>
+			</div>
+			<span class="kb-summary-toggle">
+				<span class="kb-summary-toggle-label">Interactive Board</span>
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="kb-summary-chevron">
+					<polyline points="6 9 12 15 18 9"/>
+				</svg>
+			</span>
+		</summary>
+
+		<div class="kb-expandable-body" id="kb-container" tabindex="0" role="region" aria-label="Interactive 104-Key Board">
+			<div class="kb-focus-hint mono">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+					<circle cx="12" cy="12" r="10"/>
+					<line x1="12" y1="8" x2="12" y2="12"/>
+					<line x1="12" y1="16" x2="12.01" y2="16"/>
+				</svg>
+				<span>Click inside or press any key on your keyboard to test switches (104 ANSI layout)</span>
+			</div>
+
+			<div class="keyboard-board" id="kb-board">
+				<!-- ================= SECTION 1: MAIN ALPHANUMERIC & FUNCTION BLOCK ================= -->
+				<div class="kb-section kb-main">
+					<!-- F-ROW (Row 0) -->
+					<div class="kb-row kb-row-fn">
+						<div class="key key-esc" data-code="Escape"><span class="k-label">Esc</span></div>
+						<div class="kb-spacer-sm"></div>
+						<div class="key key-fn" data-code="F1"><span class="k-label">F1</span></div>
+						<div class="key key-fn" data-code="F2"><span class="k-label">F2</span></div>
+						<div class="key key-fn" data-code="F3"><span class="k-label">F3</span></div>
+						<div class="key key-fn" data-code="F4"><span class="k-label">F4</span></div>
+						<div class="kb-spacer-sm"></div>
+						<div class="key key-fn" data-code="F5"><span class="k-label">F5</span></div>
+						<div class="key key-fn" data-code="F6"><span class="k-label">F6</span></div>
+						<div class="key key-fn" data-code="F7"><span class="k-label">F7</span></div>
+						<div class="key key-fn" data-code="F8"><span class="k-label">F8</span></div>
+						<div class="kb-spacer-sm"></div>
+						<div class="key key-fn" data-code="F9"><span class="k-label">F9</span></div>
+						<div class="key key-fn" data-code="F10"><span class="k-label">F10</span></div>
+						<div class="key key-fn" data-code="F11"><span class="k-label">F11</span></div>
+						<div class="key key-fn" data-code="F12"><span class="k-label">F12</span></div>
+					</div>
+
+					<!-- NUMBER ROW (Row 1) -->
+					<div class="kb-row">
+						<div class="key" data-code="Backquote"><span class="k-sub">~</span><span class="k-label">`</span></div>
+						<div class="key" data-code="Digit1"><span class="k-sub">!</span><span class="k-label">1</span></div>
+						<div class="key" data-code="Digit2"><span class="k-sub">@</span><span class="k-label">2</span></div>
+						<div class="key" data-code="Digit3"><span class="k-sub">#</span><span class="k-label">3</span></div>
+						<div class="key" data-code="Digit4"><span class="k-sub">$</span><span class="k-label">4</span></div>
+						<div class="key" data-code="Digit5"><span class="k-sub">%</span><span class="k-label">5</span></div>
+						<div class="key" data-code="Digit6"><span class="k-sub">^</span><span class="k-label">6</span></div>
+						<div class="key" data-code="Digit7"><span class="k-sub">&amp;</span><span class="k-label">7</span></div>
+						<div class="key" data-code="Digit8"><span class="k-sub">*</span><span class="k-label">8</span></div>
+						<div class="key" data-code="Digit9"><span class="k-sub">(</span><span class="k-label">9</span></div>
+						<div class="key" data-code="Digit0"><span class="k-sub">)</span><span class="k-label">0</span></div>
+						<div class="key" data-code="Minus"><span class="k-sub">_</span><span class="k-label">-</span></div>
+						<div class="key" data-code="Equal"><span class="k-sub">+</span><span class="k-label">=</span></div>
+						<div class="key key-backspace" data-code="Backspace"><span class="k-label">&larr; Backspace</span></div>
+					</div>
+
+					<!-- QWERTY ROW (Row 2) -->
+					<div class="kb-row">
+						<div class="key key-tab" data-code="Tab"><span class="k-label">Tab</span></div>
+						<div class="key" data-code="KeyQ"><span class="k-label">Q</span></div>
+						<div class="key" data-code="KeyW"><span class="k-label">W</span></div>
+						<div class="key" data-code="KeyE"><span class="k-label">E</span></div>
+						<div class="key" data-code="KeyR"><span class="k-label">R</span></div>
+						<div class="key" data-code="KeyT"><span class="k-label">T</span></div>
+						<div class="key" data-code="KeyY"><span class="k-label">Y</span></div>
+						<div class="key" data-code="KeyU"><span class="k-label">U</span></div>
+						<div class="key" data-code="KeyI"><span class="k-label">I</span></div>
+						<div class="key" data-code="KeyO"><span class="k-label">O</span></div>
+						<div class="key" data-code="KeyP"><span class="k-label">P</span></div>
+						<div class="key" data-code="BracketLeft"><span class="k-sub">&#123;</span><span class="k-label">[</span></div>
+						<div class="key" data-code="BracketRight"><span class="k-sub">&#125;</span><span class="k-label">]</span></div>
+						<div class="key key-backslash" data-code="Backslash"><span class="k-sub">|</span><span class="k-label">\</span></div>
+					</div>
+
+					<!-- HOME ROW (Row 3) -->
+					<div class="kb-row">
+						<div class="key key-caps" data-code="CapsLock"><span class="k-label">Caps Lock</span></div>
+						<div class="key" data-code="KeyA"><span class="k-label">A</span></div>
+						<div class="key" data-code="KeyS"><span class="k-label">S</span></div>
+						<div class="key" data-code="KeyD"><span class="k-label">D</span></div>
+						<div class="key" data-code="KeyF"><span class="k-label">F</span></div>
+						<div class="key" data-code="KeyG"><span class="k-label">G</span></div>
+						<div class="key" data-code="KeyH"><span class="k-label">H</span></div>
+						<div class="key" data-code="KeyJ"><span class="k-label">J</span></div>
+						<div class="key" data-code="KeyK"><span class="k-label">K</span></div>
+						<div class="key" data-code="KeyL"><span class="k-label">L</span></div>
+						<div class="key" data-code="Semicolon"><span class="k-sub">:</span><span class="k-label">;</span></div>
+						<div class="key" data-code="Quote"><span class="k-sub">&quot;</span><span class="k-label">'</span></div>
+						<div class="key key-enter" data-code="Enter"><span class="k-label">&crarr; Enter</span></div>
+					</div>
+
+					<!-- BOTTOM LETTER ROW (Row 4) -->
+					<div class="kb-row">
+						<div class="key key-shift-l" data-code="ShiftLeft"><span class="k-label">Shift</span></div>
+						<div class="key" data-code="KeyZ"><span class="k-label">Z</span></div>
+						<div class="key" data-code="KeyX"><span class="k-label">X</span></div>
+						<div class="key" data-code="KeyC"><span class="k-label">C</span></div>
+						<div class="key" data-code="KeyV"><span class="k-label">V</span></div>
+						<div class="key" data-code="KeyB"><span class="k-label">B</span></div>
+						<div class="key" data-code="KeyN"><span class="k-label">N</span></div>
+						<div class="key" data-code="KeyM"><span class="k-label">M</span></div>
+						<div class="key" data-code="Comma"><span class="k-sub">&lt;</span><span class="k-label">,</span></div>
+						<div class="key" data-code="Period"><span class="k-sub">&gt;</span><span class="k-label">.</span></div>
+						<div class="key" data-code="Slash"><span class="k-sub">?</span><span class="k-label">/</span></div>
+						<div class="key key-shift-r" data-code="ShiftRight"><span class="k-label">Shift</span></div>
+					</div>
+
+					<!-- MODIFIERS & SPACE ROW (Row 5) -->
+					<div class="kb-row">
+						<div class="key key-mod" data-code="ControlLeft"><span class="k-label">Ctrl</span></div>
+						<div class="key key-mod" data-code="MetaLeft"><span class="k-label">Win</span></div>
+						<div class="key key-mod" data-code="AltLeft"><span class="k-label">Alt</span></div>
+						<div class="key key-space" data-code="Space"><span class="k-label">Space</span></div>
+						<div class="key key-mod" data-code="AltRight"><span class="k-label">Alt</span></div>
+						<div class="key key-mod" data-code="MetaRight"><span class="k-label">Win</span></div>
+						<div class="key key-mod" data-code="ContextMenu"><span class="k-label">Menu</span></div>
+						<div class="key key-mod" data-code="ControlRight"><span class="k-label">Ctrl</span></div>
+					</div>
+				</div>
+
+				<!-- ================= SECTION 2: NAVIGATION & ARROW CLUSTER ================= -->
+				<div class="kb-section kb-nav">
+					<!-- Top PrntScrn/ScrollLock/Pause (Row 0) -->
+					<div class="kb-row kb-row-fn">
+						<div class="key key-nav-sm" data-code="PrintScreen"><span class="k-label">PrtSc</span></div>
+						<div class="key key-nav-sm" data-code="ScrollLock"><span class="k-label">ScrLk</span></div>
+						<div class="key key-nav-sm" data-code="Pause"><span class="k-label">Pause</span></div>
+					</div>
+
+					<!-- Nav Upper: Ins, Home, PgUp (Row 1) -->
+					<div class="kb-row">
+						<div class="key key-nav" data-code="Insert"><span class="k-label">Ins</span></div>
+						<div class="key key-nav" data-code="Home"><span class="k-label">Home</span></div>
+						<div class="key key-nav" data-code="PageUp"><span class="k-label">PgUp</span></div>
+					</div>
+
+					<!-- Nav Lower: Del, End, PgDn (Row 2) -->
+					<div class="kb-row">
+						<div class="key key-nav" data-code="Delete"><span class="k-label">Del</span></div>
+						<div class="key key-nav" data-code="End"><span class="k-label">End</span></div>
+						<div class="key key-nav" data-code="PageDown"><span class="k-label">PgDn</span></div>
+					</div>
+
+					<!-- Spacer between nav and arrows (Row 3) -->
+					<div class="kb-row kb-nav-spacer"></div>
+
+					<!-- Arrow Up (Row 4) -->
+					<div class="kb-row">
+						<div class="key-nav-dummy"></div>
+						<div class="key key-arrow" data-code="ArrowUp"><span class="k-label">&uarr;</span></div>
+						<div class="key-nav-dummy"></div>
+					</div>
+
+					<!-- Arrow Left, Down, Right (Row 5) -->
+					<div class="kb-row">
+						<div class="key key-arrow" data-code="ArrowLeft"><span class="k-label">&larr;</span></div>
+						<div class="key key-arrow" data-code="ArrowDown"><span class="k-label">&darr;</span></div>
+						<div class="key key-arrow" data-code="ArrowRight"><span class="k-label">&rarr;</span></div>
+					</div>
+				</div>
+
+				<!-- ================= SECTION 3: NUMPAD CLUSTER (17 KEYS) ================= -->
+				<div class="kb-section kb-numpad">
+					<!-- LED Status Bar (Row 0) -->
+					<div class="numpad-led-bar">
+						<div class="led-item" id="led-num">
+							<span class="led-dot"></span>
+							<span class="led-txt">NUM</span>
+						</div>
+						<div class="led-item" id="led-caps">
+							<span class="led-dot"></span>
+							<span class="led-txt">CAPS</span>
+						</div>
+						<div class="led-item" id="led-scroll">
+							<span class="led-dot"></span>
+							<span class="led-txt">SCRL</span>
+						</div>
+					</div>
+
+					<!-- Numpad Grid (Rows 1 to 5) -->
+					<div class="numpad-grid">
+						<!-- Row 1 -->
+						<div class="key np-key" data-code="NumLock"><span class="k-label">Num</span></div>
+						<div class="key np-key" data-code="NumpadDivide"><span class="k-label">/</span></div>
+						<div class="key np-key" data-code="NumpadMultiply"><span class="k-label">*</span></div>
+						<div class="key np-key" data-code="NumpadSubtract"><span class="k-label">-</span></div>
+
+						<!-- Row 2 -->
+						<div class="key np-key" data-code="Numpad7"><span class="k-sub">Home</span><span class="k-label">7</span></div>
+						<div class="key np-key" data-code="Numpad8"><span class="k-sub">&uarr;</span><span class="k-label">8</span></div>
+						<div class="key np-key" data-code="Numpad9"><span class="k-sub">PgUp</span><span class="k-label">9</span></div>
+						<div class="key np-key np-tall-add" data-code="NumpadAdd"><span class="k-label">+</span></div>
+
+						<!-- Row 3 -->
+						<div class="key np-key" data-code="Numpad4"><span class="k-sub">&larr;</span><span class="k-label">4</span></div>
+						<div class="key np-key" data-code="Numpad5"><span class="k-label">5</span></div>
+						<div class="key np-key" data-code="Numpad6"><span class="k-sub">&rarr;</span><span class="k-label">6</span></div>
+
+						<!-- Row 4 -->
+						<div class="key np-key" data-code="Numpad1"><span class="k-sub">End</span><span class="k-label">1</span></div>
+						<div class="key np-key" data-code="Numpad2"><span class="k-sub">&darr;</span><span class="k-label">2</span></div>
+						<div class="key np-key" data-code="Numpad3"><span class="k-sub">PgDn</span><span class="k-label">3</span></div>
+						<div class="key np-key np-tall-enter" data-code="NumpadEnter"><span class="k-label">&crarr;</span></div>
+
+						<!-- Row 5 -->
+						<div class="key np-key np-wide-0" data-code="Numpad0"><span class="k-sub">Ins</span><span class="k-label">0</span></div>
+						<div class="key np-key" data-code="NumpadDecimal"><span class="k-sub">Del</span><span class="k-label">.</span></div>
+					</div>
+				</div>
+			</div>
+
+			<!-- MOBILE SOFTWARE KEYBOARD INPUT FALLBACK -->
+			<div class="mobile-input-bar">
+				<input 
+					type="text" 
+					id="kb-mobile-input" 
+					class="mobile-type-field mono" 
+					placeholder="Tap here to open software keyboard on touch devices..."
+					autocomplete="off"
+					autocapitalize="off"
+					spellcheck="false"
+				/>
+			</div>
+
+			<!-- LIVE KEY EVENT INSPECTOR BAR -->
+			<div class="event-inspector mono">
+				<div class="event-item">
+					<span class="e-tag">LAST KEY</span>
+					<span class="e-val" id="ev-code">None</span>
+				</div>
+				<div class="event-item">
+					<span class="e-tag">KEY</span>
+					<span class="e-val" id="ev-key">--</span>
+				</div>
+				<div class="event-item">
+					<span class="e-tag">KEYCODE</span>
+					<span class="e-val" id="ev-which">--</span>
+				</div>
+				<div class="event-item">
+					<span class="e-tag">MODIFIERS</span>
+					<span class="e-val" id="ev-mods">None</span>
+				</div>
+				<div class="event-item">
+					<span class="e-tag">TIMESTAMP</span>
+					<span class="e-val" id="ev-ts">0.0 ms</span>
+				</div>
+			</div>
 		</div>
-
-		<div class="keyboard-board" id="kb-board">
-			<!-- ROW 1 (Number row) -->
-			<div class="kb-row">
-				<div class="key key-sm" data-code="Escape"><span class="k-label">Esc</span></div>
-				<div class="key" data-code="Digit1"><span class="k-sub">!</span><span class="k-label">1</span></div>
-				<div class="key" data-code="Digit2"><span class="k-sub">@</span><span class="k-label">2</span></div>
-				<div class="key" data-code="Digit3"><span class="k-sub">#</span><span class="k-label">3</span></div>
-				<div class="key" data-code="Digit4"><span class="k-sub">$</span><span class="k-label">4</span></div>
-				<div class="key" data-code="Digit5"><span class="k-sub">%</span><span class="k-label">5</span></div>
-				<div class="key" data-code="Digit6"><span class="k-sub">^</span><span class="k-label">6</span></div>
-				<div class="key" data-code="Digit7"><span class="k-sub">&amp;</span><span class="k-label">7</span></div>
-				<div class="key" data-code="Digit8"><span class="k-sub">*</span><span class="k-label">8</span></div>
-				<div class="key" data-code="Digit9"><span class="k-sub">(</span><span class="k-label">9</span></div>
-				<div class="key" data-code="Digit0"><span class="k-sub">)</span><span class="k-label">0</span></div>
-				<div class="key" data-code="Minus"><span class="k-sub">_</span><span class="k-label">-</span></div>
-				<div class="key" data-code="Equal"><span class="k-sub">+</span><span class="k-label">=</span></div>
-				<div class="key key-backspace" data-code="Backspace"><span class="k-label">&larr; Backspace</span></div>
-			</div>
-
-			<!-- ROW 2 (QWERTY) -->
-			<div class="kb-row">
-				<div class="key key-tab" data-code="Tab"><span class="k-label">Tab</span></div>
-				<div class="key" data-code="KeyQ"><span class="k-label">Q</span></div>
-				<div class="key" data-code="KeyW"><span class="k-label">W</span></div>
-				<div class="key" data-code="KeyE"><span class="k-label">E</span></div>
-				<div class="key" data-code="KeyR"><span class="k-label">R</span></div>
-				<div class="key" data-code="KeyT"><span class="k-label">T</span></div>
-				<div class="key" data-code="KeyY"><span class="k-label">Y</span></div>
-				<div class="key" data-code="KeyU"><span class="k-label">U</span></div>
-				<div class="key" data-code="KeyI"><span class="k-label">I</span></div>
-				<div class="key" data-code="KeyO"><span class="k-label">O</span></div>
-				<div class="key" data-code="KeyP"><span class="k-label">P</span></div>
-				<div class="key" data-code="BracketLeft"><span class="k-sub">&#123;</span><span class="k-label">[</span></div>
-				<div class="key" data-code="BracketRight"><span class="k-sub">&#125;</span><span class="k-label">]</span></div>
-				<div class="key key-backslash" data-code="Backslash"><span class="k-sub">|</span><span class="k-label">\</span></div>
-			</div>
-
-			<!-- ROW 3 (Home row) -->
-			<div class="kb-row">
-				<div class="key key-caps" data-code="CapsLock"><span class="k-label">Caps Lock</span></div>
-				<div class="key" data-code="KeyA"><span class="k-label">A</span></div>
-				<div class="key" data-code="KeyS"><span class="k-label">S</span></div>
-				<div class="key" data-code="KeyD"><span class="k-label">D</span></div>
-				<div class="key" data-code="KeyF"><span class="k-label">F</span></div>
-				<div class="key" data-code="KeyG"><span class="k-label">G</span></div>
-				<div class="key" data-code="KeyH"><span class="k-label">H</span></div>
-				<div class="key" data-code="KeyJ"><span class="k-label">J</span></div>
-				<div class="key" data-code="KeyK"><span class="k-label">K</span></div>
-				<div class="key" data-code="KeyL"><span class="k-label">L</span></div>
-				<div class="key" data-code="Semicolon"><span class="k-sub">:</span><span class="k-label">;</span></div>
-				<div class="key" data-code="Quote"><span class="k-sub">&quot;</span><span class="k-label">'</span></div>
-				<div class="key key-enter" data-code="Enter"><span class="k-label">&crarr; Enter</span></div>
-			</div>
-
-			<!-- ROW 4 (Bottom letter row + Up arrow) -->
-			<div class="kb-row">
-				<div class="key key-shift-l" data-code="ShiftLeft"><span class="k-label">Shift</span></div>
-				<div class="key" data-code="KeyZ"><span class="k-label">Z</span></div>
-				<div class="key" data-code="KeyX"><span class="k-label">X</span></div>
-				<div class="key" data-code="KeyC"><span class="k-label">C</span></div>
-				<div class="key" data-code="KeyV"><span class="k-label">V</span></div>
-				<div class="key" data-code="KeyB"><span class="k-label">B</span></div>
-				<div class="key" data-code="KeyN"><span class="k-label">N</span></div>
-				<div class="key" data-code="KeyM"><span class="k-label">M</span></div>
-				<div class="key" data-code="Comma"><span class="k-sub">&lt;</span><span class="k-label">,</span></div>
-				<div class="key" data-code="Period"><span class="k-sub">&gt;</span><span class="k-label">.</span></div>
-				<div class="key" data-code="Slash"><span class="k-sub">?</span><span class="k-label">/</span></div>
-				<div class="key key-shift-r" data-code="ShiftRight"><span class="k-label">Shift</span></div>
-				<div class="key key-arrow" data-code="ArrowUp"><span class="k-label">&uarr;</span></div>
-			</div>
-
-			<!-- ROW 5 (Modifiers + Space + Nav arrows) -->
-			<div class="kb-row">
-				<div class="key key-mod" data-code="ControlLeft"><span class="k-label">Ctrl</span></div>
-				<div class="key key-mod" data-code="MetaLeft"><span class="k-label">Win</span></div>
-				<div class="key key-mod" data-code="AltLeft"><span class="k-label">Alt</span></div>
-				<div class="key key-space" data-code="Space"><span class="k-label">Space</span></div>
-				<div class="key key-mod" data-code="AltRight"><span class="k-label">Alt</span></div>
-				<div class="key key-mod" data-code="ControlRight"><span class="k-label">Ctrl</span></div>
-				<div class="key key-arrow" data-code="ArrowLeft"><span class="k-label">&larr;</span></div>
-				<div class="key key-arrow" data-code="ArrowDown"><span class="k-label">&darr;</span></div>
-				<div class="key key-arrow" data-code="ArrowRight"><span class="k-label">&rarr;</span></div>
-			</div>
-		</div>
-
-		<!-- MOBILE SOFTWARE KEYBOARD INPUT FALLBACK -->
-		<div class="mobile-input-bar">
-			<input 
-				type="text" 
-				id="kb-mobile-input" 
-				class="mobile-type-field mono" 
-				placeholder="Tap here to open software keyboard on mobile/touch devices..."
-				autocomplete="off"
-				autocapitalize="off"
-				spellcheck="false"
-			/>
-		</div>
-
-		<!-- LIVE KEY EVENT INSPECTOR BAR -->
-		<div class="event-inspector mono">
-			<div class="event-item">
-				<span class="e-tag">LAST EVENT</span>
-				<span class="e-val" id="ev-code">None</span>
-			</div>
-			<div class="event-item">
-				<span class="e-tag">KEY</span>
-				<span class="e-val" id="ev-key">--</span>
-			</div>
-			<div class="event-item">
-				<span class="e-tag">KEYCODE</span>
-				<span class="e-val" id="ev-which">--</span>
-			</div>
-			<div class="event-item">
-				<span class="e-tag">MODIFIERS</span>
-				<span class="e-val" id="ev-mods">None</span>
-			</div>
-			<div class="event-item">
-				<span class="e-tag">TIMESTAMP</span>
-				<span class="e-val" id="ev-ts">0.0 ms</span>
-			</div>
-		</div>
-	</div>
+	</details>
 </section>
 
 <script>
 	function initKeyboardLab() {
 		const container = document.getElementById('kb-container');
+		const detailsEl = document.getElementById('kb-details') as HTMLDetailsElement | null;
 		if (!container) return;
 
 		const currentRolloverEl = document.getElementById('kb-current-rollover');
 		const peakRolloverEl = document.getElementById('kb-peak-rollover');
 		const dispatchLatEl = document.getElementById('kb-dispatch-lat');
-		const minDeltaEl = document.getElementById('kb-min-delta');
-		const deltaTierEl = document.getElementById('kb-delta-tier');
 		const chatterStatusEl = document.getElementById('kb-chatter-status');
 		const chatterSubEl = document.getElementById('kb-chatter-sub');
 		const testedCountEl = document.getElementById('kb-tested-count');
 		const coveragePctEl = document.getElementById('kb-coverage-pct');
+		const summaryTagEl = document.getElementById('kb-summary-tag');
 		const resetBtn = document.getElementById('reset-keyboard-btn');
 		const mobileInput = document.getElementById('kb-mobile-input') as HTMLInputElement | null;
 
@@ -235,17 +358,35 @@
 		const evModsEl = document.getElementById('ev-mods');
 		const evTsEl = document.getElementById('ev-ts');
 
+		// LED indicator elements
+		const ledNumEl = document.getElementById('led-num');
+		const ledCapsEl = document.getElementById('led-caps');
+		const ledScrollEl = document.getElementById('led-scroll');
+
 		const allKeyElements = document.querySelectorAll<HTMLElement>('.keyboard-board .key');
-		const totalKeys = allKeyElements.length;
+		const totalKeys = allKeyElements.length; // 104 keys
 
 		// State
 		const activeKeys = new Set<string>();
 		const testedKeys = new Set<string>();
 		let peakRollover = 0;
-		let minDeltaMs = Infinity;
-		let lastKeyDownTime = 0;
 		let chatterCount = 0;
 		const keyReleaseTimes = new Map<string, number>();
+
+		function updateLEDs(e: KeyboardEvent) {
+			if (ledNumEl && typeof e.getModifierState === 'function') {
+				const numActive = e.getModifierState('NumLock');
+				ledNumEl.classList.toggle('led-active', numActive);
+			}
+			if (ledCapsEl && typeof e.getModifierState === 'function') {
+				const capsActive = e.getModifierState('CapsLock');
+				ledCapsEl.classList.toggle('led-active', capsActive);
+			}
+			if (ledScrollEl && typeof e.getModifierState === 'function') {
+				const scrollActive = e.getModifierState('ScrollLock');
+				ledScrollEl.classList.toggle('led-active', scrollActive);
+			}
+		}
 
 		function updateRolloverUI() {
 			const current = activeKeys.size;
@@ -273,11 +414,19 @@
 				const pct = Math.round((count / totalKeys) * 100);
 				coveragePctEl.textContent = `${pct}% matrix verified`;
 			}
+			if (summaryTagEl) {
+				summaryTagEl.textContent = `• ${count} / ${totalKeys} keys tested (Peak NKRO: ${peakRollover})`;
+			}
 		}
 
 		function handleKeyDown(e: KeyboardEvent) {
 			const now = performance.now();
 			const code = e.code || e.key;
+
+			// Auto expand if collapsed when user presses keys
+			if (detailsEl && !detailsEl.open) {
+				detailsEl.open = true;
+			}
 
 			// Intercept space/tab/arrows if container or mobile input is focused to avoid page jumping
 			const isFocused = document.activeElement === container || document.activeElement === mobileInput;
@@ -288,30 +437,11 @@
 			// 1. Hardware Dispatch Latency (performance.now() vs event.timeStamp)
 			if (e.timeStamp && dispatchLatEl) {
 				let lat = now - e.timeStamp;
-				// In some browsers e.timeStamp is monotonic performance time, in others epoch
 				if (lat < 0 || lat > 500) lat = 0.5 + Math.random() * 0.4;
 				dispatchLatEl.textContent = lat.toFixed(2);
 			}
 
-			// 2. Inter-keystroke Interval Delta (quantization reveals polling rate)
-			if (lastKeyDownTime > 0) {
-				const delta = now - lastKeyDownTime;
-				if (delta > 0.5 && delta < 500) {
-					if (delta < minDeltaMs) {
-						minDeltaMs = delta;
-						if (minDeltaEl) minDeltaEl.textContent = minDeltaMs.toFixed(1);
-						if (deltaTierEl) {
-							if (minDeltaMs <= 1.5) deltaTierEl.textContent = '1000Hz+ High-Speed Polling';
-							else if (minDeltaMs <= 4.5) deltaTierEl.textContent = '500Hz / 2ms Polling';
-							else if (minDeltaMs <= 9.5) deltaTierEl.textContent = '125Hz / 8ms Standard USB';
-							else deltaTierEl.textContent = `${minDeltaMs.toFixed(0)}ms Delta Recorded`;
-						}
-					}
-				}
-			}
-			lastKeyDownTime = now;
-
-			// 3. Switch Chatter / Rebound Bounce Monitor (<15ms repeat on same key)
+			// 2. Switch Chatter / Rebound Bounce Monitor (<15ms repeat on same key)
 			const lastRelease = keyReleaseTimes.get(code);
 			if (lastRelease && (now - lastRelease) < 15 && !e.repeat) {
 				chatterCount++;
@@ -325,20 +455,21 @@
 				}
 			}
 
-			// 4. Update Active & Tested Sets
+			// 3. Update Active & Tested Sets
 			if (!e.repeat) {
 				activeKeys.add(code);
 				testedKeys.add(code);
 			}
 
-			// 5. Visual keycap activation
+			// 4. Visual keycap activation
 			const keyEl = document.querySelector<HTMLElement>(`.keyboard-board [data-code="${code}"]`);
 			if (keyEl) {
 				keyEl.classList.add('key-pressed');
 				keyEl.classList.add('key-tested');
 			}
 
-			// 6. Update Inspector Readout
+			// 5. Update Inspector Readout & LEDs
+			updateLEDs(e);
 			if (evCodeEl) evCodeEl.textContent = code;
 			if (evKeyEl) evKeyEl.textContent = e.key === ' ' ? 'Space' : e.key;
 			if (evWhichEl) evWhichEl.textContent = (e.keyCode || e.which || '--').toString();
@@ -366,6 +497,7 @@
 				keyEl.classList.remove('key-pressed');
 			}
 
+			updateLEDs(e);
 			updateRolloverUI();
 		}
 
@@ -374,8 +506,6 @@
 			activeKeys.clear();
 			testedKeys.clear();
 			peakRollover = 0;
-			minDeltaMs = Infinity;
-			lastKeyDownTime = 0;
 			chatterCount = 0;
 			keyReleaseTimes.clear();
 
@@ -386,8 +516,6 @@
 			if (currentRolloverEl) currentRolloverEl.textContent = '0';
 			if (peakRolloverEl) peakRolloverEl.textContent = 'Peak: 0 (Idle)';
 			if (dispatchLatEl) dispatchLatEl.textContent = '--';
-			if (minDeltaEl) minDeltaEl.textContent = '--';
-			if (deltaTierEl) deltaTierEl.textContent = 'USB Polling Quantization';
 			if (chatterStatusEl) {
 				chatterStatusEl.textContent = 'Clean';
 				chatterStatusEl.style.color = '';
@@ -397,7 +525,8 @@
 				chatterSubEl.style.color = '';
 			}
 			if (testedCountEl) testedCountEl.textContent = '0';
-			if (coveragePctEl) coveragePctEl.textContent = '0% tested';
+			if (coveragePctEl) coveragePctEl.textContent = '0% matrix verified';
+			if (summaryTagEl) summaryTagEl.textContent = `• 0 / ${totalKeys} keys tested`;
 			if (evCodeEl) evCodeEl.textContent = 'None';
 			if (evKeyEl) evKeyEl.textContent = '--';
 			if (evWhichEl) evWhichEl.textContent = '--';
@@ -432,11 +561,6 @@
 			keyEl.addEventListener('pointerup', releaseHandler);
 			keyEl.addEventListener('pointercancel', releaseHandler);
 			keyEl.addEventListener('pointerleave', releaseHandler);
-		});
-
-		// Focus hint click behavior
-		container.addEventListener('click', () => {
-			container.focus();
 		});
 
 		// Clear pressed state on window blur (e.g. Alt-Tab or app switch)
@@ -518,10 +642,10 @@
 		margin: 0 0 1.25em 0;
 	}
 
-	/* METRICS SUMMARY GRID */
+	/* METRICS SUMMARY GRID (4 BALANCED COLUMNS) */
 	.metrics-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
 		gap: 0.85em;
 		margin-bottom: 1.25em;
 	}
@@ -579,25 +703,107 @@
 		text-overflow: ellipsis;
 	}
 
-	/* INTERACTIVE KEYBOARD WRAPPER & BOARD */
-	.keyboard-wrap {
-		position: relative;
-		background: rgba(0, 0, 0, 0.02);
-		border: 1px solid var(--border-color);
-		border-radius: 10px;
-		padding: 1.1em;
-		outline: none;
-		transition: border-color 0.15s ease, box-shadow 0.15s ease;
+	/* EXPANDABLE ACCORDION (Styled like Privacy Disclaimer) */
+	.kb-expandable {
+		border: 1px solid rgba(234, 88, 12, 0.3);
+		border-radius: 8px;
+		background: rgba(234, 88, 12, 0.05);
+		margin-bottom: 1.25em;
+		transition: border-color 0.15s ease, background 0.15s ease;
+	}
+	:global(html[data-theme="dark"]) .kb-expandable {
+		background: rgba(255, 107, 0, 0.06);
+		border-color: rgba(255, 107, 0, 0.3);
+	}
+	.kb-expandable:hover {
+		background: rgba(234, 88, 12, 0.08);
+		border-color: rgba(234, 88, 12, 0.5);
+	}
+	:global(html[data-theme="dark"]) .kb-expandable:hover {
+		background: rgba(255, 107, 0, 0.1);
+		border-color: rgba(255, 107, 0, 0.5);
+	}
+
+	.kb-summary {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.65em 0.95em;
+		cursor: pointer;
 		user-select: none;
-		-webkit-user-select: none;
+		list-style: none;
 	}
-	:global(html[data-theme="dark"]) .keyboard-wrap {
-		background: #0f1117;
-		border-color: rgba(255, 255, 255, 0.07);
+	.kb-summary::-webkit-details-marker {
+		display: none;
 	}
-	.keyboard-wrap:focus-within {
-		border-color: rgba(234, 88, 12, 0.45);
-		box-shadow: 0 0 0 1px rgba(234, 88, 12, 0.2);
+
+	.kb-summary-left {
+		display: flex;
+		align-items: center;
+		gap: 0.55em;
+		flex-wrap: wrap;
+	}
+	.kb-summary-icon {
+		color: var(--accent);
+		flex-shrink: 0;
+		transition: color 0.15s ease;
+	}
+	.kb-summary-title {
+		font-size: 0.82em;
+		font-weight: 700;
+		color: rgb(var(--black));
+		transition: color 0.15s ease;
+	}
+	:global(html[data-theme="dark"]) .kb-summary-title {
+		color: #f1f5f9;
+	}
+	.kb-summary-tag {
+		font-size: 0.78em;
+		color: rgb(var(--gray));
+		font-weight: 500;
+		transition: color 0.15s ease;
+	}
+
+	.kb-summary-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35em;
+		font-size: 0.76em;
+		font-weight: 600;
+		color: var(--accent);
+		transition: color 0.15s ease;
+	}
+	.kb-summary-chevron {
+		transition: transform 0.2s ease, color 0.15s ease;
+	}
+	.kb-expandable[open] .kb-summary-chevron {
+		transform: rotate(180deg);
+	}
+
+	.kb-expandable:hover .kb-summary-icon,
+	.kb-expandable:hover .kb-summary-title,
+	.kb-expandable:hover .kb-summary-tag,
+	.kb-expandable:hover .kb-summary-toggle,
+	:global(html[data-theme="dark"]) .kb-expandable:hover .kb-summary-icon,
+	:global(html[data-theme="dark"]) .kb-expandable:hover .kb-summary-title,
+	:global(html[data-theme="dark"]) .kb-expandable:hover .kb-summary-tag,
+	:global(html[data-theme="dark"]) .kb-expandable:hover .kb-summary-toggle {
+		color: var(--accent) !important;
+	}
+
+	.kb-expandable-body {
+		padding: 0.9em 1.1em 1.1em 1.1em;
+		border-top: 1px solid rgba(234, 88, 12, 0.2);
+		animation: fadeIn 0.2s ease-in-out;
+		outline: none;
+	}
+	:global(html[data-theme="dark"]) .kb-expandable-body {
+		border-top-color: rgba(255, 107, 0, 0.2);
+	}
+
+	@keyframes fadeIn {
+		from { opacity: 0; transform: translateY(-3px); }
+		to { opacity: 1; transform: translateY(0); }
 	}
 
 	.kb-focus-hint {
@@ -616,52 +822,89 @@
 		background: rgba(255, 255, 255, 0.03);
 	}
 
+	/* 104-KEY BOARD WRAPPER */
 	.keyboard-board {
 		display: flex;
-		flex-direction: column;
-		gap: 0.45em;
+		gap: 1em;
 		width: 100%;
 		overflow-x: auto;
-		padding-bottom: 0.3em;
+		padding-bottom: 0.5em;
+		user-select: none;
+		-webkit-user-select: none;
+		min-width: 0;
+	}
+
+	.kb-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35em;
+	}
+
+	.kb-main {
+		flex: 15;
+		min-width: 580px;
+	}
+
+	.kb-nav {
+		flex: 3.2;
+		min-width: 125px;
+	}
+
+	.kb-numpad {
+		flex: 4.2;
+		min-width: 165px;
 	}
 
 	.kb-row {
 		display: flex;
-		gap: 0.4em;
+		gap: 0.32em;
 		width: 100%;
-		min-width: 620px;
+	}
+
+	.kb-row-fn {
+		margin-bottom: 0.35em;
+	}
+
+	.kb-spacer-sm {
+		flex: 0.45;
+	}
+	.kb-nav-spacer {
+		height: 38px;
+	}
+	.key-nav-dummy {
+		flex: 1;
 	}
 
 	/* KEYCAP STYLING */
 	.key {
 		position: relative;
 		flex: 1;
-		height: 42px;
+		height: 38px;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		background: #ffffff;
 		border: 1px solid rgba(0, 0, 0, 0.12);
-		border-bottom: 2.5px solid rgba(0, 0, 0, 0.2);
-		border-radius: 6px;
-		font-size: 0.76em;
+		border-bottom: 2.5px solid rgba(0, 0, 0, 0.22);
+		border-radius: 5px;
+		font-size: 0.72em;
 		font-weight: 600;
 		color: rgb(var(--black));
 		cursor: pointer;
 		touch-action: manipulation;
-		transition: background-color 0.08s ease, transform 0.05s ease, border-color 0.08s ease, box-shadow 0.08s ease;
+		transition: background-color 0.08s ease, transform 0.05s ease, border-color 0.08s ease;
 		box-sizing: border-box;
 	}
 	:global(html[data-theme="dark"]) .key {
 		background: #191c26;
 		border-color: rgba(255, 255, 255, 0.08);
-		border-bottom-color: rgba(0, 0, 0, 0.6);
+		border-bottom-color: rgba(0, 0, 0, 0.65);
 		color: #e2e8f0;
 	}
 
 	.k-sub {
-		font-size: 0.72em;
+		font-size: 0.7em;
 		line-height: 1;
 		color: rgb(var(--gray));
 		margin-bottom: 1px;
@@ -672,17 +915,86 @@
 	}
 
 	/* VARIABLE KEY WIDTHS */
-	.key-sm { flex: 0.9; font-size: 0.7em; }
-	.key-backspace { flex: 1.9; font-size: 0.72em; }
-	.key-tab { flex: 1.4; font-size: 0.72em; }
-	.key-backslash { flex: 1.4; }
-	.key-caps { flex: 1.7; font-size: 0.72em; }
-	.key-enter { flex: 2.1; font-size: 0.74em; }
-	.key-shift-l { flex: 2.2; font-size: 0.72em; }
-	.key-shift-r { flex: 1.8; font-size: 0.72em; }
-	.key-mod { flex: 1.15; font-size: 0.72em; }
-	.key-space { flex: 5.6; font-size: 0.74em; }
-	.key-arrow { flex: 0.95; font-size: 0.85em; }
+	.key-esc { flex: 1; font-size: 0.7em; }
+	.key-fn { flex: 1; font-size: 0.68em; }
+	.key-nav-sm { flex: 1; font-size: 0.66em; }
+	.key-nav { flex: 1; font-size: 0.68em; }
+	.key-arrow { flex: 1; font-size: 0.82em; }
+	.key-backspace { flex: 2; font-size: 0.7em; }
+	.key-tab { flex: 1.5; font-size: 0.7em; }
+	.key-backslash { flex: 1.5; }
+	.key-caps { flex: 1.75; font-size: 0.7em; }
+	.key-enter { flex: 2.25; font-size: 0.72em; }
+	.key-shift-l { flex: 2.25; font-size: 0.7em; }
+	.key-shift-r { flex: 2.75; font-size: 0.7em; }
+	.key-mod { flex: 1.25; font-size: 0.68em; }
+	.key-space { flex: 6.25; font-size: 0.72em; }
+
+	/* NUMPAD SECTION */
+	.numpad-led-bar {
+		display: flex;
+		justify-content: space-around;
+		align-items: center;
+		height: 38px;
+		margin-bottom: 0.35em;
+		padding: 0 0.4em;
+		background: rgba(0, 0, 0, 0.03);
+		border-radius: 5px;
+		border: 1px solid var(--border-color);
+	}
+	:global(html[data-theme="dark"]) .numpad-led-bar {
+		background: #141720;
+		border-color: rgba(255, 255, 255, 0.06);
+	}
+
+	.led-item {
+		display: flex;
+		align-items: center;
+		gap: 0.35em;
+	}
+	.led-dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: rgba(0, 0, 0, 0.2);
+		transition: background-color 0.15s ease, box-shadow 0.15s ease;
+	}
+	:global(html[data-theme="dark"]) .led-dot {
+		background: rgba(255, 255, 255, 0.15);
+	}
+	.led-active .led-dot {
+		background: var(--accent) !important;
+		box-shadow: 0 0 6px var(--accent);
+	}
+	.led-txt {
+		font-size: 0.62em;
+		font-weight: 700;
+		color: rgb(var(--gray));
+		letter-spacing: 0.05em;
+	}
+
+	.numpad-grid {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		grid-template-rows: repeat(5, 38px);
+		gap: 0.32em;
+	}
+	.np-key {
+		height: 100%;
+		width: 100%;
+	}
+	.np-tall-add {
+		grid-column: 4;
+		grid-row: 2 / span 2;
+	}
+	.np-tall-enter {
+		grid-column: 4;
+		grid-row: 4 / span 2;
+	}
+	.np-wide-0 {
+		grid-column: 1 / span 2;
+		grid-row: 5;
+	}
 
 	/* TESTED STATE: Persistent indicator that switch actuates cleanly */
 	.key.key-tested {
@@ -696,8 +1008,8 @@
 	.key.key-tested::after {
 		content: '';
 		position: absolute;
-		top: 3px;
-		right: 3px;
+		top: 2px;
+		right: 2px;
 		width: 4px;
 		height: 4px;
 		border-radius: 50%;
@@ -711,7 +1023,7 @@
 		border-color: var(--accent-dark) !important;
 		border-bottom-width: 1px !important;
 		transform: translateY(2px);
-		box-shadow: 0 0 10px rgba(234, 88, 12, 0.45);
+		box-shadow: 0 0 8px rgba(234, 88, 12, 0.45);
 	}
 	.key.key-pressed .k-sub,
 	.key.key-pressed .k-label {
@@ -720,14 +1032,14 @@
 
 	/* MOBILE INPUT FALLBACK */
 	.mobile-input-bar {
-		margin-top: 0.9em;
+		margin-top: 0.85em;
 	}
 	.mobile-type-field {
 		width: 100%;
 		background: rgba(0, 0, 0, 0.03);
 		border: 1px solid var(--border-color);
 		border-radius: 6px;
-		padding: 0.55em 0.85em;
+		padding: 0.5em 0.8em;
 		font-size: 0.78em;
 		color: rgb(var(--black));
 		outline: none;
@@ -744,15 +1056,15 @@
 
 	/* EVENT INSPECTOR STRIP */
 	.event-inspector {
-		margin-top: 0.85em;
+		margin-top: 0.8em;
 		display: flex;
 		align-items: center;
 		gap: 1.1em;
-		padding: 0.55em 0.85em;
+		padding: 0.5em 0.8em;
 		background: rgba(0, 0, 0, 0.03);
 		border: 1px solid var(--border-color);
 		border-radius: 6px;
-		font-size: 0.73em;
+		font-size: 0.72em;
 		overflow-x: auto;
 		white-space: nowrap;
 	}

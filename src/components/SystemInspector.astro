@@ -64,10 +64,6 @@
 			<span class="t-label">Display &amp; Scaling</span>
 			<span id="t-display" class="t-val">Detecting...</span>
 		</div>
-		<div class="telemetry-item full-row">
-			<span class="t-label">Raw User Agent</span>
-			<span id="t-ua" class="t-val mono break-all">Detecting...</span>
-		</div>
 	</div>
 </section>
 
@@ -97,33 +93,53 @@
 		}
 	}
 
-	function detectOS(): string {
+	function detectOS(gpu: string): string {
 		const ua = navigator.userAgent;
 		const navData = (navigator as any).userAgentData;
+		const platform = navData?.platform || navigator.platform || '';
+		const isMobileARM = /(Adreno|Mali|Immortalis|Xclipse|PowerVR)/i.test(gpu);
+		const hasTouch = (navigator.maxTouchPoints && navigator.maxTouchPoints > 1) || ('ontouchstart' in window);
 
-		if (navData && navData.platform) {
-			const p = navData.platform;
-			if (p === 'Windows') return 'Windows PC';
-			if (p === 'macOS') return 'Apple macOS';
-			if (p === 'Linux') return 'GNU/Linux';
-			if (p === 'Android') return 'Android Device';
+		// Direct Android UA pattern
+		if (/Android (\d+(\.\d+)?)/i.test(ua)) {
+			const match = ua.match(/Android (\d+(\.\d+)?)/i);
+			const ver = match ? match[1] : '';
+			const isTablet = hasTouch && !/Mobile/i.test(ua);
+			return ver ? `Android ${ver}${isTablet ? ' (Tablet)' : ''}` : 'Android Device';
 		}
 
-		if (/Windows NT 10.0/.test(ua)) return 'Windows 10 / 11 (64-bit)';
-		if (/Macintosh; Intel Mac OS X (\d+[._]\d+)/.test(ua)) {
-			const match = ua.match(/Macintosh; Intel Mac OS X (\d+[._]\d+)/);
-			return `macOS ${match ? match[1].replace('_', '.') : ''}`;
+		// Android Tablet in "Desktop Site" Mode (Chromium sends (X11; Linux x86_64) on tablets)
+		if ((/Linux/i.test(ua) || /Linux/i.test(platform)) && (isMobileARM || (hasTouch && !/Macintosh|Windows/i.test(ua)))) {
+			return isMobileARM ? 'Android (ARM64 Tablet)' : 'Android Tablet (Desktop Mode)';
 		}
-		if (/Android (\d+(\.\d+)?)/.test(ua)) {
-			const match = ua.match(/Android (\d+(\.\d+)?)/);
-			return `Android ${match ? match[1] : ''}`;
-		}
+
+		// iOS / iPadOS
 		if (/iPhone OS (\d+[._]\d+)/.test(ua)) {
 			const match = ua.match(/iPhone OS (\d+[._]\d+)/);
 			return `iOS ${match ? match[1].replace('_', '.') : ''} (iPhone)`;
 		}
-		if (/Linux/.test(ua)) return 'GNU/Linux';
-		return navigator.platform || 'Unknown OS';
+		if (/iPad/.test(ua) || (ua.includes('Macintosh') && hasTouch)) {
+			return 'Apple iPadOS (iPad)';
+		}
+
+		// macOS
+		if (/Macintosh; Intel Mac OS X (\d+[._]\d+)/.test(ua)) {
+			const match = ua.match(/Macintosh; Intel Mac OS X (\d+[._]\d+)/);
+			const isAppleSilicon = /Apple/i.test(gpu);
+			return `macOS ${match ? match[1].replace(/_/g, '.') : ''}${isAppleSilicon ? ' (Apple Silicon)' : ''}`;
+		}
+
+		// Windows
+		if (/Windows NT 10.0/.test(ua) || platform === 'Windows') {
+			return 'Windows 10 / 11 (64-bit)';
+		}
+
+		// Genuine Desktop GNU/Linux (no mobile ARM GPU and no multitouch)
+		if (/Linux/i.test(ua) || /Linux/i.test(platform)) {
+			return 'GNU/Linux (x86_64 Desktop)';
+		}
+
+		return platform || 'Unknown OS';
 	}
 
 	async function initTelemetry() {
@@ -135,13 +151,17 @@
 		const ramEl = document.getElementById('t-ram');
 		const gpuEl = document.getElementById('t-gpu');
 		const displayEl = document.getElementById('t-display');
-		const uaEl = document.getElementById('t-ua');
 
 		// Instant Client Detection
-		if (gpuEl) gpuEl.textContent = detectGPU();
+		const gpuString = detectGPU();
+		if (gpuEl) gpuEl.textContent = gpuString;
+
 		if (osEl) {
-			osEl.textContent = detectOS();
+			osEl.textContent = detectOS(gpuString);
 			const navData = (navigator as any).userAgentData;
+			const isMobileARM = /(Adreno|Mali|Immortalis|Xclipse|PowerVR)/i.test(gpuString);
+			const hasTouch = (navigator.maxTouchPoints && navigator.maxTouchPoints > 1) || ('ontouchstart' in window);
+
 			if (navData && navData.getHighEntropyValues) {
 				navData.getHighEntropyValues(['platform', 'platformVersion', 'architecture', 'bitness', 'model'])
 					.then((hints: any) => {
@@ -150,6 +170,24 @@
 							const winVer = major >= 13 ? 'Windows 11' : 'Windows 10';
 							const arch = hints.architecture ? ` (${hints.architecture}, ${hints.bitness || 64}-bit)` : '';
 							osEl.textContent = `${winVer}${arch}`;
+						} else if (
+							hints.platform === 'Android' || 
+							isMobileARM || 
+							(hints.architecture?.toLowerCase().includes('arm') && /Linux/i.test(hints.platform || ''))
+						) {
+							const ver = hints.platformVersion ? ` ${hints.platformVersion.split('.')[0]}` : '';
+							let device = '';
+							if (hints.model) {
+								device = ` (${hints.model})`;
+							} else if (hasTouch) {
+								device = ' (ARM64 Tablet)';
+							} else {
+								device = ' (Mobile)';
+							}
+							osEl.textContent = `Android${ver}${device}`;
+						} else if (hints.platform === 'Linux' && !isMobileARM && !hasTouch) {
+							const arch = hints.architecture ? ` (${hints.architecture})` : ' (x86_64 Desktop)';
+							osEl.textContent = `GNU/Linux${arch}`;
 						}
 					})
 					.catch(() => {});
@@ -171,10 +209,6 @@
 			const dpr = window.devicePixelRatio ? ` @ ${window.devicePixelRatio}x scaling` : '';
 			const depth = window.screen.colorDepth ? ` (${window.screen.colorDepth}-bit color)` : '';
 			displayEl.textContent = `${window.screen.width} × ${window.screen.height}${dpr}${depth}`;
-		}
-
-		if (uaEl && navigator.userAgent) {
-			uaEl.textContent = navigator.userAgent;
 		}
 
 		// Cloudflare Edge Ephemeral Detection
@@ -301,10 +335,6 @@
 		min-width: 0;
 		overflow: hidden;
 	}
-	.telemetry-item.full-row {
-		grid-column: 1 / -1;
-		margin-top: 0.25em;
-	}
 	.t-label {
 		font-size: 0.76em;
 		font-weight: 700;
@@ -326,9 +356,6 @@
 	.t-val.ip-val {
 		color: var(--accent);
 		font-weight: 700;
-	}
-	.break-all {
-		word-break: break-all;
 	}
 
 	@media (max-width: 600px) {

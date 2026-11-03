@@ -14,21 +14,33 @@
 		</h2>
 	</div>
 
-	<!-- PROMINENT PRIVACY NOTICE (AT TOP) -->
-	<div class="telemetry-privacy-banner">
-		<div class="privacy-icon-box">
-			<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
-				<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-				<path d="m9 12 2 2 4-4"/>
-			</svg>
-		</div>
-		<div class="privacy-content">
-			<div class="privacy-headline">🔒 Client-Side Privacy &bull; What the Web Sees</div>
-			<p class="privacy-message">
-				Ever wonder what websites know about your device? The metrics below represent the standard network, hardware, and browser telemetry exposed to virtually every website you visit across the web. This demonstration inspects everything live in your local session &mdash; <strong>zero data is tracked, stored, or logged to any server or database.</strong>
+	<!-- EXPANDABLE PRIVACY & TELEMETRY NOTICE -->
+	<details class="privacy-details">
+		<summary class="privacy-summary">
+			<div class="privacy-summary-left">
+				<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="privacy-icon">
+					<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+					<path d="m9 12 2 2 4-4"/>
+				</svg>
+				<span class="privacy-title">Client-Side Privacy Notice</span>
+				<span class="privacy-tag">&bull; Zero device data logged</span>
+			</div>
+			<span class="privacy-toggle">
+				<span class="privacy-toggle-label">Details</span>
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="privacy-chevron">
+					<polyline points="6 9 12 15 18 9"/>
+				</svg>
+			</span>
+		</summary>
+		<div class="privacy-body">
+			<p>
+				<strong>Client-Side Evaluation:</strong> The hardware, GPU, CPU, and screen metrics below are read ephemerally in your active browser session via standard WebGL, Screen, and Navigator APIs. <strong>No hardware or browser fingerprinting data is collected, stored, or transmitted to any server or database.</strong>
+			</p>
+			<p>
+				<strong>Network &amp; Edge Layer:</strong> Like all websites and content delivery networks, Cloudflare Pages edge infrastructure receives standard HTTP connection metadata (such as your connecting IP address and Anycast routing headers) at the network layer to deliver web assets and protect against DDoS attacks.
 			</p>
 		</div>
-	</div>
+	</details>
 
 	<!-- CLIENT HARDWARE & BROWSER TELEMETRY GRID -->
 	<div class="telemetry-grid">
@@ -249,53 +261,100 @@
 		margin-top: 2.5em;
 	}
 
-	/* PRIVACY ASSURANCE BANNER */
-	.telemetry-privacy-banner {
-		display: flex;
-		align-items: flex-start;
-		gap: 0.8em;
-		background: rgba(22, 101, 52, 0.06);
-		border: 1px solid rgba(22, 101, 52, 0.2);
+	/* EXPANDABLE PRIVACY & ARCHITECTURE NOTICE */
+	.privacy-details {
+		border: 1px solid var(--border-color);
 		border-radius: 8px;
-		padding: 0.85em 1em;
-		margin-bottom: 1.4em;
+		background: rgba(0, 0, 0, 0.015);
+		margin-bottom: 1.25em;
+		transition: border-color 0.15s ease, background 0.15s ease;
 	}
-	:global(html[data-theme="dark"]) .telemetry-privacy-banner {
-		background: rgba(16, 185, 129, 0.08);
+	:global(html[data-theme="dark"]) .privacy-details {
+		background: rgba(255, 255, 255, 0.02);
+	}
+	.privacy-details[open] {
+		background: rgba(22, 101, 52, 0.03);
+		border-color: rgba(22, 101, 52, 0.25);
+	}
+	:global(html[data-theme="dark"]) .privacy-details[open] {
+		background: rgba(16, 185, 129, 0.04);
 		border-color: rgba(16, 185, 129, 0.25);
 	}
-	.privacy-icon-box {
-		color: #16a34a;
-		flex-shrink: 0;
+
+	.privacy-summary {
 		display: flex;
 		align-items: center;
-		margin-top: 0.1em;
+		justify-content: space-between;
+		padding: 0.55em 0.85em;
+		cursor: pointer;
+		user-select: none;
+		list-style: none;
 	}
-	:global(html[data-theme="dark"]) .privacy-icon-box {
+	.privacy-summary::-webkit-details-marker {
+		display: none;
+	}
+	.privacy-summary-left {
+		display: flex;
+		align-items: center;
+		gap: 0.55em;
+		flex-wrap: wrap;
+	}
+	.privacy-icon {
+		color: #16a34a;
+		flex-shrink: 0;
+	}
+	:global(html[data-theme="dark"]) .privacy-icon {
 		color: #34d399;
 	}
-	.privacy-content {
+	.privacy-title {
+		font-size: 0.82em;
+		font-weight: 700;
+		color: rgb(var(--black));
+	}
+	.privacy-tag {
+		font-size: 0.78em;
+		color: rgb(var(--gray));
+		font-weight: 500;
+	}
+
+	.privacy-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35em;
+		font-size: 0.76em;
+		font-weight: 600;
+		color: rgb(var(--gray));
+		transition: color 0.15s ease;
+	}
+	.privacy-summary:hover .privacy-toggle,
+	.privacy-summary:hover .privacy-title {
+		color: var(--accent);
+	}
+	.privacy-chevron {
+		transition: transform 0.2s ease;
+	}
+	.privacy-details[open] .privacy-chevron {
+		transform: rotate(180deg);
+	}
+
+	.privacy-body {
+		padding: 0.75em 1em 0.95em 1em;
+		border-top: 1px solid var(--border-color);
 		display: flex;
 		flex-direction: column;
-		gap: 0.2em;
+		gap: 0.6em;
+		animation: fadeIn 0.2s ease-in-out;
 	}
-	.privacy-headline {
-		font-size: 0.88em;
-		font-weight: 700;
-		color: #15803d;
-		letter-spacing: 0.02em;
-	}
-	:global(html[data-theme="dark"]) .privacy-headline {
-		color: #6ee7b7;
-	}
-	.privacy-message {
-		font-size: 0.82em;
-		line-height: 1.5;
-		color: #166534;
+	.privacy-body p {
+		font-size: 0.8em;
+		line-height: 1.55;
+		color: rgb(var(--gray-dark));
 		margin: 0;
 	}
-	:global(html[data-theme="dark"]) .privacy-message {
-		color: #a7f3d0;
+
+	@keyframes fadeIn {
+		from { opacity: 0; transform: translateY(-4px); }
+		to { opacity: 1; transform: translateY(0); }
 	}
 
 	.telemetry-header {

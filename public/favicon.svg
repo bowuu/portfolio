@@ -4,13 +4,13 @@
             <stop offset="0%" stop-color="#18181c"/>
             <stop offset="100%" stop-color="#09090b"/>
         </linearGradient>
-        <linearGradient id="bGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="wGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#ff8c26"/>
             <stop offset="100%" stop-color="#ea580c"/>
         </linearGradient>
         <linearGradient id="layerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.32"/>
-            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0.05"/>
         </linearGradient>
         <linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#f97316"/>
@@ -19,6 +19,9 @@
         <filter id="shadow" x="-15%" y="-15%" width="130%" height="130%">
             <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#000000" flood-opacity="0.6"/>
         </filter>
+        <clipPath id="wClip">
+            <path d="M 18 26 L 38 102 L 51 102 L 64 61 L 77 102 L 90 102 L 110 26 L 94 26 L 83.5 74 L 70.5 26 L 57.5 26 L 44.5 74 L 34 26 Z"/>
+        </clipPath>
     </defs>
     
     <!-- Obsidian Carbon Base -->
@@ -28,17 +31,19 @@
     <rect x="2" y="2" width="124" height="124" rx="26" stroke="url(#rimGrad)" stroke-width="3" stroke-opacity="0.9"/>
     <rect x="7" y="7" width="114" height="114" rx="21" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
 
-    <!-- High-Impact Solid 'B' with Layer Lines & ATE Contacts -->
+    <!-- High-Impact Solid 'W' with Layer Lines & ATE Contacts -->
     <g filter="url(#shadow)">
-        <!-- The Bold 'B' in Signal Orange -->
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M32 20 h36 c12 0 21 8.5 21 19.5 c0 7.2 -4.5 13.5 -11.2 16.8 c8.8 3.2 15.2 10.8 15.2 20.7 c0 13.5 -11.5 24 -25.5 24 H32 V20 z M48 35 v16 h19 c5.2 0 9.5 -3.5 9.5 -8 s-4.3 -8 -9.5 -8 H48 z M48 66 v21 h21 c6.8 0 12 -4.5 12 -10.5 s-5.2 -10.5 -12 -10.5 H48 z" fill="url(#bGrad)"/>
+        <!-- The Bold 'W' in Signal Orange (Centroid: X=64, Y=64, Width: 92, Height: 76) -->
+        <path d="M 18 26 L 38 102 L 51 102 L 64 61 L 77 102 L 90 102 L 110 26 L 94 26 L 83.5 74 L 70.5 26 L 57.5 26 L 44.5 74 L 34 26 Z" fill="url(#wGrad)"/>
         
-        <!-- Subtle FDM 3D Layer Highlights -->
-        <path d="M32 30 h35 c10 0 17 6 17 9 M32 45 h47 M32 60 h51 M32 75 h56 M32 90 h48" stroke="url(#layerGrad)" stroke-width="2" stroke-linecap="round"/>
+        <!-- Subtle FDM 3D Layer Highlights clipped precisely to the W body -->
+        <g clip-path="url(#wClip)">
+            <path d="M 15 40 H 113 M 15 54 H 113 M 15 68 H 113 M 15 82 H 113 M 15 96 H 113" stroke="url(#layerGrad)" stroke-width="2" stroke-linecap="round"/>
+        </g>
         
         <!-- Silicon / ATE Hardware Probe Pins -->
-        <circle cx="40" cy="27" r="2.5" fill="#fafafa"/>
-        <circle cx="40" cy="58" r="2.5" fill="#fafafa"/>
-        <circle cx="40" cy="94" r="2.5" fill="#fafafa"/>
+        <circle cx="26" cy="31" r="2.2" fill="#fafafa"/>
+        <circle cx="64" cy="31" r="2.2" fill="#fafafa"/>
+        <circle cx="102" cy="31" r="2.2" fill="#fafafa"/>
     </g>
 </svg>

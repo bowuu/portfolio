@@ -263,29 +263,30 @@
 
 	/* EXPANDABLE PRIVACY & ARCHITECTURE NOTICE */
 	.privacy-details {
-		border: 1px solid var(--border-color);
+		border: 1px solid rgba(22, 163, 74, 0.35);
 		border-radius: 8px;
-		background: rgba(0, 0, 0, 0.015);
+		background: rgba(34, 197, 94, 0.12);
 		margin-bottom: 1.25em;
 		transition: border-color 0.15s ease, background 0.15s ease;
 	}
 	:global(html[data-theme="dark"]) .privacy-details {
-		background: rgba(255, 255, 255, 0.02);
+		background: rgba(16, 185, 129, 0.14);
+		border-color: rgba(52, 211, 153, 0.35);
 	}
-	.privacy-details[open] {
-		background: rgba(22, 101, 52, 0.03);
-		border-color: rgba(22, 101, 52, 0.25);
+	.privacy-details:hover {
+		background: rgba(34, 197, 94, 0.16);
+		border-color: rgba(22, 163, 74, 0.45);
 	}
-	:global(html[data-theme="dark"]) .privacy-details[open] {
-		background: rgba(16, 185, 129, 0.04);
-		border-color: rgba(16, 185, 129, 0.25);
+	:global(html[data-theme="dark"]) .privacy-details:hover {
+		background: rgba(16, 185, 129, 0.18);
+		border-color: rgba(52, 211, 153, 0.45);
 	}
 
 	.privacy-summary {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0.55em 0.85em;
+		padding: 0.6em 0.9em;
 		cursor: pointer;
 		user-select: none;
 		list-style: none;
@@ -309,12 +310,18 @@
 	.privacy-title {
 		font-size: 0.82em;
 		font-weight: 700;
-		color: rgb(var(--black));
+		color: #15803d;
+	}
+	:global(html[data-theme="dark"]) .privacy-title {
+		color: #86efac;
 	}
 	.privacy-tag {
 		font-size: 0.78em;
-		color: rgb(var(--gray));
+		color: #166534;
 		font-weight: 500;
+	}
+	:global(html[data-theme="dark"]) .privacy-tag {
+		color: #a7f3d0;
 	}
 
 	.privacy-toggle {
@@ -323,8 +330,11 @@
 		gap: 0.35em;
 		font-size: 0.76em;
 		font-weight: 600;
-		color: rgb(var(--gray));
+		color: #15803d;
 		transition: color 0.15s ease;
+	}
+	:global(html[data-theme="dark"]) .privacy-toggle {
+		color: #86efac;
 	}
 	.privacy-summary:hover .privacy-toggle,
 	.privacy-summary:hover .privacy-title {
@@ -339,17 +349,23 @@
 
 	.privacy-body {
 		padding: 0.75em 1em 0.95em 1em;
-		border-top: 1px solid var(--border-color);
+		border-top: 1px solid rgba(22, 163, 74, 0.22);
 		display: flex;
 		flex-direction: column;
 		gap: 0.6em;
 		animation: fadeIn 0.2s ease-in-out;
 	}
+	:global(html[data-theme="dark"]) .privacy-body {
+		border-top-color: rgba(52, 211, 153, 0.25);
+	}
 	.privacy-body p {
 		font-size: 0.8em;
 		line-height: 1.55;
-		color: rgb(var(--gray-dark));
+		color: #14532d;
 		margin: 0;
+	}
+	:global(html[data-theme="dark"]) .privacy-body p {
+		color: #d1fae5;
 	}
 
 	@keyframes fadeIn {

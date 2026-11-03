@@ -1,31 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
     <defs>
-        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#14151a"/>
-            <stop offset="100%" stop-color="#08090c"/>
-        </linearGradient>
-        <linearGradient id="rim" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#ff8c26"/>
-            <stop offset="100%" stop-color="#ea580c"/>
-        </linearGradient>
+        <filter id="contrast" x="-15%" y="-15%" width="130%" height="130%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.8"/>
+        </filter>
     </defs>
-    
-    <!-- Obsidian Silicon Base -->
-    <rect width="128" height="128" rx="28" fill="url(#bg)"/>
-    
-    <!-- High-Precision Orange Rim -->
-    <rect x="2" y="2" width="124" height="124" rx="26" stroke="url(#rim)" stroke-width="2.5" stroke-opacity="0.85"/>
-    <rect x="6" y="6" width="116" height="116" rx="22" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-
-    <!-- The Obsidian Prism (B + W Elemental Monogram) -->
-    <g>
+    <!-- Maximized Floating Obsidian Prism (Full Bleed Favicon) -->
+    <g filter="url(#contrast)" stroke="#08090d" stroke-width="3" stroke-linejoin="round">
         <!-- Left Pillar Facet (Pure White - Spine of B) -->
-        <path d="M 28 28 H 54 V 100 H 28 Z" fill="#ffffff"/>
+        <rect x="6" y="6" width="42" height="116" rx="6" fill="#ffffff"/>
         
         <!-- Upper Prismatic Wedge (Signal Orange - Upper Bowl & W Peak) -->
-        <path d="M 60 28 L 100 50 L 60 62 Z" fill="#ff6b00"/>
+        <path d="M 54 6 L 120 40 C 122 41 122 43 120 44 L 54 61 Z" fill="#ff6b00"/>
         
         <!-- Lower Prismatic Wedge (Deep Amber - Lower Bowl & W Base) -->
-        <path d="M 60 66 L 100 78 L 60 100 Z" fill="#c2410c"/>
+        <path d="M 54 67 L 120 84 C 122 85 122 87 120 88 L 54 122 Z" fill="#c2410c"/>
     </g>
 </svg>

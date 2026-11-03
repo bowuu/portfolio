@@ -9,7 +9,7 @@
 				<rect x="5" y="2" width="14" height="20" rx="7"/>
 				<line x1="12" y1="6" x2="12" y2="10"/>
 			</svg>
-			Mouse Polling &amp; Click Latency Lab
+			Mouse Polling &amp; Reaction Lab
 		</h2>
 
 		<div class="header-actions">
@@ -32,8 +32,8 @@
 		<!-- COLUMN 1: MOUSE POLLING RATE TRACKER -->
 		<div class="lab-col">
 			<div class="col-head">
-				<span class="col-title">USB Polling Rate (Raw Buffer)</span>
-				<span class="badge mono" id="poll-tier-badge">Awaiting Movement</span>
+				<span class="col-title">Mouse Polling Rate (Raw Buffer)</span>
+				<span class="badge mono" id="poll-tier-badge">Idle</span>
 			</div>
 
 			<!-- INTERACTIVE POLLING CANVAS / HOVER ZONE -->
@@ -79,10 +79,10 @@
 			</div>
 		</div>
 
-		<!-- COLUMN 2: CLICK LATENCY & REACTION TEST -->
+		<!-- COLUMN 2: VISUAL REACTION BENCHMARK -->
 		<div class="lab-col">
 			<div class="col-head">
-				<span class="col-title">Click Latency &amp; Reflex Benchmark</span>
+				<span class="col-title">Visual Reaction Benchmark</span>
 				<span class="badge mono" id="reaction-state-badge">Ready</span>
 			</div>
 
@@ -242,19 +242,19 @@
 					// Update Tier Classification Badge
 					if (tierBadgeEl) {
 						if (peakHz >= 3500) {
-							tierBadgeEl.textContent = 'Esports Class (4000Hz - 8000Hz)';
+							tierBadgeEl.textContent = 'Esports (8000Hz)';
 							tierBadgeEl.className = 'badge mono badge-orange';
 						} else if (peakHz >= 850) {
-							tierBadgeEl.textContent = 'High-Speed Gaming (1000Hz)';
+							tierBadgeEl.textContent = 'Gaming (1000Hz)';
 							tierBadgeEl.className = 'badge mono badge-orange';
 						} else if (peakHz >= 400) {
-							tierBadgeEl.textContent = 'Standard Gaming (500Hz)';
+							tierBadgeEl.textContent = 'Gaming (500Hz)';
 							tierBadgeEl.className = 'badge mono';
 						} else if (peakHz >= 110) {
-							tierBadgeEl.textContent = 'Standard Office USB (125Hz)';
+							tierBadgeEl.textContent = 'Office (125Hz)';
 							tierBadgeEl.className = 'badge mono';
 						} else {
-							tierBadgeEl.textContent = `${peakHz} Hz Active`;
+							tierBadgeEl.textContent = `${peakHz} Hz`;
 							tierBadgeEl.className = 'badge mono';
 						}
 					}
@@ -383,7 +383,7 @@
 				if (stabilityEl) stabilityEl.textContent = 'Jitter: \u00B10.0 ms';
 				if (packetCountEl) packetCountEl.textContent = '0';
 				if (tierBadgeEl) {
-					tierBadgeEl.textContent = 'Awaiting Movement';
+					tierBadgeEl.textContent = 'Idle';
 					tierBadgeEl.className = 'badge mono';
 				}
 				if (reactionBox) reactionBox.className = 'reaction-box idle';
@@ -480,7 +480,9 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		min-height: 26px;
 		margin-bottom: 0.85em;
+		gap: 0.5em;
 	}
 
 	.col-title {
@@ -489,6 +491,9 @@
 		text-transform: uppercase;
 		letter-spacing: 0.03em;
 		color: var(--text-color);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.badge {
@@ -497,6 +502,11 @@
 		border-radius: 4px;
 		background: rgba(0, 0, 0, 0.05);
 		color: rgb(var(--gray));
+		border: 1px solid transparent;
+		white-space: nowrap;
+		flex-shrink: 0;
+		box-sizing: border-box;
+		line-height: 1.4;
 	}
 	:global(html[data-theme="dark"]) .badge {
 		background: rgba(255, 255, 255, 0.06);
@@ -504,7 +514,7 @@
 	.badge-orange {
 		background: rgba(234, 88, 12, 0.15);
 		color: var(--accent);
-		border: 1px solid rgba(234, 88, 12, 0.3);
+		border-color: rgba(234, 88, 12, 0.3);
 		font-weight: 600;
 	}
 

@@ -189,6 +189,7 @@ html {
 #about,
 #skills,
 #projects,
+#lab,
 #benchmark,
 #input-lab,
 #keyboard-lab,
@@ -260,6 +261,7 @@ html {
   /* Hide interactive, client-only, and navigation UI */
   header,
   #debug,
+  #lab,
   #benchmark,
   #input-lab,
   #keyboard-lab,

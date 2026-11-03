@@ -2,19 +2,20 @@
 // NetworkBenchmark.astro - Real-time zero-host-bandwidth Cloudflare edge network benchmark
 ---
 
-<section class="card benchmark-card" id="benchmark">
+<section class="card benchmark-card" id="lab">
+	<a id="benchmark" style="display:none;" aria-hidden="true"></a>
 	<div class="benchmark-header">
 		<h2 class="card-title">
 			<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
 				<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
 			</svg>
-			Edge Network Benchmark
+			Network Test
 		</h2>
-		<button id="run-speedtest-btn" class="benchmark-btn" type="button" aria-label="Run Edge Network Benchmark">
+		<button id="run-speedtest-btn" class="benchmark-btn" type="button" aria-label="Run Network Test">
 			<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon" id="btn-icon-play">
 				<polygon points="5 3 19 12 5 21 5 3"/>
 			</svg>
-			<span id="speedtest-btn-text">Run Benchmark</span>
+			<span id="speedtest-btn-text">Run Test</span>
 		</button>
 	</div>
 
@@ -25,16 +26,25 @@
 	<!-- BENCHMARK TILES -->
 	<div class="benchmark-tiles">
 		<div class="b-tile">
-			<span class="b-tile-label">Latency / Ping</span>
+			<div class="b-tile-head">
+				<span class="b-tile-label">Latency / Ping</span>
+				<span class="loss-badge mono" id="speed-loss-badge" title="Packet Loss: 0 / 16 packets lost">
+					<span id="speed-loss">0</span>% loss
+				</span>
+			</div>
 			<div class="b-tile-value-wrap">
 				<span id="speed-ping" class="b-tile-num mono">--</span>
 				<span class="b-tile-unit">ms</span>
 			</div>
-			<span id="speed-jitter" class="b-tile-sub">Jitter: -- ms &bull; <span id="speed-target-colo" class="colo-target" title="Target: Cloudflare MIA Datacenter (Miami, FL) via Anycast">MIA Edge</span></span>
+			<span class="b-tile-sub">
+				<span id="speed-jitter">Jitter: -- ms</span> &bull; <span id="speed-loss-sub">0/16 lost</span> &bull; <span id="speed-target-colo" class="colo-target" title="Target: Cloudflare MIA Datacenter (Miami, FL) via Anycast">MIA Edge</span>
+			</span>
 		</div>
 
 		<div class="b-tile b-tile-highlight">
-			<span class="b-tile-label">Download Speed</span>
+			<div class="b-tile-head">
+				<span class="b-tile-label">Download Speed</span>
+			</div>
 			<div class="b-tile-value-wrap">
 				<span id="speed-down" class="b-tile-num mono">--</span>
 				<span class="b-tile-unit">Mbps</span>
@@ -43,7 +53,9 @@
 		</div>
 
 		<div class="b-tile">
-			<span class="b-tile-label">Upload Speed</span>
+			<div class="b-tile-head">
+				<span class="b-tile-label">Upload Speed</span>
+			</div>
 			<div class="b-tile-value-wrap">
 				<span id="speed-up" class="b-tile-num mono">--</span>
 				<span class="b-tile-unit">Mbps</span>
@@ -52,21 +64,14 @@
 		</div>
 
 		<div class="b-tile">
-			<span class="b-tile-label">Bufferbloat</span>
+			<div class="b-tile-head">
+				<span class="b-tile-label">Bufferbloat</span>
+			</div>
 			<div class="b-tile-value-wrap">
 				<span id="speed-bloat" class="b-tile-num mono">--</span>
 				<span id="speed-bloat-unit" class="b-tile-unit">Grade</span>
 			</div>
 			<span id="speed-bloat-sub" class="b-tile-sub">Loaded Ping &Delta;</span>
-		</div>
-
-		<div class="b-tile">
-			<span class="b-tile-label">Packet Loss</span>
-			<div class="b-tile-value-wrap">
-				<span id="speed-loss" class="b-tile-num mono">--</span>
-				<span class="b-tile-unit">%</span>
-			</div>
-			<span id="speed-loss-sub" class="b-tile-sub">0 / 16 pkts lost</span>
 		</div>
 	</div>
 
@@ -76,7 +81,7 @@
 			<div class="progress-bar" id="benchmark-progress-bar"></div>
 		</div>
 		<div class="status-wrap">
-			<span id="speedtest-status" class="status-text">Click "Run Benchmark" to measure real-time latency, jitter, packet loss, and sustained throughput.</span>
+			<span id="speedtest-status" class="status-text">Click "Run Test" to measure real-time latency, jitter, packet loss, and sustained throughput.</span>
 		</div>
 	</div>
 </section>
@@ -189,9 +194,13 @@
 
 	function updateColoTargetUI(jitterVal?: string) {
 		const jitterEl = document.getElementById('speed-jitter');
-		if (jitterEl) {
-			const jText = jitterVal !== undefined ? `Jitter: ${jitterVal} ms` : (jitterEl.textContent?.split('•')[0].trim() || 'Jitter: -- ms');
-			jitterEl.innerHTML = `${jText} &bull; <span id="speed-target-colo" class="colo-target" title="Target: Cloudflare ${detectedColo} Datacenter (${detectedCity}) via Anycast">${detectedColo} Edge</span>`;
+		if (jitterEl && jitterVal !== undefined) {
+			jitterEl.textContent = `Jitter: ${jitterVal} ms`;
+		}
+		const coloEl = document.getElementById('speed-target-colo');
+		if (coloEl) {
+			coloEl.textContent = `${detectedColo} Edge`;
+			coloEl.title = `Target: Cloudflare ${detectedColo} Datacenter (${detectedCity}) via Anycast`;
 		}
 	}
 
@@ -205,13 +214,13 @@
 		const statusText = document.getElementById('speedtest-status');
 
 		const pingEl = document.getElementById('speed-ping');
-		const jitterEl = document.getElementById('speed-jitter');
 		const downEl = document.getElementById('speed-down');
 		const downSubEl = document.getElementById('speed-down-sub');
 		const upEl = document.getElementById('speed-up');
 		const upSubEl = document.getElementById('speed-up-sub');
 		const lossEl = document.getElementById('speed-loss');
 		const lossSubEl = document.getElementById('speed-loss-sub');
+		const lossBadge = document.getElementById('speed-loss-badge');
 		const bloatEl = document.getElementById('speed-bloat');
 		const bloatSubEl = document.getElementById('speed-bloat-sub');
 
@@ -228,6 +237,10 @@
 		if (upSubEl) upSubEl.textContent = 'Queued';
 		if (lossEl) lossEl.textContent = '--';
 		if (lossSubEl) lossSubEl.textContent = 'Probing...';
+		if (lossBadge) {
+			lossBadge.classList.remove('loss-optimal', 'loss-warn');
+			lossBadge.title = 'Packet Loss: Probing...';
+		}
 		if (bloatEl) {
 			bloatEl.textContent = '--';
 			bloatEl.style.color = '';
@@ -275,9 +288,16 @@
 				}
 
 				const currentLost = failed + tcpLostTotal;
-				const currentLossRate = ((currentLost / (i + 1)) * 100).toFixed(1);
+				const currentLossRate = ((currentLost / (i + 1)) * 100).toFixed(0);
 				if (lossEl) lossEl.textContent = currentLossRate;
-				if (lossSubEl) lossSubEl.textContent = `${currentLost} / ${i + 1} pkts lost`;
+				if (lossSubEl) lossSubEl.textContent = `${currentLost}/${i + 1} lost`;
+				if (lossBadge) {
+					lossBadge.title = `Packet Loss: ${currentLost} / ${i + 1} pkts lost (${currentLossRate}%)`;
+					if (currentLost > 0) {
+						lossBadge.classList.add('loss-warn');
+						lossBadge.classList.remove('loss-optimal');
+					}
+				}
 				if (progressBar) progressBar.style.width = `${5 + Math.round(((i + 1) / totalProbes) * 25)}%`;
 			}
 
@@ -290,12 +310,22 @@
 			}
 			const jitter = pings.length > 1 ? (diffSum / (pings.length - 1)).toFixed(1) : '0.0';
 			const finalLost = failed + tcpLostTotal;
-			const finalLossRate = ((finalLost / totalProbes) * 100).toFixed(1);
+			const finalLossRate = ((finalLost / totalProbes) * 100).toFixed(0);
 
 			if (pingEl) pingEl.textContent = medianPing.toString();
 			updateColoTargetUI(jitter);
 			if (lossEl) lossEl.textContent = finalLossRate;
-			if (lossSubEl) lossSubEl.textContent = finalLost === 0 ? '0 / 16 pkts lost (Optimal)' : `${finalLost} / 16 pkts lost`;
+			if (lossSubEl) lossSubEl.textContent = `${finalLost}/${totalProbes} lost`;
+			if (lossBadge) {
+				lossBadge.title = `Packet Loss: ${finalLost} / ${totalProbes} pkts lost (${finalLossRate}%)`;
+				if (finalLost === 0) {
+					lossBadge.classList.add('loss-optimal');
+					lossBadge.classList.remove('loss-warn');
+				} else {
+					lossBadge.classList.add('loss-warn');
+					lossBadge.classList.remove('loss-optimal');
+				}
+			}
 
 			// ==========================================
 			// STAGE 2: MULTI-STREAM SUSTAINED DOWNLOAD (3s)
@@ -514,11 +544,11 @@
 			if (progressBar) progressBar.style.width = '100%';
 			const targetSummary = detectedColo ? ` via Cloudflare ${detectedColo} Edge (${detectedCity})` : ' via Cloudflare Anycast';
 			const physicsSummary = distanceKm > 0 ? ` &bull; Distance: ~${distanceKm} km (Physical fiber optical limit: ~${fiberRttMs} ms RTT)` : '';
-			if (statusText) statusText.innerHTML = `Benchmark complete. 0 host bandwidth consumed; all data routed${targetSummary}${physicsSummary}.`;
+			if (statusText) statusText.innerHTML = `Test complete. 0 host bandwidth consumed; all data routed${targetSummary}${physicsSummary}.`;
 
 		} catch (err: any) {
 			console.error('Speedtest encountered error:', err);
-			if (statusText) statusText.textContent = 'Benchmark interrupted or blocked by browser extensions.';
+			if (statusText) statusText.textContent = 'Test interrupted or blocked by browser extensions.';
 		} finally {
 			isBenchmarking = false;
 			if (btn) btn.disabled = false;
@@ -619,7 +649,7 @@
 	/* TILES GRID */
 	.benchmark-tiles {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+		grid-template-columns: repeat(4, 1fr);
 		gap: 1em;
 		margin-bottom: 1.2em;
 	}
@@ -644,12 +674,56 @@
 		border-color: rgba(234, 88, 12, 0.45);
 		background: rgba(234, 88, 12, 0.08);
 	}
+	.b-tile-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		min-height: 20px;
+	}
 	.b-tile-label {
 		font-size: 0.74em;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: rgb(var(--gray));
+	}
+	.loss-badge {
+		font-size: 0.72em;
+		font-weight: 700;
+		padding: 0.1em 0.5em;
+		border-radius: 4px;
+		background: rgba(0, 0, 0, 0.05);
+		color: rgb(var(--gray));
+		border: 1px solid var(--border-color);
+		letter-spacing: 0.02em;
+		line-height: 1.3;
+		cursor: help;
+		transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+	}
+	:global(html[data-theme="dark"]) .loss-badge {
+		background: rgba(255, 255, 255, 0.05);
+		color: #94a3b8;
+		border-color: rgba(255, 255, 255, 0.1);
+	}
+	.loss-badge.loss-optimal {
+		background: rgba(34, 197, 94, 0.1);
+		color: #16a34a;
+		border-color: rgba(34, 197, 94, 0.3);
+	}
+	:global(html[data-theme="dark"]) .loss-badge.loss-optimal {
+		background: rgba(34, 197, 94, 0.16);
+		color: #4ade80;
+		border-color: rgba(34, 197, 94, 0.35);
+	}
+	.loss-badge.loss-warn {
+		background: rgba(239, 68, 68, 0.12);
+		color: #dc2626;
+		border-color: rgba(239, 68, 68, 0.35);
+	}
+	:global(html[data-theme="dark"]) .loss-badge.loss-warn {
+		background: rgba(239, 68, 68, 0.2);
+		color: #f87171;
+		border-color: rgba(239, 68, 68, 0.45);
 	}
 	.b-tile-value-wrap {
 		display: flex;
@@ -719,7 +793,12 @@
 		line-height: 1.4;
 	}
 
-	@media (max-width: 600px) {
+	@media (max-width: 860px) {
+		.benchmark-tiles {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+	@media (max-width: 520px) {
 		.benchmark-header {
 			flex-direction: column;
 			align-items: flex-start;
@@ -729,7 +808,7 @@
 			justify-content: center;
 		}
 		.benchmark-tiles {
-			grid-template-columns: repeat(2, 1fr);
+			grid-template-columns: 1fr;
 		}
 	}
 </style>

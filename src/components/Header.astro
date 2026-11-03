@@ -30,7 +30,7 @@ import ThemeToggle from './ThemeToggle.astro';
 			<a href="/#about" class="nav-link active">About</a>
 			<a href="/#skills" class="nav-link">Skills</a>
 			<a href="/#projects" class="nav-link">Projects</a>
-			<a href="/#benchmark" class="nav-link">Benchmark</a>
+			<a href="/#lab" class="nav-link">Lab</a>
 			<a href="/#debug" class="nav-link">Debug</a>
 		</div>
 		<div class="actions-right">
@@ -46,12 +46,13 @@ import ThemeToggle from './ThemeToggle.astro';
 		const navLinks = document.querySelectorAll<HTMLAnchorElement>('.nav-link');
 		if (!navLinks.length) return;
 
-		const sectionIds = ['about', 'skills', 'projects', 'benchmark', 'debug'];
+		const sectionIds = ['about', 'skills', 'projects', 'lab', 'benchmark', 'input-lab', 'keyboard-lab', 'debug'];
 
 		function setActive(id: string) {
+			const targetId = (id === 'benchmark' || id === 'input-lab' || id === 'keyboard-lab') ? 'lab' : id;
 			navLinks.forEach((link) => {
 				const href = link.getAttribute('href') || '';
-				if (href.endsWith(`#${id}`) || (id === 'about' && href === '/')) {
+				if (href.endsWith(`#${targetId}`) || (targetId === 'about' && href === '/')) {
 					link.classList.add('active');
 				} else {
 					link.classList.remove('active');
@@ -62,7 +63,7 @@ import ThemeToggle from './ThemeToggle.astro';
 		navLinks.forEach((link) => {
 			link.addEventListener('click', () => {
 				const href = link.getAttribute('href') || '';
-				const match = href.match(/#(\w+)$/);
+				const match = href.match(/#([\w-]+)$/);
 				if (match && match[1]) {
 					setActive(match[1]);
 				} else {

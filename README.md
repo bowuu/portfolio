@@ -41,3 +41,17 @@ npm run dev
 # Build production bundle
 npm run build
 ```
+
+
+---
+
+## 🤖 AI Agent & Developer Guidelines
+
+Operational rulebooks, architectural constraints, and sensitive project specifications for AI pair programmers (e.g. Antigravity) are maintained in the private vault:
+👉 **[`bowuu/agent-rules`](https://github.com/bowuu/agent-rules)** (`repos/portfolio/AGENTS.md`)
+
+To sync local guidelines across devices, clone the private vault alongside this project and run:
+```powershell
+cd agent-rules
+.\sync.ps1 -Action deploy
+```

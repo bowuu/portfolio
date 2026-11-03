@@ -27,105 +27,59 @@
 		Measure real-time USB mouse polling frequency, display-to-click visual reaction latency, and test mouse buttons and scroll wheel.
 	</p>
 
-	<!-- THREE-COLUMN BENCHMARK WORKBENCH -->
+	<!-- TWO-COLUMN BENCHMARK WORKBENCH -->
 	<div class="lab-grid">
-		<!-- COLUMN 1: MOUSE POLLING RATE TRACKER -->
+		<!-- COLUMN 1: MOUSE POLLING & REFLEX BENCHMARK -->
 		<div class="lab-col">
 			<div class="col-head">
-				<span class="col-title">Mouse Polling Rate</span>
-				<span class="badge mono" id="poll-tier-badge">Idle</span>
-			</div>
-
-			<!-- INTERACTIVE POLLING CANVAS / HOVER ZONE -->
-			<div class="poll-zone" id="poll-zone" tabindex="0">
-				<canvas id="poll-sparkline" width="460" height="90"></canvas>
-				<div class="poll-overlay" id="poll-overlay">
-					<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" class="mouse-icon">
-						<rect x="5" y="2" width="14" height="20" rx="7"/>
-						<line x1="12" y1="6" x2="12" y2="10"/>
-					</svg>
-					<span class="poll-prompt">Move cursor rapidly inside this box</span>
+				<span class="col-title">Polling &amp; Reflex Benchmark</span>
+				<div class="head-badges">
+					<span class="badge mono" id="poll-tier-badge">Idle</span>
+					<span class="badge mono" id="reaction-state-badge">Ready</span>
 				</div>
 			</div>
 
-			<!-- POLLING TELEMETRY READOUTS -->
+			<!-- UNIFIED POLLING CANVAS & REFLEX TARGET -->
+			<div class="poll-reflex-box idle" id="poll-reflex-box" role="button" tabindex="0">
+				<canvas id="poll-sparkline" width="460" height="90"></canvas>
+				<div class="poll-reflex-overlay">
+					<span class="reaction-headline" id="reaction-headline">Click to Test Reflex</span>
+					<span class="reaction-sub" id="reaction-sub">Move cursor rapidly to test polling</span>
+				</div>
+			</div>
+
+			<!-- UNIFIED POLLING & REFLEX READOUTS (3 SPACIOUS CARDS) -->
 			<div class="metrics-row">
 				<div class="metric-mini">
-					<span class="m-label">Current Rate</span>
+					<span class="m-label">Polling Rate</span>
 					<div class="m-val-wrap">
 						<span class="m-val mono" id="poll-current-hz">0</span>
 						<span class="m-unit">Hz</span>
 					</div>
-					<span class="m-sub mono" id="poll-interval-ms">Interval: -- ms</span>
+					<span class="m-sub mono" id="poll-peak-sub">Peak: 0 Hz</span>
 				</div>
 
 				<div class="metric-mini">
-					<span class="m-label">Peak Polling</span>
-					<div class="m-val-wrap">
-						<span class="m-val mono" id="poll-peak-hz">0</span>
-						<span class="m-unit">Hz</span>
-					</div>
-					<span class="m-sub mono" id="poll-stability">Jitter: &plusmn;0.0 ms</span>
-				</div>
-
-				<div class="metric-mini">
-					<span class="m-label">Raw Packets</span>
-					<div class="m-val-wrap">
-						<span class="m-val mono" id="poll-packet-count">0</span>
-						<span class="m-unit">pkts</span>
-					</div>
-					<span class="m-sub mono" id="poll-coalesced">Coalesced API active</span>
-				</div>
-			</div>
-		</div>
-
-		<!-- COLUMN 2: MOUSE REFLEX BENCHMARK -->
-		<div class="lab-col">
-			<div class="col-head">
-				<span class="col-title">Mouse Reflex Benchmark</span>
-				<span class="badge mono" id="reaction-state-badge">Ready</span>
-			</div>
-
-			<!-- INTERACTIVE REACTION TARGET -->
-			<div class="reaction-box idle" id="reaction-box" role="button" tabindex="0">
-				<div class="reaction-content">
-					<span class="reaction-headline" id="reaction-headline">Click to Start</span>
-					<span class="reaction-sub" id="reaction-sub">Click when it turns green</span>
-				</div>
-			</div>
-
-			<!-- CLICK & REACTION TIMING READOUTS -->
-			<div class="metrics-row">
-				<div class="metric-mini">
-					<span class="m-label">Last Reflex</span>
+					<span class="m-label">Visual Reflex</span>
 					<div class="m-val-wrap">
 						<span class="m-val mono" id="reaction-time-val">--</span>
 						<span class="m-unit">ms</span>
 					</div>
-					<span class="m-sub mono" id="reaction-rating">Awaiting click</span>
+					<span class="m-sub mono" id="reaction-best-sub">Best: -- ms</span>
 				</div>
 
 				<div class="metric-mini">
-					<span class="m-label">Best Reflex</span>
+					<span class="m-label">Jitter Stability</span>
 					<div class="m-val-wrap">
-						<span class="m-val mono" id="reaction-best-val">--</span>
+						<span class="m-val mono" id="poll-stability-val">&plusmn;0.0</span>
 						<span class="m-unit">ms</span>
 					</div>
-					<span class="m-sub mono" id="reaction-best-sub">Fastest attempt</span>
-				</div>
-
-				<div class="metric-mini">
-					<span class="m-label">Session Average</span>
-					<div class="m-val-wrap">
-						<span class="m-val mono" id="reaction-avg-val">--</span>
-						<span class="m-unit">ms</span>
-					</div>
-					<span class="m-sub mono" id="reaction-count-sub">0 total attempts</span>
+					<span class="m-sub mono" id="reaction-count-sub">0 reflex tests</span>
 				</div>
 			</div>
 		</div>
 
-		<!-- COLUMN 3: MOUSE BUTTONS & SCROLL TESTER -->
+		<!-- COLUMN 2: MOUSE BUTTONS & SCROLL TESTER -->
 		<div class="lab-col">
 			<div class="col-head">
 				<span class="col-title">Mouse Buttons &amp; Scroll</span>
@@ -208,25 +162,39 @@
 <script>
 	function initInputLatencyLab() {
 		// ==========================================
-		// 1. MOUSE POLLING RATE DETECTOR
+		// 1. UNIFIED MOUSE POLLING & REFLEX BENCHMARK
 		// ==========================================
-		const pollZone = document.getElementById('poll-zone');
-		const pollOverlay = document.getElementById('poll-overlay');
-		const currentHzEl = document.getElementById('poll-current-hz');
-		const peakHzEl = document.getElementById('poll-peak-hz');
-		const intervalEl = document.getElementById('poll-interval-ms');
-		const stabilityEl = document.getElementById('poll-stability');
-		const packetCountEl = document.getElementById('poll-packet-count');
+		const pollReflexBox = document.getElementById('poll-reflex-box');
+		const reactionHeadline = document.getElementById('reaction-headline');
+		const reactionSub = document.getElementById('reaction-sub');
 		const tierBadgeEl = document.getElementById('poll-tier-badge');
+		const reactionStateBadge = document.getElementById('reaction-state-badge');
 		const canvas = document.getElementById('poll-sparkline') as HTMLCanvasElement | null;
 		const ctx = canvas?.getContext('2d');
 
+		// Telemetry Elements
+		const pollCurrentHz = document.getElementById('poll-current-hz');
+		const pollPeakSub = document.getElementById('poll-peak-sub');
+		const reactionTimeVal = document.getElementById('reaction-time-val');
+		const reactionBestSub = document.getElementById('reaction-best-sub');
+		const pollStabilityVal = document.getElementById('poll-stability-val');
+		const reactionCountSub = document.getElementById('reaction-count-sub');
+
+		// Polling State
 		let peakHz = 0;
 		let totalPackets = 0;
 		let eventTimestamps: number[] = [];
 		let intervalHistory: number[] = [];
 		let sparklineData: number[] = new Array(50).fill(0);
 		let decayTimer: any = null;
+
+		// Reflex State
+		type ReactionState = 'IDLE' | 'WAITING' | 'READY' | 'TOO_SOON' | 'RESULT';
+		let reactionState: ReactionState = 'IDLE';
+		let stateTimer: any = null;
+		let greenTimestamp = 0;
+		let reactionScores: number[] = [];
+		let bestReflex = Infinity;
 
 		function drawSparkline() {
 			if (!ctx || !canvas) return;
@@ -273,9 +241,6 @@
 		}
 
 		function handlePointerMove(e: PointerEvent) {
-			if (pollOverlay) pollOverlay.style.opacity = '0';
-
-			// Leverage getCoalescedEvents for unthrottled raw USB packet timestamps
 			const events: PointerEvent[] = (typeof (e as any).getCoalescedEvents === 'function')
 				? (e as any).getCoalescedEvents()
 				: [e];
@@ -286,7 +251,6 @@
 
 				if (eventTimestamps.length > 0) {
 					const dt = t - eventTimestamps[eventTimestamps.length - 1];
-					// Filter out duplicate OS frame timestamps (0ms) and pauses (> 100ms)
 					if (dt > 0.05 && dt < 80) {
 						intervalHistory.push(dt);
 						if (intervalHistory.length > 40) intervalHistory.shift();
@@ -297,27 +261,23 @@
 			}
 
 			if (intervalHistory.length >= 5) {
-				// Calculate median interval to eliminate OS scheduling jitter outliers
 				const sorted = [...intervalHistory].sort((a, b) => a - b);
 				const medianDt = sorted[Math.floor(sorted.length / 2)];
 				const hz = Math.round(1000 / medianDt);
 
 				if (hz > 40 && hz < 12000) {
-					if (currentHzEl) currentHzEl.textContent = `${hz}`;
-					if (intervalEl) intervalEl.textContent = `Interval: ${medianDt.toFixed(2)} ms`;
+					if (pollCurrentHz) pollCurrentHz.textContent = `${hz}`;
 
 					if (hz > peakHz) {
 						peakHz = hz;
-						if (peakHzEl) peakHzEl.textContent = `${peakHz}`;
+						if (pollPeakSub) pollPeakSub.textContent = `Peak: ${peakHz.toLocaleString()} Hz`;
 					}
 
-					// Standard deviation calculation
 					const mean = intervalHistory.reduce((a, b) => a + b, 0) / intervalHistory.length;
 					const variance = intervalHistory.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / intervalHistory.length;
 					const stdDev = Math.sqrt(variance);
-					if (stabilityEl) stabilityEl.textContent = `Jitter: \u00B1${stdDev.toFixed(2)} ms`;
+					if (pollStabilityVal) pollStabilityVal.textContent = `\u00B1${stdDev.toFixed(1)}`;
 
-					// Update Tier Classification Badge
 					if (tierBadgeEl) {
 						if (peakHz >= 3500) {
 							tierBadgeEl.textContent = 'Esports (8000Hz)';
@@ -337,106 +297,73 @@
 						}
 					}
 
-					// Push to sparkline
 					sparklineData.push(hz);
 					if (sparklineData.length > 50) sparklineData.shift();
 					drawSparkline();
 				}
 			}
 
-			if (packetCountEl) packetCountEl.textContent = totalPackets.toLocaleString();
-
-			// Reset current rate decay
 			clearTimeout(decayTimer);
 			decayTimer = setTimeout(() => {
-				if (currentHzEl) currentHzEl.textContent = '0';
-				if (pollOverlay) pollOverlay.style.opacity = '1';
+				if (pollCurrentHz) pollCurrentHz.textContent = '0';
 			}, 350);
 		}
 
-		if (pollZone) {
-			pollZone.addEventListener('pointermove', handlePointerMove);
-		}
-
-		// ==========================================
-		// 2. CLICK REACTION & VISUAL-MOTOR BENCHMARK
-		// ==========================================
-		const reactionBox = document.getElementById('reaction-box');
-		const reactionHeadline = document.getElementById('reaction-headline');
-		const reactionSub = document.getElementById('reaction-sub');
-		const reactionStateBadge = document.getElementById('reaction-state-badge');
-		const reactionTimeVal = document.getElementById('reaction-time-val');
-		const reactionRating = document.getElementById('reaction-rating');
-		const reactionBestVal = document.getElementById('reaction-best-val');
-		const reactionAvgVal = document.getElementById('reaction-avg-val');
-		const reactionCountSub = document.getElementById('reaction-count-sub');
-
-		type ReactionState = 'IDLE' | 'WAITING' | 'READY' | 'TOO_SOON' | 'RESULT';
-		let reactionState: ReactionState = 'IDLE';
-		let stateTimer: any = null;
-		let greenTimestamp = 0;
-		let reactionScores: number[] = [];
-		let bestReflex = Infinity;
-
 		function startReactionTest() {
 			reactionState = 'WAITING';
-			if (reactionBox) reactionBox.className = 'reaction-box waiting';
+			if (pollReflexBox) pollReflexBox.className = 'poll-reflex-box waiting';
 			if (reactionHeadline) reactionHeadline.textContent = 'Wait for green...';
 			if (reactionSub) reactionSub.textContent = 'Do not click yet!';
 			if (reactionStateBadge) reactionStateBadge.textContent = 'Waiting...';
 
-			const randomDelay = 1500 + Math.random() * 2500; // 1.5s to 4.0s
+			const randomDelay = 1500 + Math.random() * 2500;
 			clearTimeout(stateTimer);
 			stateTimer = setTimeout(() => {
 				reactionState = 'READY';
 				greenTimestamp = performance.now();
-				if (reactionBox) reactionBox.className = 'reaction-box ready';
+				if (pollReflexBox) pollReflexBox.className = 'poll-reflex-box ready';
 				if (reactionHeadline) reactionHeadline.textContent = 'CLICK NOW!';
 				if (reactionSub) reactionSub.textContent = 'Click as fast as you can';
 				if (reactionStateBadge) reactionStateBadge.textContent = 'Go!';
 			}, randomDelay);
 		}
 
-		if (reactionBox) {
-			reactionBox.addEventListener('pointerdown', (e: PointerEvent) => {
+		if (pollReflexBox) {
+			pollReflexBox.addEventListener('pointermove', handlePointerMove);
+			pollReflexBox.addEventListener('pointerdown', (e: PointerEvent) => {
 				const downTime = (e.timeStamp && e.timeStamp > 0) ? e.timeStamp : performance.now();
 
 				if (reactionState === 'IDLE' || reactionState === 'RESULT' || reactionState === 'TOO_SOON') {
 					startReactionTest();
 				} else if (reactionState === 'WAITING') {
-					// Clicked too soon
 					clearTimeout(stateTimer);
 					reactionState = 'TOO_SOON';
-					if (reactionBox) reactionBox.className = 'reaction-box too-soon';
+					if (pollReflexBox) pollReflexBox.className = 'poll-reflex-box too-soon';
 					if (reactionHeadline) reactionHeadline.textContent = 'Too Soon!';
 					if (reactionSub) reactionSub.textContent = 'Clicked before green. Click to retry.';
 					if (reactionStateBadge) reactionStateBadge.textContent = 'False Start';
 				} else if (reactionState === 'READY') {
-					// Successful reaction
 					const reactionDelta = Math.max(1, Math.round(downTime - greenTimestamp));
 					reactionState = 'RESULT';
 					reactionScores.push(reactionDelta);
 					if (reactionDelta < bestReflex) {
 						bestReflex = reactionDelta;
-						if (reactionBestVal) reactionBestVal.textContent = `${bestReflex}`;
+						if (reactionBestSub) reactionBestSub.textContent = `Best: ${bestReflex} ms`;
 					}
-
-					if (reactionBox) reactionBox.className = 'reaction-box result';
-					if (reactionHeadline) reactionHeadline.textContent = `${reactionDelta} ms`;
-					if (reactionSub) reactionSub.textContent = 'Click to test again';
-					if (reactionStateBadge) reactionStateBadge.textContent = `${reactionDelta} ms`;
 
 					if (reactionTimeVal) reactionTimeVal.textContent = `${reactionDelta}`;
-					if (reactionRating) {
-						if (reactionDelta < 185) reactionRating.textContent = 'Superhuman reflex';
-						else if (reactionDelta < 225) reactionRating.textContent = 'Esports caliber';
-						else if (reactionDelta < 275) reactionRating.textContent = 'Fast reaction';
-						else reactionRating.textContent = 'Typical response';
-					}
+					if (reactionCountSub) reactionCountSub.textContent = `${reactionScores.length} reflex test(s)`;
 
-					const avg = Math.round(reactionScores.reduce((a, b) => a + b, 0) / reactionScores.length);
-					if (reactionAvgVal) reactionAvgVal.textContent = `${avg}`;
-					if (reactionCountSub) reactionCountSub.textContent = `${reactionScores.length} attempts recorded`;
+					let rating = 'Average';
+					if (reactionDelta < 185) rating = 'Pro Esports';
+					else if (reactionDelta < 225) rating = 'Fast';
+					else if (reactionDelta < 275) rating = 'Normal';
+					else rating = 'Slow';
+
+					if (pollReflexBox) pollReflexBox.className = 'poll-reflex-box result';
+					if (reactionHeadline) reactionHeadline.textContent = `${reactionDelta} ms (${rating})`;
+					if (reactionSub) reactionSub.textContent = 'Click to test again';
+					if (reactionStateBadge) reactionStateBadge.textContent = `${reactionDelta} ms`;
 				}
 			});
 		}
@@ -591,23 +518,20 @@
 				}
 				if (mouseBadge) mouseBadge.textContent = 'Ready';
 
-				if (currentHzEl) currentHzEl.textContent = '0';
-				if (peakHzEl) peakHzEl.textContent = '0';
-				if (intervalEl) intervalEl.textContent = 'Interval: -- ms';
-				if (stabilityEl) stabilityEl.textContent = 'Jitter: \u00B10.0 ms';
-				if (packetCountEl) packetCountEl.textContent = '0';
+				if (pollCurrentHz) pollCurrentHz.textContent = '0';
+				if (pollPeakSub) pollPeakSub.textContent = 'Peak: 0 Hz';
+				if (pollStabilityVal) pollStabilityVal.textContent = '\u00B10.0';
+				if (reactionTimeVal) reactionTimeVal.textContent = '--';
+				if (reactionBestSub) reactionBestSub.textContent = 'Best: -- ms';
+				if (reactionCountSub) reactionCountSub.textContent = '0 reflex tests';
 				if (tierBadgeEl) {
 					tierBadgeEl.textContent = 'Idle';
 					tierBadgeEl.className = 'badge mono';
 				}
-				if (reactionBox) reactionBox.className = 'reaction-box idle';
-				if (reactionHeadline) reactionHeadline.textContent = 'Click to Start';
-				if (reactionSub) reactionSub.textContent = 'Click when it turns green';
-				if (reactionTimeVal) reactionTimeVal.textContent = '--';
-				if (reactionRating) reactionRating.textContent = 'Awaiting click';
-				if (reactionBestVal) reactionBestVal.textContent = '--';
-				if (reactionAvgVal) reactionAvgVal.textContent = '--';
-				if (reactionCountSub) reactionCountSub.textContent = '0 total attempts';
+				if (reactionStateBadge) reactionStateBadge.textContent = 'Ready';
+				if (pollReflexBox) pollReflexBox.className = 'poll-reflex-box idle';
+				if (reactionHeadline) reactionHeadline.textContent = 'Click to Test Reflex';
+				if (reactionSub) reactionSub.textContent = 'Move cursor rapidly to test polling';
 				drawSparkline();
 			});
 		}
@@ -685,11 +609,17 @@
 		margin: 0 0 1.25em 0;
 	}
 
-	/* MULTI-COLUMN LAB WORKBENCH (3 APPLET COLUMNS) */
+	/* TWO-COLUMN LAB WORKBENCH */
 	.lab-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-		gap: 1.15em;
+		grid-template-columns: 1fr 1fr;
+		gap: 1.25em;
+	}
+
+	@media (max-width: 820px) {
+		.lab-grid {
+			grid-template-columns: 1fr;
+		}
 	}
 
 	.lab-col {
@@ -711,6 +641,12 @@
 		min-height: 26px;
 		margin-bottom: 0.85em;
 		gap: 0.5em;
+	}
+
+	.head-badges {
+		display: flex;
+		align-items: center;
+		gap: 0.4em;
 	}
 
 	.col-title {
@@ -746,23 +682,53 @@
 		font-weight: 600;
 	}
 
-	/* POLLING HOVER ZONE & SPARKLINE */
-	.poll-zone {
+	/* UNIFIED POLLING CANVAS & REFLEX BOX */
+	.poll-reflex-box {
 		position: relative;
 		height: 120px;
-		border: 1px dashed var(--border-color);
 		border-radius: 6px;
-		background: rgba(0, 0, 0, 0.02);
 		overflow: hidden;
-		cursor: crosshair;
 		user-select: none;
 		margin-bottom: 1em;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		cursor: pointer;
+		transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+		padding: 1em;
 	}
-	:global(html[data-theme="dark"]) .poll-zone {
-		background: rgba(255, 255, 255, 0.01);
+	.poll-reflex-box.idle {
+		background: rgba(0, 0, 0, 0.03);
+		border: 1px dashed var(--border-color);
+	}
+	:global(html[data-theme="dark"]) .poll-reflex-box.idle {
+		background: rgba(255, 255, 255, 0.02);
+	}
+	.poll-reflex-box.idle:hover {
+		border-color: var(--accent);
+		transform: translateY(-1px);
+	}
+	.poll-reflex-box.waiting {
+		background: #854d0e !important;
+		color: #ffffff;
+		border: 1px solid #ca8a04 !important;
+		box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3);
+	}
+	.poll-reflex-box.ready {
+		background: #15803d !important;
+		color: #ffffff;
+		border: 1px solid #22c55e !important;
+		box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+		transform: scale(1.01);
+	}
+	.poll-reflex-box.too-soon {
+		background: #991b1b !important;
+		color: #ffffff;
+		border: 1px solid #ef4444 !important;
+	}
+	.poll-reflex-box.result {
+		background: rgba(234, 88, 12, 0.12) !important;
+		border: 1px solid var(--accent) !important;
 	}
 
 	#poll-sparkline {
@@ -772,84 +738,19 @@
 		width: 100%;
 		height: 100%;
 		pointer-events: none;
+		z-index: 1;
+		opacity: 0.6;
 	}
 
-	.poll-overlay {
+	.poll-reflex-overlay {
 		position: relative;
 		z-index: 2;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.4em;
-		color: rgb(var(--gray));
-		pointer-events: none;
-		transition: opacity 0.2s ease;
-	}
-	.mouse-icon {
-		opacity: 0.6;
-	}
-	.poll-prompt {
-		font-size: 0.78em;
-		font-weight: 500;
-	}
-
-	/* REACTION INTERACTIVE BOX */
-	.reaction-box {
-		height: 120px;
-		border-radius: 6px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		text-align: center;
-		cursor: pointer;
-		user-select: none;
-		margin-bottom: 1em;
-		transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-		padding: 1em;
-	}
-
-	.reaction-box.idle {
-		background: rgba(0, 0, 0, 0.03);
-		border: 1px dashed var(--border-color);
-	}
-	:global(html[data-theme="dark"]) .reaction-box.idle {
-		background: rgba(255, 255, 255, 0.02);
-	}
-	.reaction-box.idle:hover {
-		border-color: var(--accent);
-		transform: translateY(-1px);
-	}
-
-	.reaction-box.waiting {
-		background: #854d0e;
-		color: #ffffff;
-		border: 1px solid #ca8a04;
-		box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3);
-	}
-
-	.reaction-box.ready {
-		background: #15803d;
-		color: #ffffff;
-		border: 1px solid #22c55e;
-		box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
-		transform: scale(1.01);
-	}
-
-	.reaction-box.too-soon {
-		background: #991b1b;
-		color: #ffffff;
-		border: 1px solid #ef4444;
-	}
-
-	.reaction-box.result {
-		background: rgba(234, 88, 12, 0.12);
-		border: 1px solid var(--accent);
-	}
-
-	.reaction-content {
-		display: flex;
-		flex-direction: column;
 		gap: 0.3em;
+		text-align: center;
+		pointer-events: none;
 	}
 
 	.reaction-headline {

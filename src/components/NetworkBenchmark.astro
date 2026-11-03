@@ -233,12 +233,12 @@
 			if (lossSubEl) lossSubEl.textContent = finalLost === 0 ? '0 / 16 pkts lost (Optimal)' : `${finalLost} / 16 pkts lost`;
 
 			// ==========================================
-			// STAGE 2: MULTI-STREAM SUSTAINED DOWNLOAD (3.5s)
+			// STAGE 2: MULTI-STREAM SUSTAINED DOWNLOAD (3s)
 			// ==========================================
 			if (statusText) statusText.textContent = 'Streaming multi-connection download to measure sustained wire speed...';
 			if (progressBar) progressBar.style.width = '25%';
 
-			const downDurationSec = 3.5;
+			const downDurationSec = 3.0;
 			const downStreams = 4;
 			const chunkSize = 25000000; // 25MB per request
 			const downControllers: AbortController[] = [];
@@ -314,16 +314,17 @@
 			const finalDownElapsed = downSteadyStartTime > 0 ? (performance.now() - downSteadyStartTime) / 1000 : (performance.now() - d0) / 1000;
 			const finalDownMbps = (downSteadyBytes * 8) / (Math.max(finalDownElapsed, 0.001) * 1_000_000);
 			if (downEl) downEl.textContent = finalDownMbps.toFixed(1);
-			if (downSubEl) downSubEl.textContent = `Sustained (${(downTotalBytes / (1024 * 1024)).toFixed(1)} MB)`;
+			const downSecDisplay = Math.max(1, Math.round((performance.now() - d0) / 1000));
+			if (downSubEl) downSubEl.textContent = `Sustained (${(downTotalBytes / (1024 * 1024)).toFixed(1)} MB / ${downSecDisplay}s)`;
 			if (progressBar) progressBar.style.width = '63%';
 
 			// ==========================================
-			// STAGE 3: MULTI-STREAM SUSTAINED UPLOAD (3.5s)
+			// STAGE 3: MULTI-STREAM SUSTAINED UPLOAD (3s)
 			// ==========================================
 			if (statusText) statusText.textContent = 'Saturating return pipeline with multi-stream upstream channels...';
 			if (upSubEl) upSubEl.textContent = 'Measuring...';
 
-			const upDurationSec = 3.5;
+			const upDurationSec = 3.0;
 			const upStreams = 4;
 			const upChunkSize = 3 * 1024 * 1024; // 3MB chunk per request
 			const upBuf = new Uint8Array(upChunkSize);
@@ -388,7 +389,8 @@
 			const upBytesToCount = upSteadyBytes > 0 ? upSteadyBytes : upTotalBytes;
 			const finalUpMbps = (upBytesToCount * 8) / (Math.max(finalUpElapsed, 0.001) * 1_000_000);
 			if (upEl) upEl.textContent = finalUpMbps > 0 ? finalUpMbps.toFixed(1) : '--';
-			if (upSubEl) upSubEl.textContent = `Sustained (${(upTotalBytes / (1024 * 1024)).toFixed(1)} MB)`;
+			const upSecDisplay = Math.max(1, Math.round((performance.now() - u0) / 1000));
+			if (upSubEl) upSubEl.textContent = `Sustained (${(upTotalBytes / (1024 * 1024)).toFixed(1)} MB / ${upSecDisplay}s)`;
 			if (progressBar) progressBar.style.width = '100%';
 			const targetSummary = detectedColo ? ` via Cloudflare ${detectedColo} Edge (${detectedCity})` : ' via Cloudflare Anycast';
 			if (statusText) statusText.textContent = `Benchmark complete. 0 host bandwidth consumed; all data routed${targetSummary}.`;

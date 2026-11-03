@@ -272,12 +272,12 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		border-color: rgba(245, 158, 11, 0.3);
 	}
 	/* CARDS */
-	.card {
+	.card, :global(.card) {
 		background: var(--bg-card);
 		border: 1px solid var(--border-color);
 		border-radius: 12px;
 		padding: clamp(1.2em, 3vw, 2em);
-		margin-top: 1.5em;
+		margin-top: 1.8em;
 		box-shadow: var(--box-shadow);
 		transition: background-color 0.2s ease, border-color 0.2s ease;
 		width: 100%;

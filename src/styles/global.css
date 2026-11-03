@@ -187,10 +187,44 @@ html {
 }
 
 #about,
-#projects,
 #skills,
-#inspector {
+#projects,
+#inspector,
+#benchmark {
   scroll-margin-top: 75px;
+}
+
+/* ==========================================================================
+   GLOBAL CARD CONTAINER SYSTEM
+   Standardized card container applied across all top-level sections
+   ========================================================================== */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: clamp(1.2em, 3vw, 2em);
+  margin-top: 1.8em;
+  box-shadow: var(--box-shadow);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  width: 100%;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: clamp(1.2em, 2.5vw, 1.35em);
+  font-weight: 700;
+  margin: 0 0 1.2em 0;
+  padding-bottom: 0.5em;
+  border-bottom: 1.5px solid var(--border-color);
+  color: rgb(var(--black));
+  letter-spacing: -0.01em;
+}
+
+.card-icon {
+  color: var(--accent);
+  flex-shrink: 0;
 }
 
 /* ==========================================================================
@@ -224,6 +258,7 @@ html {
   /* Hide interactive, client-only, and navigation UI */
   header,
   #inspector,
+  #benchmark,
   .canvas-wrapper,
   .cad-controls-top,
   .cad-viewer-footer,

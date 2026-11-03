@@ -191,6 +191,7 @@ html {
 #projects,
 #benchmark,
 #input-lab,
+#keyboard-lab,
 #debug {
   scroll-margin-top: 75px;
 }
@@ -261,6 +262,7 @@ html {
   #debug,
   #benchmark,
   #input-lab,
+  #keyboard-lab,
   .canvas-wrapper,
   .cad-controls-top,
   .cad-viewer-footer,

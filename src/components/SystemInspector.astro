@@ -219,9 +219,9 @@
 		}
 
 		if (cpuEl) {
-			cpuEl.textContent = navigator.hardwareConcurrency 
-				? `${navigator.hardwareConcurrency} Logical CPU Cores` 
-				: 'Multi-core Processor';
+			const cores = navigator.hardwareConcurrency;
+			cpuEl.textContent = cores ? `${cores} Logical CPU Cores` : 'Multi-core Processor';
+			cpuEl.title = 'W3C Navigator API exposes total logical thread concurrency. Heterogeneous P/E core topology is abstracted by the OS scheduler to prevent hardware fingerprinting.';
 		}
 
 		if (ramEl) {
@@ -239,7 +239,7 @@
 		const audioEl = document.getElementById('t-audio');
 		const accelEl = document.getElementById('t-accel');
 
-		// 1. Color Gamut, HDR, and Refresh Rate Detection
+		// 1. Color Gamut, HDR, and Refresh Rate Detection (VRR / LTPO aware)
 		const isP3 = window.matchMedia('(color-gamut: p3)').matches;
 		const isRec2020 = window.matchMedia('(color-gamut: rec2020)').matches;
 		const isHDR = window.matchMedia('(dynamic-range: high)').matches;
@@ -247,39 +247,62 @@
 		const hdrTag = isHDR ? 'HDR' : 'SDR';
 
 		if (refreshEl) {
-			let frameTimes: number[] = [];
-			let lastFrame = performance.now();
-			let framesCollected = 0;
-			const targetFrames = 30;
+			let maxObservedHz = 60;
+			let isSampling = false;
 
-			function sampleFrame(now: number) {
-				const delta = now - lastFrame;
-				lastFrame = now;
-				if (delta > 0 && delta < 100) frameTimes.push(delta);
-				framesCollected++;
+			function measureRefreshBurst(targetSamples: number = 35) {
+				if (isSampling) return;
+				isSampling = true;
+				let frameTimes: number[] = [];
+				let lastFrame = performance.now();
+				let frames = 0;
 
-				if (framesCollected < targetFrames) {
-					requestAnimationFrame(sampleFrame);
-				} else if (frameTimes.length > 5) {
-					const clean = frameTimes.slice(3);
-					clean.sort((a, b) => a - b);
-					const medianDelta = clean[Math.floor(clean.length / 2)];
-					let rawHz = Math.round(1000 / medianDelta);
-					
-					// Snap to standard refresh rates
-					let displayHz = rawHz;
-					for (const std of [60, 75, 90, 120, 144, 165, 240, 360]) {
-						if (Math.abs(rawHz - std) <= 3) {
-							displayHz = std;
-							break;
+				function onFrame(now: number) {
+					const delta = now - lastFrame;
+					lastFrame = now;
+					if (delta > 2 && delta < 100) frameTimes.push(delta);
+					frames++;
+
+					if (frames < targetSamples) {
+						requestAnimationFrame(onFrame);
+					} else {
+						isSampling = false;
+						if (frameTimes.length > 5) {
+							// Discard outliers and find minimum delta (peak display throughput)
+							const clean = frameTimes.slice(3).sort((a, b) => a - b);
+							const p15 = clean[Math.floor(clean.length * 0.2)];
+							let rawHz = Math.round(1000 / p15);
+
+							for (const std of [60, 75, 90, 120, 144, 165, 240, 360]) {
+								if (Math.abs(rawHz - std) <= 4) {
+									rawHz = std;
+									break;
+								}
+							}
+
+							if (rawHz > maxObservedHz) maxObservedHz = rawHz;
+							const vrrTag = maxObservedHz > 60 ? ' (Adaptive VRR)' : '';
+							if (refreshEl) {
+								refreshEl.textContent = `${maxObservedHz} Hz${vrrTag} • ${gamut} • ${hdrTag}`;
+							}
 						}
 					}
-					if (refreshEl) refreshEl.textContent = `${displayHz} Hz • ${gamut} • ${hdrTag}`;
-				} else {
-					if (refreshEl) refreshEl.textContent = `60 Hz • ${gamut} • ${hdrTag}`;
 				}
+				requestAnimationFrame(onFrame);
 			}
-			requestAnimationFrame(sampleFrame);
+
+			// Initial measurement
+			measureRefreshBurst(30);
+
+			// On touch / scroll / interaction (wakes up mobile LTPO 120Hz compositor)
+			const wakeVRR = () => {
+				measureRefreshBurst(35);
+			};
+			window.addEventListener('scroll', wakeVRR, { passive: true, once: false });
+			window.addEventListener('pointerdown', wakeVRR, { passive: true, once: false });
+			refreshEl.style.cursor = 'pointer';
+			refreshEl.title = 'Click to re-sample refresh rate. On mobile VRR/LTPO displays, refresh scales dynamically up to 120Hz during active touch/scroll.';
+			refreshEl.addEventListener('click', () => measureRefreshBurst(50));
 		}
 
 		// 2. Audio Pipeline Latency
@@ -289,8 +312,15 @@
 				if (AudioCtx) {
 					const actx = new AudioCtx();
 					const baseLatMs = ((actx.baseLatency || 0.005) * 1000).toFixed(1);
+					const outLatMs = (actx as any).outputLatency ? (((actx as any).outputLatency) * 1000).toFixed(1) : null;
 					const rateKhz = (actx.sampleRate / 1000).toFixed(0);
-					audioEl.textContent = `${baseLatMs} ms latency • ${rateKhz} kHz DAC`;
+					
+					if (outLatMs) {
+						audioEl.textContent = `${baseLatMs} ms buffer (${outLatMs} ms sink) • ${rateKhz} kHz DAC`;
+					} else {
+						audioEl.textContent = `${baseLatMs} ms buffer • ${rateKhz} kHz DAC`;
+					}
+					audioEl.title = `AudioContext processing buffer: ${baseLatMs}ms. Desktop WASAPI/CoreAudio defaults to ~10ms. Android ranges from 3ms (AAudio low-latency fast track) up to 120ms+ (mixer fallback, DSP effects, or Bluetooth A2DP).`;
 					actx.close();
 				} else {
 					audioEl.textContent = 'Standard Audio Subsystem';

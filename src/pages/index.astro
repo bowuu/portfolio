@@ -6,6 +6,7 @@ import CadModelViewer from '../components/CadModelViewer.astro';
 import SystemInspector from '../components/SystemInspector.astro';
 import NetworkBenchmark from '../components/NetworkBenchmark.astro';
 import InputLatencyLab from '../components/InputLatencyLab.astro';
+import KeyboardLab from '../components/KeyboardLab.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 ---
 
@@ -145,7 +146,10 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 			<!-- MOUSE POLLING & CLICK LATENCY LAB -->
 			<InputLatencyLab />
 
-			<!-- SYSTEM INSPECTOR -->
+			<!-- KEYBOARD MATRIX & LATENCY LAB -->
+			<KeyboardLab />
+
+			<!-- DEBUG / SYSTEM INSPECTOR -->
 			<SystemInspector />
 		</main>
 

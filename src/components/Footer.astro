@@ -1,0 +1,56 @@
+---
+const today = new Date();
+---
+
+<footer>
+	<div class="footer-links">
+		<a href="https://www.linkedin.com/in/bowu/" target="_blank" rel="noopener">LinkedIn</a>
+		<span class="dot">&bull;</span>
+		<a href="https://github.com/bowuu" target="_blank" rel="noopener">GitHub</a>
+		<span class="dot">&bull;</span>
+		<a href="https://makerworld.com/en/@brob" target="_blank" rel="noopener">MakerWorld 3D</a>
+	</div>
+
+	<!-- COPYRIGHT AT BOTTOM OF FOOTER -->
+	<p class="copyright">&copy; {today.getFullYear()} Bo Wu. All rights reserved.</p>
+</footer>
+
+<style>
+	footer {
+		padding: clamp(2rem, 4vw, 3rem) clamp(1rem, 4vw, 2rem) 3.5rem clamp(1rem, 4vw, 2rem);
+		background: var(--bg-page);
+		color: rgb(var(--gray));
+		text-align: center;
+		border-top: 1px solid var(--border-color);
+		width: 100%;
+		transition: background-color 0.2s ease, border-color 0.2s ease;
+	}
+	.footer-links {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 0.8em;
+		font-size: 0.95em;
+	}
+	.footer-links a {
+		color: rgb(var(--gray));
+		text-decoration: none;
+		font-weight: 500;
+		transition: color 0.15s ease;
+	}
+	.footer-links a:hover {
+		color: var(--accent);
+	}
+	.dot {
+		color: rgba(var(--gray), 0.4);
+		font-size: 0.8em;
+	}
+	.copyright {
+		margin-top: 1.5em;
+		margin-bottom: 0;
+		font-size: 0.82em;
+		font-weight: 500;
+		color: rgb(var(--gray));
+		opacity: 0.75;
+	}
+</style>

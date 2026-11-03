@@ -1,0 +1,433 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import CadModelViewer from '../components/CadModelViewer.astro';
+import SystemInspector from '../components/SystemInspector.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<!-- HERO / ABOUT -->
+			<section class="hero" id="about">
+				<div class="avatar-wrap">
+					<img 
+						src="/dog.jpg" 
+						alt="Dog mascot" 
+						title="Chief Morale Officer 🐾" 
+						class="avatar-img" 
+						width="144" 
+						height="144" 
+						loading="eager" 
+					/>
+				</div>
+				<h1 class="name">Bo Wu</h1>
+				<p class="role-title">Hardware Engineer</p>
+				<p class="tagline">Silicon Validation &bull; Embedded Linux &bull; Hardware Systems</p>
+
+				<div class="contact-links">
+					<a href="https://www.linkedin.com/in/bowu/" target="_blank" rel="noopener" class="pill linkedin" title="Connect on LinkedIn">
+						<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+							<path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+						</svg>
+						LinkedIn
+					</a>
+					<a href="https://github.com/bowuu" target="_blank" rel="noopener" class="pill" title="GitHub Code Repositories">
+						<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+							<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+						</svg>
+						GitHub
+					</a>
+					<a href="https://makerworld.com/en/@brob" target="_blank" rel="noopener" class="pill highlight" title="3D Models on MakerWorld">
+						<svg viewBox="0 0 28 28" width="16" height="16" fill="currentColor">
+							<path d="M27.2867 2.68142L20.8492 0.160571L20.4386 0L20.0257 0.160571L13.9977 2.51861L7.96978 0.160571L7.56139 0L7.15188 0.160571L0.713275 2.68142L0 2.96102V25.0401L0.713275 25.3186L7.15188 27.8394L7.56139 28L7.97091 27.8394L14 25.4814L20.028 27.8394L20.4386 28L20.8492 27.8394L27.2867 25.3186L28 25.0401V2.96102L27.2867 2.68142ZM20.4386 1.20372L26.8772 3.7257V12.8356L20.4386 10.3158V1.20372ZM14.4095 13.8787L20.4386 11.5207L26.4677 13.8787L26.7748 13.9989L26.4677 14.119L20.4386 16.4771L14.4095 14.119L14.1024 13.9989L14.4095 13.8787ZM7.56139 1.20372L14 3.7257V12.8356L7.56139 10.3147V1.20372ZM1.53343 13.8787L7.56139 11.5207L13.5905 13.8787L13.8976 13.9989L13.5905 14.119L7.56139 16.4771L1.53343 14.119L1.22629 13.9989L1.53343 13.8787ZM1.12504 24.2732V15.1588L7.56365 17.6785V26.7895L1.12504 24.2732ZM14.0022 24.2732V15.1588L20.4409 17.6785V26.7895L14.0022 24.2732Z"/>
+						</svg>
+						MakerWorld 3D
+					</a>
+				</div>
+			</section>
+
+			<!-- PROJECTS -->
+			<section class="card" id="projects">
+				<h2 class="card-title">
+					<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+						<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+					</svg>
+					Projects
+				</h2>
+				<div class="projects-list">
+					<!-- PROJECT 1: 3D CAD VIEWER -->
+					<div class="project-box">
+						<div class="project-head">
+							<div class="project-title-group">
+								<h3 class="project-name">3D Models</h3>
+							</div>
+							<a href="https://makerworld.com/en/@brob" target="_blank" rel="noopener" class="sub-link">MakerWorld @brob &rarr;</a>
+						</div>
+
+						<!-- INTERACTIVE 3D CAD VIEWER EMBED -->
+						<CadModelViewer />
+					</div>
+
+					<!-- PROJECT 2: PLAYKEYS FOR PLEX WEB -->
+					<div class="project-box">
+						<div class="project-head">
+							<div class="project-title-group">
+								<h3 class="project-name">Playkeys for Plex Web</h3>
+								<span class="proj-badge">Chrome Extension &bull; Manifest V3</span>
+								<span class="proj-badge ai-badge">AI-Accelerated Development</span>
+							</div>
+							<a href="https://github.com/bowuu/playkeys" target="_blank" rel="noopener" class="sub-link">GitHub Repository &rarr;</a>
+						</div>
+						<p class="project-text">
+							A zero-dependency Manifest V3 browser extension built to control Plex Web playback seamlessly via global OS hardware media keys, dynamic squircle toolbar status badges, a dark-themed popup player, and scrubbable timeline seek.
+						</p>
+						<div class="project-meta-strip">
+							<span class="meta-label">Engineering Methodology:</span>
+							<span>Rapidly architected and shipped using AI-assisted pair-programming workflows (LLM-driven development), executing end-to-end from initial concept to store-policy compliance in a single build session.</span>
+						</div>
+						<div class="project-tags">
+							<span class="tag">Manifest V3</span>
+							<span class="tag">Vanilla JavaScript</span>
+							<span class="tag">AI Pair-Programming</span>
+							<span class="tag">Zero Dependencies</span>
+							<span class="tag">MediaSession API</span>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- SKILLS -->
+			<section class="card" id="skills">
+				<h2 class="card-title">
+					<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+						<rect x="4" y="4" width="16" height="16" rx="2"/>
+						<rect x="9" y="9" width="6" height="6"/>
+						<line x1="9" y1="1" x2="9" y2="4"/>
+						<line x1="15" y1="1" x2="15" y2="4"/>
+						<line x1="9" y1="20" x2="9" y2="23"/>
+						<line x1="15" y1="20" x2="15" y2="23"/>
+						<line x1="20" y1="9" x2="23" y2="9"/>
+						<line x1="20" y1="14" x2="23" y2="14"/>
+						<line x1="1" y1="9" x2="4" y2="9"/>
+						<line x1="1" y1="14" x2="4" y2="14"/>
+					</svg>
+					Skills
+				</h2>
+				<div class="skills-grid">
+					<div class="skill-category">
+						<span class="skill-label">Silicon &amp; Hardware Validation</span>
+						<p class="skill-items">Automated Test Equipment (ATE), Die Sort &amp; Yield Optimization, Power Rail &amp; Waveform Debug</p>
+					</div>
+					<div class="skill-category">
+						<span class="skill-label">Embedded &amp; Platforms</span>
+						<p class="skill-items">Embedded Linux (Yocto, Debian, RHEL), RISC Architectures, High-Speed I/O (PCIe, Ethernet)</p>
+					</div>
+					<div class="skill-category">
+						<span class="skill-label">CAD &amp; Prototyping</span>
+						<p class="skill-items">Autodesk Inventor, 3D Printing</p>
+					</div>
+				</div>
+			</section>
+
+			<!-- SYSTEM INSPECTOR -->
+			<SystemInspector />
+		</main>
+
+		<Footer />
+	</body>
+</html>
+
+<style>
+	main {
+		width: 100%;
+		max-width: 1100px;
+		margin: 0 auto;
+		padding: clamp(1.25rem, 3.5vw, 2.5rem) clamp(1rem, 4vw, 2rem) 4rem clamp(1rem, 4vw, 2rem);
+	}
+
+	/* HERO */
+	.hero {
+		text-align: center;
+		padding: clamp(1.5rem, 3.5vw, 2.5rem) 0 clamp(1.2rem, 3vw, 2rem) 0;
+	}
+	.avatar-wrap {
+		display: flex;
+		justify-content: center;
+		margin-bottom: 1.25em;
+	}
+	.avatar-img {
+		width: clamp(120px, 16vw, 144px);
+		height: clamp(120px, 16vw, 144px);
+		border-radius: 50%;
+		object-fit: cover;
+		box-shadow: 0 0 0 3px var(--bg-card), 0 0 0 5px rgba(var(--accent-rgb), 0.35), 0 10px 25px rgba(0, 0, 0, 0.12);
+		transition: transform 0.25s ease, box-shadow 0.25s ease;
+		background: var(--bg-card);
+		user-select: none;
+	}
+	.avatar-img:hover {
+		transform: scale(1.05);
+		box-shadow: 0 0 0 3px var(--bg-card), 0 0 0 5px var(--accent), 0 14px 30px rgba(0, 0, 0, 0.18);
+	}
+	.name {
+		font-size: clamp(2.4em, 6vw, 3.2em);
+		font-weight: 800;
+		letter-spacing: -0.025em;
+		margin: 0 0 0.15em 0;
+		color: rgb(var(--black));
+	}
+	.role-title {
+		font-size: clamp(1.15em, 2.8vw, 1.38em);
+		font-weight: 700;
+		letter-spacing: -0.01em;
+		color: var(--accent);
+		margin: 0 0 0.35em 0;
+	}
+	.tagline {
+		font-size: clamp(0.95em, 2.2vw, 1.1em);
+		line-height: 1.5;
+		margin: 0 auto 1.4em auto;
+		color: rgb(var(--gray-dark));
+	}
+
+	/* CONTACT PILLS */
+	.contact-links {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.5em;
+	}
+	.pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45em;
+		padding: 0.45em 0.9em;
+		border-radius: 20px;
+		background: var(--bg-card);
+		border: 1px solid var(--border-color);
+		color: rgb(var(--gray-dark));
+		text-decoration: none;
+		font-size: 0.86em;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+	.pill:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+		transform: translateY(-1px);
+	}
+	.pill.primary {
+		background: var(--accent);
+		color: #ffffff;
+		border-color: var(--accent);
+	}
+	.pill.primary:hover {
+		background: var(--accent-dark);
+		color: #ffffff;
+	}
+	.pill.linkedin {
+		background: #0a66c2;
+		color: #ffffff;
+		border-color: #0a66c2;
+	}
+	.pill.linkedin:hover {
+		background: #004182;
+		border-color: #004182;
+		color: #ffffff;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 14px rgba(10, 102, 194, 0.35);
+	}
+	:global(html[data-theme="dark"]) .pill.linkedin {
+		background: rgba(10, 102, 194, 0.22);
+		color: #60a5fa;
+		border-color: rgba(10, 102, 194, 0.45);
+	}
+	:global(html[data-theme="dark"]) .pill.linkedin:hover {
+		background: #0a66c2;
+		color: #ffffff;
+		border-color: #0a66c2;
+		box-shadow: 0 4px 16px rgba(10, 102, 194, 0.45);
+	}
+	.pill.highlight {
+		background: #fdf5ea;
+		color: #b45309;
+		border-color: #fcd34d;
+	}
+	:global(html[data-theme="dark"]) .pill.highlight {
+		background: rgba(245, 158, 11, 0.15);
+		color: #fbbf24;
+		border-color: rgba(245, 158, 11, 0.3);
+	}
+	/* CARDS */
+	.card {
+		background: var(--bg-card);
+		border: 1px solid var(--border-color);
+		border-radius: 12px;
+		padding: clamp(1.2em, 3vw, 2em);
+		margin-top: 1.5em;
+		box-shadow: var(--box-shadow);
+		transition: background-color 0.2s ease, border-color 0.2s ease;
+		width: 100%;
+	}
+	.card-title {
+		display: flex;
+		align-items: center;
+		gap: 0.5em;
+		font-size: clamp(1.2em, 2.5vw, 1.35em);
+		font-weight: 700;
+		margin: 0 0 1.2em 0;
+		padding-bottom: 0.5em;
+		border-bottom: 1.5px solid var(--border-color);
+		color: rgb(var(--black));
+	}
+
+	.card-icon {
+		color: var(--accent);
+		flex-shrink: 0;
+	}
+
+	/* SKILLS GRID */
+	.skills-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+		gap: 1.2em;
+	}
+	.skill-category {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35em;
+		background: rgba(var(--gray-light), 0.25);
+		padding: 1.1em 1.25em;
+		border-radius: 8px;
+		border: 1px solid var(--border-color);
+		min-width: 0;
+	}
+	.skill-label {
+		font-size: 0.84em;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--accent);
+	}
+	.skill-items {
+		font-size: 0.9em;
+		line-height: 1.5;
+		margin: 0;
+		color: rgb(var(--gray-dark));
+		word-break: break-word;
+	}
+
+	/* PROJECTS */
+	.projects-list {
+		display: flex;
+		flex-direction: column;
+		gap: 1.8em;
+	}
+	.project-box {
+		padding: clamp(1em, 2vw, 1.5em);
+		background: var(--bg-card);
+		border: 1px solid var(--border-color);
+		border-radius: 10px;
+		width: 100%;
+	}
+	.project-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: 0.4em;
+		margin-bottom: 0.8em;
+	}
+	.project-title-group {
+		display: flex;
+		align-items: center;
+		gap: 0.6em;
+		flex-wrap: wrap;
+	}
+	.project-name {
+		font-size: 1.15em;
+		font-weight: 700;
+		margin: 0;
+		color: rgb(var(--black));
+	}
+	.proj-badge {
+		font-size: 0.72em;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		background: rgba(var(--gray-light), 0.8);
+		color: rgb(var(--gray-dark));
+		padding: 0.2em 0.55em;
+		border-radius: 4px;
+	}
+	:global(html[data-theme="dark"]) .proj-badge {
+		background: #27272a;
+		color: #d4d4d8;
+	}
+	.proj-badge.ai-badge {
+		background: rgba(168, 85, 247, 0.12);
+		color: #9333ea;
+		border: 1px solid rgba(168, 85, 247, 0.25);
+		font-weight: 700;
+	}
+	:global(html[data-theme="dark"]) .proj-badge.ai-badge {
+		background: rgba(168, 85, 247, 0.2);
+		color: #c084fc;
+		border-color: rgba(168, 85, 247, 0.4);
+	}
+	.project-meta-strip {
+		margin-top: 0.6em;
+		padding: 0.6em 0.9em;
+		background: rgba(var(--gray-light), 0.35);
+		border-radius: 6px;
+		border: 1px solid var(--border-color);
+		font-size: 0.85em;
+		line-height: 1.5;
+		color: rgb(var(--gray-dark));
+	}
+	.meta-label {
+		font-weight: 700;
+		color: rgb(var(--black));
+		margin-right: 0.3em;
+	}
+	.project-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4em;
+		margin-top: 0.8em;
+	}
+	.tag {
+		font-size: 0.74em;
+		font-weight: 600;
+		padding: 0.2em 0.55em;
+		border-radius: 4px;
+		background: rgba(var(--accent-rgb), 0.08);
+		color: var(--accent);
+		border: 1px solid rgba(var(--accent-rgb), 0.18);
+	}
+
+	.sub-link {
+		font-size: 0.88em;
+		font-weight: 700;
+		color: var(--accent);
+		text-decoration: none;
+	}
+	.sub-link:hover {
+		text-decoration: underline;
+	}
+	.project-text {
+		font-size: 0.92em;
+		line-height: 1.6;
+		margin: 0 0 0.8em 0;
+		color: rgb(var(--gray-dark));
+	}
+</style>

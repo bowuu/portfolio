@@ -1,0 +1,657 @@
+---
+---
+
+<div class="cad-viewer-container">
+	<div class="cad-viewer-header">
+		<div class="cad-viewer-title-row">
+			<div class="cad-viewer-title">
+				<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+					<polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+					<line x1="12" y1="22.08" x2="12" y2="12"/>
+				</svg>
+				<span>Model Selection</span>
+				<svg class="title-arrow" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<line x1="4" y1="12" x2="20" y2="12"></line>
+					<polyline points="14 6 20 12 14 18"></polyline>
+				</svg>
+			</div>
+
+			<!-- MODEL SELECTOR DROPDOWN -->
+			<div class="model-select-wrapper">
+				<select id="cad-model-select" class="model-select" aria-label="Select 3D CAD Model">
+					<optgroup label="Networking & Hardware Mounts">
+						<option value="be92u" selected>ASUS RT-BE92U Router Mount</option>
+						<option value="network-switch-stand">Network Switch Vertical Stand</option>
+					</optgroup>
+					<optgroup label="Workstation & Peripherals">
+						<option value="laptop-vertical-stand">Vertical Laptop Workstation Stand</option>
+						<option value="dual-keyboard-mount">Dual Keyboard Under-Desk Bracket</option>
+						<option value="ikea-tertial">IKEA Tertial Desk Lamp Heavy Mount</option>
+					</optgroup>
+					<optgroup label="Audio & Smart Devices">
+						<option value="r70x-headband">Audio-Technica ATH-R70x Headband Joiner</option>
+						<option value="lenovo-clock-stand">Lenovo Smart Clock Essential Riser</option>
+						<option value="remote-mount">Smart Remote Wall Mount</option>
+					</optgroup>
+					<optgroup label="Automotive & Mechanical">
+						<option value="brz-armrest">Subaru BRZ / GR86 Armrest Blocker</option>
+						<option value="skil-battery">Skil 12V Battery Magnetic Holder</option>
+						<option value="gilmour-handle">Gilmour Garden Nozzle Handle</option>
+					</optgroup>
+				</select>
+			</div>
+		</div>
+
+		<div class="cad-controls-top">
+			<button id="cad-reset-cam-btn" class="cad-mini-btn" type="button" title="Reset Viewpoint">Reset View</button>
+			<button id="cad-wireframe-btn" class="cad-mini-btn" type="button">Wireframe: OFF</button>
+		</div>
+	</div>
+
+	<!-- MODEL QUICK DESCRIPTION -->
+	<div class="cad-model-meta-strip">
+		<span id="model-desc-text" class="model-desc-text">
+			Custom wall mounting bracket for ASUS RT-BE92U Wi-Fi 7 router with integrated thermal ventilation clearance and cable channels.
+		</span>
+	</div>
+
+	<!-- PRINT-ONLY SUMMARY OF 3D MODELS -->
+	<div class="print-only cad-print-summary">
+		<p class="print-summary-title"><strong>Selected 3D CAD &amp; Prototyping Designs (MakerWorld @brob):</strong></p>
+		<ul class="print-model-list">
+			<li><strong>Networking &amp; Hardware Mounts:</strong> ASUS RT-BE92U Wi-Fi 7 Router Mount, Multi-Port Network Switch Stand</li>
+			<li><strong>Workstation &amp; Peripherals:</strong> Dual Vertical Laptop Stand, Dual Keyboard Under-Desk Sliding Cradle, IKEA Tertial Heavy Mount</li>
+			<li><strong>Audio &amp; Smart Devices:</strong> ATH-R70x Open-Back Headband Joiner, Lenovo Smart Clock Essential Riser, Smart Remote Wall Mount</li>
+			<li><strong>Automotive &amp; Workshop:</strong> Subaru BRZ / GR86 Console Gap Blocker, Skil 12V Battery Magnetic Mount, Gilmour High-Flow Nozzle Handle</li>
+		</ul>
+	</div>
+
+	<!-- 3D WEBGL CANVAS -->
+	<div class="canvas-wrapper" id="canvas-container">
+		<canvas id="cad-canvas"></canvas>
+		<div id="cad-loading-overlay" class="cad-loading hidden">
+			<div class="spinner"></div>
+			<span>Tessellating 3D B-Rep Mesh...</span>
+		</div>
+		<div class="cad-drag-hint">
+			<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+				<path d="m5 9-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
+			</svg>
+			<span>Orbit: Left-drag &bull; Pan: Right-drag / Two-finger &bull; Zoom: Scroll / Pinch</span>
+		</div>
+	</div>
+
+	<!-- CONTROLS & SPEC BAR -->
+	<div class="cad-viewer-footer">
+		<div class="cad-color-picker">
+			<span class="color-label">Color:</span>
+			<button class="color-dot active" data-color="#ea580c" title="Bambu Orange" style="background: #ea580c;"></button>
+			<button class="color-dot" data-color="#facc15" title="Sunflower Yellow" style="background: #facc15;"></button>
+			<button class="color-dot" data-color="#10b981" title="Cyber Green" style="background: #10b981;"></button>
+			<button class="color-dot" data-color="#2563eb" title="Tech Blue" style="background: #2563eb;"></button>
+			<button class="color-dot" data-color="#9333ea" title="Royal Purple" style="background: #9333ea;"></button>
+			<button class="color-dot" data-color="#f472b6" title="Sakura Pink" style="background: #f472b6;"></button>
+			<button class="color-dot light-dot" data-color="#f8fafc" title="Clean White" style="background: #f8fafc;"></button>
+			<button class="color-dot" data-color="#64748b" title="Cool Gray" style="background: #64748b;"></button>
+			<button class="color-dot" data-color="#1e293b" title="Matte Black PETG" style="background: #1e293b;"></button>
+		</div>
+		<div class="cad-specs" id="cad-specs">
+			<span class="spec-tag" id="spec-dim">241 x 28 x 76 mm</span>
+			<span class="spec-tag" id="spec-poly">12,602 Triangles</span>
+			<span class="spec-tag" id="spec-verts">9,224 Vertices</span>
+		</div>
+	</div>
+</div>
+
+<script>
+	import * as THREE from 'three';
+	import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+	interface ModelMeta {
+		id: string;
+		name: string;
+		file: string;
+		category: string;
+		desc: string;
+		dimensions: string;
+		jsonFile: string;
+		stepFile: string;
+		triangles: number;
+		vertices: number;
+	}
+
+	interface MeshPayload {
+		id: string;
+		name: string;
+		file: string;
+		category: string;
+		desc: string;
+		bbox: { width: number; height: number; depth: number };
+		triangles: number;
+		vertices: number;
+		positions: number[];
+		normals: number[];
+		indices: number[];
+	}
+
+	function initCadViewer() {
+		const canvas = document.getElementById('cad-canvas') as HTMLCanvasElement | null;
+		const container = document.getElementById('canvas-container');
+		if (!canvas || !container) return;
+
+		// Clean up previous instance if any
+		if ((canvas as any).__cleanup) {
+			(canvas as any).__cleanup();
+		}
+
+		let animationFrameId: number;
+		const renderer = new THREE.WebGLRenderer({
+			canvas,
+			antialias: true,
+			alpha: true,
+			powerPreference: 'high-performance'
+		});
+		renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+		renderer.toneMapping = THREE.ACESFilmicToneMapping;
+		renderer.toneMappingExposure = 1.15;
+
+		const scene = new THREE.Scene();
+		const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 1000);
+		camera.position.set(45, 38, 55);
+
+		const controls = new OrbitControls(camera, canvas);
+		controls.enableDamping = true;
+		controls.dampingFactor = 0.06;
+		controls.minDistance = 15;
+		controls.maxDistance = 220;
+		controls.maxPolarAngle = Math.PI / 2 + 0.15; // Don't flip under build plate
+
+		// Lighting
+		const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+		scene.add(ambientLight);
+
+		const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+		keyLight.position.set(60, 80, 50);
+		scene.add(keyLight);
+
+		const fillLight = new THREE.DirectionalLight(0x93c5fd, 1.2);
+		fillLight.position.set(-60, 40, -50);
+		scene.add(fillLight);
+
+		const rimLight = new THREE.DirectionalLight(0xffedd5, 1.0);
+		rimLight.position.set(0, -50, 40);
+		scene.add(rimLight);
+
+		// Build Plate Grid
+		const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+		const gridPrimary = isDark ? 0x334155 : 0xcbd5e1;
+		const gridSecondary = isDark ? 0x1e293b : 0xe2e8f0;
+		const grid = new THREE.GridHelper(80, 20, gridPrimary, gridSecondary);
+		grid.position.y = -18;
+		scene.add(grid);
+
+		// Model Group
+		const modelGroup = new THREE.Group();
+		scene.add(modelGroup);
+
+		// Material (Default to vibrant Orange for high contrast)
+		let baseHex = 0xea580c;
+		const material = new THREE.MeshStandardMaterial({
+			color: baseHex,
+			roughness: 0.38,
+			metalness: 0.08,
+			flatShading: false,
+			wireframe: false
+		});
+
+		let currentMeshObj: THREE.Mesh | null = null;
+		const meshCache: Record<string, MeshPayload> = {};
+		let manifestMap: Record<string, ModelMeta> = {};
+
+		// UI Elements
+		const selectEl = document.getElementById('cad-model-select') as HTMLSelectElement | null;
+		const descTextEl = document.getElementById('model-desc-text');
+		const specDimEl = document.getElementById('spec-dim');
+		const specPolyEl = document.getElementById('spec-poly');
+		const specVertsEl = document.getElementById('spec-verts');
+		const loadingOverlay = document.getElementById('cad-loading-overlay');
+		const wireframeBtn = document.getElementById('cad-wireframe-btn');
+		const resetCamBtn = document.getElementById('cad-reset-cam-btn');
+		const colorDots = document.querySelectorAll('.color-dot');
+
+		function resize() {
+			const width = container!.clientWidth;
+			const height = container!.clientHeight;
+			camera.aspect = width / height;
+			camera.updateProjectionMatrix();
+			renderer.setSize(width, height, false);
+		}
+		resize();
+		window.addEventListener('resize', resize);
+
+		function applyModelData(data: MeshPayload, meta?: ModelMeta) {
+			if (currentMeshObj) {
+				modelGroup.remove(currentMeshObj);
+				currentMeshObj.geometry.dispose();
+				currentMeshObj = null;
+			}
+
+			const geometry = new THREE.BufferGeometry();
+			geometry.setAttribute('position', new THREE.Float32BufferAttribute(data.positions, 3));
+			if (data.normals && data.normals.length) {
+				geometry.setAttribute('normal', new THREE.Float32BufferAttribute(data.normals, 3));
+			} else {
+				geometry.computeVertexNormals();
+			}
+			geometry.setIndex(data.indices);
+			geometry.computeBoundingBox();
+
+			currentMeshObj = new THREE.Mesh(geometry, material);
+			modelGroup.add(currentMeshObj);
+
+			// Center vertically on build plate
+			if (geometry.boundingBox) {
+				const minY = geometry.boundingBox.min.y;
+				grid.position.y = minY - 0.2;
+				controls.target.set(0, (geometry.boundingBox.max.y + geometry.boundingBox.min.y) / 2, 0);
+			}
+
+			// Update spec labels
+			const w = data.bbox?.width || (meta ? parseInt(meta.dimensions.split('x')[0]) : 0);
+			const h = data.bbox?.height || (meta ? parseInt(meta.dimensions.split('x')[1]) : 0);
+			const d = data.bbox?.depth || (meta ? parseInt(meta.dimensions.split('x')[2]) : 0);
+			if (specDimEl) specDimEl.textContent = `${w} x ${h} x ${d} mm`;
+			if (specPolyEl) specPolyEl.textContent = `${(data.indices.length / 3).toLocaleString()} Triangles`;
+			if (specVertsEl) specVertsEl.textContent = `${(data.positions.length / 3).toLocaleString()} Vertices`;
+			if (descTextEl && meta) descTextEl.textContent = meta.desc;
+		}
+
+		async function loadModel(id: string) {
+			const meta = manifestMap[id];
+			if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+
+			if (meshCache[id]) {
+				applyModelData(meshCache[id], meta);
+				if (loadingOverlay) loadingOverlay.classList.add('hidden');
+				return;
+			}
+
+			try {
+				const jsonUrl = meta ? meta.jsonFile : `/models/${id}.json`;
+				const res = await fetch(jsonUrl);
+				if (res.ok) {
+					const data: MeshPayload = await res.json();
+					meshCache[id] = data;
+					applyModelData(data, meta);
+				}
+			} catch (err) {
+				console.error('Error loading CAD model:', err);
+			} finally {
+				if (loadingOverlay) loadingOverlay.classList.add('hidden');
+			}
+		}
+
+		// Fetch manifest
+		fetch('/models/manifest.json')
+			.then(r => r.json())
+			.then((items: ModelMeta[]) => {
+				items.forEach(m => { manifestMap[m.id] = m; });
+				const initialId = selectEl ? selectEl.value : 'be92u';
+				loadModel(initialId);
+			})
+			.catch(() => {
+				loadModel('be92u');
+			});
+
+		if (selectEl) {
+			selectEl.addEventListener('change', () => {
+				loadModel(selectEl.value);
+			});
+		}
+
+		if (wireframeBtn) {
+			wireframeBtn.addEventListener('click', () => {
+				material.wireframe = !material.wireframe;
+				wireframeBtn.textContent = `Wireframe: ${material.wireframe ? 'ON' : 'OFF'}`;
+				wireframeBtn.classList.toggle('active', material.wireframe);
+			});
+		}
+
+		if (resetCamBtn) {
+			resetCamBtn.addEventListener('click', () => {
+				camera.position.set(45, 38, 55);
+				controls.target.set(0, 0, 0);
+				controls.update();
+			});
+		}
+
+		colorDots.forEach((dot) => {
+			dot.addEventListener('click', () => {
+				colorDots.forEach((d) => d.classList.remove('active'));
+				dot.classList.add('active');
+				const hexStr = dot.getAttribute('data-color') || '#ea580c';
+				material.color.set(hexStr);
+			});
+		});
+
+		// Render animation loop
+		function animate() {
+			animationFrameId = requestAnimationFrame(animate);
+			controls.update();
+			renderer.render(scene, camera);
+		}
+		animate();
+
+		// Cleanup handle for HMR / page changes
+		(canvas as any).__cleanup = () => {
+			cancelAnimationFrame(animationFrameId);
+			window.removeEventListener('resize', resize);
+			renderer.dispose();
+			controls.dispose();
+		};
+	}
+
+	initCadViewer();
+	document.addEventListener('astro:page-load', initCadViewer);
+</script>
+
+<style>
+	.cad-viewer-container {
+		background: var(--bg-card);
+		border: 1px solid var(--border-color);
+		border-radius: 12px;
+		margin-top: 1.2em;
+		overflow: hidden;
+		box-shadow: var(--box-shadow);
+		transition: background-color 0.2s ease, border-color 0.2s ease;
+	}
+
+	.cad-viewer-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.85em 1.25em;
+		border-bottom: 1px solid var(--border-color);
+		background: rgba(var(--gray-light), 0.5);
+		flex-wrap: wrap;
+		gap: 0.8em;
+	}
+
+	.cad-viewer-title-row {
+		display: flex;
+		align-items: center;
+		gap: 0.9em;
+		flex-wrap: wrap;
+	}
+	.cad-viewer-title {
+		display: flex;
+		align-items: center;
+		gap: 0.45em;
+		font-size: 0.95em;
+		font-weight: 700;
+		color: rgb(var(--black));
+	}
+	.cad-viewer-title svg {
+		color: var(--accent);
+	}
+	.title-arrow {
+		color: var(--accent);
+		margin-left: 0.1em;
+		flex-shrink: 0;
+		animation: nudgeArrow 2s infinite ease-in-out;
+	}
+	@keyframes nudgeArrow {
+		0%, 100% { transform: translateX(0); }
+		50% { transform: translateX(3px); }
+	}
+
+	/* MODEL SELECTOR DROPDOWN */
+	.model-select-wrapper {
+		display: inline-block;
+	}
+	.model-select {
+		font-size: 0.85em;
+		font-weight: 600;
+		padding: 0.4em 0.85em;
+		border-radius: 6px;
+		border: 1px solid var(--border-color);
+		background: var(--bg-card);
+		color: rgb(var(--black));
+		cursor: pointer;
+		outline: none;
+		transition: border-color 0.15s ease;
+	}
+	.model-select:hover, .model-select:focus {
+		border-color: var(--accent);
+	}
+
+	.cad-controls-top {
+		display: flex;
+		align-items: center;
+		gap: 0.6em;
+	}
+	.cad-mini-btn {
+		font-size: 0.78em;
+		font-weight: 600;
+		padding: 0.3em 0.7em;
+		border-radius: 5px;
+		background: transparent;
+		border: 1px solid var(--border-color);
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+	.cad-mini-btn:hover, .cad-mini-btn.active {
+		background: var(--accent);
+		color: #ffffff;
+		border-color: var(--accent);
+	}
+
+	/* MODEL DESCRIPTION STRIP */
+	.cad-model-meta-strip {
+		padding: 0.6em 1.25em;
+		background: rgba(var(--gray-light), 0.25);
+		border-bottom: 1px solid var(--border-color);
+		font-size: 0.84em;
+		line-height: 1.45;
+		color: rgb(var(--gray-dark));
+	}
+
+	.canvas-wrapper {
+		position: relative;
+		width: 100%;
+		height: 480px;
+		background: radial-gradient(circle at 50% 45%, rgba(var(--gray-light), 0.45) 0%, rgba(var(--gray-light), 0.05) 75%);
+		cursor: grab;
+		overflow: hidden;
+	}
+	.canvas-wrapper:active {
+		cursor: grabbing;
+	}
+	#cad-canvas {
+		width: 100%;
+		height: 100%;
+		display: block;
+		outline: none;
+	}
+
+	.cad-loading {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(255, 255, 255, 0.85);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.6em;
+		font-size: 0.88em;
+		font-weight: 600;
+		color: rgb(var(--gray-dark));
+		backdrop-filter: blur(2px);
+		z-index: 5;
+	}
+	:global(html[data-theme="dark"]) .cad-loading {
+		background: rgba(22, 22, 25, 0.88);
+		color: #fafafa;
+	}
+	.cad-loading.hidden {
+		display: none;
+	}
+	.spinner {
+		width: 28px;
+		height: 28px;
+		border: 3px solid rgba(var(--accent-rgb), 0.2);
+		border-top-color: var(--accent);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+	@keyframes spin {
+		to { transform: rotate(360deg); }
+	}
+
+	.cad-drag-hint {
+		position: absolute;
+		bottom: 12px;
+		right: 14px;
+		display: flex;
+		align-items: center;
+		gap: 0.4em;
+		font-size: 0.74em;
+		color: rgb(var(--gray));
+		pointer-events: none;
+		background: rgba(255, 255, 255, 0.85);
+		padding: 0.25em 0.7em;
+		border-radius: 12px;
+		backdrop-filter: blur(4px);
+		border: 1px solid var(--border-color);
+	}
+	:global(html[data-theme="dark"]) .cad-drag-hint {
+		background: rgba(22, 22, 25, 0.88);
+		color: #a1a1aa;
+	}
+
+	.cad-viewer-footer {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.85em 1.25em;
+		border-top: 1px solid var(--border-color);
+		background: rgba(var(--gray-light), 0.4);
+		flex-wrap: wrap;
+		gap: 0.8em;
+	}
+
+	.cad-color-picker {
+		display: flex;
+		align-items: center;
+		gap: 0.45em;
+		flex-wrap: wrap;
+	}
+	.color-label {
+		font-size: 0.78em;
+		font-weight: 600;
+		color: rgb(var(--gray));
+		margin-right: 0.2em;
+	}
+	.color-dot {
+		width: 19px;
+		height: 19px;
+		border-radius: 50%;
+		border: 2px solid transparent;
+		cursor: pointer;
+		padding: 0;
+		transition: transform 0.15s ease, border-color 0.15s ease;
+	}
+	.color-dot.light-dot {
+		border: 1.5px solid rgba(148, 163, 184, 0.45);
+	}
+	.color-dot:hover {
+		transform: scale(1.15);
+	}
+	.color-dot.active {
+		border-color: var(--accent) !important;
+		transform: scale(1.18);
+		box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.5);
+	}
+
+	.cad-specs {
+		display: flex;
+		align-items: center;
+		gap: 0.45em;
+		flex-wrap: wrap;
+	}
+	.spec-tag {
+		font-size: 0.76em;
+		font-weight: 600;
+		padding: 0.22em 0.6em;
+		border-radius: 4px;
+		background: rgba(var(--gray-light), 0.8);
+		color: rgb(var(--gray-dark));
+	}
+	:global(html[data-theme="dark"]) .spec-tag {
+		background: #27272a;
+		color: #d4d4d8;
+	}
+
+	@media (max-width: 680px) {
+		.cad-viewer-header {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0.7em;
+			padding: 0.75em 1em;
+		}
+		.cad-viewer-title-row {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0.5em;
+		}
+		.model-select {
+			width: 100%;
+			max-width: 100%;
+		}
+		.cad-controls-top {
+			justify-content: space-between;
+			width: 100%;
+		}
+		.canvas-wrapper {
+			height: 350px;
+		}
+		.cad-viewer-footer {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.8em;
+			padding: 0.75em 1em;
+		}
+	}
+
+	.print-only {
+		display: none;
+	}
+	@media print {
+		.print-only {
+			display: block !important;
+		}
+		.cad-print-summary {
+			margin: 0.5rem 0 0.25rem 0;
+			font-size: 9.5pt;
+			color: #1f2937;
+		}
+		.print-summary-title {
+			margin: 0 0 0.25rem 0;
+			font-size: 9.5pt;
+		}
+		.print-model-list {
+			margin: 0.25rem 0 0.5rem 1.25rem;
+			padding: 0;
+			line-height: 1.4;
+		}
+		.print-model-list li {
+			margin-bottom: 0.2rem;
+		}
+	}
+
+</style>

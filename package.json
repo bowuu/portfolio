@@ -1,0 +1,26 @@
+{
+  "name": "portfolio",
+  "description": "Personal Portfolio & Interactive Engineering Showcase (brob.uk)",
+  "private": true,
+  "dependencies": {
+    "@astrojs/cloudflare": "12.6.0",
+    "@astrojs/sitemap": "3.4.1",
+    "@types/three": "^0.187.0",
+    "astro": "5.10.1",
+    "three": "^0.187.0",
+    "typescript": "5.8.3"
+  },
+  "devDependencies": {
+    "wrangler": "4.21.x"
+  },
+  "scripts": {
+    "astro": "astro",
+    "build": "astro build",
+    "cf-typegen": "wrangler types",
+    "check": "astro build && tsc && wrangler deploy --dry-run",
+    "deploy": "wrangler deploy",
+    "dev": "astro dev",
+    "preview": "astro build && wrangler dev"
+  },
+  "type": "module"
+}

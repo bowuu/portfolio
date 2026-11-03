@@ -1,0 +1,388 @@
+/*
+  Bear Blog base styling with modern Dark Mode, CSS Custom Properties, and Design System
+*/
+
+:root {
+  --accent: #ea580c;
+  --accent-dark: #c2410c;
+  --accent-rgb: 234, 88, 12;
+  --black: 15, 23, 42;
+  --gray: 100, 116, 139;
+  --gray-light: 244, 244, 245;
+  --gray-dark: 51, 65, 85;
+  --bg-page: #fafafa;
+  --bg-card: #ffffff;
+  --border-color: rgba(148, 163, 184, 0.25);
+  --header-bg: rgba(255, 255, 255, 0.94);
+  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+html[data-theme="dark"] {
+  --accent: #f97316;
+  --accent-dark: #ea580c;
+  --accent-rgb: 249, 115, 22;
+  --black: 250, 250, 250;
+  --gray: 161, 161, 170;
+  --gray-light: 39, 39, 42;
+  --gray-dark: 212, 212, 216;
+  --bg-page: #0c0c0e;
+  --bg-card: #161619;
+  --border-color: rgba(255, 255, 255, 0.09);
+  --header-bg: rgba(18, 18, 22, 0.94);
+  --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+}
+
+@font-face {
+  font-family: "Atkinson";
+  src: url("/fonts/atkinson-regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Atkinson";
+  src: url("/fonts/atkinson-bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: clip;
+  width: 100%;
+}
+
+body {
+  font-family: "Atkinson", sans-serif;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  text-align: left;
+  background-color: var(--bg-page);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  overflow-x: clip;
+  color: rgb(var(--gray-dark));
+  font-size: 18px;
+  line-height: 1.6;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+main {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 3.5vw, 2.5rem) clamp(1rem, 4vw, 2rem) 4rem clamp(1rem, 4vw, 2rem);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0 0 0.5rem 0;
+  color: rgb(var(--black));
+  line-height: 1.25;
+  transition: color 0.2s ease;
+}
+h1 {
+  font-size: 2.75em;
+}
+h2 {
+  font-size: 2.1em;
+}
+h3 {
+  font-size: 1.6em;
+}
+h4 {
+  font-size: 1.3em;
+}
+h5 {
+  font-size: 1.15em;
+}
+strong,
+b {
+  font-weight: 700;
+}
+
+a {
+  color: var(--accent);
+  transition: color 0.15s ease;
+}
+a:hover {
+  color: var(--accent-dark);
+}
+
+p {
+  margin-bottom: 1em;
+}
+
+table {
+  width: 100%;
+}
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+code {
+  padding: 2px 5px;
+  background-color: rgb(var(--gray-light));
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.88em;
+}
+pre {
+  padding: 1.2em;
+  border-radius: 8px;
+  background-color: #0c0c0e;
+  border: 1px solid var(--border-color);
+  color: #fafafa;
+}
+pre > code {
+  all: unset;
+}
+blockquote {
+  border-left: 4px solid var(--accent);
+  padding: 0 0 0 20px;
+  margin: 0px;
+  font-size: 1.2em;
+}
+hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 720px) {
+  body {
+    font-size: 17px;
+  }
+  main {
+    padding: 1em;
+  }
+}
+
+.sr-only {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  position: absolute !important;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  clip: rect(1px 1px 1px 1px);
+  clip: rect(1px, 1px, 1px, 1px);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+#about,
+#projects,
+#skills,
+#inspector {
+  scroll-margin-top: 75px;
+}
+
+/* ==========================================================================
+   PRINT STYLES (@media print)
+   Optimized for recruiter printouts & Save as PDF (Ctrl + P)
+   ========================================================================== */
+.print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 1.5cm;
+    size: letter portrait;
+  }
+
+  *, *::before, *::after {
+    background: transparent !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Hide interactive, client-only, and navigation UI */
+  header,
+  #inspector,
+  .canvas-wrapper,
+  .cad-controls-top,
+  .cad-viewer-footer,
+  .theme-wrapper,
+  .theme-toggle,
+  .model-select-wrapper,
+  .title-arrow,
+  .cad-drag-hint,
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Hero Section Print Styling */
+  .hero {
+    padding: 0 0 1.25rem 0 !important;
+    text-align: left !important;
+    border-bottom: 2px solid #e5e7eb !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .avatar-wrap {
+    display: none !important;
+  }
+
+  .name {
+    font-size: 24pt !important;
+    font-weight: 800 !important;
+    color: #000000 !important;
+    margin: 0 0 0.1em 0 !important;
+  }
+
+  .role-title {
+    font-size: 14pt !important;
+    font-weight: 700 !important;
+    color: #c2410c !important;
+    margin: 0 0 0.25em 0 !important;
+  }
+
+  .tagline {
+    font-size: 11pt !important;
+    color: #4b5563 !important;
+    margin: 0 0 0.75em 0 !important;
+  }
+
+  .contact-links {
+    justify-content: flex-start !important;
+    gap: 0.6em !important;
+  }
+
+  .pill {
+    border: 1px solid #d1d5db !important;
+    background: #f9fafb !important;
+    color: #1f2937 !important;
+    padding: 0.25em 0.65em !important;
+    font-size: 9pt !important;
+  }
+
+  /* Cards & Sections */
+  .card {
+    border: 1px solid #e5e7eb !important;
+    background: #ffffff !important;
+    padding: 1.25rem !important;
+    margin-bottom: 1.25rem !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border-radius: 6px !important;
+  }
+
+  .card-title {
+    font-size: 13.5pt !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding-bottom: 0.35em !important;
+    margin-bottom: 0.75em !important;
+    color: #000000 !important;
+  }
+
+  .project-box {
+    border: 1px solid #e5e7eb !important;
+    background: #fafafa !important;
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border-radius: 6px !important;
+  }
+
+  .project-name {
+    font-size: 12pt !important;
+    font-weight: 700 !important;
+    color: #111827 !important;
+  }
+
+  .sub-link {
+    font-size: 9pt !important;
+    color: #2563eb !important;
+  }
+
+  .proj-badge {
+    border: 1px solid #d1d5db !important;
+    background: #ffffff !important;
+    color: #374151 !important;
+    font-size: 8pt !important;
+  }
+
+  .tag {
+    border: 1px solid #e5e7eb !important;
+    background: #ffffff !important;
+    color: #4b5563 !important;
+    font-size: 8pt !important;
+  }
+
+  .project-meta-strip {
+    border-left: 3px solid #d1d5db !important;
+    background: #ffffff !important;
+    font-size: 9pt !important;
+  }
+
+  /* Skills Grid */
+  .skills-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .skill-category {
+    border: 1px solid #e5e7eb !important;
+    background: #fafafa !important;
+    padding: 0.75rem !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .skill-label {
+    font-size: 9.5pt !important;
+    font-weight: 700 !important;
+    color: #111827 !important;
+  }
+
+  .skill-items {
+    font-size: 8.5pt !important;
+    line-height: 1.35 !important;
+    color: #374151 !important;
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid #e5e7eb !important;
+    padding: 1rem 0 !important;
+    font-size: 8.5pt !important;
+    color: #6b7280 !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+}

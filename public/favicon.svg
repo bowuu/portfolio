@@ -1,49 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
     <defs>
         <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#18181c"/>
-            <stop offset="100%" stop-color="#09090b"/>
+            <stop offset="0%" stop-color="#14151a"/>
+            <stop offset="100%" stop-color="#08090c"/>
         </linearGradient>
-        <linearGradient id="wGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="rim" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#ff8c26"/>
             <stop offset="100%" stop-color="#ea580c"/>
         </linearGradient>
-        <linearGradient id="layerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
-            <stop offset="100%" stop-color="#ffffff" stop-opacity="0.05"/>
-        </linearGradient>
-        <linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#f97316"/>
-            <stop offset="100%" stop-color="#ea580c"/>
-        </linearGradient>
-        <filter id="shadow" x="-15%" y="-15%" width="130%" height="130%">
-            <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#000000" flood-opacity="0.6"/>
-        </filter>
-        <clipPath id="wClip">
-            <path d="M 18 26 L 38 102 L 51 102 L 64 61 L 77 102 L 90 102 L 110 26 L 94 26 L 83.5 74 L 70.5 26 L 57.5 26 L 44.5 74 L 34 26 Z"/>
-        </clipPath>
     </defs>
     
-    <!-- Obsidian Carbon Base -->
+    <!-- Obsidian Silicon Base -->
     <rect width="128" height="128" rx="28" fill="url(#bg)"/>
     
     <!-- High-Precision Orange Rim -->
-    <rect x="2" y="2" width="124" height="124" rx="26" stroke="url(#rimGrad)" stroke-width="3" stroke-opacity="0.9"/>
-    <rect x="7" y="7" width="114" height="114" rx="21" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <rect x="2" y="2" width="124" height="124" rx="26" stroke="url(#rim)" stroke-width="2.5" stroke-opacity="0.85"/>
+    <rect x="6" y="6" width="116" height="116" rx="22" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
 
-    <!-- High-Impact Solid 'W' with Layer Lines & ATE Contacts -->
-    <g filter="url(#shadow)">
-        <!-- The Bold 'W' in Signal Orange (Centroid: X=64, Y=64, Width: 92, Height: 76) -->
-        <path d="M 18 26 L 38 102 L 51 102 L 64 61 L 77 102 L 90 102 L 110 26 L 94 26 L 83.5 74 L 70.5 26 L 57.5 26 L 44.5 74 L 34 26 Z" fill="url(#wGrad)"/>
+    <!-- The Obsidian Prism (B + W Elemental Monogram) -->
+    <g>
+        <!-- Left Pillar Facet (Pure White - Spine of B) -->
+        <path d="M 28 28 H 54 V 100 H 28 Z" fill="#ffffff"/>
         
-        <!-- Subtle FDM 3D Layer Highlights clipped precisely to the W body -->
-        <g clip-path="url(#wClip)">
-            <path d="M 15 40 H 113 M 15 54 H 113 M 15 68 H 113 M 15 82 H 113 M 15 96 H 113" stroke="url(#layerGrad)" stroke-width="2" stroke-linecap="round"/>
-        </g>
+        <!-- Upper Prismatic Wedge (Signal Orange - Upper Bowl & W Peak) -->
+        <path d="M 60 28 L 100 50 L 60 62 Z" fill="#ff6b00"/>
         
-        <!-- Silicon / ATE Hardware Probe Pins -->
-        <circle cx="26" cy="31" r="2.2" fill="#fafafa"/>
-        <circle cx="64" cy="31" r="2.2" fill="#fafafa"/>
-        <circle cx="102" cy="31" r="2.2" fill="#fafafa"/>
+        <!-- Lower Prismatic Wedge (Deep Amber - Lower Bowl & W Base) -->
+        <path d="M 60 66 L 100 78 L 60 100 Z" fill="#c2410c"/>
     </g>
 </svg>

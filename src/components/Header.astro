@@ -28,6 +28,7 @@ import ThemeToggle from './ThemeToggle.astro';
 		</div>
 		<div class="internal-links" id="nav-links">
 			<a href="/#about" class="nav-link active">About</a>
+			<a href="/#skills" class="nav-link">Skills</a>
 			<a href="/#projects" class="nav-link">Projects</a>
 			<a href="/#inspector" class="nav-link">Inspector</a>
 			<a href="/#benchmark" class="nav-link">Benchmark</a>
@@ -45,7 +46,7 @@ import ThemeToggle from './ThemeToggle.astro';
 		const navLinks = document.querySelectorAll<HTMLAnchorElement>('.nav-link');
 		if (!navLinks.length) return;
 
-		const sectionIds = ['about', 'projects', 'inspector', 'benchmark'];
+		const sectionIds = ['about', 'skills', 'projects', 'inspector', 'benchmark'];
 
 		function setActive(id: string) {
 			navLinks.forEach((link) => {

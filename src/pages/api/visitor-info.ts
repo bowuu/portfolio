@@ -20,7 +20,8 @@ export const GET: APIRoute = async ({ request, locals }) => {
 	const location = locParts.length > 0 ? locParts.join(', ') : 'Location unavailable';
 
 	const isp = cf.asOrganization || (cf.asn ? `AS${cf.asn}` : 'Standard ISP');
-	const colo = cf.colo ? `${cf.colo} Edge Datacenter` : 'Cloudflare Edge Node';
+	const rawColo = cf.colo || (request.headers.get('cf-ray') ? request.headers.get('cf-ray')!.split('-')[1] : '') || '';
+	const colo = rawColo ? `${rawColo} Edge Datacenter` : 'Cloudflare Edge Node';
 	const protocol = cf.httpProtocol || 'HTTP/2';
 
 	// 3. Raw User-Agent
@@ -30,8 +31,13 @@ export const GET: APIRoute = async ({ request, locals }) => {
 		JSON.stringify({
 			ip,
 			location,
+			city,
+			region,
+			country,
+			postalCode,
 			isp,
 			colo,
+			coloCode: rawColo,
 			protocol,
 			userAgent,
 		}),

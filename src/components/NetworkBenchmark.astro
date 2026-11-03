@@ -11,7 +11,7 @@
 				</svg>
 				Edge Network Benchmark
 			</h2>
-			<span class="benchmark-badge">Cloudflare Anycast &bull; 0 Host Bandwidth</span>
+			<span class="benchmark-badge" id="benchmark-badge">Cloudflare Anycast &bull; <span id="benchmark-colo-badge">MIA Edge</span> &bull; 0 Host Bandwidth</span>
 		</div>
 		<button id="run-speedtest-btn" class="benchmark-btn" type="button" aria-label="Run Edge Network Benchmark">
 			<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon" id="btn-icon-play">
@@ -33,7 +33,7 @@
 				<span id="speed-ping" class="b-tile-num mono">--</span>
 				<span class="b-tile-unit">ms</span>
 			</div>
-			<span id="speed-jitter" class="b-tile-sub">Jitter: -- ms</span>
+			<span id="speed-jitter" class="b-tile-sub">Jitter: -- ms &bull; <span id="speed-target-colo" class="colo-target" title="Target: Cloudflare MIA Datacenter (Miami, FL) via Anycast">MIA Edge</span></span>
 		</div>
 
 		<div class="b-tile b-tile-highlight">
@@ -78,6 +78,71 @@
 <script>
 	let isBenchmarking = false;
 
+	const COLO_MAP: Record<string, string> = {
+		MIA: 'Miami, FL',
+		TPA: 'Tampa, FL',
+		MCO: 'Orlando, FL',
+		ATL: 'Atlanta, GA',
+		IAD: 'Ashburn, VA',
+		DCA: 'Washington, DC',
+		CLT: 'Charlotte, NC',
+		RDU: 'Raleigh, NC',
+		ORD: 'Chicago, IL',
+		DFW: 'Dallas, TX',
+		IAH: 'Houston, TX',
+		DEN: 'Denver, CO',
+		PHX: 'Phoenix, AZ',
+		LAX: 'Los Angeles, CA',
+		SFO: 'San Francisco, CA',
+		SJC: 'San Jose, CA',
+		SEA: 'Seattle, WA',
+		PDX: 'Portland, OR',
+		EWR: 'Newark, NJ',
+		JFK: 'New York, NY',
+		BOS: 'Boston, MA',
+		YYZ: 'Toronto, ON',
+		LHR: 'London, UK',
+		FRA: 'Frankfurt, DE',
+		AMS: 'Amsterdam, NL',
+		NRT: 'Tokyo, JP',
+		SIN: 'Singapore',
+		SYD: 'Sydney, AU',
+	};
+
+	let detectedColo = 'MIA';
+	let detectedCity = 'Miami, FL';
+
+	async function resolveEdgeDatacenter() {
+		try {
+			const win = window as any;
+			if (!win.__visitorInfoPromise) {
+				win.__visitorInfoPromise = fetch('/api/visitor-info', { cache: 'no-store' })
+					.then((res) => (res.ok ? res.json() : null))
+					.catch(() => null);
+			}
+			const data = await win.__visitorInfoPromise;
+			if (data && data.coloCode) {
+				detectedColo = data.coloCode.toUpperCase();
+				detectedCity = COLO_MAP[detectedColo] || (data.city ? `${data.city}` : 'Edge Datacenter');
+
+				const badgeColo = document.getElementById('benchmark-colo-badge');
+				if (badgeColo) badgeColo.textContent = `${detectedColo} Edge`;
+
+				updateColoTargetUI();
+			}
+		} catch (_) {
+			// Fallback to Anycast defaults
+		}
+	}
+
+	function updateColoTargetUI(jitterVal?: string) {
+		const jitterEl = document.getElementById('speed-jitter');
+		if (jitterEl) {
+			const jText = jitterVal !== undefined ? `Jitter: ${jitterVal} ms` : (jitterEl.textContent?.split('•')[0].trim() || 'Jitter: -- ms');
+			jitterEl.innerHTML = `${jText} &bull; <span id="speed-target-colo" class="colo-target" title="Target: Cloudflare ${detectedColo} Datacenter (${detectedCity}) via Anycast">${detectedColo} Edge</span>`;
+		}
+	}
+
 	async function runBenchmark() {
 		if (isBenchmarking) return;
 		isBenchmarking = true;
@@ -102,7 +167,7 @@
 
 		// Reset values
 		if (pingEl) pingEl.textContent = '--';
-		if (jitterEl) jitterEl.textContent = 'Jitter: -- ms';
+		updateColoTargetUI('--');
 		if (downEl) downEl.textContent = '--';
 		if (downSubEl) downSubEl.textContent = 'Measuring...';
 		if (upEl) upEl.textContent = '--';
@@ -169,7 +234,7 @@
 			const finalLossRate = ((finalLost / totalProbes) * 100).toFixed(1);
 
 			if (pingEl) pingEl.textContent = medianPing.toString();
-			if (jitterEl) jitterEl.textContent = `Jitter: ${jitter} ms`;
+			updateColoTargetUI(jitter);
 			if (lossEl) lossEl.textContent = finalLossRate;
 			if (lossSubEl) lossSubEl.textContent = finalLost === 0 ? '0 / 16 pkts lost (Optimal)' : `${finalLost} / 16 pkts lost`;
 
@@ -331,7 +396,8 @@
 			if (upEl) upEl.textContent = finalUpMbps > 0 ? finalUpMbps.toFixed(1) : '--';
 			if (upSubEl) upSubEl.textContent = `Sustained (${(upTotalBytes / (1024 * 1024)).toFixed(1)} MB)`;
 			if (progressBar) progressBar.style.width = '100%';
-			if (statusText) statusText.textContent = 'Benchmark complete. 0 host bandwidth consumed; all data routed via Anycast.';
+			const targetSummary = detectedColo ? ` via Cloudflare ${detectedColo} Edge (${detectedCity})` : ' via Cloudflare Anycast';
+			if (statusText) statusText.textContent = `Benchmark complete. 0 host bandwidth consumed; all data routed${targetSummary}.`;
 
 		} catch (err: any) {
 			console.error('Speedtest encountered error:', err);
@@ -352,8 +418,10 @@
 	}
 
 	setupBenchmarkBtn();
+	resolveEdgeDatacenter();
 	document.addEventListener('astro:page-load', () => {
 		setupBenchmarkBtn();
+		resolveEdgeDatacenter();
 	});
 </script>
 
@@ -512,6 +580,15 @@
 		font-size: 0.74em;
 		color: rgb(var(--gray));
 		margin-top: 0.1em;
+	}
+	.colo-target {
+		color: rgb(var(--gray-dark));
+		border-bottom: 1px dotted rgba(var(--gray), 0.6);
+		cursor: help;
+		transition: color 0.15s ease;
+	}
+	.colo-target:hover {
+		color: var(--accent);
 	}
 
 	/* PROGRESS TRACK & STATUS */

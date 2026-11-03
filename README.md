@@ -55,3 +55,10 @@ To sync local guidelines across devices, clone the private vault alongside this 
 cd agent-rules
 .\sync.ps1 -Action deploy
 ```
+
+---
+
+## 📜 License
+
+- **Website Source Code:** Licensed under the [MIT License](LICENSE).
+- **Personal Content & 3D CAD Models:** All rights reserved. Personal likeness, resume data, and 3D CAD models in `/public/models/` may not be reproduced or used to misrepresent personal identity.

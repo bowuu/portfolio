@@ -2,6 +2,7 @@
   "name": "portfolio",
   "description": "Personal Portfolio & Interactive Engineering Showcase (brob.uk)",
   "private": true,
+  "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
     "@astrojs/cloudflare": "12.6.0",
     "@astrojs/sitemap": "3.4.1",

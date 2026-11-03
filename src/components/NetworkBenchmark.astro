@@ -22,7 +22,7 @@
 	</div>
 
 	<p class="benchmark-desc">
-		Measure real-time round-trip latency, jitter, and wire-speed edge throughput directly against Cloudflare's global Anycast network. Tests execute point-to-point in browser memory &mdash; <strong>zero payload bandwidth is transferred through brob.uk.</strong>
+		Measure real-time round-trip latency, jitter, packet loss, and sustained wire-speed edge throughput directly against Cloudflare's global Anycast network. Tests execute point-to-point in browser memory &mdash; <strong>zero payload bandwidth is transferred through brob.uk.</strong>
 	</p>
 
 	<!-- BENCHMARK TILES -->
@@ -55,11 +55,12 @@
 		</div>
 
 		<div class="b-tile">
-			<span class="b-tile-label">Edge PoP &amp; Protocol</span>
+			<span class="b-tile-label">Packet Loss</span>
 			<div class="b-tile-value-wrap">
-				<span id="speed-colo" class="b-tile-text">Detecting...</span>
+				<span id="speed-loss" class="b-tile-num mono">--</span>
+				<span class="b-tile-unit">%</span>
 			</div>
-			<span id="speed-protocol" class="b-tile-sub">Anycast Node</span>
+			<span id="speed-loss-sub" class="b-tile-sub">0 / 16 pkts lost</span>
 		</div>
 	</div>
 
@@ -69,38 +70,12 @@
 			<div class="progress-bar" id="benchmark-progress-bar"></div>
 		</div>
 		<div class="status-wrap">
-			<span id="speedtest-status" class="status-text">Click "Run Benchmark" to measure real-time latency, jitter, and edge throughput.</span>
+			<span id="speedtest-status" class="status-text">Click "Run Benchmark" to measure real-time latency, jitter, packet loss, and sustained throughput.</span>
 		</div>
 	</div>
 </section>
 
 <script>
-	let edgeColoName = 'Cloudflare Edge';
-	let edgeProtocol = 'HTTP/2';
-
-	async function initBenchmarkMeta() {
-		const speedColoEl = document.getElementById('speed-colo');
-		const speedProtoEl = document.getElementById('speed-protocol');
-
-		try {
-			const res = await fetch('/api/visitor-info', { cache: 'no-store' });
-			if (res.ok) {
-				const data = await res.json();
-				if (data.colo) {
-					edgeColoName = data.colo.replace(/\s*Edge Datacenter$/i, '').trim();
-				}
-				if (data.protocol) {
-					edgeProtocol = data.protocol;
-				}
-				if (speedColoEl) speedColoEl.textContent = edgeColoName;
-				if (speedProtoEl) speedProtoEl.textContent = `Protocol: ${edgeProtocol}`;
-			}
-		} catch {
-			if (speedColoEl) speedColoEl.textContent = 'Cloudflare Anycast';
-			if (speedProtoEl) speedProtoEl.textContent = 'Edge Node';
-		}
-	}
-
 	let isBenchmarking = false;
 
 	async function runBenchmark() {
@@ -118,8 +93,8 @@
 		const downSubEl = document.getElementById('speed-down-sub');
 		const upEl = document.getElementById('speed-up');
 		const upSubEl = document.getElementById('speed-up-sub');
-		const coloEl = document.getElementById('speed-colo');
-		const protoEl = document.getElementById('speed-protocol');
+		const lossEl = document.getElementById('speed-loss');
+		const lossSubEl = document.getElementById('speed-loss-sub');
 
 		if (btn) btn.disabled = true;
 		if (btnText) btnText.textContent = 'Testing...';
@@ -129,206 +104,258 @@
 		if (pingEl) pingEl.textContent = '--';
 		if (jitterEl) jitterEl.textContent = 'Jitter: -- ms';
 		if (downEl) downEl.textContent = '--';
-		if (downSubEl) downSubEl.textContent = 'Sampling...';
+		if (downSubEl) downSubEl.textContent = 'Measuring...';
 		if (upEl) upEl.textContent = '--';
-		if (upSubEl) upSubEl.textContent = 'Sampling...';
+		if (upSubEl) upSubEl.textContent = 'Queued';
+		if (lossEl) lossEl.textContent = '--';
+		if (lossSubEl) lossSubEl.textContent = 'Probing...';
 
 		try {
 			// ==========================================
-			// STAGE 1: LATENCY & JITTER
+			// STAGE 1: LATENCY, JITTER & PACKET LOSS (16 Probes)
 			// ==========================================
-			if (statusText) statusText.textContent = 'Measuring round-trip latency to nearest Anycast edge...';
-			if (progressBar) progressBar.style.width = '15%';
+			if (statusText) statusText.textContent = 'Transmitting 16 probes to analyze latency, jitter, and packet loss...';
 
-			// Warmup probe
-			try {
-				const warmupRes = await fetch(`https://speed.cloudflare.com/__down?bytes=0&_w=${Date.now()}`, { cache: 'no-store' });
-				const ray = warmupRes.headers.get('cf-ray');
-				if (ray && ray.includes('-')) {
-					const detectedColo = ray.split('-')[1].trim();
-					if (coloEl && (!edgeColoName || edgeColoName === 'Cloudflare Edge')) {
-						coloEl.textContent = `${detectedColo} Datacenter`;
-					}
-				}
-			} catch (_) {}
-
-			// 4 sequential pings
+			const totalProbes = 16;
+			let successful = 0;
+			let failed = 0;
+			let tcpLostTotal = 0;
 			const pings: number[] = [];
-			for (let i = 0; i < 4; i++) {
+
+			for (let i = 0; i < totalProbes; i++) {
 				const t0 = performance.now();
 				try {
-					const res = await fetch(`https://speed.cloudflare.com/__down?bytes=0&_t=${Date.now()}_${i}`, { cache: 'no-store' });
-					await res.blob();
-					const rtt = performance.now() - t0;
-					pings.push(rtt);
-					if (pingEl) pingEl.textContent = Math.round(rtt).toString();
-				} catch (e) {
-					console.warn('Ping sample failed:', e);
-				}
-				if (progressBar) progressBar.style.width = `${15 + (i + 1) * 5}%`;
-			}
-
-			if (pings.length > 0) {
-				pings.sort((a, b) => a - b);
-				const median = pings[Math.floor(pings.length / 2)];
-				let diffSum = 0;
-				for (let i = 1; i < pings.length; i++) {
-					diffSum += Math.abs(pings[i] - pings[i - 1]);
-				}
-				const jitter = pings.length > 1 ? diffSum / (pings.length - 1) : 0;
-
-				if (pingEl) pingEl.textContent = Math.round(median).toString();
-				if (jitterEl) jitterEl.textContent = `Jitter: ${jitter.toFixed(1)} ms`;
-			}
-
-			// ==========================================
-			// STAGE 2: DOWNLOAD THROUGHPUT
-			// ==========================================
-			if (statusText) statusText.textContent = 'Streaming download payload from edge CDN...';
-			if (progressBar) progressBar.style.width = '40%';
-
-			let totalBytes = 0;
-			const initialChunk = 5 * 1024 * 1024; // 5MB calibration
-			const d0 = performance.now();
-
-			const controller = new AbortController();
-			const timeoutId = setTimeout(() => controller.abort(), 3200);
-
-			try {
-				const downRes = await fetch(`https://speed.cloudflare.com/__down?bytes=${initialChunk}&_t=${Date.now()}`, {
-					cache: 'no-store',
-					signal: controller.signal,
-				});
-
-				if (downRes.body) {
-					const reader = downRes.body.getReader();
-					while (true) {
-						const { done, value } = await reader.read();
-						if (done) break;
-						if (value) {
-							totalBytes += value.length;
-							const elapsed = (performance.now() - d0) / 1000;
-							if (elapsed > 0.3) {
-								const curMbps = (totalBytes * 8) / (elapsed * 1_000_000);
-								if (downEl) downEl.textContent = curMbps.toFixed(1);
-							}
-						}
-					}
-				}
-			} catch (err: any) {
-				if (err.name !== 'AbortError') console.warn('Download probe error:', err);
-			} finally {
-				clearTimeout(timeoutId);
-			}
-
-			const elapsedDown = (performance.now() - d0) / 1000;
-			const initialMbps = (totalBytes * 8) / (Math.max(elapsedDown, 0.001) * 1_000_000);
-
-			// Fast connection burst (if >40 Mbps and took <1.2s)
-			if (initialMbps > 40 && elapsedDown < 1.2) {
-				if (progressBar) progressBar.style.width = '55%';
-				if (statusText) statusText.textContent = 'High-speed pipe detected: Bursting wire-speed test (25MB)...';
-
-				const burstBytes = 25 * 1024 * 1024;
-				const b0 = performance.now();
-				const bCtrl = new AbortController();
-				const bTimeout = setTimeout(() => bCtrl.abort(), 2800);
-
-				try {
-					const bRes = await fetch(`https://speed.cloudflare.com/__down?bytes=${burstBytes}&_t=${Date.now()}`, {
+					const ctrl = new AbortController();
+					const timeout = setTimeout(() => ctrl.abort(), 1200);
+					const res = await fetch(`https://speed.cloudflare.com/__down?bytes=0&_p=${i}_${Date.now()}`, {
+						signal: ctrl.signal,
 						cache: 'no-store',
-						signal: bCtrl.signal,
 					});
+					clearTimeout(timeout);
+					if (res.ok) {
+						successful++;
+						const rtt = performance.now() - t0;
+						pings.push(rtt);
+						if (pingEl) pingEl.textContent = Math.round(rtt).toString();
 
-					let bBytes = 0;
-					if (bRes.body) {
-						const bReader = bRes.body.getReader();
-						while (true) {
-							const { done, value } = await bReader.read();
-							if (done) break;
-							if (value) {
-								bBytes += value.length;
-								const bElapsed = (performance.now() - b0) / 1000;
-								if (bElapsed > 0.25) {
-									const bMbps = (bBytes * 8) / (bElapsed * 1_000_000);
-									if (downEl) downEl.textContent = bMbps.toFixed(1);
+						const timing = res.headers.get('server-timing') || '';
+						const lostMatch = timing.match(/lost=(\d+)/);
+						if (lostMatch) {
+							tcpLostTotal += parseInt(lostMatch[1], 10);
+						}
+					} else {
+						failed++;
+					}
+				} catch (_) {
+					failed++;
+				}
+
+				const currentLost = failed + tcpLostTotal;
+				const currentLossRate = ((currentLost / (i + 1)) * 100).toFixed(1);
+				if (lossEl) lossEl.textContent = currentLossRate;
+				if (lossSubEl) lossSubEl.textContent = `${currentLost} / ${i + 1} pkts lost`;
+				if (progressBar) progressBar.style.width = `${5 + Math.round(((i + 1) / totalProbes) * 25)}%`;
+			}
+
+			// Finalize latency, jitter, loss
+			pings.sort((a, b) => a - b);
+			const medianPing = pings.length ? Math.round(pings[Math.floor(pings.length / 2)]) : 0;
+			let diffSum = 0;
+			for (let i = 1; i < pings.length; i++) {
+				diffSum += Math.abs(pings[i] - pings[i - 1]);
+			}
+			const jitter = pings.length > 1 ? (diffSum / (pings.length - 1)).toFixed(1) : '0.0';
+			const finalLost = failed + tcpLostTotal;
+			const finalLossRate = ((finalLost / totalProbes) * 100).toFixed(1);
+
+			if (pingEl) pingEl.textContent = medianPing.toString();
+			if (jitterEl) jitterEl.textContent = `Jitter: ${jitter} ms`;
+			if (lossEl) lossEl.textContent = finalLossRate;
+			if (lossSubEl) lossSubEl.textContent = finalLost === 0 ? '0 / 16 pkts lost (Optimal)' : `${finalLost} / 16 pkts lost`;
+
+			// ==========================================
+			// STAGE 2: MULTI-STREAM SUSTAINED DOWNLOAD (3.5s)
+			// ==========================================
+			if (statusText) statusText.textContent = 'Streaming multi-connection download to measure sustained wire speed...';
+			if (progressBar) progressBar.style.width = '30%';
+
+			const downDurationSec = 3.5;
+			const downStreams = 3;
+			const chunkSize = 25000000; // 25MB per request
+			const downControllers: AbortController[] = [];
+
+			let downTotalBytes = 0;
+			let downSteadyBytes = 0;
+			let downSteadyStartTime = 0;
+			const d0 = performance.now();
+			const downWarmupMs = 600; // Discard initial 600ms TCP slow start ramp
+			let isDownDone = false;
+
+			// Live ticker to update speed every 100ms
+			const downTicker = setInterval(() => {
+				const now = performance.now();
+				const elapsedTotal = (now - d0) / 1000;
+				if (downSteadyStartTime > 0 && now - downSteadyStartTime > 150) {
+					const steadyElapsed = (now - downSteadyStartTime) / 1000;
+					const curMbps = (downSteadyBytes * 8) / (steadyElapsed * 1_000_000);
+					if (downEl) downEl.textContent = curMbps.toFixed(1);
+				}
+				const progressPct = 30 + Math.min(45, (elapsedTotal / downDurationSec) * 45);
+				if (progressBar) progressBar.style.width = `${progressPct.toFixed(0)}%`;
+			}, 100);
+
+			const runDownWorker = async (streamId: number) => {
+				while (!isDownDone && (performance.now() - d0) / 1000 < downDurationSec) {
+					const ctrl = new AbortController();
+					downControllers.push(ctrl);
+					try {
+						const res = await fetch(`https://speed.cloudflare.com/__down?bytes=${chunkSize}&_s=${streamId}_${Date.now()}`, {
+							signal: ctrl.signal,
+							cache: 'no-store',
+						});
+						if (res.body) {
+							const reader = res.body.getReader();
+							while (true) {
+								const { done, value } = await reader.read();
+								if (done) break;
+								if (value) {
+									const now = performance.now();
+									downTotalBytes += value.length;
+									if (now - d0 > downWarmupMs) {
+										if (downSteadyStartTime === 0) downSteadyStartTime = now;
+										downSteadyBytes += value.length;
+									}
+									if ((now - d0) / 1000 >= downDurationSec) {
+										isDownDone = true;
+										downControllers.forEach(c => {
+											try { c.abort(); } catch (_) {}
+										});
+										break;
+									}
 								}
 							}
 						}
-						const finalBElapsed = (performance.now() - b0) / 1000;
-						const finalBMbps = (bBytes * 8) / (Math.max(finalBElapsed, 0.001) * 1_000_000);
-						if (downEl) downEl.textContent = finalBMbps.toFixed(1);
-					}
-				} catch (_) {
-				} finally {
-					clearTimeout(bTimeout);
-				}
-			} else {
-				if (downEl) downEl.textContent = initialMbps.toFixed(1);
-			}
-
-			if (downSubEl) downSubEl.textContent = 'Direct Stream Complete';
-			if (progressBar) progressBar.style.width = '70%';
-
-			// ==========================================
-			// STAGE 3: UPLOAD THROUGHPUT
-			// ==========================================
-			if (statusText) statusText.textContent = 'Uploading test payload to edge return pipeline...';
-
-			const upSize1 = 1.5 * 1024 * 1024; // 1.5MB
-			const upBuf1 = new Uint8Array(upSize1);
-			const u0 = performance.now();
-
-			const upCtrl = new AbortController();
-			const upTimeout = setTimeout(() => upCtrl.abort(), 3000);
-
-			try {
-				await fetch('https://speed.cloudflare.com/__up', {
-					method: 'POST',
-					body: upBuf1,
-					headers: { 'Content-Type': 'application/octet-stream' },
-					signal: upCtrl.signal,
-				});
-
-				const upElapsed1 = (performance.now() - u0) / 1000;
-				const upMbps1 = (upSize1 * 8) / (Math.max(upElapsed1, 0.001) * 1_000_000);
-				if (upEl) upEl.textContent = upMbps1.toFixed(1);
-
-				// Fast connection burst for upload
-				if (upMbps1 > 35 && upElapsed1 < 0.9) {
-					if (progressBar) progressBar.style.width = '85%';
-					const upSize2 = 5 * 1024 * 1024; // 5MB burst
-					const upBuf2 = new Uint8Array(upSize2);
-					const u2_0 = performance.now();
-
-					const upCtrl2 = new AbortController();
-					const upTimeout2 = setTimeout(() => upCtrl2.abort(), 2800);
-
-					try {
-						await fetch('https://speed.cloudflare.com/__up', {
-							method: 'POST',
-							body: upBuf2,
-							headers: { 'Content-Type': 'application/octet-stream' },
-							signal: upCtrl2.signal,
-						});
-						const upElapsed2 = (performance.now() - u2_0) / 1000;
-						const upMbps2 = (upSize2 * 8) / (Math.max(upElapsed2, 0.001) * 1_000_000);
-						if (upEl) upEl.textContent = upMbps2.toFixed(1);
 					} catch (_) {
-					} finally {
-						clearTimeout(upTimeout2);
+						// Expected on abort
 					}
 				}
-			} catch (e: any) {
-				console.warn('Upload test error:', e);
-				if (upEl) upEl.textContent = 'N/A';
-			} finally {
-				clearTimeout(upTimeout);
+			};
+
+			const downTimeout = setTimeout(() => {
+				isDownDone = true;
+				downControllers.forEach(c => {
+					try { c.abort(); } catch (_) {}
+				});
+			}, (downDurationSec + 0.15) * 1000);
+
+			await Promise.allSettled(Array.from({ length: downStreams }, (_, i) => runDownWorker(i)));
+			clearTimeout(downTimeout);
+			clearInterval(downTicker);
+
+			const finalDownElapsed = downSteadyStartTime > 0 ? (performance.now() - downSteadyStartTime) / 1000 : (performance.now() - d0) / 1000;
+			const finalDownMbps = (downSteadyBytes * 8) / (Math.max(finalDownElapsed, 0.001) * 1_000_000);
+			if (downEl) downEl.textContent = finalDownMbps.toFixed(1);
+			if (downSubEl) downSubEl.textContent = `Sustained (${(downTotalBytes / (1024 * 1024)).toFixed(1)} MB)`;
+			if (progressBar) progressBar.style.width = '75%';
+
+			// ==========================================
+			// STAGE 3: MULTI-STREAM SUSTAINED UPLOAD
+			// ==========================================
+			if (statusText) statusText.textContent = 'Uploading test payload to measure return pipeline speed...';
+			if (upSubEl) upSubEl.textContent = 'Measuring...';
+
+			// Quick calibration probe (512 KB)
+			const calibSize = 512 * 1024;
+			const calibBuf = new Uint8Array(calibSize);
+			const calibCtrl = new AbortController();
+			const calibTimeout = setTimeout(() => calibCtrl.abort(), 2500);
+
+			let calibSpeedMbps = 0;
+			try {
+				const calibStart = performance.now();
+				const calibRes = await fetch('https://speed.cloudflare.com/__up', {
+					method: 'POST',
+					body: calibBuf,
+					headers: { 'Content-Type': 'application/octet-stream' },
+					signal: calibCtrl.signal,
+				});
+				clearTimeout(calibTimeout);
+				if (calibRes.ok) {
+					const calibDuration = (performance.now() - calibStart) / 1000;
+					calibSpeedMbps = (calibSize * 8) / (Math.max(calibDuration, 0.001) * 1_000_000);
+					if (upEl) upEl.textContent = calibSpeedMbps.toFixed(1);
+				}
+			} catch (_) {
+				clearTimeout(calibTimeout);
 			}
 
-			if (upSubEl) upSubEl.textContent = 'Return Pipe Complete';
+			if (progressBar) progressBar.style.width = '80%';
+
+			// If calibration succeeded and link has good speed (> 10 Mbps), run multi-stream burst
+			if (calibSpeedMbps >= 10) {
+				const burstDurationSec = 2.0;
+				const streamChunkSize = calibSpeedMbps > 80 ? 4 * 1024 * 1024 : 1.5 * 1024 * 1024;
+				const burstBuf = new Uint8Array(streamChunkSize);
+				const burstControllers: AbortController[] = [];
+				let isBurstDone = false;
+				let burstBytes = 0;
+				let burstSteadyStartTime = 0;
+				const b0 = performance.now();
+
+				const burstTicker = setInterval(() => {
+					const now = performance.now();
+					const elapsed = (now - b0) / 1000;
+					if (burstSteadyStartTime > 0 && now - burstSteadyStartTime > 150) {
+						const steadyElapsed = (now - burstSteadyStartTime) / 1000;
+						const curMbps = (burstBytes * 8) / (steadyElapsed * 1_000_000);
+						if (upEl) upEl.textContent = curMbps.toFixed(1);
+					}
+					const progressPct = 80 + Math.min(20, (elapsed / burstDurationSec) * 20);
+					if (progressBar) progressBar.style.width = `${progressPct.toFixed(0)}%`;
+				}, 100);
+
+				const runBurstWorker = async () => {
+					while (!isBurstDone && (performance.now() - b0) / 1000 < burstDurationSec) {
+						const ctrl = new AbortController();
+						burstControllers.push(ctrl);
+						const reqStart = performance.now();
+						try {
+							const res = await fetch('https://speed.cloudflare.com/__up', {
+								method: 'POST',
+								body: burstBuf,
+								headers: { 'Content-Type': 'application/octet-stream' },
+								signal: ctrl.signal,
+							});
+							if (res.ok) {
+								if (burstSteadyStartTime === 0) burstSteadyStartTime = reqStart;
+								burstBytes += streamChunkSize;
+							}
+						} catch (_) {}
+					}
+				};
+
+				const burstTimeout = setTimeout(() => {
+					isBurstDone = true;
+					burstControllers.forEach(c => {
+						try { c.abort(); } catch (_) {}
+					});
+				}, (burstDurationSec + 0.15) * 1000);
+
+				await Promise.allSettled([runBurstWorker(), runBurstWorker()]);
+				clearTimeout(burstTimeout);
+				clearInterval(burstTicker);
+
+				if (burstBytes > 0 && burstSteadyStartTime > 0) {
+					const steadyElapsed = (performance.now() - burstSteadyStartTime) / 1000;
+					const finalBurstMbps = (burstBytes * 8) / (Math.max(steadyElapsed, 0.001) * 1_000_000);
+					if (upEl) upEl.textContent = finalBurstMbps.toFixed(1);
+				}
+			}
+
+			if (upSubEl) upSubEl.textContent = 'Return Pipeline Complete';
 			if (progressBar) progressBar.style.width = '100%';
 			if (statusText) statusText.textContent = 'Benchmark complete. 0 host bandwidth consumed; all data routed via Anycast.';
+
 		} catch (err: any) {
 			console.error('Speedtest encountered error:', err);
 			if (statusText) statusText.textContent = 'Benchmark interrupted or blocked by browser extensions.';
@@ -347,10 +374,8 @@
 		}
 	}
 
-	initBenchmarkMeta();
 	setupBenchmarkBtn();
 	document.addEventListener('astro:page-load', () => {
-		initBenchmarkMeta();
 		setupBenchmarkBtn();
 	});
 </script>
@@ -505,15 +530,6 @@
 		font-size: 0.85em;
 		font-weight: 600;
 		color: rgb(var(--gray));
-	}
-	.b-tile-text {
-		font-size: 1.05em;
-		font-weight: 700;
-		color: rgb(var(--black));
-		line-height: 1.25;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
 	}
 	.b-tile-sub {
 		font-size: 0.74em;

@@ -177,10 +177,10 @@
 			// STAGE 2: MULTI-STREAM SUSTAINED DOWNLOAD (3.5s)
 			// ==========================================
 			if (statusText) statusText.textContent = 'Streaming multi-connection download to measure sustained wire speed...';
-			if (progressBar) progressBar.style.width = '30%';
+			if (progressBar) progressBar.style.width = '25%';
 
 			const downDurationSec = 3.5;
-			const downStreams = 3;
+			const downStreams = 4;
 			const chunkSize = 25000000; // 25MB per request
 			const downControllers: AbortController[] = [];
 
@@ -188,10 +188,10 @@
 			let downSteadyBytes = 0;
 			let downSteadyStartTime = 0;
 			const d0 = performance.now();
-			const downWarmupMs = 600; // Discard initial 600ms TCP slow start ramp
+			const downWarmupMs = 500; // Discard initial 500ms TCP slow start ramp
 			let isDownDone = false;
 
-			// Live ticker to update speed every 100ms
+			// Live ticker to update speed every 80ms
 			const downTicker = setInterval(() => {
 				const now = performance.now();
 				const elapsedTotal = (now - d0) / 1000;
@@ -200,9 +200,9 @@
 					const curMbps = (downSteadyBytes * 8) / (steadyElapsed * 1_000_000);
 					if (downEl) downEl.textContent = curMbps.toFixed(1);
 				}
-				const progressPct = 30 + Math.min(45, (elapsedTotal / downDurationSec) * 45);
+				const progressPct = 25 + Math.min(38, (elapsedTotal / downDurationSec) * 38);
 				if (progressBar) progressBar.style.width = `${progressPct.toFixed(0)}%`;
-			}, 100);
+			}, 80);
 
 			const runDownWorker = async (streamId: number) => {
 				while (!isDownDone && (performance.now() - d0) / 1000 < downDurationSec) {
@@ -256,110 +256,80 @@
 			const finalDownMbps = (downSteadyBytes * 8) / (Math.max(finalDownElapsed, 0.001) * 1_000_000);
 			if (downEl) downEl.textContent = finalDownMbps.toFixed(1);
 			if (downSubEl) downSubEl.textContent = `Sustained (${(downTotalBytes / (1024 * 1024)).toFixed(1)} MB)`;
-			if (progressBar) progressBar.style.width = '75%';
+			if (progressBar) progressBar.style.width = '63%';
 
 			// ==========================================
-			// STAGE 3: MULTI-STREAM SUSTAINED UPLOAD
+			// STAGE 3: MULTI-STREAM SUSTAINED UPLOAD (3.5s)
 			// ==========================================
-			if (statusText) statusText.textContent = 'Profiling return pipeline & saturating upstream channels...';
+			if (statusText) statusText.textContent = 'Saturating return pipeline with multi-stream upstream channels...';
 			if (upSubEl) upSubEl.textContent = 'Measuring...';
 
-			// Phase 1: Warmup & TCP slow-start calibration (2 MB)
-			const warmupSize = 2 * 1024 * 1024;
-			const warmupBuf = new Uint8Array(warmupSize);
-			const wStart = performance.now();
-			const wCtrl = new AbortController();
-			const wTimeout = setTimeout(() => wCtrl.abort(), 4000);
+			const upDurationSec = 3.5;
+			const upStreams = 4;
+			const upChunkSize = 3 * 1024 * 1024; // 3MB chunk per request
+			const upBuf = new Uint8Array(upChunkSize);
+			const upControllers: AbortController[] = [];
 
-			let warmupMbps = 0;
-			let wDuration = 0;
-			try {
-				const wRes = await fetch('https://speed.cloudflare.com/__up', {
-					method: 'POST',
-					body: warmupBuf,
-					headers: { 'Content-Type': 'application/octet-stream' },
-					signal: wCtrl.signal,
+			let upTotalBytes = 0;
+			let upSteadyBytes = 0;
+			let upSteadyStartTime = 0;
+			const u0 = performance.now();
+			const upWarmupMs = 500; // Discard initial 500ms TCP slow start ramp
+			let isUpDone = false;
+
+			const upTicker = setInterval(() => {
+				const now = performance.now();
+				const elapsedTotal = (now - u0) / 1000;
+				if (upSteadyStartTime > 0 && now - upSteadyStartTime > 150) {
+					const steadyElapsed = (now - upSteadyStartTime) / 1000;
+					const curMbps = (upSteadyBytes * 8) / (steadyElapsed * 1_000_000);
+					if (upEl && curMbps > 0) upEl.textContent = curMbps.toFixed(1);
+				}
+				const progressPct = 63 + Math.min(37, (elapsedTotal / upDurationSec) * 37);
+				if (progressBar) progressBar.style.width = `${progressPct.toFixed(0)}%`;
+			}, 80);
+
+			const runUpWorker = async (workerId: number) => {
+				while (!isUpDone && (performance.now() - u0) / 1000 < upDurationSec) {
+					const ctrl = new AbortController();
+					upControllers.push(ctrl);
+					const reqStart = performance.now();
+					try {
+						const res = await fetch(`https://speed.cloudflare.com/__up?_u=${workerId}_${Date.now()}`, {
+							method: 'POST',
+							body: upBuf,
+							headers: { 'Content-Type': 'application/octet-stream' },
+							signal: ctrl.signal,
+						});
+						if (res.ok) {
+							upTotalBytes += upChunkSize;
+							if (reqStart - u0 > upWarmupMs) {
+								if (upSteadyStartTime === 0) upSteadyStartTime = reqStart;
+								upSteadyBytes += upChunkSize;
+							}
+						}
+					} catch (_) {
+						// Expected on abort
+					}
+				}
+			};
+
+			const upTimeout = setTimeout(() => {
+				isUpDone = true;
+				upControllers.forEach(c => {
+					try { c.abort(); } catch (_) {}
 				});
-				clearTimeout(wTimeout);
-				if (wRes.ok) {
-					wDuration = (performance.now() - wStart) / 1000;
-					warmupMbps = (warmupSize * 8) / (Math.max(wDuration, 0.001) * 1_000_000);
-					if (upEl) upEl.textContent = warmupMbps.toFixed(1);
-				}
-			} catch (_) {
-				clearTimeout(wTimeout);
-			}
+			}, (upDurationSec + 0.15) * 1000);
 
-			if (progressBar) progressBar.style.width = '82%';
+			await Promise.allSettled(Array.from({ length: upStreams }, (_, i) => runUpWorker(i)));
+			clearTimeout(upTimeout);
+			clearInterval(upTicker);
 
-			let finalUpMbps = warmupMbps;
-
-			// Phase 2: Full Multi-Stream Wire-Speed Measurement
-			if (wDuration > 0 && wDuration < 0.7) {
-				// Fast broadband / gigabit link (> 25 Mbps): Launch 2 parallel 15MB streams (30MB total)
-				if (statusText) statusText.textContent = 'Fast pipe detected: Saturating upstream channels (2x 15MB)...';
-				const burstSize = 15 * 1024 * 1024;
-				const burstBuf = new Uint8Array(burstSize);
-				const mStart = performance.now();
-				const mCtrl = new AbortController();
-				const mTimeout = setTimeout(() => mCtrl.abort(), 4500);
-
-				const upTicker = setInterval(() => {
-					const now = performance.now();
-					const elapsed = (now - mStart) / 1000;
-					const progressPct = 82 + Math.min(16, (elapsed / 1.5) * 16);
-					if (progressBar) progressBar.style.width = `${progressPct.toFixed(0)}%`;
-				}, 80);
-
-				try {
-					await Promise.all([
-						fetch('https://speed.cloudflare.com/__up', {
-							method: 'POST',
-							body: burstBuf,
-							headers: { 'Content-Type': 'application/octet-stream' },
-							signal: mCtrl.signal,
-						}),
-						fetch('https://speed.cloudflare.com/__up', {
-							method: 'POST',
-							body: burstBuf,
-							headers: { 'Content-Type': 'application/octet-stream' },
-							signal: mCtrl.signal,
-						}),
-					]);
-					const mDuration = (performance.now() - mStart) / 1000;
-					finalUpMbps = (burstSize * 2 * 8) / (Math.max(mDuration, 0.001) * 1_000_000);
-				} catch (_) {
-				} finally {
-					clearTimeout(mTimeout);
-					clearInterval(upTicker);
-				}
-			} else if (wDuration >= 0.7 && wDuration < 2.0) {
-				// Moderate broadband link (10 - 25 Mbps): Launch 1 stream of 6MB
-				if (statusText) statusText.textContent = 'Measuring sustained upstream channel (6MB)...';
-				const burstSize = 6 * 1024 * 1024;
-				const burstBuf = new Uint8Array(burstSize);
-				const mStart = performance.now();
-				const mCtrl = new AbortController();
-				const mTimeout = setTimeout(() => mCtrl.abort(), 4500);
-
-				try {
-					await fetch('https://speed.cloudflare.com/__up', {
-						method: 'POST',
-						body: burstBuf,
-						headers: { 'Content-Type': 'application/octet-stream' },
-						signal: mCtrl.signal,
-					});
-					const mDuration = (performance.now() - mStart) / 1000;
-					finalUpMbps = (burstSize * 8) / (Math.max(mDuration, 0.001) * 1_000_000);
-				} catch (_) {
-				} finally {
-					clearTimeout(mTimeout);
-				}
-			}
-
-			const displayMbps = Math.max(finalUpMbps, warmupMbps);
-			if (upEl) upEl.textContent = displayMbps > 0 ? displayMbps.toFixed(1) : '--';
-			if (upSubEl) upSubEl.textContent = 'Return Pipeline Complete';
+			const finalUpElapsed = upSteadyStartTime > 0 ? (performance.now() - upSteadyStartTime) / 1000 : (performance.now() - u0) / 1000;
+			const upBytesToCount = upSteadyBytes > 0 ? upSteadyBytes : upTotalBytes;
+			const finalUpMbps = (upBytesToCount * 8) / (Math.max(finalUpElapsed, 0.001) * 1_000_000);
+			if (upEl) upEl.textContent = finalUpMbps > 0 ? finalUpMbps.toFixed(1) : '--';
+			if (upSubEl) upSubEl.textContent = `Sustained (${(upTotalBytes / (1024 * 1024)).toFixed(1)} MB)`;
 			if (progressBar) progressBar.style.width = '100%';
 			if (statusText) statusText.textContent = 'Benchmark complete. 0 host bandwidth consumed; all data routed via Anycast.';
 

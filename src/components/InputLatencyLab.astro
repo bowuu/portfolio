@@ -320,14 +320,29 @@
 			}, randomDelay);
 		}
 
+		function handlePointerUp(e: PointerEvent) {
+			if (lastPointerDownTime > 0) {
+				const upTime = (e.timeStamp && e.timeStamp > 0) ? e.timeStamp : performance.now();
+				lastClickReleaseTime = upTime;
+				const holdDuration = Math.max(0.5, upTime - lastPointerDownTime);
+				if (debounceTimeVal) debounceTimeVal.textContent = `${holdDuration.toFixed(1)}`;
+				lastPointerDownTime = 0;
+			}
+		}
+
 		if (reactionBox) {
-			reactionBox.addEventListener('pointerdown', (e) => {
-				const now = performance.now();
-				lastPointerDownTime = now;
+			reactionBox.addEventListener('pointerdown', (e: PointerEvent) => {
+				const downTime = (e.timeStamp && e.timeStamp > 0) ? e.timeStamp : performance.now();
+				lastPointerDownTime = downTime;
+
+				// Capture pointer so pointerup is guaranteed even on rapid twitch movements
+				try {
+					reactionBox.setPointerCapture(e.pointerId);
+				} catch (_) {}
 
 				// Double-click gap calculation
 				if (lastClickReleaseTime > 0) {
-					const gap = now - lastClickReleaseTime;
+					const gap = downTime - lastClickReleaseTime;
 					if (gap > 10 && gap < 800) {
 						if (doubleclickVal) doubleclickVal.textContent = `${Math.round(gap)}`;
 					}
@@ -345,7 +360,7 @@
 					if (reactionStateBadge) reactionStateBadge.textContent = 'False Start';
 				} else if (reactionState === 'READY') {
 					// Successful reaction
-					const reactionDelta = Math.round(now - greenTimestamp);
+					const reactionDelta = Math.max(1, Math.round(downTime - greenTimestamp));
 					reactionState = 'RESULT';
 					reactionScores.push(reactionDelta);
 					if (reactionBox) reactionBox.className = 'reaction-box result';
@@ -359,14 +374,8 @@
 				}
 			});
 
-			reactionBox.addEventListener('pointerup', () => {
-				const upNow = performance.now();
-				lastClickReleaseTime = upNow;
-				if (lastPointerDownTime > 0) {
-					const holdDuration = upNow - lastPointerDownTime;
-					if (debounceTimeVal) debounceTimeVal.textContent = `${holdDuration.toFixed(1)}`;
-				}
-			});
+			reactionBox.addEventListener('pointerup', handlePointerUp);
+			window.addEventListener('pointerup', handlePointerUp);
 		}
 
 		// Reset Button
@@ -379,6 +388,8 @@
 				intervalHistory = [];
 				sparklineData = new Array(50).fill(0);
 				reactionScores = [];
+				lastPointerDownTime = 0;
+				lastClickReleaseTime = 0;
 				clearTimeout(stateTimer);
 				reactionState = 'IDLE';
 

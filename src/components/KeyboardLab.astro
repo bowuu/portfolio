@@ -11,7 +11,7 @@
 				<path d="M6 12h.01M10 12h.01M14 12h.01M18 12h.01"/>
 				<path d="M7 16h10"/>
 			</svg>
-			Keyboard Matrix &amp; Latency Lab
+			Keyboard Lab
 		</h2>
 
 		<div class="header-actions">
@@ -68,7 +68,7 @@
 	</div>
 
 	<!-- EXPANDABLE 104-KEY VISUAL MATRIX ACCORDION -->
-	<details class="kb-expandable" id="kb-details" open>
+	<details class="kb-expandable" id="kb-details">
 		<summary class="kb-summary">
 			<div class="kb-summary-left">
 				<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="kb-summary-icon">
@@ -422,11 +422,6 @@
 		function handleKeyDown(e: KeyboardEvent) {
 			const now = performance.now();
 			const code = e.code || e.key;
-
-			// Auto expand if collapsed when user presses keys
-			if (detailsEl && !detailsEl.open) {
-				detailsEl.open = true;
-			}
 
 			// Intercept space/tab/arrows if container or mobile input is focused to avoid page jumping
 			const isFocused = document.activeElement === container || document.activeElement === mobileInput;

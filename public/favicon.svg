@@ -30,7 +30,7 @@
 
     <!-- High-Impact Solid 'B' with Layer Lines & ATE Contacts -->
     <g filter="url(#shadow)">
-        <!-- The Bold 'B' in Bambu Orange -->
+        <!-- The Bold 'B' in Signal Orange -->
         <path fill-rule="evenodd" clip-rule="evenodd" d="M32 20 h36 c12 0 21 8.5 21 19.5 c0 7.2 -4.5 13.5 -11.2 16.8 c8.8 3.2 15.2 10.8 15.2 20.7 c0 13.5 -11.5 24 -25.5 24 H32 V20 z M48 35 v16 h19 c5.2 0 9.5 -3.5 9.5 -8 s-4.3 -8 -9.5 -8 H48 z M48 66 v21 h21 c6.8 0 12 -4.5 12 -10.5 s-5.2 -10.5 -12 -10.5 H48 z" fill="url(#bGrad)"/>
         
         <!-- Subtle FDM 3D Layer Highlights -->

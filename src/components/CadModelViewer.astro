@@ -21,23 +21,23 @@
 			<div class="model-select-wrapper">
 				<select id="cad-model-select" class="model-select" aria-label="Select 3D CAD Model">
 					<optgroup label="Networking & Hardware Mounts">
-						<option value="be92u" selected>ASUS RT-BE92U Router Mount</option>
+						<option value="router-mount" selected>Wi-Fi 7 Router Wall Mount</option>
 						<option value="network-switch-stand">Network Switch Vertical Stand</option>
 					</optgroup>
 					<optgroup label="Workstation & Peripherals">
 						<option value="laptop-vertical-stand">Vertical Laptop Workstation Stand</option>
 						<option value="dual-keyboard-mount">Dual Keyboard Under-Desk Bracket</option>
-						<option value="ikea-tertial">IKEA Tertial Desk Lamp Heavy Mount</option>
+						<option value="task-lamp-mount">Articulated Task Lamp Heavy Desk Mount</option>
 					</optgroup>
 					<optgroup label="Audio & Smart Devices">
-						<option value="r70x-headband">Audio-Technica ATH-R70x Headband Joiner</option>
-						<option value="lenovo-clock-stand">Lenovo Smart Clock Essential Riser</option>
+						<option value="headphone-headband">Open-Back Studio Headphone Headband Joiner</option>
+						<option value="digital-clock-stand">Desktop Digital Smart Clock Riser</option>
 						<option value="remote-mount">Smart Remote Wall Mount</option>
 					</optgroup>
 					<optgroup label="Automotive & Mechanical">
-						<option value="brz-armrest">Subaru BRZ / GR86 Armrest Blocker</option>
-						<option value="skil-battery">Skil 12V Battery Magnetic Holder</option>
-						<option value="gilmour-handle">Gilmour Garden Nozzle Handle</option>
+						<option value="console-gap-blocker">Sports Coupe Console Gap Blocker</option>
+						<option value="battery-holder-mount">12V Power Tool Battery Magnetic Holder</option>
+						<option value="hose-nozzle-handle">High-Pressure Hose Nozzle Ergonomic Handle</option>
 					</optgroup>
 				</select>
 			</div>
@@ -52,7 +52,7 @@
 	<!-- MODEL QUICK DESCRIPTION -->
 	<div class="cad-model-meta-strip">
 		<span id="model-desc-text" class="model-desc-text">
-			Custom wall mounting bracket for ASUS RT-BE92U Wi-Fi 7 router with integrated thermal ventilation clearance and cable channels.
+			Custom wall mounting bracket for vertical Wi-Fi 7 router with integrated thermal ventilation clearance and cable channels.
 		</span>
 	</div>
 
@@ -60,10 +60,10 @@
 	<div class="print-only cad-print-summary">
 		<p class="print-summary-title"><strong>Selected 3D CAD &amp; Prototyping Designs (MakerWorld @brob):</strong></p>
 		<ul class="print-model-list">
-			<li><strong>Networking &amp; Hardware Mounts:</strong> ASUS RT-BE92U Wi-Fi 7 Router Mount, Multi-Port Network Switch Stand</li>
-			<li><strong>Workstation &amp; Peripherals:</strong> Dual Vertical Laptop Stand, Dual Keyboard Under-Desk Sliding Cradle, IKEA Tertial Heavy Mount</li>
-			<li><strong>Audio &amp; Smart Devices:</strong> ATH-R70x Open-Back Headband Joiner, Lenovo Smart Clock Essential Riser, Smart Remote Wall Mount</li>
-			<li><strong>Automotive &amp; Workshop:</strong> Subaru BRZ / GR86 Console Gap Blocker, Skil 12V Battery Magnetic Mount, Gilmour High-Flow Nozzle Handle</li>
+			<li><strong>Networking &amp; Hardware Mounts:</strong> Wi-Fi 7 Router Wall Mount, Multi-Port Network Switch Stand</li>
+			<li><strong>Workstation &amp; Peripherals:</strong> Dual Vertical Laptop Stand, Dual Keyboard Under-Desk Sliding Cradle, Articulated Task Lamp Heavy Mount</li>
+			<li><strong>Audio &amp; Smart Devices:</strong> Open-Back Studio Headphone Headband Joiner, Desktop Digital Smart Clock Riser, Smart Remote Wall Mount</li>
+			<li><strong>Automotive &amp; Workshop:</strong> Sports Coupe Console Gap Blocker, 12V Battery Magnetic Mount, High-Pressure Hose Nozzle Handle</li>
 		</ul>
 	</div>
 
@@ -86,7 +86,7 @@
 	<div class="cad-viewer-footer">
 		<div class="cad-color-picker">
 			<span class="color-label">Color:</span>
-			<button class="color-dot active" data-color="#ea580c" title="Bambu Orange" style="background: #ea580c;"></button>
+			<button class="color-dot active" data-color="#ea580c" title="Signal Orange" style="background: #ea580c;"></button>
 			<button class="color-dot" data-color="#facc15" title="Sunflower Yellow" style="background: #facc15;"></button>
 			<button class="color-dot" data-color="#10b981" title="Cyber Green" style="background: #10b981;"></button>
 			<button class="color-dot" data-color="#2563eb" title="Tech Blue" style="background: #2563eb;"></button>
@@ -297,11 +297,11 @@
 			.then(r => r.json())
 			.then((items: ModelMeta[]) => {
 				items.forEach(m => { manifestMap[m.id] = m; });
-				const initialId = selectEl ? selectEl.value : 'be92u';
+				const initialId = selectEl ? selectEl.value : 'router-mount';
 				loadModel(initialId);
 			})
 			.catch(() => {
-				loadModel('be92u');
+				loadModel('router-mount');
 			});
 
 		if (selectEl) {

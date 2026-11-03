@@ -32,7 +32,7 @@
 		<!-- COLUMN 1: MOUSE POLLING RATE TRACKER -->
 		<div class="lab-col">
 			<div class="col-head">
-				<span class="col-title">Mouse Polling Rate (Raw Buffer)</span>
+				<span class="col-title">Mouse Polling Rate</span>
 				<span class="badge mono" id="poll-tier-badge">Idle</span>
 			</div>
 
@@ -79,18 +79,18 @@
 			</div>
 		</div>
 
-		<!-- COLUMN 2: VISUAL REACTION BENCHMARK -->
+		<!-- COLUMN 2: MOUSE REFLEX BENCHMARK -->
 		<div class="lab-col">
 			<div class="col-head">
-				<span class="col-title">Visual Reaction Benchmark</span>
+				<span class="col-title">Mouse Reflex Benchmark</span>
 				<span class="badge mono" id="reaction-state-badge">Ready</span>
 			</div>
 
 			<!-- INTERACTIVE REACTION TARGET -->
 			<div class="reaction-box idle" id="reaction-box" role="button" tabindex="0">
 				<div class="reaction-content">
-					<span class="reaction-headline" id="reaction-headline">Click Here to Test Reaction</span>
-					<span class="reaction-sub" id="reaction-sub">Tests hardware visual-motor click response time</span>
+					<span class="reaction-headline" id="reaction-headline">Click to Start</span>
+					<span class="reaction-sub" id="reaction-sub">Click when it turns green</span>
 				</div>
 			</div>
 
@@ -303,9 +303,9 @@
 		function startReactionTest() {
 			reactionState = 'WAITING';
 			if (reactionBox) reactionBox.className = 'reaction-box waiting';
-			if (reactionHeadline) reactionHeadline.textContent = 'Wait for GREEN...';
+			if (reactionHeadline) reactionHeadline.textContent = 'Wait for green...';
 			if (reactionSub) reactionSub.textContent = 'Do not click yet!';
-			if (reactionStateBadge) reactionStateBadge.textContent = 'Armed...';
+			if (reactionStateBadge) reactionStateBadge.textContent = 'Waiting...';
 
 			const randomDelay = 1500 + Math.random() * 2500; // 1.5s to 4.0s
 			clearTimeout(stateTimer);
@@ -314,8 +314,8 @@
 				greenTimestamp = performance.now();
 				if (reactionBox) reactionBox.className = 'reaction-box ready';
 				if (reactionHeadline) reactionHeadline.textContent = 'CLICK NOW!';
-				if (reactionSub) reactionSub.textContent = 'Measure display-to-input response';
-				if (reactionStateBadge) reactionStateBadge.textContent = 'Active';
+				if (reactionSub) reactionSub.textContent = 'Click as fast as you can';
+				if (reactionStateBadge) reactionStateBadge.textContent = 'Go!';
 			}, randomDelay);
 		}
 
@@ -331,7 +331,7 @@
 					reactionState = 'TOO_SOON';
 					if (reactionBox) reactionBox.className = 'reaction-box too-soon';
 					if (reactionHeadline) reactionHeadline.textContent = 'Too Soon!';
-					if (reactionSub) reactionSub.textContent = 'Clicked before screen turned green. Click to retry.';
+					if (reactionSub) reactionSub.textContent = 'Clicked before green. Click to retry.';
 					if (reactionStateBadge) reactionStateBadge.textContent = 'False Start';
 				} else if (reactionState === 'READY') {
 					// Successful reaction
@@ -387,8 +387,8 @@
 					tierBadgeEl.className = 'badge mono';
 				}
 				if (reactionBox) reactionBox.className = 'reaction-box idle';
-				if (reactionHeadline) reactionHeadline.textContent = 'Click Here to Test Reaction';
-				if (reactionSub) reactionSub.textContent = 'Tests hardware visual-motor click response time';
+				if (reactionHeadline) reactionHeadline.textContent = 'Click to Start';
+				if (reactionSub) reactionSub.textContent = 'Click when it turns green';
 				if (reactionTimeVal) reactionTimeVal.textContent = '--';
 				if (reactionRating) reactionRating.textContent = 'Awaiting click';
 				if (reactionBestVal) reactionBestVal.textContent = '--';

@@ -24,7 +24,7 @@
 	</div>
 
 	<p class="benchmark-desc">
-		Measure real-time USB mouse polling frequency (via raw coalesced OS input buffers), mechanical switch contact debounce time, and display-to-click reaction latency.
+		Measure real-time USB mouse polling frequency (via raw coalesced OS input buffers), tracking jitter stability, and display-to-click visual reaction latency.
 	</p>
 
 	<!-- TWO-COLUMN BENCHMARK WORKBENCH -->
@@ -79,10 +79,10 @@
 			</div>
 		</div>
 
-		<!-- COLUMN 2: CLICK LATENCY & SWITCH DEBOUNCE -->
+		<!-- COLUMN 2: CLICK LATENCY & REACTION TEST -->
 		<div class="lab-col">
 			<div class="col-head">
-				<span class="col-title">Click Latency &amp; Switch Debounce</span>
+				<span class="col-title">Click Latency &amp; Reflex Benchmark</span>
 				<span class="badge mono" id="reaction-state-badge">Ready</span>
 			</div>
 
@@ -94,33 +94,33 @@
 				</div>
 			</div>
 
-			<!-- CLICK & SWITCH TIMING READOUTS -->
+			<!-- CLICK & REACTION TIMING READOUTS -->
 			<div class="metrics-row">
 				<div class="metric-mini">
-					<span class="m-label">Reaction Latency</span>
+					<span class="m-label">Last Reflex</span>
 					<div class="m-val-wrap">
 						<span class="m-val mono" id="reaction-time-val">--</span>
 						<span class="m-unit">ms</span>
 					</div>
-					<span class="m-sub mono" id="reaction-avg-val">Avg: -- ms (0 tries)</span>
+					<span class="m-sub mono" id="reaction-rating">Awaiting click</span>
 				</div>
 
 				<div class="metric-mini">
-					<span class="m-label">Switch Hold Time</span>
+					<span class="m-label">Best Reflex</span>
 					<div class="m-val-wrap">
-						<span class="m-val mono" id="debounce-time-val">--</span>
+						<span class="m-val mono" id="reaction-best-val">--</span>
 						<span class="m-unit">ms</span>
 					</div>
-					<span class="m-sub mono">Down-to-up contact time</span>
+					<span class="m-sub mono" id="reaction-best-sub">Fastest attempt</span>
 				</div>
 
 				<div class="metric-mini">
-					<span class="m-label">Double-Click Gap</span>
+					<span class="m-label">Session Average</span>
 					<div class="m-val-wrap">
-						<span class="m-val mono" id="doubleclick-val">--</span>
+						<span class="m-val mono" id="reaction-avg-val">--</span>
 						<span class="m-unit">ms</span>
 					</div>
-					<span class="m-sub mono" id="doubleclick-sub">Debounce chatter filter</span>
+					<span class="m-sub mono" id="reaction-count-sub">0 total attempts</span>
 				</div>
 			</div>
 		</div>
@@ -281,25 +281,24 @@
 		}
 
 		// ==========================================
-		// 2. CLICK REACTION & SWITCH DEBOUNCE
+		// 2. CLICK REACTION & VISUAL-MOTOR BENCHMARK
 		// ==========================================
 		const reactionBox = document.getElementById('reaction-box');
 		const reactionHeadline = document.getElementById('reaction-headline');
 		const reactionSub = document.getElementById('reaction-sub');
 		const reactionStateBadge = document.getElementById('reaction-state-badge');
 		const reactionTimeVal = document.getElementById('reaction-time-val');
+		const reactionRating = document.getElementById('reaction-rating');
+		const reactionBestVal = document.getElementById('reaction-best-val');
 		const reactionAvgVal = document.getElementById('reaction-avg-val');
-		const debounceTimeVal = document.getElementById('debounce-time-val');
-		const doubleclickVal = document.getElementById('doubleclick-val');
+		const reactionCountSub = document.getElementById('reaction-count-sub');
 
 		type ReactionState = 'IDLE' | 'WAITING' | 'READY' | 'TOO_SOON' | 'RESULT';
 		let reactionState: ReactionState = 'IDLE';
 		let stateTimer: any = null;
 		let greenTimestamp = 0;
 		let reactionScores: number[] = [];
-
-		let lastPointerDownTime = 0;
-		let lastClickReleaseTime = 0;
+		let bestReflex = Infinity;
 
 		function startReactionTest() {
 			reactionState = 'WAITING';
@@ -320,33 +319,9 @@
 			}, randomDelay);
 		}
 
-		function handlePointerUp(e: PointerEvent) {
-			if (lastPointerDownTime > 0) {
-				const upTime = (e.timeStamp && e.timeStamp > 0) ? e.timeStamp : performance.now();
-				lastClickReleaseTime = upTime;
-				const holdDuration = Math.max(0.5, upTime - lastPointerDownTime);
-				if (debounceTimeVal) debounceTimeVal.textContent = `${holdDuration.toFixed(1)}`;
-				lastPointerDownTime = 0;
-			}
-		}
-
 		if (reactionBox) {
 			reactionBox.addEventListener('pointerdown', (e: PointerEvent) => {
 				const downTime = (e.timeStamp && e.timeStamp > 0) ? e.timeStamp : performance.now();
-				lastPointerDownTime = downTime;
-
-				// Capture pointer so pointerup is guaranteed even on rapid twitch movements
-				try {
-					reactionBox.setPointerCapture(e.pointerId);
-				} catch (_) {}
-
-				// Double-click gap calculation
-				if (lastClickReleaseTime > 0) {
-					const gap = downTime - lastClickReleaseTime;
-					if (gap > 10 && gap < 800) {
-						if (doubleclickVal) doubleclickVal.textContent = `${Math.round(gap)}`;
-					}
-				}
 
 				if (reactionState === 'IDLE' || reactionState === 'RESULT' || reactionState === 'TOO_SOON') {
 					startReactionTest();
@@ -363,19 +338,29 @@
 					const reactionDelta = Math.max(1, Math.round(downTime - greenTimestamp));
 					reactionState = 'RESULT';
 					reactionScores.push(reactionDelta);
+					if (reactionDelta < bestReflex) {
+						bestReflex = reactionDelta;
+						if (reactionBestVal) reactionBestVal.textContent = `${bestReflex}`;
+					}
+
 					if (reactionBox) reactionBox.className = 'reaction-box result';
 					if (reactionHeadline) reactionHeadline.textContent = `${reactionDelta} ms`;
 					if (reactionSub) reactionSub.textContent = 'Click to test again';
 					if (reactionStateBadge) reactionStateBadge.textContent = `${reactionDelta} ms`;
 
 					if (reactionTimeVal) reactionTimeVal.textContent = `${reactionDelta}`;
+					if (reactionRating) {
+						if (reactionDelta < 185) reactionRating.textContent = 'Superhuman reflex';
+						else if (reactionDelta < 225) reactionRating.textContent = 'Esports caliber';
+						else if (reactionDelta < 275) reactionRating.textContent = 'Fast reaction';
+						else reactionRating.textContent = 'Typical response';
+					}
+
 					const avg = Math.round(reactionScores.reduce((a, b) => a + b, 0) / reactionScores.length);
-					if (reactionAvgVal) reactionAvgVal.textContent = `Avg: ${avg} ms (${reactionScores.length} tries)`;
+					if (reactionAvgVal) reactionAvgVal.textContent = `${avg}`;
+					if (reactionCountSub) reactionCountSub.textContent = `${reactionScores.length} attempts recorded`;
 				}
 			});
-
-			reactionBox.addEventListener('pointerup', handlePointerUp);
-			window.addEventListener('pointerup', handlePointerUp);
 		}
 
 		// Reset Button
@@ -388,8 +373,7 @@
 				intervalHistory = [];
 				sparklineData = new Array(50).fill(0);
 				reactionScores = [];
-				lastPointerDownTime = 0;
-				lastClickReleaseTime = 0;
+				bestReflex = Infinity;
 				clearTimeout(stateTimer);
 				reactionState = 'IDLE';
 
@@ -406,9 +390,10 @@
 				if (reactionHeadline) reactionHeadline.textContent = 'Click Here to Test Reaction';
 				if (reactionSub) reactionSub.textContent = 'Tests hardware visual-motor click response time';
 				if (reactionTimeVal) reactionTimeVal.textContent = '--';
-				if (reactionAvgVal) reactionAvgVal.textContent = 'Avg: -- ms (0 tries)';
-				if (debounceTimeVal) debounceTimeVal.textContent = '--';
-				if (doubleclickVal) doubleclickVal.textContent = '--';
+				if (reactionRating) reactionRating.textContent = 'Awaiting click';
+				if (reactionBestVal) reactionBestVal.textContent = '--';
+				if (reactionAvgVal) reactionAvgVal.textContent = '--';
+				if (reactionCountSub) reactionCountSub.textContent = '0 total attempts';
 				drawSparkline();
 			});
 		}

@@ -1,5 +1,17 @@
 ---
-const today = new Date();
+const now = new Date();
+const currentYear = now.getFullYear();
+
+// Human-readable build timestamp (e.g. "November 4, 2026 at 9:50 AM EST")
+const lastUpdated = new Intl.DateTimeFormat('en-US', {
+	month: 'long',
+	day: 'numeric',
+	year: 'numeric',
+	hour: 'numeric',
+	minute: '2-digit',
+	timeZoneName: 'short',
+}).format(now);
+const isoTimestamp = now.toISOString();
 ---
 
 <footer>
@@ -12,7 +24,8 @@ const today = new Date();
 	</div>
 
 	<!-- COPYRIGHT AT BOTTOM OF FOOTER -->
-	<p class="copyright">&copy; {today.getFullYear()} Bo Wu. All rights reserved.</p>
+	<p class="copyright">&copy; {currentYear} Bo Wu. All rights reserved.</p>
+	<p class="last-updated">Last updated: <time datetime={isoTimestamp}>{lastUpdated}</time></p>
 </footer>
 
 <style>
@@ -52,5 +65,16 @@ const today = new Date();
 		font-weight: 500;
 		color: rgb(var(--gray));
 		opacity: 0.75;
+	}
+	.last-updated {
+		margin-top: 0.4em;
+		margin-bottom: 0;
+		font-size: 0.76em;
+		font-weight: 400;
+		color: rgb(var(--gray));
+		opacity: 0.6;
+	}
+	.last-updated time {
+		font-variant-numeric: tabular-nums;
 	}
 </style>

@@ -1026,7 +1026,7 @@
 		font-size: 0.62em;
 		font-weight: 700;
 		letter-spacing: 0.02em;
-		color: rgb(var(--gray-dark));
+		color: #0f172a;
 		cursor: pointer;
 		user-select: none;
 		transition: background-color 0.12s ease;
@@ -1034,17 +1034,17 @@
 		box-sizing: border-box;
 	}
 	:global(html[data-theme="dark"]) .mouse-btn-thumb {
-		background: #181b24;
-		border-color: rgba(255, 255, 255, 0.16);
-		color: #cbd5e1;
+		background: #2c3142;
+		border-color: rgba(255, 255, 255, 0.18);
+		color: #ffffff;
 		box-shadow: -2px 1px 6px rgba(0, 0, 0, 0.35);
 	}
 	/* Hover should NOT light up outline */
 	.mouse-btn-thumb:hover {
-		background: #f1f5f9;
+		background: #f8fafc;
 	}
 	:global(html[data-theme="dark"]) .mouse-btn-thumb:hover {
-		background: #232736;
+		background: #373d52;
 	}
 
 	/* Ergonomic Mouse Body Shell - no border or overflow:hidden so full button perimeters light up */
@@ -1075,7 +1075,7 @@
 		justify-content: center;
 		font-size: 0.68em;
 		font-weight: 700;
-		color: rgb(var(--gray-dark));
+		color: #0f172a;
 		cursor: pointer;
 		transition: background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
 		background: #ffffff;
@@ -1085,9 +1085,9 @@
 		border: 1.5px solid var(--border-color);
 	}
 	:global(html[data-theme="dark"]) .mouse-btn-main {
-		color: #cbd5e1;
-		background: #13161f;
-		border-color: rgba(255, 255, 255, 0.14);
+		color: #ffffff;
+		background: #2c3142;
+		border-color: rgba(255, 255, 255, 0.18);
 	}
 	.mouse-btn-left {
 		border-top-left-radius: 22px;
@@ -1114,9 +1114,9 @@
 		z-index: 0;
 	}
 	:global(html[data-theme="dark"]) .mouse-wheel-wrap {
-		background: #13161f;
-		border-top-color: rgba(255, 255, 255, 0.14);
-		border-bottom-color: rgba(255, 255, 255, 0.14);
+		background: #2c3142;
+		border-top-color: rgba(255, 255, 255, 0.18);
+		border-bottom-color: rgba(255, 255, 255, 0.18);
 	}
 
 	.mouse-btn-wheel {
@@ -1137,7 +1137,7 @@
 		z-index: 1;
 	}
 	:global(html[data-theme="dark"]) .mouse-btn-wheel {
-		background: #202433;
+		background: #1d212d;
 		border-color: rgba(255, 255, 255, 0.18);
 	}
 
@@ -1181,18 +1181,18 @@
 		z-index: 1;
 	}
 	:global(html[data-theme="dark"]) .mouse-palm {
-		background: #13161f;
-		border-color: rgba(255, 255, 255, 0.14);
+		background: #2c3142;
+		border-color: rgba(255, 255, 255, 0.18);
 	}
 
-	/* BUTTON ACTIVE STATES (UNIFIED, BALANCED SIGNAL ORANGE GLOW) */
+	/* BUTTON ACTIVE STATES (EXACT PARITY WITH 104-KEY KEYBOARD LAB) */
 	.mouse-btn.btn-active {
-		background: #ea580c !important;
-		border-color: #c2410c !important;
+		background: var(--accent) !important;
+		color: #ffffff !important;
+		border-color: #d95b00 !important;
 		border-width: 1.5px !important;
 		border-style: solid !important;
-		color: #ffffff !important;
-		box-shadow: 0 0 8px rgba(234, 88, 12, 0.45) !important;
+		box-shadow: 0 0 10px rgba(255, 107, 0, 0.6) !important;
 		transition: none !important;
 		z-index: 3 !important;
 	}
@@ -1202,9 +1202,9 @@
 		font-weight: 800;
 	}
 	:global(html[data-theme="dark"]) .mouse-btn.btn-active {
-		background: #f97316 !important;
-		border-color: #ea580c !important;
-		box-shadow: 0 0 10px rgba(249, 115, 22, 0.5) !important;
+		background: var(--accent) !important;
+		border-color: #d95b00 !important;
+		box-shadow: 0 0 10px rgba(255, 107, 0, 0.6) !important;
 	}
 
 	/* Thumb buttons keep border-right: none when active */
@@ -1212,16 +1212,16 @@
 		border-right: none !important;
 	}
 
-	/* SCROLL NOTCH ACTIVE STATE (MATCHING BUTTON GLOW INTENSITY) */
+	/* SCROLL NOTCH ACTIVE STATE (MATCHING KEYBOARD ACTIVE GLOW & ACCENT) */
 	.notch-active {
-		background: #ea580c !important;
+		background: var(--accent) !important;
 		color: #ffffff !important;
-		box-shadow: 0 0 8px rgba(234, 88, 12, 0.45) !important;
+		box-shadow: 0 0 10px rgba(255, 107, 0, 0.6) !important;
 		border-radius: 3px;
 	}
 	:global(html[data-theme="dark"]) .notch-active {
-		background: #f97316 !important;
-		box-shadow: 0 0 10px rgba(249, 115, 22, 0.5) !important;
+		background: var(--accent) !important;
+		box-shadow: 0 0 10px rgba(255, 107, 0, 0.6) !important;
 	}
 	.notch-active svg {
 		stroke: #ffffff !important;

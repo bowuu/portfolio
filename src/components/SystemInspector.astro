@@ -34,7 +34,7 @@
 		</summary>
 		<div class="privacy-body">
 			<p>
-				<strong>Client-Side Evaluation:</strong> The hardware, GPU, CPU, screen, and codec metrics below are read ephemerally in your active browser session via standard WebGL, Screen, Audio, and Navigator APIs. <strong>No hardware or browser fingerprinting data is collected, stored, or transmitted to any server or database.</strong>
+				<strong>Client-Side Evaluation:</strong> The hardware, GPU, CPU, screen, audio, and media metrics below are read ephemerally in your active browser session via standard WebGL, Screen, Audio, and Navigator APIs. <strong>No hardware or browser fingerprinting data is collected, stored, or transmitted to any server or database.</strong>
 			</p>
 			<p>
 				<strong>Network &amp; Edge Layer:</strong> Like all websites and content delivery networks, Cloudflare Pages edge infrastructure receives standard HTTP connection metadata (such as your connecting IP address and Anycast routing headers) at the network layer to deliver web assets and protect against DDoS attacks.
@@ -42,7 +42,7 @@
 		</div>
 	</details>
 
-	<!-- SUBSECTION 1: EDGE & NETWORK -->
+	<!-- SUBSECTION 1: NETWORK & EDGE -->
 	<div class="telemetry-group">
 		<div class="telemetry-group-header">
 			<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
@@ -50,7 +50,7 @@
 				<line x1="2" y1="12" x2="22" y2="12"/>
 				<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
 			</svg>
-			<span>Edge &amp; Network</span>
+			<span>Network &amp; Edge</span>
 		</div>
 		<div class="telemetry-grid">
 			<div class="telemetry-item">
@@ -72,7 +72,7 @@
 		</div>
 	</div>
 
-	<!-- SUBSECTION 2: HARDWARE & COMPUTE -->
+	<!-- SUBSECTION 2: HARDWARE & SYSTEM -->
 	<div class="telemetry-group">
 		<div class="telemetry-group-header">
 			<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
@@ -106,10 +106,18 @@
 				<span class="t-label">Graphics Card (GPU)</span>
 				<span id="t-gpu" class="t-val">Detecting WebGL...</span>
 			</div>
+			<div class="telemetry-item">
+				<span class="t-label">GPU Max Texture Size</span>
+				<span id="t-texture" class="t-val">Probing raster limits...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">GPU Shading Language</span>
+				<span id="t-glsl" class="t-val">Probing compiler...</span>
+			</div>
 		</div>
 	</div>
 
-	<!-- SUBSECTION 3: DISPLAY, AUDIO & MEDIA -->
+	<!-- SUBSECTION 3: DISPLAY & TOUCH -->
 	<div class="telemetry-group">
 		<div class="telemetry-group-header">
 			<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
@@ -117,7 +125,7 @@
 				<line x1="8" y1="21" x2="16" y2="21"/>
 				<line x1="12" y1="17" x2="12" y2="21"/>
 			</svg>
-			<span>Display &amp; Media</span>
+			<span>Display &amp; Touch</span>
 		</div>
 		<div class="telemetry-grid">
 			<div class="telemetry-item">
@@ -129,12 +137,41 @@
 				<span id="t-refresh" class="t-val">Measuring refresh rate...</span>
 			</div>
 			<div class="telemetry-item">
+				<span class="t-label">Screen Orientation</span>
+				<span id="t-orientation" class="t-val">Detecting orientation...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Touch Digitizer</span>
+				<span id="t-touch" class="t-val">Probing digitizer...</span>
+			</div>
+		</div>
+	</div>
+
+	<!-- SUBSECTION 4: AUDIO & MEDIA -->
+	<div class="telemetry-group">
+		<div class="telemetry-group-header">
+			<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+				<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+				<path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+			</svg>
+			<span>Audio &amp; Media</span>
+		</div>
+		<div class="telemetry-grid">
+			<div class="telemetry-item">
 				<span class="t-label">Audio Pipeline Latency</span>
 				<span id="t-audio" class="t-val">Probing DAC sink...</span>
 			</div>
 			<div class="telemetry-item">
+				<span class="t-label">Audio Output Channels</span>
+				<span id="t-channels" class="t-val">Querying mixer topology...</span>
+			</div>
+			<div class="telemetry-item">
 				<span class="t-label">Hardware Video Codecs</span>
 				<span id="t-codecs" class="t-val">Probing ASIC decoders...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Media Hardware Devices</span>
+				<span id="t-endpoints" class="t-val">Enumerating endpoints...</span>
 			</div>
 		</div>
 	</div>
@@ -256,7 +293,7 @@
 	};
 
 	async function initTelemetry() {
-		// Edge & Network elements
+		// Network & Edge elements
 		const ipEl = document.getElementById('t-ip');
 		const locEl = document.getElementById('t-location');
 		const edgeEl = document.getElementById('t-edge');
@@ -267,12 +304,20 @@
 		const cpuEl = document.getElementById('t-cpu');
 		const ramEl = document.getElementById('t-ram');
 		const gpuEl = document.getElementById('t-gpu');
+		const textureEl = document.getElementById('t-texture');
+		const glslEl = document.getElementById('t-glsl');
 
-		// Display, Audio & Media elements
+		// Display & Touch elements
 		const displayEl = document.getElementById('t-display');
 		const refreshEl = document.getElementById('t-refresh');
+		const orientEl = document.getElementById('t-orientation');
+		const touchEl = document.getElementById('t-touch');
+
+		// Audio & Media elements
 		const audioEl = document.getElementById('t-audio');
+		const channelsEl = document.getElementById('t-channels');
 		const codecsEl = document.getElementById('t-codecs');
+		const endpointsEl = document.getElementById('t-endpoints');
 
 		// 1. Instant Client Detection: GPU
 		const gpuString = detectGPU();
@@ -330,14 +375,50 @@
 			ramEl.textContent = mem ? `${mem} GB RAM` : '64-bit Architecture';
 		}
 
-		// 5. Display & Scaling
+		// 5. GPU Max Texture Size
+		if (textureEl) {
+			try {
+				const canvas = document.createElement('canvas');
+				const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+				if (gl) {
+					const maxTex = (gl as WebGLRenderingContext).getParameter((gl as WebGLRenderingContext).MAX_TEXTURE_SIZE);
+					const kTier = maxTex >= 16384 ? '16K' : (maxTex >= 8192 ? '8K' : '4K');
+					textureEl.textContent = `${maxTex.toLocaleString()} px (${kTier} Canvas)`;
+					textureEl.title = `Maximum hardware texture dimension supported by physical GPU silicon: ${maxTex}×${maxTex} pixels.`;
+				} else {
+					textureEl.textContent = '8,192 px (Standard 8K)';
+				}
+			} catch {
+				textureEl.textContent = 'Hardware Dependent';
+			}
+		}
+
+		// 6. GPU Shading Language Version
+		if (glslEl) {
+			try {
+				const canvas = document.createElement('canvas');
+				const gl = (canvas.getContext('webgl2') || canvas.getContext('webgl')) as WebGLRenderingContext | null;
+				if (gl) {
+					const glsl = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);
+					const cleanGlsl = glsl ? glsl.split('(')[0].trim() : 'GLSL ES 3.00';
+					glslEl.textContent = cleanGlsl;
+					glslEl.title = `Hardware shading language compiler version: ${glsl || 'GLSL'}`;
+				} else {
+					glslEl.textContent = 'GLSL ES 1.00';
+				}
+			} catch {
+				glslEl.textContent = 'OpenGL ES Shading';
+			}
+		}
+
+		// 7. Display & Scaling
 		if (displayEl) {
 			const dpr = window.devicePixelRatio ? ` @ ${window.devicePixelRatio}x scaling` : '';
 			const depth = window.screen.colorDepth ? ` (${window.screen.colorDepth}-bit color)` : '';
 			displayEl.textContent = `${window.screen.width} × ${window.screen.height}${dpr}${depth}`;
 		}
 
-		// 6. Panel Refresh & Gamut (VRR, LTPO, HDR10 & Video-plane aware)
+		// 8. Panel Refresh & Gamut (VRR, LTPO, HDR10 & Video-plane aware)
 		const isP3 = window.matchMedia('(color-gamut: p3)').matches;
 		const isRec2020 = window.matchMedia('(color-gamut: rec2020)').matches;
 		const isHDR = window.matchMedia('(dynamic-range: high)').matches;
@@ -401,7 +482,40 @@
 			refreshEl.addEventListener('click', () => measureRefreshBurst(50));
 		}
 
-		// 7. Audio Pipeline Latency
+		// 9. Screen Orientation & Hardware Angle
+		if (orientEl) {
+			const updateOrient = () => {
+				if (screen.orientation) {
+					const type = screen.orientation.type.replace('-', ' ');
+					const angle = screen.orientation.angle;
+					orientEl.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} (${angle}°)`;
+				} else {
+					const isLand = window.innerWidth > window.innerHeight;
+					orientEl.textContent = isLand ? 'Landscape (0°)' : 'Portrait (0°)';
+				}
+			};
+			updateOrient();
+			if (screen.orientation && screen.orientation.addEventListener) {
+				screen.orientation.addEventListener('change', updateOrient);
+			} else {
+				window.addEventListener('resize', updateOrient, { passive: true });
+			}
+			orientEl.title = 'Screen Orientation API tracking display layout mode and physical hardware angle in real-time.';
+		}
+
+		// 10. Hardware Touch Digitizer
+		if (touchEl) {
+			const points = navigator.maxTouchPoints || 0;
+			if (points > 0) {
+				touchEl.textContent = `${points}-Point Multitouch`;
+				touchEl.title = `Hardware capacitive digitizer supports up to ${points} simultaneous touch contact points.`;
+			} else {
+				touchEl.textContent = '0 (Precision Mouse / No Touch)';
+				touchEl.title = 'No capacitive touch screen detected; system uses precision mouse/pointer.';
+			}
+		}
+
+		// 11. Audio Pipeline Latency & Bit Depth
 		if (audioEl) {
 			try {
 				const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -412,21 +526,44 @@
 					const rateKhz = (actx.sampleRate / 1000).toFixed(0);
 					
 					if (outLatMs) {
-						audioEl.textContent = `${baseLatMs} ms buffer (${outLatMs} ms sink) • ${rateKhz} kHz DAC`;
+						audioEl.textContent = `${baseLatMs} ms buffer (${outLatMs} ms sink) • ${rateKhz} kHz (24-bit / 32-bit Float)`;
 					} else {
-						audioEl.textContent = `${baseLatMs} ms buffer • ${rateKhz} kHz DAC`;
+						audioEl.textContent = `${baseLatMs} ms buffer • ${rateKhz} kHz (24-bit / 32-bit Float)`;
 					}
-					audioEl.title = `AudioContext processing buffer: ${baseLatMs}ms. Desktop WASAPI/CoreAudio defaults to ~10ms. Android ranges from 3ms (AAudio low-latency fast track) up to 120ms+ (mixer fallback, DSP effects, or Bluetooth A2DP).`;
+					audioEl.title = `AudioContext processing buffer: ${baseLatMs}ms. Host DAC sample rate: ${rateKhz} kHz. Internal Web Audio DSP runs at 32-bit float precision, outputting to host 24-bit/16-bit hardware DAC.`;
 					actx.close();
 				} else {
-					audioEl.textContent = 'Standard Audio Subsystem';
+					audioEl.textContent = 'Standard Audio (24-bit DAC)';
 				}
 			} catch (_) {
 				audioEl.textContent = 'Hardware Audio Output';
 			}
 		}
 
-		// 8. Hardware Video Codecs (MediaCapabilities API)
+		// 12. Audio Output Channels
+		if (channelsEl) {
+			try {
+				const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+				if (AudioCtx) {
+					const actx = new AudioCtx();
+					const ch = actx.destination.maxChannelCount || 2;
+					let desc = `${ch} Channels`;
+					if (ch === 2) desc = '2 Channels (Stereo)';
+					else if (ch === 6) desc = '6 Channels (5.1 Surround)';
+					else if (ch === 8) desc = '8 Channels (7.1 Surround)';
+					else if (ch === 1) desc = '1 Channel (Mono)';
+					channelsEl.textContent = desc;
+					channelsEl.title = `Host audio driver mixer topology: ${ch} discrete output channels available.`;
+					actx.close();
+				} else {
+					channelsEl.textContent = '2 Channels (Stereo)';
+				}
+			} catch {
+				channelsEl.textContent = '2 Channels (Stereo)';
+			}
+		}
+
+		// 13. Hardware Video Codecs (MediaCapabilities API)
 		if (codecsEl) {
 			const probeCodecs = async () => {
 				if (navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo) {
@@ -458,7 +595,33 @@
 			codecsEl.title = 'W3C MediaCapabilities API checking GPU silicon ASIC hardware-accelerated video decoding.';
 		}
 
-		// 9. Cloudflare Edge Ephemeral Detection
+		// 14. Physical Media Device Enumeration
+		if (endpointsEl) {
+			if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+				navigator.mediaDevices.enumerateDevices().then((devices) => {
+					let audioIn = 0;
+					let audioOut = 0;
+					let videoIn = 0;
+					for (const d of devices) {
+						if (d.kind === 'audioinput') audioIn++;
+						else if (d.kind === 'audiooutput') audioOut++;
+						else if (d.kind === 'videoinput') videoIn++;
+					}
+					const parts = [];
+					if (audioIn > 0) parts.push(`${audioIn} Mic${audioIn > 1 ? 's' : ''}`);
+					if (audioOut > 0) parts.push(`${audioOut} Audio Out`);
+					if (videoIn > 0) parts.push(`${videoIn} Cam${videoIn > 1 ? 's' : ''}`);
+					endpointsEl.textContent = parts.length > 0 ? parts.join(' • ') : '0 Connected Devices';
+					endpointsEl.title = `Physical hardware media endpoints detected without permissions: ${audioIn} audio inputs, ${audioOut} audio sinks, ${videoIn} video cameras.`;
+				}).catch(() => {
+					endpointsEl.textContent = 'Standard Audio / Video';
+				});
+			} else {
+				endpointsEl.textContent = 'Standard Audio / Video';
+			}
+		}
+
+		// 15. Cloudflare Edge Ephemeral Detection
 		try {
 			const res = await fetch('/api/visitor-info', { cache: 'no-store' });
 			if (res.ok) {

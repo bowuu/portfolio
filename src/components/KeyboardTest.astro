@@ -704,19 +704,21 @@
 		border-radius: 8px;
 		background: rgba(234, 88, 12, 0.05);
 		margin-bottom: 1.25em;
-		transition: border-color 0.15s ease, background 0.15s ease;
+		transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 	}
 	:global(html[data-theme="dark"]) .kb-expandable {
 		background: rgba(255, 107, 0, 0.06);
 		border-color: rgba(255, 107, 0, 0.3);
 	}
 	.kb-expandable:hover {
-		background: rgba(234, 88, 12, 0.08);
-		border-color: rgba(234, 88, 12, 0.5);
+		background: rgba(234, 88, 12, 0.10);
+		border-color: rgba(234, 88, 12, 0.55);
+		box-shadow: 0 3px 12px rgba(234, 88, 12, 0.12);
 	}
 	:global(html[data-theme="dark"]) .kb-expandable:hover {
-		background: rgba(255, 107, 0, 0.1);
-		border-color: rgba(255, 107, 0, 0.5);
+		background: rgba(255, 107, 0, 0.14);
+		border-color: rgba(255, 107, 0, 0.55);
+		box-shadow: 0 3px 14px rgba(255, 107, 0, 0.16);
 	}
 
 	.kb-summary {
@@ -775,15 +777,25 @@
 		transform: rotate(180deg);
 	}
 
-	.kb-expandable:hover .kb-summary-icon,
-	.kb-expandable:hover .kb-summary-title,
-	.kb-expandable:hover .kb-summary-tag,
+	.kb-expandable:hover .kb-summary-title {
+		color: rgb(var(--black));
+	}
+	.kb-expandable:hover .kb-summary-tag {
+		color: rgb(var(--gray-dark));
+	}
 	.kb-expandable:hover .kb-summary-toggle,
-	:global(html[data-theme="dark"]) .kb-expandable:hover .kb-summary-icon,
-	:global(html[data-theme="dark"]) .kb-expandable:hover .kb-summary-title,
-	:global(html[data-theme="dark"]) .kb-expandable:hover .kb-summary-tag,
-	:global(html[data-theme="dark"]) .kb-expandable:hover .kb-summary-toggle {
-		color: var(--accent) !important;
+	.kb-expandable:hover .kb-summary-chevron {
+		color: #c2410c;
+	}
+	:global(html[data-theme="dark"]) .kb-expandable:hover .kb-summary-title {
+		color: #ffffff;
+	}
+	:global(html[data-theme="dark"]) .kb-expandable:hover .kb-summary-tag {
+		color: #fed7aa;
+	}
+	:global(html[data-theme="dark"]) .kb-expandable:hover .kb-summary-toggle,
+	:global(html[data-theme="dark"]) .kb-expandable:hover .kb-summary-chevron {
+		color: #ff9800;
 	}
 
 	.kb-expandable-body {

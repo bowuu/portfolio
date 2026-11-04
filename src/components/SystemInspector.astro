@@ -207,13 +207,12 @@
 		}
 	}
 
-	function buildOSDisplay(osName: string, version: string, arch: string, device: string): string {
+	function buildOSDisplay(osName: string, version: string, arch: string): string {
 		const main = version ? `${osName} ${version}` : osName;
-		const details = [arch, device].filter(Boolean).join(' • ');
-		return details ? `${main} (${details})` : main;
+		return arch ? `${main} (${arch})` : main;
 	}
 
-	function detectOS(gpu: string): string {
+	function detectOS(gpu: string): { display: string; tooltip: string } {
 		const ua = navigator.userAgent;
 		const navData = (navigator as any).userAgentData;
 		const platform = navData?.platform || navigator.platform || '';
@@ -226,23 +225,35 @@
 			const ver = match ? match[1] : '';
 			const isTablet = hasTouch && !/Mobile/i.test(ua);
 			const modelMatch = ua.match(/\((?:Linux; Android[^;]+;\s*)([a-zA-Z0-9\-_ ]+)\s+Build/i);
-			const model = modelMatch ? modelMatch[1].trim() : (isTablet ? 'Tablet' : 'Mobile');
-			return buildOSDisplay('Android', ver, 'ARM64', model);
+			const model = modelMatch ? modelMatch[1].trim() : (isTablet ? 'Tablet' : '');
+			return {
+				display: buildOSDisplay('Android', ver, 'ARM64'),
+				tooltip: model ? `Device Model: ${model}` : (isTablet ? 'Android Tablet Chassis' : 'Android Mobile Device')
+			};
 		}
 
 		// Android Tablet in "Desktop Site" Mode (Chromium sends (X11; Linux x86_64) on tablets)
 		if ((/Linux/i.test(ua) || /Linux/i.test(platform)) && (isMobileARM || (hasTouch && !/Macintosh|Windows/i.test(ua)))) {
-			return buildOSDisplay('Android', '', 'ARM64', 'Tablet');
+			return {
+				display: buildOSDisplay('Android', '', 'ARM64'),
+				tooltip: 'Android Tablet (Desktop Mode Disguise)'
+			};
 		}
 
 		// 2. iOS / iPadOS
 		if (/iPhone OS (\d+[._]\d+)/.test(ua)) {
 			const match = ua.match(/iPhone OS (\d+[._]\d+)/);
 			const ver = match ? match[1].replace('_', '.') : '';
-			return buildOSDisplay('iOS', ver, 'ARM64', 'iPhone');
+			return {
+				display: buildOSDisplay('iOS', ver, 'ARM64'),
+				tooltip: 'Apple iPhone (ARM64)'
+			};
 		}
 		if (/iPad/.test(ua) || (ua.includes('Macintosh') && hasTouch)) {
-			return buildOSDisplay('iPadOS', '', 'ARM64', 'iPad');
+			return {
+				display: buildOSDisplay('iPadOS', '', 'ARM64'),
+				tooltip: 'Apple iPad (ARM64)'
+			};
 		}
 
 		// 3. macOS
@@ -250,21 +261,33 @@
 			const match = ua.match(/Macintosh; Intel Mac OS X (\d+[._]\d+)/);
 			const ver = match ? match[1].replace(/_/g, '.') : '';
 			const isAppleSilicon = /Apple/i.test(gpu);
-			return buildOSDisplay('macOS', ver, isAppleSilicon ? 'ARM64' : 'x86_64', isAppleSilicon ? 'Apple Silicon' : 'Mac');
+			return {
+				display: buildOSDisplay('macOS', ver, isAppleSilicon ? 'ARM64' : 'x86_64'),
+				tooltip: isAppleSilicon ? 'Apple Silicon (M-Series ARM64)' : 'Intel x86_64 Architecture'
+			};
 		}
 
 		// 4. Windows
 		if (/Windows NT 10.0/.test(ua) || platform === 'Windows') {
 			const isLaptop = /Laptop|Mobile/i.test(gpu);
-			return buildOSDisplay('Windows', '10 / 11', 'x86_64', isLaptop ? 'Laptop' : 'PC');
+			return {
+				display: buildOSDisplay('Windows', '10 / 11', 'x86_64'),
+				tooltip: isLaptop ? 'Windows on 64-bit x86 (Laptop Chassis)' : 'Windows on 64-bit x86 (Desktop PC)'
+			};
 		}
 
 		// 5. Genuine Desktop GNU/Linux (no mobile ARM GPU and no multitouch)
 		if (/Linux/i.test(ua) || /Linux/i.test(platform)) {
-			return buildOSDisplay('GNU/Linux', '', 'x86_64', 'PC');
+			return {
+				display: buildOSDisplay('GNU/Linux', '', 'x86_64'),
+				tooltip: 'GNU/Linux Workstation (x86_64)'
+			};
 		}
 
-		return platform || 'Unknown OS';
+		return {
+			display: platform || 'Unknown OS',
+			tooltip: 'Operating System Host Environment'
+		};
 	}
 
 	const COLO_NAMES: Record<string, string> = {
@@ -338,7 +361,10 @@
 
 		// 2. Instant Client Detection: OS
 		if (osEl) {
-			osEl.textContent = detectOS(gpuString);
+			const initialOS = detectOS(gpuString);
+			osEl.textContent = initialOS.display;
+			osEl.title = initialOS.tooltip;
+
 			const navData = (navigator as any).userAgentData;
 			const isMobileARM = /(Adreno|Mali|Immortalis|Xclipse|PowerVR)/i.test(gpuString);
 			const hasTouch = (navigator.maxTouchPoints && navigator.maxTouchPoints > 1) || ('ontouchstart' in window);
@@ -352,7 +378,8 @@
 							const winVer = major >= 13 ? '11' : (major >= 1 ? '10' : '');
 							const arch = (hints.architecture === 'arm' || hints.architecture === 'arm64') ? 'ARM64' : 'x86_64';
 							const isLaptop = /Laptop|Mobile/i.test(gpuString);
-							osEl.textContent = buildOSDisplay('Windows', winVer, arch, isLaptop ? 'Laptop' : 'PC');
+							osEl.textContent = buildOSDisplay('Windows', winVer, arch);
+							osEl.title = isLaptop ? 'Windows on 64-bit x86 (Laptop Chassis)' : 'Windows on 64-bit x86 (Desktop PC)';
 						} else if (
 							hints.platform === 'Android' || 
 							isMobileARM || 
@@ -364,14 +391,19 @@
 								if (match) ver = match[1];
 							}
 							const isTablet = (hasTouch && !/Mobile/i.test(ua)) || /Tablet/i.test(ua);
-							const model = hints.model || (isTablet ? 'Tablet' : 'Mobile');
-							osEl.textContent = buildOSDisplay('Android', ver, 'ARM64', model);
+							const model = hints.model || '';
+							osEl.textContent = buildOSDisplay('Android', ver, 'ARM64');
+							osEl.title = model 
+								? (model.startsWith('SM-') ? `Samsung Device Model: ${model}` : `Device Model: ${model}`)
+								: (isTablet ? 'Android Tablet Chassis (ARM64)' : 'Android Mobile Device (ARM64)');
 						} else if (hints.platform === 'Linux' && !isMobileARM && !hasTouch) {
 							const arch = hints.architecture?.includes('64') || hints.bitness === '64' ? 'x86_64' : (hints.architecture || 'x86_64');
-							osEl.textContent = buildOSDisplay('GNU/Linux', '', arch, 'PC');
+							osEl.textContent = buildOSDisplay('GNU/Linux', '', arch);
+							osEl.title = 'GNU/Linux Workstation (x86_64)';
 						} else if (hints.platform === 'macOS') {
 							const isAppleSilicon = /Apple/i.test(gpuString) || hints.architecture === 'arm';
-							osEl.textContent = buildOSDisplay('macOS', '', isAppleSilicon ? 'ARM64' : 'x86_64', isAppleSilicon ? 'Apple Silicon' : 'Mac');
+							osEl.textContent = buildOSDisplay('macOS', '', isAppleSilicon ? 'ARM64' : 'x86_64');
+							osEl.title = isAppleSilicon ? 'Apple Silicon (M-Series ARM64)' : 'Intel x86_64 Architecture';
 						}
 					})
 					.catch(() => {});

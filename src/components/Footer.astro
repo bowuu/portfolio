@@ -64,9 +64,14 @@ const isoTimestamp = now.toISOString();
 			wrapEl!.classList.remove('hidden');
 		}
 
-		// 1. If already counted in this browser session, fetch read-only count without re-incrementing
-		const sessionCounted = sessionStorage.getItem('brob_session_visited');
-		if (sessionCounted) {
+		// 1. If already counted on this device today, fetch read-only count without sending an increment beacon
+		const todayKey = new Date().toISOString().slice(0, 10);
+		let localCounted = false;
+		try {
+			localCounted = localStorage.getItem('brob_visit_day') === todayKey;
+		} catch {}
+
+		if (localCounted) {
 			fetch('/api/visitor-counter')
 				.then((r) => (r.ok ? r.json() : null))
 				.then((data) => {
@@ -82,7 +87,7 @@ const isoTimestamp = now.toISOString();
 			if (triggered) return;
 			triggered = true;
 			try {
-				sessionStorage.setItem('brob_session_visited', '1');
+				localStorage.setItem('brob_visit_day', todayKey);
 			} catch {}
 
 			window.removeEventListener('scroll', onScroll);

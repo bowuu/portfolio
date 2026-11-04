@@ -529,6 +529,7 @@
 		}
 
 		function onPointerDown(e: MouseEvent | PointerEvent) {
+			e.preventDefault();
 			const info = getButtonInfo(e.button);
 			const now = performance.now();
 
@@ -550,7 +551,6 @@
 			testedButtons.add(e.button);
 			if (info.el) {
 				info.el.classList.add('btn-active');
-				info.el.classList.add('btn-tested');
 			}
 
 			if (lastBtnEl) lastBtnEl.textContent = info.name.split(' ')[0];
@@ -564,6 +564,7 @@
 		}
 
 		function onPointerUp(e: MouseEvent | PointerEvent) {
+			e.preventDefault();
 			const info = getButtonInfo(e.button);
 			if (info.el) {
 				info.el.classList.remove('btn-active');
@@ -578,12 +579,12 @@
 
 			if (e.deltaY < 0) {
 				if (notchUpEl) {
-					notchUpEl.classList.add('notch-active', 'notch-tested');
+					notchUpEl.classList.add('notch-active');
 				}
 				if (notchDownEl) notchDownEl.classList.remove('notch-active');
 			} else if (e.deltaY > 0) {
 				if (notchDownEl) {
-					notchDownEl.classList.add('notch-active', 'notch-tested');
+					notchDownEl.classList.add('notch-active');
 				}
 				if (notchUpEl) notchUpEl.classList.remove('notch-active');
 			}
@@ -605,6 +606,15 @@
 			btnZone.addEventListener('auxclick', (e) => e.preventDefault());
 			btnZone.addEventListener('wheel', onWheel, { passive: false });
 		}
+
+		// Ensure all buttons deactivate immediately when released anywhere or on window blur
+		window.addEventListener('mouseup', (e: MouseEvent) => {
+			const info = getButtonInfo(e.button);
+			if (info.el) info.el.classList.remove('btn-active');
+		});
+		window.addEventListener('blur', () => {
+			[lmbEl, rmbEl, wheelEl, thumb1El, thumb2El].forEach(el => el?.classList.remove('btn-active'));
+		});
 
 		// Reset Button
 		const resetBtn = document.getElementById('reset-input-lab-btn');
@@ -629,10 +639,10 @@
 				lastClickTimePerButton.clear();
 				mouseChatterCount = 0;
 				[lmbEl, rmbEl, wheelEl, thumb1El, thumb2El].forEach(el => {
-					if (el) el.classList.remove('btn-active', 'btn-tested');
+					if (el) el.classList.remove('btn-active');
 				});
-				if (notchUpEl) notchUpEl.classList.remove('notch-active', 'notch-tested');
-				if (notchDownEl) notchDownEl.classList.remove('notch-active', 'notch-tested');
+				if (notchUpEl) notchUpEl.classList.remove('notch-active');
+				if (notchDownEl) notchDownEl.classList.remove('notch-active');
 				if (lastBtnEl) lastBtnEl.textContent = '--';
 				if (btnCountEl) btnCountEl.textContent = '0 / 5 tested';
 				if (mouseBadge) {
@@ -1100,12 +1110,6 @@
 	:global(html[data-theme="dark"]) .wheel-notch {
 		color: rgba(255, 255, 255, 0.4);
 	}
-	.wheel-notch.notch-tested {
-		color: #ea580c !important;
-	}
-	:global(html[data-theme="dark"]) .wheel-notch.notch-tested {
-		color: #f97316 !important;
-	}
 
 	.wheel-center {
 		width: 4px;
@@ -1157,31 +1161,7 @@
 		box-shadow: 0 0 16px rgba(249, 115, 22, 0.85), inset 0 0 4px #ffffff !important;
 	}
 
-	/* ALL BUTTONS LIGHT UP OUTLINE CONSISTENTLY ON ALL 4 SIDES */
-	.mouse-btn.btn-tested {
-		border-color: #f97316 !important;
-		border-width: 1.5px !important;
-		border-style: solid !important;
-		background: rgba(249, 115, 22, 0.35) !important;
-		box-shadow: 0 0 10px rgba(249, 115, 22, 0.5), inset 0 0 8px rgba(249, 115, 22, 0.25) !important;
-		z-index: 3 !important;
-	}
-	:global(html[data-theme="light"]) .mouse-btn.btn-tested {
-		border-color: rgba(234, 88, 12, 0.85) !important;
-		background: rgba(234, 88, 12, 0.18) !important;
-		box-shadow: 0 0 8px rgba(234, 88, 12, 0.35), inset 0 0 6px rgba(234, 88, 12, 0.15) !important;
-	}
-	.mouse-btn.btn-tested .mb-label,
-	.mouse-btn.btn-tested span {
-		color: #c2410c !important;
-		font-weight: 800;
-	}
-	:global(html[data-theme="dark"]) .mouse-btn.btn-tested .mb-label,
-	:global(html[data-theme="dark"]) .mouse-btn.btn-tested span {
-		color: #ffedd5 !important;
-		font-weight: 800;
-		text-shadow: 0 0 8px rgba(249, 115, 22, 0.7);
-	}
+	
 
 	/* Thumb buttons keep border-right: none when active or tested */
 	.mouse-btn-thumb.btn-active,

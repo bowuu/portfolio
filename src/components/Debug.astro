@@ -758,19 +758,21 @@
 		border-radius: 8px;
 		background: rgba(34, 197, 94, 0.12);
 		margin-bottom: 1.25em;
-		transition: border-color 0.15s ease, background 0.15s ease;
+		transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 	}
 	:global(html[data-theme="dark"]) .privacy-details {
 		background: rgba(16, 185, 129, 0.14);
 		border-color: rgba(52, 211, 153, 0.35);
 	}
 	.privacy-details:hover {
-		background: rgba(34, 197, 94, 0.16);
-		border-color: rgba(234, 88, 12, 0.35);
+		background: rgba(34, 197, 94, 0.18);
+		border-color: rgba(22, 163, 74, 0.55);
+		box-shadow: 0 3px 12px rgba(22, 163, 74, 0.12);
 	}
 	:global(html[data-theme="dark"]) .privacy-details:hover {
-		background: rgba(16, 185, 129, 0.18);
-		border-color: rgba(255, 107, 0, 0.35);
+		background: rgba(16, 185, 129, 0.22);
+		border-color: rgba(52, 211, 153, 0.55);
+		box-shadow: 0 3px 14px rgba(16, 185, 129, 0.16);
 	}
 
 	.privacy-summary {
@@ -830,19 +832,26 @@
 	:global(html[data-theme="dark"]) .privacy-toggle {
 		color: #86efac;
 	}
-	.privacy-details:hover .privacy-icon,
 	.privacy-details:hover .privacy-title,
-	.privacy-details:hover .privacy-tag,
 	.privacy-details:hover .privacy-toggle,
-	.privacy-details:hover .privacy-toggle-label,
-	.privacy-details:hover .privacy-chevron,
-	:global(html[data-theme="dark"]) .privacy-details:hover .privacy-icon,
+	.privacy-details:hover .privacy-toggle-label {
+		color: #166534;
+	}
+	.privacy-details:hover .privacy-icon,
+	.privacy-details:hover .privacy-chevron {
+		color: #15803d;
+	}
 	:global(html[data-theme="dark"]) .privacy-details:hover .privacy-title,
-	:global(html[data-theme="dark"]) .privacy-details:hover .privacy-tag,
 	:global(html[data-theme="dark"]) .privacy-details:hover .privacy-toggle,
-	:global(html[data-theme="dark"]) .privacy-details:hover .privacy-toggle-label,
+	:global(html[data-theme="dark"]) .privacy-details:hover .privacy-toggle-label {
+		color: #ffffff;
+	}
+	:global(html[data-theme="dark"]) .privacy-details:hover .privacy-icon,
 	:global(html[data-theme="dark"]) .privacy-details:hover .privacy-chevron {
-		color: var(--accent) !important;
+		color: #6ee7b7;
+	}
+	:global(html[data-theme="dark"]) .privacy-details:hover .privacy-tag {
+		color: #d1fae5;
 	}
 	.privacy-chevron {
 		transition: transform 0.2s ease, color 0.15s ease;

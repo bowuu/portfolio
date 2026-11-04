@@ -106,6 +106,10 @@
 				<span class="t-label">Graphics Card (GPU)</span>
 				<span id="t-gpu" class="t-val">Detecting WebGL...</span>
 			</div>
+			<div class="telemetry-item">
+				<span class="t-label">WebGPU Silicon</span>
+				<span id="t-webgpu" class="t-val">Probing native driver...</span>
+			</div>
 		</div>
 	</div>
 
@@ -162,11 +166,11 @@
 				<span id="t-codecs" class="t-val">Probing ASIC decoders...</span>
 			</div>
 			<div class="telemetry-item">
-				<span class="t-label">4K HDR Video Profile</span>
-				<span id="t-hdr-profile" class="t-val">Probing 4K ASIC...</span>
+				<span class="t-label">Hardware Video Encoder</span>
+				<span id="t-encoder" class="t-val">Probing WebCodecs ASIC...</span>
 			</div>
 			<div class="telemetry-item">
-				<span class="t-label">Hardware DRM System</span>
+				<span class="t-label">Video DRM System</span>
 				<span id="t-drm" class="t-val">Probing CDM modules...</span>
 			</div>
 		</div>
@@ -188,12 +192,16 @@
 			const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
 			if (!renderer) return 'Hardware Accelerated GPU';
 
-			// Format ANGLE strings cleanly
+			// Format ANGLE strings cleanly and strip trademark noise (e.g. Adreno (TM) -> Adreno)
 			const angleMatch = renderer.match(/ANGLE \([^,]+,\s*([^,]+)/);
-			if (angleMatch && angleMatch[1]) {
-				return angleMatch[1].replace(/\sDirect3D.*$/, '').replace(/\s*\((?:0x)?[0-9a-fA-F]{4,8}\)/g, '').trim();
-			}
-			return renderer.replace(/Direct3D.*$/, '').replace(/\s*\((?:0x)?[0-9a-fA-F]{4,8}\)/g, '').trim();
+			const raw = angleMatch && angleMatch[1] ? angleMatch[1] : renderer;
+			return raw
+				.replace(/\sDirect3D.*$/, '')
+				.replace(/\s*\((?:0x)?[0-9a-fA-F]{4,8}\)/g, '')
+				.replace(/\s*\((?:TM|tm|R|r)\)/gi, '')
+				.replace(/[™®]/g, '')
+				.replace(/\s+/g, ' ')
+				.trim() || 'Hardware Accelerated GPU';
 		} catch {
 			return 'Generic Graphics Accelerator';
 		}
@@ -300,6 +308,7 @@
 		const cpuEl = document.getElementById('t-cpu');
 		const ramEl = document.getElementById('t-ram');
 		const gpuEl = document.getElementById('t-gpu');
+		const webgpuEl = document.getElementById('t-webgpu');
 
 		// Display & Touch elements
 		const displayEl = document.getElementById('t-display');
@@ -311,7 +320,7 @@
 		const audioEl = document.getElementById('t-audio');
 		const audioCodecsEl = document.getElementById('t-audio-codecs');
 		const codecsEl = document.getElementById('t-codecs');
-		const hdrProfileEl = document.getElementById('t-hdr-profile');
+		const encoderEl = document.getElementById('t-encoder');
 		const drmEl = document.getElementById('t-drm');
 
 		// 1. Instant Client Detection: GPU
@@ -370,7 +379,58 @@
 			ramEl.textContent = mem ? `${mem} GB RAM` : '64-bit Architecture';
 		}
 
-		// 5. Display & Scaling
+		// 5. WebGPU Silicon Architecture (Direct Native Driver)
+		if (webgpuEl) {
+			if ('gpu' in navigator && (navigator as any).gpu) {
+				(navigator as any).gpu.requestAdapter()
+					.then(async (adapter: any) => {
+						if (!adapter) {
+							webgpuEl.textContent = 'Hardware Blocked';
+							return;
+						}
+						const info = adapter.info || (adapter.requestAdapterInfo ? await adapter.requestAdapterInfo() : null);
+						if (info) {
+							const arch = (info.architecture || '')
+								.replace(/\s*\((?:TM|tm|R|r)\)/gi, '')
+								.replace(/[™®]/g, '')
+								.trim();
+							let vendor = (info.vendor || '')
+								.replace(/\s*\((?:TM|tm|R|r)\)/gi, '')
+								.replace(/[™®]/g, '')
+								.trim();
+							if (vendor) vendor = vendor.charAt(0).toUpperCase() + vendor.slice(1);
+							let desc = (info.description || '')
+								.replace(/\sDirect3D.*$/, '')
+								.replace(/\s*\((?:0x)?[0-9a-fA-F]{4,8}\)/g, '')
+								.replace(/\s*\((?:TM|tm|R|r)\)/gi, '')
+								.replace(/[™®]/g, '')
+								.replace(/\s+/g, ' ')
+								.trim();
+
+							if (arch && vendor) {
+								webgpuEl.textContent = `${vendor} ${arch.toUpperCase()}`;
+							} else if (desc) {
+								webgpuEl.textContent = `${desc} (Direct Driver)`;
+							} else if (arch) {
+								webgpuEl.textContent = `${arch.toUpperCase()} Silicon`;
+							} else {
+								webgpuEl.textContent = `${vendor || 'Native'} Direct Vulkan / D3D12`;
+							}
+							webgpuEl.title = `Native WebGPU driver adapter info: vendor=${info.vendor || 'n/a'}, architecture=${info.architecture || 'n/a'}, device=${info.device || 'n/a'}. Direct OS driver pipeline without ANGLE translation.`;
+						} else {
+							webgpuEl.textContent = 'Active Direct Driver';
+						}
+					})
+					.catch(() => {
+						webgpuEl.textContent = 'Disabled / Blocked';
+					});
+			} else {
+				webgpuEl.textContent = 'Not Supported (Legacy Browser)';
+				webgpuEl.title = 'WebGPU API is not supported by this browser engine or requires enabling experimental flags.';
+			}
+		}
+
+		// 6. Display & Scaling
 		if (displayEl) {
 			const dpr = window.devicePixelRatio ? ` @ ${window.devicePixelRatio}x scaling` : '';
 			const depth = window.screen.colorDepth ? ` (${window.screen.colorDepth}-bit color)` : '';
@@ -504,11 +564,12 @@
 			try {
 				const audioTest = document.createElement('audio');
 				const list = [
+					{ name: 'MP3', type: 'audio/mpeg' },
+					{ name: 'AAC', type: 'audio/mp4; codecs="mp4a.40.2"' },
 					{ name: 'FLAC', type: 'audio/flac' },
 					{ name: 'Opus', type: 'audio/ogg; codecs="opus"' },
-					{ name: 'AAC', type: 'audio/mp4; codecs="mp4a.40.2"' },
-					{ name: 'ALAC', type: 'audio/mp4; codecs="alac"' },
 					{ name: 'Vorbis', type: 'audio/ogg; codecs="vorbis"' },
+					{ name: 'ALAC', type: 'audio/mp4; codecs="alac"' },
 					{ name: 'PCM', type: 'audio/wav; codecs="1"' },
 				];
 				const supported: string[] = [];
@@ -525,7 +586,7 @@
 			}
 		}
 
-		// 11. Hardware Video Codecs (MediaCapabilities API)
+		// 11. Hardware Video Codecs (MediaCapabilities API Decoders)
 		if (codecsEl) {
 			const probeCodecs = async () => {
 				if (navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo) {
@@ -557,36 +618,43 @@
 			codecsEl.title = 'W3C MediaCapabilities API checking GPU silicon ASIC hardware-accelerated video decoding.';
 		}
 
-		// 12. 4K HDR Video ASIC Profile
-		if (hdrProfileEl) {
-			const probeHDR = async () => {
-				if (navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo) {
-					const hdrCandidates = [
-						{ name: 'HEVC 10', config: { type: 'file', video: { contentType: 'video/mp4; codecs="hvc1.2.4.L153.B0"', width: 3840, height: 2160, bitrate: 20000000, framerate: 60 } } },
-						{ name: 'AV1 10', config: { type: 'file', video: { contentType: 'video/mp4; codecs="av01.0.12M.10"', width: 3840, height: 2160, bitrate: 20000000, framerate: 60 } } },
-						{ name: 'VP9 P2', config: { type: 'file', video: { contentType: 'video/webm; codecs="vp09.02.10.10.01.09.16.09.01"', width: 3840, height: 2160, bitrate: 20000000, framerate: 60 } } }
+		// 12. Hardware Video Encoder (WebCodecs API)
+		if (encoderEl) {
+			const probeEncoder = async () => {
+				if (typeof VideoEncoder !== 'undefined' && VideoEncoder.isConfigSupported) {
+					const encCandidates = [
+						{ name: 'AV1', codec: 'av01.0.08M.10' },
+						{ name: 'HEVC', codec: 'hvc1.1.6.L93.B0' },
+						{ name: 'VP9', codec: 'vp09.00.10.08' },
+						{ name: 'H.264', codec: 'avc1.42001f' }
 					];
-					const smoothHDR: string[] = [];
-					for (const c of hdrCandidates) {
+					const supported: string[] = [];
+					for (const c of encCandidates) {
 						try {
-							const res = await navigator.mediaCapabilities.decodingInfo(c.config as any);
-							if (res.supported && res.smooth) {
-								smoothHDR.push(c.name);
+							const res = await VideoEncoder.isConfigSupported({
+								codec: c.codec,
+								width: 1920,
+								height: 1080,
+								bitrate: 5000000,
+								framerate: 60
+							});
+							if (res.supported) {
+								supported.push(c.name);
 							}
 						} catch (_) {}
 					}
-					if (smoothHDR.length > 0) {
-						hdrProfileEl.textContent = `4K60 HDR10 (${smoothHDR.join(' • ')})`;
-						hdrProfileEl.title = `Hardware ASIC silicon decoding for 4K 60fps 10-bit HDR streams: ${smoothHDR.join(', ')}`;
+					if (supported.length > 0) {
+						encoderEl.textContent = supported.join(' • ');
+						encoderEl.title = `W3C WebCodecs VideoEncoder hardware recording/encoding capabilities: ${supported.join(', ')}`;
 					} else {
-						hdrProfileEl.textContent = '1080p SDR (No 4K HDR ASIC)';
-						hdrProfileEl.title = 'No dedicated hardware ASIC silicon decoder detected for 4K 60fps 10-bit HDR streams.';
+						encoderEl.textContent = 'Software / CPU Encoding';
 					}
 				} else {
-					hdrProfileEl.textContent = 'Standard Video Subsystem';
+					encoderEl.textContent = 'Not Supported';
+					encoderEl.title = 'WebCodecs VideoEncoder API is not supported by this browser engine.';
 				}
 			};
-			probeHDR();
+			probeEncoder();
 		}
 
 		// 13. Hardware DRM Key System (EME)

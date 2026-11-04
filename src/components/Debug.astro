@@ -34,13 +34,13 @@
 		</summary>
 		<div class="privacy-body">
 			<p>
+				<strong>Network:</strong> Like all websites and content delivery networks, Cloudflare Pages edge infrastructure receives standard HTTP connection metadata (such as your connecting IP address and Anycast routing headers) at the network layer to deliver web assets and protect against DDoS attacks.
+			</p>
+			<p>
 				<strong>Client-Side Evaluation:</strong> The hardware, GPU, CPU, screen, audio, and media metrics below are read ephemerally in your active browser session via standard WebGL, Screen, Audio, and Navigator APIs. <strong>No hardware or browser fingerprinting data is collected, stored, or transmitted to any server or database.</strong>
 			</p>
 			<p>
-				<strong>Anonymous Visitor Counter:</strong> The footer displays an aggregate count of unique human sessions hosted on a Cloudflare D1 serverless database. To prevent duplicate tallies across tabs or browser windows without tracking you, the edge computes an ephemeral, one-way <strong>SHA-256 cryptographic hash</strong> combining your incoming connection with a secret daily salt in volatile memory. <strong>Your raw IP address is discarded immediately and is never stored in any database.</strong> The temporary cryptographic hash is automatically purged after 24–48 hours, and the permanent database only stores an anonymous scalar integer (+1).
-			</p>
-			<p>
-				<strong>Network &amp; Edge Layer:</strong> Like all websites and content delivery networks, Cloudflare Pages edge infrastructure receives standard HTTP connection metadata (such as your connecting IP address and Anycast routing headers) at the network layer to deliver web assets and protect against DDoS attacks.
+				<strong>Visitor Counter:</strong> The footer displays an aggregate count of unique human sessions hosted on a Cloudflare D1 serverless database. To prevent duplicate tallies across tabs or browser windows without tracking you, the edge computes an ephemeral, one-way <strong>SHA-256 cryptographic hash</strong> combining your incoming connection with a secret daily salt in volatile memory. <strong>Your raw IP address is discarded immediately and is never stored in any database.</strong> The temporary cryptographic hash is automatically purged after 24–48 hours, and the permanent database only stores an anonymous scalar integer (+1).
 			</p>
 		</div>
 	</details>

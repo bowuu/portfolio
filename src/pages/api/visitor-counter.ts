@@ -32,11 +32,17 @@ function isLikelyBot(request: Request, cf: any): boolean {
 
 /**
  * Computes a mathematically irreversible, one-way SHA-256 hash
- * combining the raw IP address with the current date and secret salt.
- * The raw IP is discarded immediately from volatile memory and NEVER stored.
+ * combining the connection IP, User-Agent, and Accept-Language
+ * with the current calendar date and a secret rotating salt.
+ *
+ * This distinguishes multiple distinct visitors sharing the same
+ * public IP (e.g., corporate/campus NAT, coffee shop Wi-Fi) while
+ * preserving complete deduplication for same-device repeat visits.
+ * All raw connection headers are discarded immediately from volatile
+ * RAM and are NEVER saved or logged to any database.
  */
-async function computeDailyHash(ip: string, day: string): Promise<string> {
-	const raw = `${ip}::${day}::${SALT_SECRET}`;
+async function computeDailyHash(ip: string, ua: string, lang: string, day: string): Promise<string> {
+	const raw = `${ip}::${ua}::${lang}::${day}::${SALT_SECRET}`;
 	const msgBuffer = new TextEncoder().encode(raw);
 	const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
 	const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -128,13 +134,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	try {
 		await ensureTables(db);
 
-		// Extract connection IP to compute one-way daily hash (never saved to database)
+		// Extract connection IP and coarse client headers to compute one-way daily hash
 		const clientIp = request.headers.get('cf-connecting-ip') ||
 			(request.headers.get('x-forwarded-for')?.split(',')[0].trim()) ||
 			'127.0.0.1';
+		const userAgent = request.headers.get('user-agent') || '';
+		const acceptLang = request.headers.get('accept-language')?.split(',')[0].trim() || '';
 
 		const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
-		const dailyHash = await computeDailyHash(clientIp, today);
+		const dailyHash = await computeDailyHash(clientIp, userAgent, acceptLang, today);
 
 		// 2. Attempt to register the daily hash.
 		// If changes === 1, this visitor is brand new for today.

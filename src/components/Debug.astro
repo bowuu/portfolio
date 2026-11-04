@@ -40,7 +40,7 @@
 				<strong>Client-Side Evaluation:</strong> The hardware, GPU, CPU, screen, audio, and media metrics below are read ephemerally in your active browser session via standard WebGL, Screen, Audio, and Navigator APIs. <strong>No hardware or browser fingerprinting data is collected, stored, or transmitted to any server or database.</strong>
 			</p>
 			<p>
-				<strong>Visitor Counter:</strong> The footer displays an aggregate count of unique human sessions hosted on a Cloudflare D1 serverless database. To prevent duplicate tallies across tabs or browser windows without tracking you, the edge computes an ephemeral, one-way <strong>SHA-256 cryptographic hash</strong> combining your incoming connection with a secret daily salt in volatile memory. <strong>Your raw IP address is discarded immediately and is never stored in any database.</strong> The temporary cryptographic hash is automatically purged after 24–48 hours, and the permanent database only stores an anonymous scalar integer (+1).
+				<strong>Visitor Counter:</strong> The footer tally stores only an anonymous aggregate count in Cloudflare D1. To deduplicate visits across tabs without tracking individuals, an ephemeral one-way hash with a daily rotating salt is evaluated in volatile memory. <strong>Raw IP addresses are never saved</strong>, and temporary hashes are automatically purged within 24–48 hours.
 			</p>
 		</div>
 	</details>

@@ -96,116 +96,47 @@
 
 			<!-- INTERACTIVE MOUSE HARDWARE TEST ZONE -->
 			<div class="mouse-hardware-zone" id="mouse-btn-zone" tabindex="0" title="Click buttons or scroll wheel anywhere inside this zone">
-												<div class="mouse-device-wrap">
-					<!-- MINIMAL, SMOOTH 3/4 ISOMETRIC ERGONOMIC MOUSE (5-BUTTON & SCROLL) -->
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 220" class="mouse-isometric-svg" aria-label="Interactive 5-Button Mouse Diagram">
-						<defs>
-							<!-- Soft Contact Drop Shadow -->
-							<radialGradient id="deskShadow" cx="50%" cy="50%" r="50%">
-								<stop offset="0%" stop-color="var(--desk-shadow-1, rgba(0,0,0,0.65))" />
-								<stop offset="65%" stop-color="var(--desk-shadow-2, rgba(0,0,0,0.18))" />
-								<stop offset="100%" stop-color="rgba(0,0,0,0)" />
-							</radialGradient>
+				<div class="mouse-device-wrap">
+					<!-- ERGONOMIC MOUSE CHASSIS -->
+					<div class="mouse-chassis">
+						<!-- INTEGRATED THUMB BUTTONS (LEFT FLANK) -->
+						<div class="mouse-thumb-wing">
+							<div class="mouse-btn mouse-btn-thumb thumb-fwd" id="btn-thumb2" title="Forward (Button 4)">
+								<span>Fwd</span>
+							</div>
+							<div class="mouse-btn mouse-btn-thumb thumb-back" id="btn-thumb1" title="Back (Button 3)">
+								<span>Back</span>
+							</div>
+						</div>
 
-							<!-- Shell Base / Silhouette Gradient -->
-							<linearGradient id="chassisGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-								<stop offset="0%" stop-color="var(--chassis-g1, #1a1d29)" />
-								<stop offset="100%" stop-color="var(--chassis-g2, #0c0d13)" />
-							</linearGradient>
+						<!-- MAIN MOUSE SHELL -->
+						<div class="mouse-body">
+							<!-- TOP PRIMARY BUTTONS -->
+							<div class="mouse-top-buttons">
+								<!-- LEFT MOUSE BUTTON (LMB) -->
+								<div class="mouse-btn mouse-btn-main mouse-btn-left" id="btn-lmb" title="Left Click (Button 0)">
+									<span class="mb-label">LMB</span>
+								</div>
 
-							<!-- Palm Dome Gradient -->
-							<linearGradient id="palmGrad" x1="20%" y1="0%" x2="80%" y2="100%">
-								<stop offset="0%" stop-color="var(--palm-g1, #262c3e)" />
-								<stop offset="60%" stop-color="var(--palm-g2, #161924)" />
-								<stop offset="100%" stop-color="var(--palm-g3, #0f1118)" />
-							</linearGradient>
+								<!-- SCROLL WHEEL & MMB -->
+								<div class="mouse-wheel-wrap">
+									<div class="mouse-btn mouse-btn-wheel" id="btn-wheel" title="Middle Click (Button 1) &amp; Scroll">
+										<span class="wheel-notch up" id="notch-up">&and;</span>
+										<span class="wheel-center"></span>
+										<span class="wheel-notch down" id="notch-down">&or;</span>
+									</div>
+								</div>
 
-							<!-- LMB Paddle Gradient -->
-							<linearGradient id="lmbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-								<stop offset="0%" stop-color="var(--lmb-g1, #2c3349)" />
-								<stop offset="70%" stop-color="var(--lmb-g2, #1b1f2c)" />
-								<stop offset="100%" stop-color="var(--lmb-g3, #12151e)" />
-							</linearGradient>
+								<!-- RIGHT MOUSE BUTTON (RMB) -->
+								<div class="mouse-btn mouse-btn-main mouse-btn-right" id="btn-rmb" title="Right Click (Button 2)">
+									<span class="mb-label">RMB</span>
+								</div>
+							</div>
 
-							<!-- RMB Paddle Gradient -->
-							<linearGradient id="rmbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-								<stop offset="0%" stop-color="var(--rmb-g1, #222736)" />
-								<stop offset="70%" stop-color="var(--rmb-g2, #151722)" />
-								<stop offset="100%" stop-color="var(--rmb-g3, #0e1017)" />
-							</linearGradient>
-
-							<!-- Thumb Buttons Gradient -->
-							<linearGradient id="thumbGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-								<stop offset="0%" stop-color="var(--thumb-g1, #2a3044)" />
-								<stop offset="100%" stop-color="var(--thumb-g2, #161822)" />
-							</linearGradient>
-
-							<!-- Scroll Wheel Gradient -->
-							<linearGradient id="wheelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-								<stop offset="0%" stop-color="var(--wheel-g1, #47516d)" />
-								<stop offset="50%" stop-color="var(--wheel-g2, #282d3d)" />
-								<stop offset="100%" stop-color="var(--wheel-g3, #12141c)" />
-							</linearGradient>
-						</defs>
-
-						<!-- 1. Ambient Ground Drop Shadow -->
-						<ellipse cx="195" cy="188" rx="165" ry="22" fill="url(#deskShadow)" class="mouse-desk-shadow" />
-
-						<!-- 2. Master Chassis Silhouette (Smooth curved perimeter) -->
-						<path id="mouse-base-chassis" class="mouse-svg-base"
-							d="M 46 128 C 40 148, 54 168, 86 182 C 125 198, 185 204, 250 196 C 305 188, 342 165, 355 138 C 362 118, 352 92, 330 68 C 298 34, 245 16, 188 18 C 134 20, 88 44, 60 76 C 46 92, 48 112, 46 128 Z" />
-
-						<!-- 3. Rear Palm Dome (Smooth Back Shell) -->
-						<path id="mouse-palm-dome" class="mouse-svg-palm"
-							d="M 188 126 C 205 82, 238 46, 275 25 C 315 42, 345 74, 355 106 C 360 126, 350 148, 332 165 C 290 146, 245 132, 188 126 Z" />
-
-						<!-- 4. Left Flank / Thumb Rest Area -->
-						<path id="mouse-flank" class="mouse-svg-flank"
-							d="M 46 128 C 86 142, 138 140, 188 126 C 245 132, 290 146, 332 165 C 295 186, 235 198, 175 196 C 115 194, 65 174, 46 128 Z" />
-
-						<!-- 5. RMB (Right Mouse Button - Far Paddle) -->
-						<path id="btn-rmb" class="mouse-btn mouse-btn-part"
-							d="M 46 128 C 48 108, 54 88, 70 66 C 98 34, 142 18, 195 18 C 225 18, 252 22, 275 25 C 246 44, 222 62, 204 80 L 156 114 C 122 120, 84 125, 46 128 Z"
-							title="Right Click (Button 2)" />
-						<text class="mb-svg-label mb-lbl-rmb" x="156" y="56" text-anchor="middle">RMB</text>
-
-						<!-- 6. Central Scroll Wheel Well -->
-						<path id="wheel-well" class="mouse-svg-well"
-							d="M 88 130 L 156 80 C 161 76, 168 79, 166 85 L 98 135 C 93 139, 86 136, 88 130 Z" />
-
-						<!-- 7. Scroll Wheel Cylinder (MMB) -->
-						<g id="btn-wheel" class="mouse-btn mouse-wheel-group" title="Middle Click (Button 1) &amp; Scroll">
-							<path class="mouse-wheel-body"
-								d="M 95 125 L 149 85 C 154 81, 160 84, 158 89 L 104 129 C 99 133, 93 130, 95 125 Z" />
-							<!-- Tread Ribs -->
-							<line x1="107" y1="119" x2="113" y2="114" class="wheel-rib" />
-							<line x1="118" y1="111" x2="124" y2="106" class="wheel-rib" />
-							<line x1="129" y1="103" x2="135" y2="98" class="wheel-rib" />
-							<line x1="140" y1="95" x2="146" y2="90" class="wheel-rib" />
-						</g>
-
-						<!-- Directional Wheel Arrows -->
-						<text id="notch-up" class="wheel-notch notch-up" x="154" y="73" text-anchor="middle">▲</text>
-						<text id="notch-down" class="wheel-notch notch-down" x="93" y="147" text-anchor="middle">▼</text>
-
-						<!-- 8. LMB (Left Mouse Button - Near Paddle) -->
-						<path id="btn-lmb" class="mouse-btn mouse-btn-part"
-							d="M 46 128 L 98 135 L 166 85 C 178 99, 184 113, 188 126 C 142 142, 92 144, 46 128 Z"
-							title="Left Click (Button 0)" />
-						<text class="mb-svg-label mb-lbl-lmb" x="116" y="120" text-anchor="middle">LMB</text>
-
-						<!-- 9. ENLARGED FORWARD THUMB BUTTON (Button 4 / btn-thumb2) -->
-						<path id="btn-thumb2" class="mouse-btn mouse-btn-part"
-							d="M 190 130 L 245 133 C 250 133, 253 137, 251 142 L 242 166 C 240 170, 235 172, 231 171 L 179 157 C 175 156, 174 151, 176 147 L 184 133 C 185 131, 188 130, 190 130 Z"
-							title="Forward (Button 4)" />
-						<text class="mb-svg-label mb-lbl-fwd" x="215" y="154" text-anchor="middle">Fwd</text>
-
-						<!-- 10. ENLARGED BACK THUMB BUTTON (Button 3 / btn-thumb1) -->
-						<path id="btn-thumb1" class="mouse-btn mouse-btn-part"
-							d="M 255 134 L 312 138 C 317 138, 320 142, 318 147 L 308 171 C 306 175, 301 177, 297 176 L 248 165 C 244 164, 243 159, 245 155 L 249 137 C 250 135, 253 134, 255 134 Z"
-							title="Back (Button 3)" />
-						<text class="mb-svg-label mb-lbl-back" x="282" y="158" text-anchor="middle">Back</text>
-					</svg>
+							<!-- CLEAN PALM REST (SMOOTH SATIN FINISH) -->
+							<div class="mouse-palm"></div>
+						</div>
+					</div>
 				</div>
 			</div>
 
@@ -1003,177 +934,224 @@
 	.mouse-device-wrap {
 		position: relative;
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		width: 100%;
-		height: 100%;
 	}
 
-	.mouse-isometric-svg {
-		height: 126px;
-		width: auto;
-		max-width: 100%;
-		display: block;
-		user-select: none;
-		overflow: visible;
-		filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.08));
-	}
-	:global(html[data-theme="dark"]) .mouse-isometric-svg {
-		filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45));
+	.mouse-chassis {
+		display: flex;
+		align-items: center;
+		position: relative;
+		height: 122px;
 	}
 
-	/* Base fills for mouse components */
-	.mouse-svg-base {
-		fill: url(#chassisGrad);
-		stroke: #0f172a;
-		stroke-width: 2.6;
-		stroke-linejoin: round;
-	}
-	:global(html[data-theme="dark"]) .mouse-svg-base {
-		stroke: rgba(255, 255, 255, 0.45);
-	}
-
-	.mouse-svg-palm {
-		fill: url(#palmGrad);
-		stroke: rgba(0, 0, 0, 0.18);
-		stroke-width: 1.8;
-		stroke-linejoin: round;
-	}
-	:global(html[data-theme="dark"]) .mouse-svg-palm {
-		stroke: rgba(255, 255, 255, 0.22);
+	/* Contoured Left Thumb Buttons */
+	.mouse-thumb-wing {
+		position: absolute;
+		left: -27px;
+		top: 26px;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		z-index: 2;
 	}
 
-	.mouse-svg-flank {
-		fill: url(#chassisGrad);
-		stroke: rgba(0, 0, 0, 0.16);
-		stroke-width: 1.5;
-	}
-	:global(html[data-theme="dark"]) .mouse-svg-flank {
-		stroke: rgba(255, 255, 255, 0.18);
-	}
-
-	.mouse-svg-well {
-		fill: #64748b;
-		stroke: rgba(0, 0, 0, 0.2);
-		stroke-width: 1.4;
-	}
-	:global(html[data-theme="dark"]) .mouse-svg-well {
-		fill: #07080e;
-		stroke: rgba(255, 255, 255, 0.18);
-	}
-
-	.mouse-btn-part {
-		fill: url(#lmbGrad);
-		stroke: rgba(0, 0, 0, 0.2);
-		stroke-width: 2.2;
-		stroke-linejoin: round;
+	.mouse-btn-thumb {
+		width: 28px;
+		height: 23px;
+		background: #ffffff;
+		border: 1.5px solid var(--border-color);
+		border-right: none;
+		border-radius: 7px 0 0 7px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.62em;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		color: rgb(var(--gray-dark));
 		cursor: pointer;
-		transition: fill 0.08s ease, stroke 0.08s ease, filter 0.08s ease;
-	}
-	#btn-rmb {
-		fill: url(#rmbGrad);
-		stroke-width: 2;
-	}
-	#btn-thumb1, #btn-thumb2 {
-		fill: url(#thumbGrad);
-		stroke-width: 2.2;
-	}
-	:global(html[data-theme="dark"]) .mouse-btn-part {
-		stroke: rgba(255, 255, 255, 0.24);
-	}
-	.mouse-btn-part:hover {
-		stroke: var(--accent);
-	}
-
-	.mouse-wheel-body {
-		fill: url(#wheelGrad);
-		stroke: var(--accent);
-		stroke-width: 2;
-		cursor: pointer;
-		transition: fill 0.08s ease, filter 0.08s ease;
-	}
-	.wheel-rib {
-		stroke: rgba(255, 255, 255, 0.9);
-		stroke-width: 2;
-		stroke-linecap: round;
-		pointer-events: none;
-	}
-	:global(html[data-theme="dark"]) .wheel-rib {
-		stroke: rgba(255, 255, 255, 0.45);
-	}
-
-	/* ACTIVE STATE (Signal Orange Glow) */
-	.mouse-btn.btn-active,
-	.mouse-btn.btn-active path,
-	path.mouse-btn.btn-active {
-		fill: #f97316 !important;
-		stroke: #ea580c !important;
-		filter: drop-shadow(0 0 14px rgba(249, 115, 22, 0.95)) !important;
-	}
-	:global(html[data-theme="light"]) .mouse-btn.btn-active,
-	:global(html[data-theme="light"]) .mouse-btn.btn-active path,
-	:global(html[data-theme="light"]) path.mouse-btn.btn-active {
-		fill: #ea580c !important;
-		stroke: #c2410c !important;
-		filter: drop-shadow(0 0 12px rgba(234, 88, 12, 0.75)) !important;
-	}
-
-	/* TESTED STATE (Persistent Warm Indicator) */
-	.mouse-btn.btn-tested,
-	.mouse-btn.btn-tested path,
-	path.mouse-btn.btn-tested {
-		fill: rgba(249, 115, 22, 0.42) !important;
-		stroke: #f97316 !important;
-		filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.45)) !important;
-	}
-	:global(html[data-theme="light"]) .mouse-btn.btn-tested,
-	:global(html[data-theme="light"]) .mouse-btn.btn-tested path,
-	:global(html[data-theme="light"]) path.mouse-btn.btn-tested {
-		fill: rgba(234, 88, 12, 0.24) !important;
-		stroke: #ea580c !important;
-		filter: drop-shadow(0 0 4px rgba(234, 88, 12, 0.35)) !important;
-	}
-
-	/* Text labels */
-	.mb-svg-label {
 		user-select: none;
-		pointer-events: none;
-		font-weight: 800;
-		font-family: system-ui, -apple-system, sans-serif;
-		fill: #0f172a;
-		transition: fill 0.1s ease;
-		font-size: 13px;
+		transition: all 0.08s ease;
+		box-shadow: -2px 1px 5px rgba(0, 0, 0, 0.06);
+		box-sizing: border-box;
 	}
-	:global(html[data-theme="dark"]) .mb-svg-label {
-		fill: #f8fafc;
+	:global(html[data-theme="dark"]) .mouse-btn-thumb {
+		background: #181b24;
+		border-color: rgba(255, 255, 255, 0.16);
+		color: #cbd5e1;
+		box-shadow: -2px 1px 6px rgba(0, 0, 0, 0.35);
 	}
-	.mb-lbl-lmb {
-		font-size: 15px;
+	.mouse-btn-thumb:hover {
+		border-color: var(--accent);
+		color: var(--accent);
 	}
-	.mb-lbl-rmb {
-		font-size: 13px;
-		fill: #64748b;
-	}
-	:global(html[data-theme="dark"]) .mb-lbl-rmb {
-		fill: #94a3b8;
-	}
-	.mb-lbl-fwd, .mb-lbl-back {
-		font-size: 13px;
+	:global(html[data-theme="dark"]) .mouse-btn-thumb:hover {
+		border-color: var(--accent);
+		color: #ffedd5;
 	}
 
-	/* Wheel Notches */
+	/* Ergonomic Mouse Body Shell */
+	.mouse-body {
+		width: 76px;
+		height: 122px;
+		border: 1.5px solid var(--border-color);
+		border-radius: 22px 22px 30px 30px;
+		background: #ffffff;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+		position: relative;
+		z-index: 1;
+	}
+	:global(html[data-theme="dark"]) .mouse-body {
+		background: #13161f;
+		border-color: rgba(255, 255, 255, 0.14);
+		box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+	}
+
+	.mouse-top-buttons {
+		display: flex;
+		height: 56px;
+		border-bottom: 1px solid var(--border-color);
+	}
+	:global(html[data-theme="dark"]) .mouse-top-buttons {
+		border-bottom-color: rgba(255, 255, 255, 0.1);
+	}
+
+	.mouse-btn-main {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.68em;
+		font-weight: 700;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+		transition: all 0.08s ease;
+		background: rgba(0, 0, 0, 0.01);
+		user-select: none;
+	}
+	:global(html[data-theme="dark"]) .mouse-btn-main {
+		color: #cbd5e1;
+		background: rgba(255, 255, 255, 0.02);
+	}
+	.mouse-btn-left {
+		border-right: 0.5px solid var(--border-color);
+	}
+	.mouse-btn-right {
+		border-left: 0.5px solid var(--border-color);
+	}
+	:global(html[data-theme="dark"]) .mouse-btn-left {
+		border-right-color: rgba(255, 255, 255, 0.08);
+	}
+	:global(html[data-theme="dark"]) .mouse-btn-right {
+		border-left-color: rgba(255, 255, 255, 0.08);
+	}
+
+	.mouse-wheel-wrap {
+		width: 20px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.03);
+	}
+	:global(html[data-theme="dark"]) .mouse-wheel-wrap {
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.mouse-btn-wheel {
+		width: 14px;
+		height: 38px;
+		border-radius: 7px;
+		border: 1px solid var(--border-color);
+		background: #ffffff;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: space-between;
+		padding: 2px 0;
+		cursor: pointer;
+		transition: all 0.08s ease;
+		box-sizing: border-box;
+	}
+	:global(html[data-theme="dark"]) .mouse-btn-wheel {
+		background: #202433;
+		border-color: rgba(255, 255, 255, 0.18);
+	}
+
 	.wheel-notch {
-		fill: var(--accent);
+		font-size: 7px;
+		line-height: 1;
+		color: rgb(var(--gray));
 		font-weight: 900;
-		font-size: 13px;
-		pointer-events: none;
-		user-select: none;
-		transition: fill 0.1s ease, filter 0.1s ease;
+		transition: color 0.1s ease, transform 0.1s ease;
 	}
-	.wheel-notch.notch-active {
-		fill: #ffffff !important;
-		filter: drop-shadow(0 0 8px #f97316) drop-shadow(0 0 14px #ea580c);
+	.wheel-center {
+		width: 4px;
+		height: 6px;
+		border-radius: 2px;
+		background: var(--border-color);
+	}
+	:global(html[data-theme="dark"]) .wheel-center {
+		background: rgba(255, 255, 255, 0.25);
+	}
+
+	.mouse-palm {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.01);
+	}
+	:global(html[data-theme="dark"]) .mouse-palm {
+		background: rgba(255, 255, 255, 0.01);
+	}
+
+	/* BUTTON ACTIVE & TESTED STATES (VIBRANT GLOW) */
+	.mouse-btn.btn-active {
+		background: #ea580c !important;
+		color: #ffffff !important;
+		box-shadow: 0 0 14px rgba(234, 88, 12, 0.75) !important;
+	}
+	.mouse-btn.btn-active .mb-label,
+	.mouse-btn.btn-active span {
+		color: #ffffff !important;
+		font-weight: 800;
+	}
+	:global(html[data-theme="dark"]) .mouse-btn.btn-active {
+		background: #f97316 !important;
+		box-shadow: 0 0 16px rgba(249, 115, 22, 0.85), inset 0 0 4px #ffffff !important;
+	}
+
+	.mouse-btn.btn-tested {
+		border-color: rgba(234, 88, 12, 0.75) !important;
+		background: rgba(234, 88, 12, 0.18) !important;
+	}
+	.mouse-btn.btn-tested .mb-label,
+	.mouse-btn.btn-tested span {
+		color: #c2410c !important;
+		font-weight: 800;
+	}
+	:global(html[data-theme="dark"]) .mouse-btn.btn-tested {
+		border-color: #f97316 !important;
+		background: rgba(249, 115, 22, 0.35) !important;
+		box-shadow: 0 0 10px rgba(249, 115, 22, 0.5), inset 0 0 8px rgba(249, 115, 22, 0.25) !important;
+	}
+	:global(html[data-theme="dark"]) .mouse-btn.btn-tested .mb-label,
+	:global(html[data-theme="dark"]) .mouse-btn.btn-tested span {
+		color: #ffedd5 !important;
+		font-weight: 800;
+		text-shadow: 0 0 8px rgba(249, 115, 22, 0.7);
+	}
+
+	.notch-active {
+		color: #f97316 !important;
 		font-weight: 900;
+		transform: scale(1.4);
+		text-shadow: 0 0 8px #f97316;
 	}
 
 	/* MINI METRICS ROW - ZERO SIDEWAYS LAYOUT SHIFT */

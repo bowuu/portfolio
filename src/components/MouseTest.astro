@@ -96,57 +96,116 @@
 
 			<!-- INTERACTIVE MOUSE HARDWARE TEST ZONE -->
 			<div class="mouse-hardware-zone" id="mouse-btn-zone" tabindex="0" title="Click buttons or scroll wheel anywhere inside this zone">
-								<div class="mouse-device-wrap">
-					<!-- AUTHENTIC 3/4 ISOMETRIC ERGONOMIC MOUSE (5-BUTTON & SCROLL) -->
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 874" class="mouse-isometric-svg" aria-label="Interactive 5-Button Mouse Hardware Diagram">
+												<div class="mouse-device-wrap">
+					<!-- MINIMAL, SMOOTH 3/4 ISOMETRIC ERGONOMIC MOUSE (5-BUTTON & SCROLL) -->
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 220" class="mouse-isometric-svg" aria-label="Interactive 5-Button Mouse Diagram">
 						<defs>
-							<radialGradient id="deskShadowGrad" cx="50%" cy="50%" r="50%">
-								<stop offset="0%" stop-color="var(--shadow-color-1, rgba(0,0,0,0.6))" />
-								<stop offset="60%" stop-color="var(--shadow-color-2, rgba(0,0,0,0.18))" />
+							<!-- Soft Contact Drop Shadow -->
+							<radialGradient id="deskShadow" cx="50%" cy="50%" r="50%">
+								<stop offset="0%" stop-color="var(--desk-shadow-1, rgba(0,0,0,0.65))" />
+								<stop offset="65%" stop-color="var(--desk-shadow-2, rgba(0,0,0,0.18))" />
 								<stop offset="100%" stop-color="rgba(0,0,0,0)" />
 							</radialGradient>
+
+							<!-- Shell Base / Silhouette Gradient -->
+							<linearGradient id="chassisGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+								<stop offset="0%" stop-color="var(--chassis-g1, #1a1d29)" />
+								<stop offset="100%" stop-color="var(--chassis-g2, #0c0d13)" />
+							</linearGradient>
+
+							<!-- Palm Dome Gradient -->
+							<linearGradient id="palmGrad" x1="20%" y1="0%" x2="80%" y2="100%">
+								<stop offset="0%" stop-color="var(--palm-g1, #262c3e)" />
+								<stop offset="60%" stop-color="var(--palm-g2, #161924)" />
+								<stop offset="100%" stop-color="var(--palm-g3, #0f1118)" />
+							</linearGradient>
+
+							<!-- LMB Paddle Gradient -->
+							<linearGradient id="lmbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+								<stop offset="0%" stop-color="var(--lmb-g1, #2c3349)" />
+								<stop offset="70%" stop-color="var(--lmb-g2, #1b1f2c)" />
+								<stop offset="100%" stop-color="var(--lmb-g3, #12151e)" />
+							</linearGradient>
+
+							<!-- RMB Paddle Gradient -->
+							<linearGradient id="rmbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+								<stop offset="0%" stop-color="var(--rmb-g1, #222736)" />
+								<stop offset="70%" stop-color="var(--rmb-g2, #151722)" />
+								<stop offset="100%" stop-color="var(--rmb-g3, #0e1017)" />
+							</linearGradient>
+
+							<!-- Thumb Buttons Gradient -->
+							<linearGradient id="thumbGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+								<stop offset="0%" stop-color="var(--thumb-g1, #2a3044)" />
+								<stop offset="100%" stop-color="var(--thumb-g2, #161822)" />
+							</linearGradient>
+
+							<!-- Scroll Wheel Gradient -->
+							<linearGradient id="wheelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+								<stop offset="0%" stop-color="var(--wheel-g1, #47516d)" />
+								<stop offset="50%" stop-color="var(--wheel-g2, #282d3d)" />
+								<stop offset="100%" stop-color="var(--wheel-g3, #12141c)" />
+							</linearGradient>
 						</defs>
 
-						<!-- Desk Drop Shadow -->
-						<ellipse cx="510" cy="740" rx="420" ry="110" fill="url(#deskShadowGrad)" class="mouse-desk-shadow" />
+						<!-- 1. Ambient Ground Drop Shadow -->
+						<ellipse cx="195" cy="188" rx="165" ry="22" fill="url(#deskShadow)" class="mouse-desk-shadow" />
 
-						<!-- Base Chassis & Lower Flank Silhouette -->
-						<path id="mouse-base-chassis" d="M 589 53.704 C 463.419 61.334, 346.498 118.474, 226.624 230.802 C 128.011 323.206, 59.155 424.459, 28.431 522.243 C 9.636 582.062, 23.333 636.334, 70.315 688.199 C 97.713 718.445, 156.727 759.547, 208.473 784.424 C 300.234 828.537, 366.742 834.914, 442 806.815 C 487.393 789.866, 542.079 754.290, 636 680.607 C 765.317 579.154, 783.990 565.361, 859.749 515.336 C 951.431 454.798, 983.852 425.403, 995.127 392.596 C 1003.495 368.246, 1000.461 322.256, 988.029 285 C 957.499 193.516, 888.441 124.620, 786.603 84.048 C 733.376 62.842, 677.406 52.688, 616.500 53.189 C 604.400 53.289, 592.025 53.520, 589 53.704" class="mouse-svg-base" />
+						<!-- 2. Master Chassis Silhouette (Smooth curved perimeter) -->
+						<path id="mouse-base-chassis" class="mouse-svg-base"
+							d="M 46 128 C 40 148, 54 168, 86 182 C 125 198, 185 204, 250 196 C 305 188, 342 165, 355 138 C 362 118, 352 92, 330 68 C 298 34, 245 16, 188 18 C 134 20, 88 44, 60 76 C 46 92, 48 112, 46 128 Z" />
 
-						<!-- Rear Palm Dome -->
-						<path id="mouse-palm-dome" d="M 532.598 176.750 C 510.373 197.510, 503.738 203.287, 499.511 205.564 C 496.339 207.272, 496 207.868, 496 211.727 L 496 216 481.035 216 C 466.832 216, 466.013 216.107, 464.941 218.111 C 463.377 221.033, 469.599 227.528, 474.865 228.472 C 486.015 230.469, 522.842 240.053, 537 244.642 C 548.459 248.356, 575.811 258.575, 583.750 262.108 C 586.087 263.149, 590.138 264.933, 592.750 266.072 C 602.742 270.431, 605.104 271.561, 626.500 282.206 C 647.435 292.622, 663.111 300.707, 673 306.189 C 681.739 311.033, 686.549 313.711, 691 316.209 C 697.620 319.924, 703.741 323.303, 710.500 326.975 C 713.800 328.767, 717.662 331.058, 719.082 332.066 L 721.664 333.897 727.318 328.183 L 732.972 322.470 728.165 313.893 C 697.722 259.587, 647.733 212.394, 583.103 176.943 C 573.180 171.500, 551.198 161, 549.727 161 C 549.580 161, 541.872 168.088, 532.598 176.750" class="mouse-svg-palm" />
+						<!-- 3. Rear Palm Dome (Smooth Back Shell) -->
+						<path id="mouse-palm-dome" class="mouse-svg-palm"
+							d="M 188 126 C 205 82, 238 46, 275 25 C 315 42, 345 74, 355 106 C 360 126, 350 148, 332 165 C 290 146, 245 132, 188 126 Z" />
 
-						<!-- RMB (Right Mouse Button - Far Paddle) -->
-						<path id="btn-rmb" class="mouse-btn mouse-btn-part" d="M 384.968 134.952 C 365.640 136.561, 361.985 137.583, 351.279 144.372 C 299.640 177.116, 240.129 226.993, 193.853 276.312 C 139.895 333.818, 102.584 384.916, 73.742 440.806 C 68.263 451.425, 64.024 460.357, 64.322 460.656 C 64.621 460.954, 66.083 458.792, 67.570 455.849 C 80.785 429.713, 113.380 383.587, 147.829 342.276 C 158.536 329.436, 161.638 326.285, 162.701 327.167 C 164.387 328.566, 165.206 327.291, 143.536 357 C 120.594 388.453, 107.246 408.836, 98.977 425.044 C 95.816 431.241, 97.183 430.814, 101.474 424.265 C 106.952 415.906, 109.052 413.798, 110.612 415.093 C 111.627 415.936, 110.227 419.370, 103.990 431.336 C 85.562 466.692, 77 494.654, 77 519.477 C 77 526.104, 76.609 529.079, 75.633 529.890 C 70.897 533.820, 68.645 512.908, 71.497 491.500 C 72.006 487.684, 71.936 487.753, 69.965 493 C 67.405 499.817, 61.491 523.588, 60.511 531 C 59.680 537.291, 57.481 540.644, 55.348 538.874 C 54.343 538.040, 53.975 534.161, 53.901 523.628 L 53.802 509.500 51.390 517 C 50.063 521.125, 48.044 528.325, 46.902 533 C 44.507 542.810, 43.460 544.627, 41.257 542.798 C 39.521 541.357, 40.128 530.453, 42.629 518.145 C 44.668 508.113, 43.735 508.090, 41.032 518.105 C 37.567 530.948, 36.702 538.598, 37.316 551 C 38.769 580.360, 52.887 603.972, 86.632 633.473 C 103.967 648.628, 129.016 666.404, 148.491 677.371 L 158.481 682.997 161.137 670.748 C 165.563 650.339, 173.485 624.822, 182.530 601.836 L 186.727 591.172 180.409 584.910 C 176.934 581.466, 172.608 575.915, 170.796 572.574 C 167.568 566.625, 167.500 566.243, 167.500 554 C 167.500 538.574, 169.346 532.765, 184.051 501.918 C 219.806 426.916, 261.445 364.579, 322.524 294.612 C 342.598 271.616, 371.684 242.137, 382 234.329 C 397.273 222.771, 413.747 216.399, 431.250 215.281 L 440 214.723 440 194.861 L 440 175 457.250 174.973 L 474.500 174.946 477 170.844 C 478.375 168.588, 485.022 161.536, 491.772 155.173 C 499.935 147.477, 503.618 143.372, 502.772 142.911 C 500.483 141.665, 485.792 138.922, 470.500 136.884 C 453.790 134.658, 402.435 133.498, 384.968 134.952" title="Right Click (Button 2)" />
+						<!-- 4. Left Flank / Thumb Rest Area -->
+						<path id="mouse-flank" class="mouse-svg-flank"
+							d="M 46 128 C 86 142, 138 140, 188 126 C 245 132, 290 146, 332 165 C 295 186, 235 198, 175 196 C 115 194, 65 174, 46 128 Z" />
 
-						<!-- LMB (Left Mouse Button - Near Paddle) -->
-						<path id="btn-lmb" class="mouse-btn mouse-btn-part" d="M 479.365 239.510 C 481.423 244.872, 482.125 254.332, 480.977 261.214 C 479.317 271.163, 475.681 278.701, 466.850 290.500 C 454.201 307.399, 427.491 345.343, 406.664 376 C 402.368 382.325, 395.901 391.775, 392.295 397 C 388.689 402.225, 377.608 418.425, 367.671 433 C 347.822 462.113, 305.417 523.489, 284.107 553.950 C 269.618 574.660, 259.527 585.900, 249.508 592.488 C 232.716 603.530, 215.231 605.438, 199.185 597.980 L 192.870 595.044 190.349 600.745 C 184.391 614.218, 172.182 654.919, 167.110 678.218 L 165.212 686.937 181.856 695.314 C 225.291 717.176, 269.821 732.541, 308.243 738.922 C 347.330 745.414, 373.003 743.149, 396.753 731.113 C 419.049 719.814, 450.099 688.722, 482.967 644.781 C 493.950 630.098, 502.485 617.917, 538.171 566 C 613.999 455.683, 647.790 412.111, 704.779 351.169 L 715.058 340.177 712.279 338.247 C 710.751 337.185, 708.150 335.619, 706.500 334.767 C 698.837 330.809, 691.409 326.740, 690.500 326.003 C 689.950 325.557, 687.250 323.976, 684.500 322.489 C 681.750 321.002, 677.475 318.656, 675 317.276 C 664.904 311.647, 631.081 293.905, 622.500 289.736 C 602.340 279.942, 583.181 271, 582.356 271 C 582.100 271, 580.002 270.141, 577.695 269.090 C 559.179 260.661, 526.423 249.592, 500.234 242.913 C 478.724 237.428, 478.556 237.401, 479.365 239.510" title="Left Click (Button 0)" />
+						<!-- 5. RMB (Right Mouse Button - Far Paddle) -->
+						<path id="btn-rmb" class="mouse-btn mouse-btn-part"
+							d="M 46 128 C 48 108, 54 88, 70 66 C 98 34, 142 18, 195 18 C 225 18, 252 22, 275 25 C 246 44, 222 62, 204 80 L 156 114 C 122 120, 84 125, 46 128 Z"
+							title="Right Click (Button 2)" />
+						<text class="mb-svg-label mb-lbl-rmb" x="156" y="56" text-anchor="middle">RMB</text>
 
-						<!-- Deep Wheel Cavity Well -->
-						<path id="wheel-well" d="M 427.297 262.750 C 392.624 301.702, 365.155 335.282, 358.653 346.665 C 358.257 347.357, 359.511 348.745, 361.744 350.087 C 367.465 353.525, 376.041 361.019, 378.066 364.349 C 380.256 367.950, 380.425 367.562, 366.803 390.274 C 335.866 441.860, 305.822 482.728, 283.032 504.227 C 266.640 519.690, 255.942 524.755, 241.948 523.676 L 234.317 523.087 228.710 535.794 C 218.640 558.617, 211.451 577.784, 212.550 578.883 C 212.889 579.222, 217.540 579.500, 222.885 579.500 C 232.088 579.500, 233.003 579.302, 240.141 575.775 C 254.168 568.842, 261.959 559.462, 301.003 502.500 C 307.789 492.600, 320.148 474.600, 328.468 462.500 C 351.435 429.096, 358.759 418.347, 382.978 382.500 C 403.901 351.533, 423.087 323.622, 447.596 288.500 C 461.315 268.840, 463.417 264.525, 463.394 256.069 C 463.371 248.021, 461.097 242.818, 456.125 239.439 C 454.151 238.098, 452.014 237, 451.377 237 C 450.740 237, 439.904 248.588, 427.297 262.750" class="mouse-svg-well" />
+						<!-- 6. Central Scroll Wheel Well -->
+						<path id="wheel-well" class="mouse-svg-well"
+							d="M 88 130 L 156 80 C 161 76, 168 79, 166 85 L 98 135 C 93 139, 86 136, 88 130 Z" />
 
-						<!-- Scroll Wheel / MMB -->
+						<!-- 7. Scroll Wheel Cylinder (MMB) -->
 						<g id="btn-wheel" class="mouse-btn mouse-wheel-group" title="Middle Click (Button 1) &amp; Scroll">
-							<path class="mouse-wheel-body" d="M 343.500 373.002 C 305.094 378.778, 269.743 419.789, 257.344 472.952 C 254.877 483.530, 252.741 514, 254.466 514 C 256.601 514, 267.716 507.083, 273.695 502.033 C 291.749 486.787, 320.751 449.242, 347.490 406.500 C 357.852 389.936, 366.399 375.066, 365.864 374.531 C 365.263 373.930, 352.862 371.994, 350.500 372.132 C 349.400 372.197, 346.250 372.588, 343.500 373.002" />
+							<path class="mouse-wheel-body"
+								d="M 95 125 L 149 85 C 154 81, 160 84, 158 89 L 104 129 C 99 133, 93 130, 95 125 Z" />
+							<!-- Tread Ribs -->
+							<line x1="107" y1="119" x2="113" y2="114" class="wheel-rib" />
+							<line x1="118" y1="111" x2="124" y2="106" class="wheel-rib" />
+							<line x1="129" y1="103" x2="135" y2="98" class="wheel-rib" />
+							<line x1="140" y1="95" x2="146" y2="90" class="wheel-rib" />
 						</g>
 
-						<!-- Forward Thumb Button (Button 4 / btn-thumb2) -->
-						<path id="btn-thumb2" class="mouse-btn mouse-btn-part" d="M 807.458 343.129 C 789.196 353.584, 763.045 372.874, 747.780 387.151 L 742.061 392.500 743.513 402 C 745.798 416.958, 748.036 426.076, 749.564 426.663 C 751.306 427.331, 756.303 424.518, 788.842 404.547 L 814.834 388.593 815.387 384.547 C 816.117 379.207, 817.414 338, 816.852 338 C 816.612 338, 812.385 340.308, 807.458 343.129" title="Forward (Button 4)" />
-
-						<!-- Back Thumb Button (Button 3 / btn-thumb1) -->
-						<path id="btn-thumb1" class="mouse-btn mouse-btn-part" d="M 869.500 317.996 C 857.811 320.370, 845.751 324.199, 834.328 329.163 L 825.157 333.149 824.606 340.325 C 824.303 344.271, 823.777 355.778, 823.438 365.896 L 822.822 384.292 828.661 380.981 C 831.872 379.161, 840.350 374.539, 847.500 370.711 C 872.162 357.506, 874.882 354.204, 881.453 329.500 C 882.916 324, 884.342 318.712, 884.624 317.750 C 885.290 315.467, 881.661 315.527, 869.500 317.996" title="Back (Button 3)" />
-
-						<!-- Non-blocking Button Labels -->
-						<text class="mb-svg-label mb-lbl-lmb" x="320" y="660" text-anchor="middle">LMB</text>
-						<text class="mb-svg-label mb-lbl-rmb" x="210" y="310" text-anchor="middle">RMB</text>
-						<text class="mb-svg-label mb-lbl-fwd" x="774" y="390" text-anchor="middle">Fwd</text>
-						<text class="mb-svg-label mb-lbl-back" x="850" y="360" text-anchor="middle">Back</text>
-
 						<!-- Directional Wheel Arrows -->
-						<text id="notch-up" class="wheel-notch notch-up" x="420" y="270" text-anchor="middle">▲</text>
-						<text id="notch-down" class="wheel-notch notch-down" x="200" y="605" text-anchor="middle">▼</text>
+						<text id="notch-up" class="wheel-notch notch-up" x="154" y="73" text-anchor="middle">▲</text>
+						<text id="notch-down" class="wheel-notch notch-down" x="93" y="147" text-anchor="middle">▼</text>
+
+						<!-- 8. LMB (Left Mouse Button - Near Paddle) -->
+						<path id="btn-lmb" class="mouse-btn mouse-btn-part"
+							d="M 46 128 L 98 135 L 166 85 C 178 99, 184 113, 188 126 C 142 142, 92 144, 46 128 Z"
+							title="Left Click (Button 0)" />
+						<text class="mb-svg-label mb-lbl-lmb" x="116" y="120" text-anchor="middle">LMB</text>
+
+						<!-- 9. ENLARGED FORWARD THUMB BUTTON (Button 4 / btn-thumb2) -->
+						<path id="btn-thumb2" class="mouse-btn mouse-btn-part"
+							d="M 190 130 L 245 133 C 250 133, 253 137, 251 142 L 242 166 C 240 170, 235 172, 231 171 L 179 157 C 175 156, 174 151, 176 147 L 184 133 C 185 131, 188 130, 190 130 Z"
+							title="Forward (Button 4)" />
+						<text class="mb-svg-label mb-lbl-fwd" x="215" y="154" text-anchor="middle">Fwd</text>
+
+						<!-- 10. ENLARGED BACK THUMB BUTTON (Button 3 / btn-thumb1) -->
+						<path id="btn-thumb1" class="mouse-btn mouse-btn-part"
+							d="M 255 134 L 312 138 C 317 138, 320 142, 318 147 L 308 171 C 306 175, 301 177, 297 176 L 248 165 C 244 164, 243 159, 245 155 L 249 137 C 250 135, 253 134, 255 134 Z"
+							title="Back (Button 3)" />
+						<text class="mb-svg-label mb-lbl-back" x="282" y="158" text-anchor="middle">Back</text>
 					</svg>
-				</div>
 				</div>
 			</div>
 
@@ -965,44 +1024,61 @@
 
 	/* Base fills for mouse components */
 	.mouse-svg-base {
-		fill: #f1f5f9;
+		fill: url(#chassisGrad);
 		stroke: #0f172a;
-		stroke-width: 7;
+		stroke-width: 2.6;
+		stroke-linejoin: round;
 	}
 	:global(html[data-theme="dark"]) .mouse-svg-base {
-		fill: #141722;
 		stroke: rgba(255, 255, 255, 0.45);
 	}
 
 	.mouse-svg-palm {
-		fill: #ffffff;
-		stroke: rgba(0, 0, 0, 0.16);
-		stroke-width: 5;
+		fill: url(#palmGrad);
+		stroke: rgba(0, 0, 0, 0.18);
+		stroke-width: 1.8;
+		stroke-linejoin: round;
 	}
 	:global(html[data-theme="dark"]) .mouse-svg-palm {
-		fill: #181c28;
 		stroke: rgba(255, 255, 255, 0.22);
 	}
 
+	.mouse-svg-flank {
+		fill: url(#chassisGrad);
+		stroke: rgba(0, 0, 0, 0.16);
+		stroke-width: 1.5;
+	}
+	:global(html[data-theme="dark"]) .mouse-svg-flank {
+		stroke: rgba(255, 255, 255, 0.18);
+	}
+
 	.mouse-svg-well {
-		fill: #94a3b8;
+		fill: #64748b;
 		stroke: rgba(0, 0, 0, 0.2);
-		stroke-width: 4;
+		stroke-width: 1.4;
 	}
 	:global(html[data-theme="dark"]) .mouse-svg-well {
-		fill: #0b0c12;
+		fill: #07080e;
 		stroke: rgba(255, 255, 255, 0.18);
 	}
 
 	.mouse-btn-part {
-		fill: #ffffff;
+		fill: url(#lmbGrad);
 		stroke: rgba(0, 0, 0, 0.2);
-		stroke-width: 5;
+		stroke-width: 2.2;
+		stroke-linejoin: round;
 		cursor: pointer;
 		transition: fill 0.08s ease, stroke 0.08s ease, filter 0.08s ease;
 	}
+	#btn-rmb {
+		fill: url(#rmbGrad);
+		stroke-width: 2;
+	}
+	#btn-thumb1, #btn-thumb2 {
+		fill: url(#thumbGrad);
+		stroke-width: 2.2;
+	}
 	:global(html[data-theme="dark"]) .mouse-btn-part {
-		fill: #1a1e2b;
 		stroke: rgba(255, 255, 255, 0.24);
 	}
 	.mouse-btn-part:hover {
@@ -1010,14 +1086,20 @@
 	}
 
 	.mouse-wheel-body {
-		fill: #475569;
+		fill: url(#wheelGrad);
 		stroke: var(--accent);
-		stroke-width: 5;
+		stroke-width: 2;
 		cursor: pointer;
 		transition: fill 0.08s ease, filter 0.08s ease;
 	}
-	:global(html[data-theme="dark"]) .mouse-wheel-body {
-		fill: #2a3044;
+	.wheel-rib {
+		stroke: rgba(255, 255, 255, 0.9);
+		stroke-width: 2;
+		stroke-linecap: round;
+		pointer-events: none;
+	}
+	:global(html[data-theme="dark"]) .wheel-rib {
+		stroke: rgba(255, 255, 255, 0.45);
 	}
 
 	/* ACTIVE STATE (Signal Orange Glow) */
@@ -1058,35 +1140,32 @@
 		pointer-events: none;
 		font-weight: 800;
 		font-family: system-ui, -apple-system, sans-serif;
-		fill: #1e293b;
+		fill: #0f172a;
 		transition: fill 0.1s ease;
-		font-size: 20px;
+		font-size: 13px;
 	}
 	:global(html[data-theme="dark"]) .mb-svg-label {
-		fill: #e2e8f0;
+		fill: #f8fafc;
 	}
 	.mb-lbl-lmb {
-		font-size: 36px;
+		font-size: 15px;
 	}
 	.mb-lbl-rmb {
-		font-size: 30px;
+		font-size: 13px;
 		fill: #64748b;
 	}
 	:global(html[data-theme="dark"]) .mb-lbl-rmb {
 		fill: #94a3b8;
 	}
-	.mb-lbl-fwd {
-		font-size: 20px;
-	}
-	.mb-lbl-back {
-		font-size: 20px;
+	.mb-lbl-fwd, .mb-lbl-back {
+		font-size: 13px;
 	}
 
 	/* Wheel Notches */
 	.wheel-notch {
 		fill: var(--accent);
 		font-weight: 900;
-		font-size: 32px;
+		font-size: 13px;
 		pointer-events: none;
 		user-select: none;
 		transition: fill 0.1s ease, filter 0.1s ease;

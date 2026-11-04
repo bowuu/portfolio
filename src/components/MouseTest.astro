@@ -517,24 +517,68 @@
 		let mouseChatterCount = 0;
 		let wheelTimer: any = null;
 
-		function getButtonInfo(btn: number): { name: string; el: HTMLElement | null } {
+		const activeTimers = new Map<HTMLElement, any>();
+		const isButtonDown = new Map<number, boolean>();
+
+		function activateButton(el: HTMLElement | null, btnId: number) {
+			if (!el) return;
+			isButtonDown.set(btnId, true);
+			el.classList.add('btn-active');
+			const existing = activeTimers.get(el);
+			if (existing) {
+				clearTimeout(existing);
+				activeTimers.delete(el);
+			}
+		}
+
+		function deactivateButton(el: HTMLElement | null, btnId: number) {
+			if (!el) return;
+			isButtonDown.set(btnId, false);
+			const existing = activeTimers.get(el);
+			if (existing) clearTimeout(existing);
+
+			// Minimum 220ms visual flash so instantaneous clicks/microswitches are clearly seen before unlighting
+			const timer = setTimeout(() => {
+				if (!isButtonDown.get(btnId)) {
+					el.classList.remove('btn-active');
+				}
+				activeTimers.delete(el);
+			}, 220);
+			activeTimers.set(el, timer);
+		}
+
+		function getButtonInfo(btn: number, target?: HTMLElement | null): { name: string; el: HTMLElement | null; id: number } {
+			// Check if clicking directly on a specific visual button element
+			if (target) {
+				const thumb1 = target.closest('#btn-thumb1');
+				if (thumb1) return { name: 'Back', el: thumb1El, id: 3 };
+				const thumb2 = target.closest('#btn-thumb2');
+				if (thumb2) return { name: 'Fwd', el: thumb2El, id: 4 };
+				const wheel = target.closest('#btn-wheel');
+				if (wheel && btn === 0) return { name: 'MMB', el: wheelEl, id: 1 };
+				const rmb = target.closest('#btn-rmb');
+				if (rmb && btn === 0) return { name: 'RMB', el: rmbEl, id: 2 };
+				const lmb = target.closest('#btn-lmb');
+				if (lmb && btn === 0) return { name: 'LMB', el: lmbEl, id: 0 };
+			}
+
 			switch (btn) {
-				case 0: return { name: 'LMB (Left)', el: lmbEl };
-				case 1: return { name: 'MMB (Wheel)', el: wheelEl };
-				case 2: return { name: 'RMB (Right)', el: rmbEl };
-				case 3: return { name: 'Thumb 1 (Back)', el: thumb1El };
-				case 4: return { name: 'Thumb 2 (Fwd)', el: thumb2El };
-				default: return { name: `Btn ${btn}`, el: null };
+				case 0: return { name: 'LMB', el: lmbEl, id: 0 };
+				case 1: return { name: 'MMB', el: wheelEl, id: 1 };
+				case 2: return { name: 'RMB', el: rmbEl, id: 2 };
+				case 3: return { name: 'Back', el: thumb1El, id: 3 };
+				case 4: return { name: 'Fwd', el: thumb2El, id: 4 };
+				default: return { name: `Btn ${btn}`, el: null, id: btn };
 			}
 		}
 
 		function onPointerDown(e: MouseEvent | PointerEvent) {
 			e.preventDefault();
-			const info = getButtonInfo(e.button);
+			const info = getButtonInfo(e.button, e.target as HTMLElement | null);
 			const now = performance.now();
 
 			// Double-click chatter detection (<30ms between successive clicks of same button)
-			const prevTime = lastClickTimePerButton.get(e.button);
+			const prevTime = lastClickTimePerButton.get(info.id);
 			if (prevTime && (now - prevTime) < 30) {
 				mouseChatterCount++;
 				if (mouseChatterEl) {
@@ -542,18 +586,16 @@
 					mouseChatterEl.style.color = '#ef4444';
 				}
 				if (mouseChatterSubEl) {
-					mouseChatterSubEl.textContent = `${mouseChatterCount} bounce(s) on ${info.name.split(' ')[0]} (${(now - prevTime).toFixed(1)}ms)`;
+					mouseChatterSubEl.textContent = `${mouseChatterCount} bounce(s) on ${info.name} (${(now - prevTime).toFixed(1)}ms)`;
 					mouseChatterSubEl.style.color = '#ef4444';
 				}
 			}
-			lastClickTimePerButton.set(e.button, now);
+			lastClickTimePerButton.set(info.id, now);
 
-			testedButtons.add(e.button);
-			if (info.el) {
-				info.el.classList.add('btn-active');
-			}
+			testedButtons.add(info.id);
+			activateButton(info.el, info.id);
 
-			if (lastBtnEl) lastBtnEl.textContent = info.name.split(' ')[0];
+			if (lastBtnEl) lastBtnEl.textContent = info.name;
 			if (btnCountEl) btnCountEl.textContent = `${testedButtons.size} / 5 tested`;
 			if (mouseBadge) {
 				mouseBadge.textContent = `${testedButtons.size} / 5 tested`;
@@ -565,12 +607,9 @@
 
 		function onPointerUp(e: MouseEvent | PointerEvent) {
 			e.preventDefault();
-			const info = getButtonInfo(e.button);
-			if (info.el) {
-				info.el.classList.remove('btn-active');
-			}
+			const info = getButtonInfo(e.button, e.target as HTMLElement | null);
+			deactivateButton(info.el, info.id);
 		}
-
 		function onWheel(e: WheelEvent) {
 			e.preventDefault();
 			totalScrollTicks++;
@@ -607,12 +646,15 @@
 			btnZone.addEventListener('wheel', onWheel, { passive: false });
 		}
 
-		// Ensure all buttons deactivate immediately when released anywhere or on window blur
+		// Ensure all buttons deactivate even if mouseup occurs outside btnZone or window blurs
 		window.addEventListener('mouseup', (e: MouseEvent) => {
-			const info = getButtonInfo(e.button);
-			if (info.el) info.el.classList.remove('btn-active');
+			const info = getButtonInfo(e.button, e.target as HTMLElement | null);
+			deactivateButton(info.el, info.id);
 		});
 		window.addEventListener('blur', () => {
+			isButtonDown.clear();
+			activeTimers.forEach(t => clearTimeout(t));
+			activeTimers.clear();
 			[lmbEl, rmbEl, wheelEl, thumb1El, thumb2El].forEach(el => el?.classList.remove('btn-active'));
 		});
 
@@ -634,6 +676,9 @@
 				reactionState = 'IDLE';
 
 				// Reset buttons & scroll state
+				isButtonDown.clear();
+				activeTimers.forEach(t => clearTimeout(t));
+				activeTimers.clear();
 				testedButtons.clear();
 				totalScrollTicks = 0;
 				lastClickTimePerButton.clear();
@@ -1148,6 +1193,7 @@
 		border-style: solid !important;
 		color: #ffffff !important;
 		box-shadow: 0 0 14px rgba(234, 88, 12, 0.75), inset 0 0 4px #ffffff !important;
+		transition: none !important;
 		z-index: 3 !important;
 	}
 	.mouse-btn.btn-active .mb-label,

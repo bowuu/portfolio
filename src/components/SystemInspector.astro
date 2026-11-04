@@ -106,14 +106,6 @@
 				<span class="t-label">Graphics Card (GPU)</span>
 				<span id="t-gpu" class="t-val">Detecting WebGL...</span>
 			</div>
-			<div class="telemetry-item">
-				<span class="t-label">GPU Max Texture Size</span>
-				<span id="t-texture" class="t-val">Probing raster limits...</span>
-			</div>
-			<div class="telemetry-item">
-				<span class="t-label">GPU Shading Language</span>
-				<span id="t-glsl" class="t-val">Probing compiler...</span>
-			</div>
 		</div>
 	</div>
 
@@ -304,8 +296,6 @@
 		const cpuEl = document.getElementById('t-cpu');
 		const ramEl = document.getElementById('t-ram');
 		const gpuEl = document.getElementById('t-gpu');
-		const textureEl = document.getElementById('t-texture');
-		const glslEl = document.getElementById('t-glsl');
 
 		// Display & Touch elements
 		const displayEl = document.getElementById('t-display');
@@ -375,43 +365,7 @@
 			ramEl.textContent = mem ? `${mem} GB RAM` : '64-bit Architecture';
 		}
 
-		// 5. GPU Max Texture Size
-		if (textureEl) {
-			try {
-				const canvas = document.createElement('canvas');
-				const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-				if (gl) {
-					const maxTex = (gl as WebGLRenderingContext).getParameter((gl as WebGLRenderingContext).MAX_TEXTURE_SIZE);
-					const kTier = maxTex >= 16384 ? '16K' : (maxTex >= 8192 ? '8K' : '4K');
-					textureEl.textContent = `${maxTex.toLocaleString()} px (${kTier} Canvas)`;
-					textureEl.title = `Maximum hardware texture dimension supported by physical GPU silicon: ${maxTex}×${maxTex} pixels.`;
-				} else {
-					textureEl.textContent = '8,192 px (Standard 8K)';
-				}
-			} catch {
-				textureEl.textContent = 'Hardware Dependent';
-			}
-		}
-
-		// 6. GPU Shading Language Version
-		if (glslEl) {
-			try {
-				const canvas = document.createElement('canvas');
-				const gl = (canvas.getContext('webgl2') || canvas.getContext('webgl')) as WebGLRenderingContext | null;
-				if (gl) {
-					const glsl = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);
-					const cleanGlsl = glsl ? glsl.split('(')[0].trim() : 'GLSL ES 3.00';
-					glslEl.textContent = cleanGlsl;
-					glslEl.title = `Hardware shading language compiler version: ${glsl || 'GLSL'}`;
-				} else {
-					glslEl.textContent = 'GLSL ES 1.00';
-				}
-			} catch {
-				glslEl.textContent = 'OpenGL ES Shading';
-			}
-		}
-
-		// 7. Display & Scaling
+		// 5. Display & Scaling
 		if (displayEl) {
 			const dpr = window.devicePixelRatio ? ` @ ${window.devicePixelRatio}x scaling` : '';
 			const depth = window.screen.colorDepth ? ` (${window.screen.colorDepth}-bit color)` : '';
@@ -515,7 +469,7 @@
 			}
 		}
 
-		// 11. Audio Pipeline Latency & Bit Depth
+		// 9. Audio Pipeline Latency
 		if (audioEl) {
 			try {
 				const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -526,14 +480,14 @@
 					const rateKhz = (actx.sampleRate / 1000).toFixed(0);
 					
 					if (outLatMs) {
-						audioEl.textContent = `${baseLatMs} ms buffer (${outLatMs} ms sink) • ${rateKhz} kHz (24-bit / 32-bit Float)`;
+						audioEl.textContent = `${baseLatMs} ms buffer (${outLatMs} ms sink) • ${rateKhz} kHz DAC`;
 					} else {
-						audioEl.textContent = `${baseLatMs} ms buffer • ${rateKhz} kHz (24-bit / 32-bit Float)`;
+						audioEl.textContent = `${baseLatMs} ms buffer • ${rateKhz} kHz DAC`;
 					}
-					audioEl.title = `AudioContext processing buffer: ${baseLatMs}ms. Host DAC sample rate: ${rateKhz} kHz. Internal Web Audio DSP runs at 32-bit float precision, outputting to host 24-bit/16-bit hardware DAC.`;
+					audioEl.title = `AudioContext processing buffer: ${baseLatMs}ms. Host DAC sample rate: ${rateKhz} kHz.`;
 					actx.close();
 				} else {
-					audioEl.textContent = 'Standard Audio (24-bit DAC)';
+					audioEl.textContent = 'Standard Audio (DAC Output)';
 				}
 			} catch (_) {
 				audioEl.textContent = 'Hardware Audio Output';

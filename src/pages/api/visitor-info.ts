@@ -41,6 +41,10 @@ export const GET: APIRoute = async ({ request, locals }) => {
 			latitude: cf.latitude || '',
 			longitude: cf.longitude || '',
 			protocol,
+			tlsVersion: cf.tlsVersion || '',
+			tlsCipher: cf.tlsCipher || '',
+			timezone: cf.timezone || '',
+			rayId: request.headers.get('cf-ray') || '',
 			userAgent,
 		}),
 		{

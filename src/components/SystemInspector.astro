@@ -154,16 +154,20 @@
 				<span id="t-audio" class="t-val">Probing DAC sink...</span>
 			</div>
 			<div class="telemetry-item">
-				<span class="t-label">Audio Output Channels</span>
-				<span id="t-channels" class="t-val">Querying mixer topology...</span>
+				<span class="t-label">Audio Codecs</span>
+				<span id="t-audio-codecs" class="t-val">Probing decoders...</span>
 			</div>
 			<div class="telemetry-item">
 				<span class="t-label">Hardware Video Codecs</span>
 				<span id="t-codecs" class="t-val">Probing ASIC decoders...</span>
 			</div>
 			<div class="telemetry-item">
-				<span class="t-label">Media Hardware Devices</span>
-				<span id="t-endpoints" class="t-val">Enumerating endpoints...</span>
+				<span class="t-label">4K HDR Video Profile</span>
+				<span id="t-hdr-profile" class="t-val">Probing 4K ASIC...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Hardware DRM System</span>
+				<span id="t-drm" class="t-val">Probing CDM modules...</span>
 			</div>
 		</div>
 	</div>
@@ -305,9 +309,10 @@
 
 		// Audio & Media elements
 		const audioEl = document.getElementById('t-audio');
-		const channelsEl = document.getElementById('t-channels');
+		const audioCodecsEl = document.getElementById('t-audio-codecs');
 		const codecsEl = document.getElementById('t-codecs');
-		const endpointsEl = document.getElementById('t-endpoints');
+		const hdrProfileEl = document.getElementById('t-hdr-profile');
+		const drmEl = document.getElementById('t-drm');
 
 		// 1. Instant Client Detection: GPU
 		const gpuString = detectGPU();
@@ -494,30 +499,33 @@
 			}
 		}
 
-		// 12. Audio Output Channels
-		if (channelsEl) {
+		// 10. Audio Codec Playback Matrix
+		if (audioCodecsEl) {
 			try {
-				const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-				if (AudioCtx) {
-					const actx = new AudioCtx();
-					const ch = actx.destination.maxChannelCount || 2;
-					let desc = `${ch} Channels`;
-					if (ch === 2) desc = '2 Channels (Stereo)';
-					else if (ch === 6) desc = '6 Channels (5.1 Surround)';
-					else if (ch === 8) desc = '8 Channels (7.1 Surround)';
-					else if (ch === 1) desc = '1 Channel (Mono)';
-					channelsEl.textContent = desc;
-					channelsEl.title = `Host audio driver mixer topology: ${ch} discrete output channels available.`;
-					actx.close();
-				} else {
-					channelsEl.textContent = '2 Channels (Stereo)';
+				const audioTest = document.createElement('audio');
+				const list = [
+					{ name: 'FLAC', type: 'audio/flac' },
+					{ name: 'Opus', type: 'audio/ogg; codecs="opus"' },
+					{ name: 'AAC', type: 'audio/mp4; codecs="mp4a.40.2"' },
+					{ name: 'ALAC', type: 'audio/mp4; codecs="alac"' },
+					{ name: 'Vorbis', type: 'audio/ogg; codecs="vorbis"' },
+					{ name: 'PCM', type: 'audio/wav; codecs="1"' },
+				];
+				const supported: string[] = [];
+				for (const item of list) {
+					const res = audioTest.canPlayType(item.type);
+					if (res === 'probably' || res === 'maybe') {
+						supported.push(item.name);
+					}
 				}
+				audioCodecsEl.textContent = supported.length > 0 ? supported.join(' • ') : 'Standard Audio (PCM/AAC)';
+				audioCodecsEl.title = `Host OS media framework native audio decoding capabilities: ${supported.join(', ')}`;
 			} catch {
-				channelsEl.textContent = '2 Channels (Stereo)';
+				audioCodecsEl.textContent = 'Standard Audio';
 			}
 		}
 
-		// 13. Hardware Video Codecs (MediaCapabilities API)
+		// 11. Hardware Video Codecs (MediaCapabilities API)
 		if (codecsEl) {
 			const probeCodecs = async () => {
 				if (navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo) {
@@ -549,30 +557,111 @@
 			codecsEl.title = 'W3C MediaCapabilities API checking GPU silicon ASIC hardware-accelerated video decoding.';
 		}
 
-		// 14. Physical Media Device Enumeration
-		if (endpointsEl) {
-			if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-				navigator.mediaDevices.enumerateDevices().then((devices) => {
-					let audioIn = 0;
-					let audioOut = 0;
-					let videoIn = 0;
-					for (const d of devices) {
-						if (d.kind === 'audioinput') audioIn++;
-						else if (d.kind === 'audiooutput') audioOut++;
-						else if (d.kind === 'videoinput') videoIn++;
+		// 12. 4K HDR Video ASIC Profile
+		if (hdrProfileEl) {
+			const probeHDR = async () => {
+				if (navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo) {
+					const hdrCandidates = [
+						{ name: 'HEVC 10', config: { type: 'file', video: { contentType: 'video/mp4; codecs="hvc1.2.4.L153.B0"', width: 3840, height: 2160, bitrate: 20000000, framerate: 60 } } },
+						{ name: 'AV1 10', config: { type: 'file', video: { contentType: 'video/mp4; codecs="av01.0.12M.10"', width: 3840, height: 2160, bitrate: 20000000, framerate: 60 } } },
+						{ name: 'VP9 P2', config: { type: 'file', video: { contentType: 'video/webm; codecs="vp09.02.10.10.01.09.16.09.01"', width: 3840, height: 2160, bitrate: 20000000, framerate: 60 } } }
+					];
+					const smoothHDR: string[] = [];
+					for (const c of hdrCandidates) {
+						try {
+							const res = await navigator.mediaCapabilities.decodingInfo(c.config as any);
+							if (res.supported && res.smooth) {
+								smoothHDR.push(c.name);
+							}
+						} catch (_) {}
 					}
-					const parts = [];
-					if (audioIn > 0) parts.push(`${audioIn} Mic${audioIn > 1 ? 's' : ''}`);
-					if (audioOut > 0) parts.push(`${audioOut} Audio Out`);
-					if (videoIn > 0) parts.push(`${videoIn} Cam${videoIn > 1 ? 's' : ''}`);
-					endpointsEl.textContent = parts.length > 0 ? parts.join(' • ') : '0 Connected Devices';
-					endpointsEl.title = `Physical hardware media endpoints detected without permissions: ${audioIn} audio inputs, ${audioOut} audio sinks, ${videoIn} video cameras.`;
-				}).catch(() => {
-					endpointsEl.textContent = 'Standard Audio / Video';
-				});
-			} else {
-				endpointsEl.textContent = 'Standard Audio / Video';
-			}
+					if (smoothHDR.length > 0) {
+						hdrProfileEl.textContent = `4K60 HDR10 (${smoothHDR.join(' • ')})`;
+						hdrProfileEl.title = `Hardware ASIC silicon decoding for 4K 60fps 10-bit HDR streams: ${smoothHDR.join(', ')}`;
+					} else {
+						hdrProfileEl.textContent = '1080p SDR (No 4K HDR ASIC)';
+						hdrProfileEl.title = 'No dedicated hardware ASIC silicon decoder detected for 4K 60fps 10-bit HDR streams.';
+					}
+				} else {
+					hdrProfileEl.textContent = 'Standard Video Subsystem';
+				}
+			};
+			probeHDR();
+		}
+
+		// 13. Hardware DRM Key System (EME)
+		if (drmEl) {
+			const probeDRM = async () => {
+				if (navigator.requestMediaKeySystemAccess) {
+					const drmCandidates = [
+						{
+							id: 'com.widevine.alpha',
+							name: 'Widevine',
+							config: [{
+								initDataTypes: ['cenc'],
+								videoCapabilities: [{ contentType: 'video/mp4; codecs="avc1.42E01E"' }]
+							}],
+							hwConfig: [{
+								initDataTypes: ['cenc'],
+								videoCapabilities: [{ contentType: 'video/mp4; codecs="avc1.42E01E"', robustness: 'HW_SECURE_ALL' }]
+							}]
+						},
+						{
+							id: 'com.microsoft.playready.recommendation',
+							name: 'PlayReady (Hardware)',
+							config: [{
+								initDataTypes: ['cenc'],
+								videoCapabilities: [{ contentType: 'video/mp4; codecs="avc1.42E01E"' }]
+							}]
+						},
+						{
+							id: 'com.microsoft.playready',
+							name: 'PlayReady',
+							config: [{
+								initDataTypes: ['cenc'],
+								videoCapabilities: [{ contentType: 'video/mp4; codecs="avc1.42E01E"' }]
+							}]
+						},
+						{
+							id: 'com.apple.fps',
+							name: 'FairPlay',
+							config: [{
+								initDataTypes: ['sinf'],
+								videoCapabilities: [{ contentType: 'video/mp4; codecs="avc1.42E01E"' }]
+							}]
+						}
+					];
+
+					const found: string[] = [];
+					for (const item of drmCandidates) {
+						if (item.id === 'com.microsoft.playready' && found.some(f => f.includes('PlayReady'))) continue;
+						try {
+							await navigator.requestMediaKeySystemAccess(item.id, item.config as any);
+							if (item.id === 'com.widevine.alpha' && item.hwConfig) {
+								try {
+									await navigator.requestMediaKeySystemAccess(item.id, item.hwConfig as any);
+									found.push('Widevine L1 (Hardware TrustZone)');
+								} catch {
+									found.push('Widevine L3 (Software CDM)');
+								}
+							} else {
+								found.push(item.name);
+							}
+						} catch (_) {}
+					}
+
+					if (found.length > 0) {
+						drmEl.textContent = found.join(' • ');
+						drmEl.title = `Encrypted Media Extensions (EME) DRM modules active: ${found.join(', ')}`;
+					} else {
+						drmEl.textContent = 'Standard / Open Media';
+						drmEl.title = 'No proprietary DRM CDM module detected or browser in privacy mode.';
+					}
+				} else {
+					drmEl.textContent = 'Not Supported';
+				}
+			};
+			probeDRM();
 		}
 
 		// 15. Cloudflare Edge Ephemeral Detection

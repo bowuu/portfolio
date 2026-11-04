@@ -563,7 +563,7 @@
 				if (notchUpEl) notchUpEl.classList.remove('notch-active');
 			}
 
-			if (scrollDeltaEl) scrollDeltaEl.textContent = `${dir} (${delta > 0 ? '+' : ''}${delta})`;
+			if (scrollDeltaEl) scrollDeltaEl.textContent = `${dir} (${delta > 0 ? '+' : ''}${delta} px)`;
 			if (scrollTotalEl) scrollTotalEl.textContent = `${totalScrollTicks} total ticks`;
 			if (btnCountEl) btnCountEl.textContent = `${testedButtons.size} / 5 tested`;
 			if (mouseBadge) mouseBadge.textContent = `Wheel ${dir}`;

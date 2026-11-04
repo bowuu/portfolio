@@ -3,10 +3,10 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import CadModelViewer from '../components/CadModelViewer.astro';
-import SystemInspector from '../components/SystemInspector.astro';
-import NetworkBenchmark from '../components/NetworkBenchmark.astro';
-import InputLatencyLab from '../components/InputLatencyLab.astro';
-import KeyboardLab from '../components/KeyboardLab.astro';
+import Networktest from '../components/Networktest.astro';
+import Mousetest from '../components/Mousetest.astro';
+import Keyboardtest from '../components/Keyboardtest.astro';
+import Debug from '../components/Debug.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 ---
 
@@ -141,16 +141,16 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 			</section>
 
 			<!-- NETWORK TEST -->
-			<NetworkBenchmark />
+			<Networktest />
 
-			<!-- MOUSE POLLING & CLICK LATENCY LAB -->
-			<InputLatencyLab />
+			<!-- MOUSE TEST -->
+			<Mousetest />
 
-			<!-- KEYBOARD MATRIX & LATENCY LAB -->
-			<KeyboardLab />
+			<!-- KEYBOARD TEST -->
+			<Keyboardtest />
 
-			<!-- DEBUG / SYSTEM INSPECTOR -->
-			<SystemInspector />
+			<!-- DEBUG -->
+			<Debug />
 		</main>
 
 		<Footer />

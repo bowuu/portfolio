@@ -13,10 +13,12 @@ Personal portfolio for **Bo Wu**, Computer Engineer specializing in silicon test
 
 ## Features
 
-- **3D Models Viewer:** Interactive WebGL viewer rendering authentic B-Rep geometry tessellated directly from CAD STEP models using Open CASCADE.
+- **3D Models:** Interactive WebGL CAD viewer rendering authentic B-Rep geometry tessellated directly from CAD STEP models using Open CASCADE.
 - **Playkeys for Plex Web:** Zero-dependency Manifest V3 browser extension for global OS media key control.
-- **System Inspector:** Client-side telemetry dashboard displaying local GPU, CPU, RAM, display scaling, and Cloudflare edge data with a 100% privacy guarantee.
-- **Edge Network Benchmark:** Direct Anycast network latency, jitter, packet loss, and multi-stream wire-speed throughput benchmark with zero host bandwidth consumption.
+- **Network Test:** Direct Anycast network latency, jitter, packet loss, and multi-stream wire-speed throughput benchmark with zero host bandwidth consumption.
+- **Mouse Test:** Real-time polling rate oscilloscope, reflex reaction benchmark, and switch chatter detector.
+- **Keyboard Test:** Full 104-key switch matrix, N-key rollover (NKRO), dispatch latency, and leaf-spring chatter detector.
+- **Debug:** Client-side telemetry dashboard displaying local GPU, CPU, RAM, display scaling, and Cloudflare edge data with a 100% privacy guarantee.
 
 ---
 

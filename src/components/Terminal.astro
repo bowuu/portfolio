@@ -4,67 +4,88 @@
 
 <div id="terminal-modal" class="terminal-modal" aria-hidden="true">
 	<div class="terminal-backdrop" id="terminal-backdrop"></div>
-	<div class="terminal-window" role="dialog" aria-modal="true" aria-label="Terminal Console">
-		<!-- HEADER BAR -->
+	<div class="terminal-window" id="terminal-window" role="dialog" aria-modal="true" aria-label="Terminal Console">
+		<!-- AUTHENTIC TERMINAL HEADER BAR -->
 		<div class="terminal-header">
-			<div class="terminal-title-group">
-				<span class="status-dot"></span>
-				<span class="terminal-title mono">visitor@brob.uk: ~ (brobOS v1.0)</span>
+			<div class="terminal-traffic-lights" aria-label="Window controls">
+				<button class="win-btn win-close" id="term-close-btn" type="button" title="Close (exit / Esc)" aria-label="Close">
+					<span class="win-glyph">&times;</span>
+				</button>
+				<button class="win-btn win-minimize" id="term-min-btn" type="button" title="Minimize (Esc)" aria-label="Minimize">
+					<span class="win-glyph">&minus;</span>
+				</button>
+				<button class="win-btn win-maximize" id="term-max-btn" type="button" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">
+					<span class="win-glyph">&#43;</span>
+				</button>
 			</div>
-			<div class="terminal-actions">
-				<button class="term-btn term-clear-btn" id="term-clear-btn" type="button" title="Clear console (clear)">
-					Clear
-				</button>
-				<button class="term-btn term-close-btn" id="term-close-btn" type="button" title="Close console (Esc or exit)">
-					&times;
-				</button>
+
+			<div class="terminal-title mono">
+				<svg class="term-title-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+					<polyline points="4 17 10 11 4 5"></polyline>
+					<line x1="12" y1="19" x2="20" y2="19"></line>
+				</svg>
+				<span>visitor@brob.uk: ~ (brobOS v1.0.0)</span>
+			</div>
+
+			<div class="terminal-header-meta mono">
+				<span class="term-meta-tag">brobsh</span>
+				<span class="term-meta-dim">80&times;24</span>
 			</div>
 		</div>
 
-		<!-- OUTPUT LOG -->
-		<div class="terminal-body" id="terminal-output">
-			<div class="term-banner mono">
-				<pre class="ascii-art">
- _              _     ___  ____  
-| |__  _ __ ___| |__ / _ \/ ___| 
-| '_ \| '__/ _ \ '_ \ | | \___ \ 
-| |_) | | |  __/ |_) | |_| |___) |
-|_.__/|_|  \___|_.__/ \___/|____/ 
-				</pre>
-				<p class="banner-sub">brobOS [Version 1.0.0] &bull; Silicon &amp; Systems Console</p>
-				<p class="banner-hint">Type <span class="term-hl">'help'</span> for available commands or <span class="term-hl">'exit'</span> to close. Press <span class="term-hl">Tab</span> to autocomplete.</p>
+		<!-- TERMINAL SCREEN BUFFER -->
+		<div class="terminal-screen" id="terminal-screen">
+			<div class="terminal-history" id="terminal-history">
+				<div class="term-banner mono">
+					<pre class="ascii-art">
+ _               _      ____   _____ 
+| |             | |    / __ \ / ____|
+| |__  _ __ ___ | |__ | |  | | (___  
+| '_ \| '__/ _ \| '_ \| |  | |\___ \ 
+| |_) | | | (_) | |_) | |__| |____) |
+|_.__/|_|  \___/|_.__/ \____/|_____/ </pre>
+					<p class="banner-sub">brobOS [Version 1.0.0(1)-release] &bull; Silicon &amp; Systems Console</p>
+					<p class="banner-hint">Type <span class="term-hl">help</span> for available commands, <span class="term-hl">clear</span> to wipe screen, or <span class="term-hl">exit</span> to close. Tab autocompletes.</p>
+				</div>
 			</div>
-		</div>
 
-		<!-- INPUT ROW -->
-		<form class="terminal-input-row" id="terminal-form">
-			<span class="term-prompt mono">visitor@brob.uk:~$</span>
-			<input 
-				type="text" 
-				id="terminal-input" 
-				class="term-input mono" 
-				autocomplete="off" 
-				autocorrect="off" 
-				autocapitalize="off" 
-				spellcheck="false" 
-				placeholder="type command..." 
-			/>
-		</form>
+			<!-- INLINE ACTIVE PROMPT (Flows naturally at bottom of buffer) -->
+			<form class="terminal-prompt-row mono" id="terminal-form">
+				<label for="terminal-input" class="term-prompt">
+					<span class="p-user">visitor@brob.uk</span><span class="p-sep">:</span><span class="p-path">~</span><span class="p-char">$</span>
+				</label>
+				<div class="term-input-wrap">
+					<input 
+						type="text" 
+						id="terminal-input" 
+						class="term-input mono" 
+						autocomplete="off" 
+						autocorrect="off" 
+						autocapitalize="off" 
+						spellcheck="false" 
+						aria-label="Terminal command input"
+					/>
+				</div>
+			</form>
+		</div>
 	</div>
 </div>
 
 <script>
 	function initTerminal() {
 		const modal = document.getElementById('terminal-modal');
+		const win = document.getElementById('terminal-window');
 		const backdrop = document.getElementById('terminal-backdrop');
 		const closeBtn = document.getElementById('term-close-btn');
-		const clearBtn = document.getElementById('term-clear-btn');
+		const minBtn = document.getElementById('term-min-btn');
+		const maxBtn = document.getElementById('term-max-btn');
 		const form = document.getElementById('terminal-form');
 		const input = document.getElementById('terminal-input') as HTMLInputElement | null;
-		const output = document.getElementById('terminal-output');
+		const screen = document.getElementById('terminal-screen');
+		const historyEl = document.getElementById('terminal-history');
 		const headerToggle = document.getElementById('terminal-toggle-btn');
 
-		if (!modal || !input || !output) return;
+		if (!modal || !win || !input || !screen || !historyEl) return;
 
 		let history: string[] = [];
 		let historyIndex = -1;
@@ -78,8 +99,8 @@
 			'network',
 			'mouse',
 			'keyboard',
-			'debug',
 			'cad',
+			'debug',
 			'theme',
 			'visitor',
 			'whoami',
@@ -91,7 +112,10 @@
 		function openTerminal() {
 			modal?.classList.add('open');
 			modal?.setAttribute('aria-hidden', 'false');
-			setTimeout(() => input?.focus(), 50);
+			setTimeout(() => {
+				input?.focus();
+				if (screen) screen.scrollTop = screen.scrollHeight;
+			}, 60);
 		}
 
 		function closeTerminal() {
@@ -107,10 +131,29 @@
 			}
 		}
 
-		// Button listeners
+		function toggleMaximize() {
+			win?.classList.toggle('maximized');
+			setTimeout(() => {
+				input?.focus();
+				if (screen) screen.scrollTop = screen.scrollHeight;
+			}, 50);
+		}
+
+		// Window control listeners
 		headerToggle?.addEventListener('click', toggleTerminal);
 		closeBtn?.addEventListener('click', closeTerminal);
+		minBtn?.addEventListener('click', closeTerminal);
+		maxBtn?.addEventListener('click', toggleMaximize);
 		backdrop?.addEventListener('click', closeTerminal);
+
+		// Click anywhere in terminal screen focuses input (authentic CLI UX)
+		screen.addEventListener('click', (e) => {
+			const selection = window.getSelection();
+			if (selection && selection.toString().length > 0) return;
+			const target = e.target as HTMLElement | null;
+			if (target && target.tagName === 'A') return;
+			input.focus();
+		});
 
 		// Global keyboard toggle (`~` or `Esc`)
 		window.addEventListener('keydown', (e: KeyboardEvent) => {
@@ -125,33 +168,42 @@
 			}
 		});
 
-		function printLine(html: string) {
+		function appendOutput(html: string) {
+			const block = document.createElement('div');
+			block.className = 'term-output-block mono';
+			block.innerHTML = html;
+			historyEl?.appendChild(block);
+			if (screen) screen.scrollTop = screen.scrollHeight;
+		}
+
+		function appendEchoLine(cmdText: string) {
 			const row = document.createElement('div');
 			row.className = 'term-line mono';
-			row.innerHTML = html;
-			output?.appendChild(row);
-			if (output) output.scrollTop = output.scrollHeight;
+			row.innerHTML = `<span class="term-prompt"><span class="p-user">visitor@brob.uk</span><span class="p-sep">:</span><span class="p-path">~</span><span class="p-char">$</span></span> <span class="term-cmd">${escapeHtml(cmdText)}</span>`;
+			historyEl?.appendChild(row);
+			if (screen) screen.scrollTop = screen.scrollHeight;
 		}
 
 		function clearOutput() {
-			if (output) {
-				output.innerHTML = '';
-				printLine('<span class="term-dim">Console cleared. Type </span><span class="term-hl">help</span><span class="term-dim"> for commands.</span>');
+			if (historyEl) {
+				historyEl.innerHTML = '';
+				if (screen) screen.scrollTop = 0;
 			}
 		}
 
-		clearBtn?.addEventListener('click', clearOutput);
-
 		function executeCommand(rawCmd: string) {
 			const trimmed = rawCmd.trim();
-			if (!trimmed) return;
+
+			// Echo executed line
+			appendEchoLine(trimmed);
+
+			if (!trimmed) {
+				return;
+			}
 
 			// Add to history
 			history.push(trimmed);
 			historyIndex = history.length;
-
-			// Echo user command
-			printLine(`<span class="term-prompt">visitor@brob.uk:~$</span> <span class="term-cmd">${escapeHtml(trimmed)}</span>`);
 
 			const parts = trimmed.split(/\s+/);
 			const cmd = parts[0].toLowerCase();
@@ -159,110 +211,115 @@
 
 			switch (cmd) {
 				case 'help':
-					printLine(`
-<div class="help-grid">
-  <div><span class="term-hl">about</span>      — Hardware engineer focus, background & profile links</div>
-  <div><span class="term-hl">skills</span>     — Silicon validation, embedded Linux, 3D CAD platforms</div>
-  <div><span class="term-hl">projects</span>   — Featured projects & 3D CAD design portfolio</div>
-  <div><span class="term-hl">tests</span>      — Jump to hardware & network test suites (#lab)</div>
-  <div><span class="term-hl">network</span>    — Jump to Anycast edge throughput benchmark (#benchmark)</div>
-  <div><span class="term-hl">mouse</span>      — Jump to mouse polling rate & button tester (#input-lab)</div>
-  <div><span class="term-hl">keyboard</span>   — Jump to 104-key switch matrix & latency lab (#keyboard-lab)</div>
-  <div><span class="term-hl">debug</span>      — Jump to client hardware & edge telemetry (#debug)</div>
-  <div><span class="term-hl">cad</span>        — List 11 Autodesk Inventor functional CAD models</div>
-  <div><span class="term-hl">theme</span>      — Toggle or set theme [dark | light | toggle]</div>
-  <div><span class="term-hl">visitor</span>    — Query anonymous D1 visitor counter</div>
-  <div><span class="term-hl">whoami</span>     — Display client connection & edge session info</div>
-  <div><span class="term-hl">date</span>       — Display current UTC timestamp</div>
-  <div><span class="term-hl">clear</span>      — Clear the terminal screen</div>
-  <div><span class="term-hl">exit</span>       — Close the terminal console</div>
-</div>
-<span class="term-dim">Tip: Use Up/Down arrows for command history, and Tab for autocompletion.</span>
-					`);
+					appendOutput(`
+<span class="term-head">brobOS 1.0.0(1)-release (x86_64-brob-linux-edge)</span>
+These shell commands are defined internally. Type <span class="term-hl">'help'</span> to see this list.
+
+  <span class="term-col">Command</span>        <span class="term-col">Description</span>
+  <span class="term-dim">------------   ------------------------------------------------------------</span>
+  <span class="term-hl">about</span>          Hardware engineering background, focus &amp; profile links
+  <span class="term-hl">skills</span>         Silicon validation, embedded Linux &amp; 3D CAD platforms
+  <span class="term-hl">projects</span>       Featured engineering projects &amp; 3D CAD portfolio
+  <span class="term-hl">tests</span>          Navigate to hardware &amp; network test suites (#lab)
+  <span class="term-hl">network</span>        Navigate to Anycast edge throughput benchmark (#benchmark)
+  <span class="term-hl">mouse</span>          Navigate to mouse polling oscilloscope &amp; button lab (#input-lab)
+  <span class="term-hl">keyboard</span>       Navigate to 104-key switch matrix &amp; latency lab (#keyboard-lab)
+  <span class="term-hl">cad</span>            List 11 Autodesk Inventor functional 3D CAD models
+  <span class="term-hl">debug</span>          Navigate to client hardware &amp; edge telemetry (#debug)
+  <span class="term-hl">theme</span> [mode]   Obsidian Dark / Clean Light theme toggle [dark|light|toggle]
+  <span class="term-hl">visitor</span>        Query anonymous Cloudflare D1 visitor counter
+  <span class="term-hl">whoami</span>         Display client session &amp; Anycast edge telemetry info
+  <span class="term-hl">date</span>           Print current UTC timestamp
+  <span class="term-hl">clear</span>          Clear console screen buffer (Ctrl+L)
+  <span class="term-hl">exit</span>           Close terminal console (Esc or \`)
+
+<span class="term-dim">Tip: Use Up/Down arrows for command history; press Tab for autocompletion.</span>`);
 					break;
 
 				case 'about':
-					printLine(`
-<span class="term-title">Bo Wu — Hardware Engineer</span>
-Silicon Validation &bull; Embedded Linux &bull; Hardware Systems
+					appendOutput(`
+<span class="term-head">Bo Wu &bull; Hardware Systems Engineer</span>
+Silicon Validation &bull; Embedded Linux &bull; 3D Parametric CAD
 
-Specializing in ATE die sort & yield optimization, high-speed interfaces (PCIe, Ethernet),
-and precision 3D CAD parametric modeling for custom functional hardware.
+Focus:
+  &bull; Automated Test Equipment (ATE) die sort, yield analysis &amp; electrical debug
+  &bull; High-speed interfaces (PCIe Gen4/5, Ethernet, DDR) &amp; embedded bringup
+  &bull; Production 3D CAD parametric modeling in Autodesk Inventor
 
-Verified Links:
-  &bull; <a href="https://www.linkedin.com/in/bowu/" target="_blank" class="term-link">LinkedIn Profile</a>
-  &bull; <a href="https://github.com/bowuu" target="_blank" class="term-link">GitHub Profile</a>
-  &bull; <a href="https://makerworld.com/en/@brob" target="_blank" class="term-link">MakerWorld 3D CAD Portfolio</a>
-					`);
+Verified Profiles:
+  &bull; LinkedIn:   <a href="https://www.linkedin.com/in/bowu/" target="_blank" class="term-link">https://www.linkedin.com/in/bowu/</a>
+  &bull; GitHub:     <a href="https://github.com/bowuu" target="_blank" class="term-link">https://github.com/bowuu</a>
+  &bull; MakerWorld: <a href="https://makerworld.com/en/@brob" target="_blank" class="term-link">https://makerworld.com/en/@brob</a>`);
 					break;
 
 				case 'skills':
-					printLine(`
-<span class="term-title">Core Technical Competencies:</span>
-  [Silicon & Validation] Automated Test Equipment (ATE), Die Sort & Yield, Power & Electrical Debug
-  [Embedded Platforms]  Embedded Linux (Yocto, Debian, RHEL), RISC Architectures, PCIe, High-Speed I/O
-  [CAD & Prototyping]   Autodesk Inventor, 3D Parametric Modeling, FDM Rapid Prototyping
-  [Cloud & Edge Systems] Cloudflare Workers, Cloudflare D1 SQL, TypeScript, WebGL (Three.js)
-					`);
+					appendOutput(`
+<span class="term-head">Core Technical Competencies:</span>
+  <span class="term-cyan">[SILICON &amp; VALIDATION]</span>  ATE Die Sort, Yield Optimization, Power/Electrical Debug
+  <span class="term-cyan">[EMBEDDED PLATFORMS]</span>   Embedded Linux (Debian, Yocto), PCIe, High-Speed I/O, RISC
+  <span class="term-cyan">[CAD &amp; PROTOTYPING]</span>    Autodesk Inventor, 3D Parametric Modeling, FDM Prototyping
+  <span class="term-cyan">[EDGE &amp; WEB SYSTEMS]</span>   Cloudflare Workers, Cloudflare D1 SQL, TypeScript, Three.js`);
 					break;
 
 				case 'projects':
-					printLine(`
-<span class="term-title">Featured Projects & Hardware:</span>
-  1. <span class="term-hl">PlayKeys</span> — Zero-dependency Manifest V3 browser extension for global OS media key control.
-  2. <span class="term-hl">3D CAD Repository</span> — 11 production-grade Autodesk Inventor models with authentic .stp downloads.
-  3. <span class="term-hl">Hardware Test Triad</span> — Anycast edge network benchmark, mouse polling oscilloscope, 104-key switch matrix.
-  4. <span class="term-hl">D1 Visitor Counter</span> — Zero-logging privacy-first engagement-verified counter with daily rotating salt.
-					`);
+					appendOutput(`
+<span class="term-head">Featured Engineering Projects:</span>
+  <span class="term-cyan">[01] PlayKeys</span>
+       Zero-dependency Manifest V3 browser extension for global OS media key control.
+  <span class="term-cyan">[02] 3D CAD Repository</span>
+       11 production Autodesk Inventor models with authentic .stp downloads.
+  <span class="term-cyan">[03] Hardware Test Triad</span>
+       Anycast edge benchmark, mouse polling oscilloscope, 104-key switch matrix.
+  <span class="term-cyan">[04] D1 Visitor Counter</span>
+       Zero-logging engagement-verified counter with daily rotating volatile salt.`);
 					break;
 
 				case 'tests':
 				case 'test':
 				case 'lab':
 					scrollToSection('lab');
-					printLine('Navigating to Hardware & Network Tests (#lab)...');
+					appendOutput('<span class="term-cyan">&rarr; Navigating to Hardware &amp; Network Tests (#lab)...</span>');
 					break;
 
 				case 'network':
 				case 'ping':
 				case 'speed':
 					scrollToSection('benchmark');
-					printLine('Navigating to Network Edge Benchmark (#benchmark)...');
+					appendOutput('<span class="term-cyan">&rarr; Navigating to Network Edge Benchmark (#benchmark)...</span>');
 					break;
 
 				case 'mouse':
 					scrollToSection('input-lab');
-					printLine('Navigating to Mouse Polling & Button Lab (#input-lab)...');
+					appendOutput('<span class="term-cyan">&rarr; Navigating to Mouse Polling &amp; Button Lab (#input-lab)...</span>');
 					break;
 
 				case 'keyboard':
 				case 'keys':
 					scrollToSection('keyboard-lab');
-					printLine('Navigating to 104-Key Switch Matrix (#keyboard-lab)...');
+					appendOutput('<span class="term-cyan">&rarr; Navigating to 104-Key Switch Matrix (#keyboard-lab)...</span>');
+					break;
+
+				case 'cad':
+					appendOutput(`
+<span class="term-head">Autodesk Inventor 3D CAD Catalog (11 Models):</span>
+  01. ASUS RT-BE92U Router Mount
+  02. IKEA Tertial Desk Lamp Heavy Mount
+  03. Audio-Technica ATH-R70x Headband Joiner
+  04. Subaru BRZ / GR86 Armrest Blocker
+  05. Skil 12V Battery Holder
+  06. Hakko FX-888D Soldering Tip Holder
+  07. Micro-USB to USB-C Adapter Leash
+  08. Logitech MX Master Vertical Charging Stand
+  09. Low-Profile Mechanical Keyboard Display Stand
+  10. Wi-Fi 7 Antenna Wall Standoff
+  11. Magnetic Cable Management Guide
+<span class="term-dim">All models render in Three.js WebGL with authentic .stp downloads under /public/models/.</span>`);
 					break;
 
 				case 'debug':
 				case 'telemetry':
 					scrollToSection('debug');
-					printLine('Navigating to Client Hardware & Edge Telemetry (#debug)...');
-					break;
-
-				case 'cad':
-					printLine(`
-<span class="term-title">Autodesk Inventor 3D CAD Catalog (11 Models):</span>
-  1. ASUS RT-BE92U Router Mount
-  2. IKEA Tertial Desk Lamp Heavy Mount
-  3. Audio-Technica ATH-R70x Headband Joiner
-  4. Subaru BRZ / GR86 Armrest Blocker
-  5. Skil 12V Battery Holder
-  6. Hakko FX-888D Soldering Tip Holder
-  7. Micro-USB to USB-C Adapter Leash
-  8. Logitech MX Master Vertical Charging Stand
-  9. Low-Profile Mechanical Keyboard Display Stand
-  10. Wi-Fi 7 Antenna Wall Standoff
-  11. Magnetic Cable Management Guide
-<span class="term-dim">All models render in WebGL with authentic .stp downloads under /public/models/.</span>
-					`);
+					appendOutput('<span class="term-cyan">&rarr; Navigating to Client Hardware &amp; Edge Telemetry (#debug)...</span>');
 					break;
 
 				case 'theme':
@@ -270,21 +327,21 @@ Verified Links:
 					if (sub === 'dark') {
 						document.documentElement.setAttribute('data-theme', 'dark');
 						localStorage.setItem('theme', 'dark');
-						printLine('Theme set to: <span class="term-hl">Obsidian Dark</span>');
+						appendOutput('Theme switched to: <span class="term-hl">Obsidian Dark</span>');
 					} else if (sub === 'light') {
 						document.documentElement.removeAttribute('data-theme');
 						localStorage.setItem('theme', 'light');
-						printLine('Theme set to: <span class="term-hl">Clean Light</span>');
+						appendOutput('Theme switched to: <span class="term-hl">Clean Light</span>');
 					} else {
 						const current = document.documentElement.getAttribute('data-theme');
 						if (current === 'dark') {
 							document.documentElement.removeAttribute('data-theme');
 							localStorage.setItem('theme', 'light');
-							printLine('Theme toggled to: <span class="term-hl">Clean Light</span>');
+							appendOutput('Theme toggled to: <span class="term-hl">Clean Light</span>');
 						} else {
 							document.documentElement.setAttribute('data-theme', 'dark');
 							localStorage.setItem('theme', 'dark');
-							printLine('Theme toggled to: <span class="term-hl">Obsidian Dark</span>');
+							appendOutput('Theme toggled to: <span class="term-hl">Obsidian Dark</span>');
 						}
 					}
 					break;
@@ -293,8 +350,11 @@ Verified Links:
 				case 'counter':
 					const counterEl = document.getElementById('visitor-count-val');
 					const currentCount = counterEl ? counterEl.textContent : 'active';
-					printLine(`Visitor counter: <span class="term-hl">${currentCount}</span> verified visitors.`);
-					printLine('<span class="term-dim">Backed by Cloudflare D1 with zero IP persistence and daily rotating volatile salts.</span>');
+					appendOutput(`
+<span class="term-head">Cloudflare D1 Engagement Counter:</span>
+  Total Verified Visitors: <span class="term-hl">${currentCount}</span>
+  Architecture: Edge-computed SHA-256 with volatile daily rotating salt
+  Privacy: Zero IP persistence; hashes purged at UTC midnight rollover.`);
 					break;
 
 				case 'whoami':
@@ -304,13 +364,17 @@ Verified Links:
 					const ip = ipEl ? ipEl.textContent : 'Detected at edge';
 					const loc = locEl ? locEl.textContent : 'Global';
 					const colo = coloEl ? coloEl.textContent : 'Cloudflare Anycast';
-					printLine(`Visitor Identity: <span class="term-hl">visitor@brob.uk</span>`);
-					printLine(`Edge PoP:         <span class="term-dim">${colo} &bull; ${loc}</span>`);
-					printLine(`IP (Ephemeral):   <span class="term-dim">${ip}</span>`);
+					appendOutput(`
+<span class="term-head">Visitor Telemetry Identity:</span>
+  USER:       visitor@brob.uk
+  EDGE POP:   <span class="term-cyan">${colo} &bull; ${loc}</span>
+  CLIENT IP:  <span class="term-dim">${ip} (ephemeral, zero persistence)</span>
+  HOST:       brob.uk (Cloudflare Workers Anycast)
+  SECURITY:   Zero-logging, volatile daily rotating salt`);
 					break;
 
 				case 'date':
-					printLine(`UTC Date: <span class="term-hl">${new Date().toUTCString()}</span>`);
+					appendOutput(`UTC Timestamp: <span class="term-hl">${new Date().toUTCString()}</span>`);
 					break;
 
 				case 'clear':
@@ -323,7 +387,7 @@ Verified Links:
 					break;
 
 				default:
-					printLine(`<span class="term-err">Command not found: '${escapeHtml(cmd)}'</span>. Type <span class="term-hl">'help'</span> for available commands.`);
+					appendOutput(`<span class="term-err">brobsh: command not found: ${escapeHtml(cmd)}</span>. Type <span class="term-hl">'help'</span> for available commands.`);
 					break;
 			}
 		}
@@ -381,6 +445,10 @@ Verified Links:
 			} else if (e.ctrlKey && e.key.toLowerCase() === 'l') {
 				e.preventDefault();
 				clearOutput();
+			} else if (e.ctrlKey && e.key.toLowerCase() === 'c') {
+				e.preventDefault();
+				appendEchoLine((input.value || '') + ' ^C');
+				input.value = '';
 			}
 		});
 	}
@@ -399,8 +467,9 @@ Verified Links:
 		justify-content: center;
 		opacity: 0;
 		pointer-events: none;
-		transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-		padding: 1.5rem;
+		transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+		padding: 1.25rem;
+		box-sizing: border-box;
 	}
 
 	.terminal-modal.open {
@@ -411,142 +480,264 @@ Verified Links:
 	.terminal-backdrop {
 		position: absolute;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.65);
-		backdrop-filter: blur(6px);
-		-webkit-backdrop-filter: blur(6px);
+		background: rgba(0, 0, 0, 0.72);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
 	}
 
+	/* AUTHENTIC UNIX / LINUX TERMINAL WINDOW FRAME */
 	.terminal-window {
 		position: relative;
 		width: 100%;
-		max-width: 720px;
-		height: 480px;
-		max-height: 85vh;
-		background: #0d0f14;
-		border: 1px solid rgba(255, 255, 255, 0.12);
+		max-width: 760px;
+		height: 490px;
+		max-height: 82vh;
+		background: #0a0c10;
+		border: 1px solid rgba(255, 255, 255, 0.14);
 		border-radius: 10px;
-		box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(249, 115, 22, 0.15);
+		box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(249, 115, 22, 0.18);
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
-		transform: scale(0.96) translateY(-8px);
-		transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+		transform: scale(0.96) translateY(-6px);
+		transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s ease, height 0.2s ease, max-width 0.2s ease;
+	}
+
+	.terminal-window.maximized {
+		max-width: 95vw;
+		width: 95vw;
+		height: 88vh;
+		max-height: 88vh;
 	}
 
 	.terminal-modal.open .terminal-window {
 		transform: scale(1) translateY(0);
 	}
 
+	/* HEADER WITH CLASSIC TRAFFIC LIGHTS */
 	.terminal-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0.65em 1em;
-		background: #141720;
+		padding: 0.6em 0.9em;
+		background: #12151d;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 		user-select: none;
+		flex-shrink: 0;
 	}
 
-	.terminal-title-group {
+	.terminal-traffic-lights {
 		display: flex;
 		align-items: center;
-		gap: 0.6em;
+		gap: 7px;
 	}
 
-	.status-dot {
-		width: 8px;
-		height: 8px;
+	.win-btn {
+		width: 12px;
+		height: 12px;
 		border-radius: 50%;
-		background: #22c55e;
-		box-shadow: 0 0 8px #22c55e;
+		border: none;
+		cursor: pointer;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		outline: none;
+		transition: transform 0.1s ease, filter 0.1s ease;
+	}
+
+	.win-glyph {
+		opacity: 0;
+		font-size: 9px;
+		line-height: 1;
+		font-weight: 900;
+		color: rgba(0, 0, 0, 0.65);
+		transition: opacity 0.12s ease;
+	}
+
+	.terminal-traffic-lights:hover .win-glyph {
+		opacity: 1;
+	}
+
+	.win-close {
+		background: #ff5f56;
+		border: 1px solid #e0443e;
+	}
+	.win-close:hover {
+		filter: brightness(1.1);
+	}
+
+	.win-minimize {
+		background: #ffbd2e;
+		border: 1px solid #dea123;
+	}
+	.win-minimize:hover {
+		filter: brightness(1.1);
+	}
+
+	.win-maximize {
+		background: #27c93f;
+		border: 1px solid #1aab29;
+	}
+	.win-maximize:hover {
+		filter: brightness(1.1);
 	}
 
 	.terminal-title {
-		font-size: 0.8em;
+		display: flex;
+		align-items: center;
+		gap: 0.45em;
+		font-size: 0.76em;
 		font-weight: 600;
 		color: #94a3b8;
 		letter-spacing: 0.02em;
 	}
 
-	.terminal-actions {
+	.term-title-icon {
+		color: #64748b;
+	}
+
+	.terminal-header-meta {
 		display: flex;
 		align-items: center;
-		gap: 0.5em;
+		gap: 0.6em;
+		font-size: 0.72em;
 	}
 
-	.term-btn {
-		background: rgba(255, 255, 255, 0.05);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		color: #cbd5e1;
-		border-radius: 4px;
-		padding: 0.2em 0.6em;
-		font-size: 0.75em;
-		cursor: pointer;
-		transition: all 0.15s ease;
-	}
-	.term-btn:hover {
-		background: rgba(255, 255, 255, 0.12);
-		color: #ffffff;
-		border-color: rgba(255, 255, 255, 0.2);
+	.term-meta-tag {
+		color: #f97316;
+		font-weight: 700;
+		background: rgba(249, 115, 22, 0.12);
+		padding: 0.1em 0.45em;
+		border-radius: 3px;
+		border: 1px solid rgba(249, 115, 22, 0.25);
 	}
 
-	.term-close-btn {
-		font-size: 1.1em;
-		padding: 0.05em 0.45em;
-		line-height: 1;
-	}
-	.term-close-btn:hover {
-		background: #ef4444;
-		border-color: #ef4444;
-		color: #ffffff;
+	.term-meta-dim {
+		color: #64748b;
 	}
 
-	.terminal-body {
+	/* UNIFIED TERMINAL SCREEN BUFFER */
+	.terminal-screen {
 		flex: 1;
-		padding: 1em;
+		padding: 1em 1.15em;
 		overflow-y: auto;
 		color: #e2e8f0;
-		font-size: 0.84em;
-		line-height: 1.6;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		font-size: 0.82em;
+		line-height: 1.55;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+		cursor: text;
+		background: #0a0c10;
 	}
 
-	.terminal-body::-webkit-scrollbar {
-		width: 6px;
+	.terminal-screen::-webkit-scrollbar {
+		width: 7px;
 	}
-	.terminal-body::-webkit-scrollbar-thumb {
-		background: rgba(255, 255, 255, 0.15);
-		border-radius: 3px;
+	.terminal-screen::-webkit-scrollbar-track {
+		background: rgba(0, 0, 0, 0.2);
+	}
+	.terminal-screen::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.16);
+		border-radius: 4px;
+	}
+	.terminal-screen::-webkit-scrollbar-thumb:hover {
+		background: rgba(255, 255, 255, 0.26);
+	}
+
+	/* ASCII ART BANNER */
+	.term-banner {
+		margin-bottom: 0.85em;
 	}
 
 	.ascii-art {
-		margin: 0 0 0.5em 0;
-		font-size: 0.72em;
-		line-height: 1.15;
-		color: var(--accent);
-		opacity: 0.95;
+		margin: 0 0 0.55em 0;
+		font-size: clamp(0.48em, 1.4vw, 0.72em);
+		line-height: 1.18;
+		letter-spacing: 0.02em;
+		color: #f97316;
+		white-space: pre;
+		overflow-x: auto;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+		text-shadow: 0 0 10px rgba(249, 115, 22, 0.35);
 	}
 
 	.banner-sub {
 		margin: 0;
-		font-weight: 600;
+		font-weight: 700;
 		color: #f1f5f9;
+		font-size: 0.94em;
 	}
 
 	.banner-hint {
-		margin: 0.3em 0 1.2em 0;
+		margin: 0.25em 0 0.85em 0;
 		color: #64748b;
-		font-size: 0.92em;
+		font-size: 0.86em;
+	}
+
+	/* INLINE TERMINAL PROMPT & STREAM */
+	.terminal-prompt-row {
+		display: flex;
+		align-items: center;
+		gap: 0.45em;
+		margin-top: 0.35em;
+		width: 100%;
+	}
+
+	.term-prompt {
+		white-space: nowrap;
+		user-select: none;
+		font-weight: 700;
+	}
+
+	.p-user {
+		color: #22c55e;
+	}
+	.p-sep {
+		color: #64748b;
+	}
+	.p-path {
+		color: #38bdf8;
+	}
+	.p-char {
+		color: #e2e8f0;
+	}
+
+	.term-input-wrap {
+		flex: 1;
+		display: flex;
+		align-items: center;
+	}
+
+	.term-input {
+		width: 100%;
+		background: transparent;
+		border: none;
+		outline: none;
+		color: #ffffff;
+		font-size: inherit;
+		font-family: inherit;
+		line-height: inherit;
+		padding: 0;
+		margin: 0;
+		caret-color: #22c55e;
+	}
+
+	/* COMMITTED LINES & OUTPUT BLOCKS */
+	.terminal-history {
+		display: flex;
+		flex-direction: column;
 	}
 
 	:global(.term-line) {
-		margin-bottom: 0.6em;
+		margin-bottom: 0.25em;
 		word-break: break-word;
 	}
 
-	:global(.term-prompt) {
-		color: #22c55e;
-		font-weight: 700;
+	:global(.term-output-block) {
+		margin-bottom: 0.65em;
+		white-space: pre-wrap;
+		word-break: break-word;
+		line-height: 1.5;
 	}
 
 	:global(.term-cmd) {
@@ -554,20 +745,33 @@ Verified Links:
 		font-weight: 600;
 	}
 
+	:global(.term-head) {
+		color: #f1f5f9;
+		font-weight: 700;
+		display: block;
+		margin-bottom: 0.2em;
+	}
+
+	:global(.term-col) {
+		color: #94a3b8;
+		font-weight: 700;
+		text-transform: uppercase;
+		font-size: 0.88em;
+		letter-spacing: 0.04em;
+	}
+
 	:global(.term-hl) {
-		color: var(--accent);
+		color: #f97316;
+		font-weight: 600;
+	}
+
+	:global(.term-cyan) {
+		color: #38bdf8;
 		font-weight: 600;
 	}
 
 	:global(.term-dim) {
 		color: #64748b;
-	}
-
-	:global(.term-title) {
-		color: #38bdf8;
-		font-weight: 700;
-		display: block;
-		margin-bottom: 0.25em;
 	}
 
 	:global(.term-err) {
@@ -577,37 +781,9 @@ Verified Links:
 	:global(.term-link) {
 		color: #38bdf8;
 		text-decoration: underline;
+		transition: color 0.12s ease;
 	}
 	:global(.term-link:hover) {
-		color: var(--accent);
-	}
-
-	:global(.help-grid) {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25em;
-		margin: 0.4em 0;
-	}
-
-	.terminal-input-row {
-		display: flex;
-		align-items: center;
-		gap: 0.6em;
-		padding: 0.65em 1em;
-		background: #141720;
-		border-top: 1px solid rgba(255, 255, 255, 0.08);
-	}
-
-	.term-input {
-		flex: 1;
-		background: transparent;
-		border: none;
-		outline: none;
-		color: #ffffff;
-		font-size: 0.88em;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-	}
-	.term-input::placeholder {
-		color: #475569;
+		color: #f97316;
 	}
 </style>

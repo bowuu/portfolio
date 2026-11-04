@@ -95,16 +95,16 @@
 			</div>
 
 			<!-- INTERACTIVE MOUSE HARDWARE TEST ZONE -->
-			<div class="mouse-hardware-zone" id="mouse-btn-zone" tabindex="0" title="Click buttons or scroll wheel anywhere inside this zone">
+			<div class="mouse-hardware-zone" id="mouse-btn-zone" tabindex="0">
 				<div class="mouse-device-wrap">
 					<!-- ERGONOMIC MOUSE CHASSIS -->
 					<div class="mouse-chassis">
 						<!-- INTEGRATED THUMB BUTTONS (LEFT FLANK) -->
 						<div class="mouse-thumb-wing">
-							<div class="mouse-btn mouse-btn-thumb thumb-fwd" id="btn-thumb2" title="Forward (Button 4)">
+							<div class="mouse-btn mouse-btn-thumb thumb-fwd" id="btn-thumb2">
 								<span>Fwd</span>
 							</div>
-							<div class="mouse-btn mouse-btn-thumb thumb-back" id="btn-thumb1" title="Back (Button 3)">
+							<div class="mouse-btn mouse-btn-thumb thumb-back" id="btn-thumb1">
 								<span>Back</span>
 							</div>
 						</div>
@@ -114,20 +114,20 @@
 							<!-- TOP PRIMARY BUTTONS -->
 							<div class="mouse-top-buttons">
 								<!-- LEFT MOUSE BUTTON (LMB) -->
-								<div class="mouse-btn mouse-btn-main mouse-btn-left" id="btn-lmb" title="Left Click (Button 0)">
+								<div class="mouse-btn mouse-btn-main mouse-btn-left" id="btn-lmb">
 									<span class="mb-label">LMB</span>
 								</div>
 
 								<!-- SCROLL WHEEL & MMB -->
 								<div class="mouse-wheel-wrap">
-									<div class="mouse-btn mouse-btn-wheel" id="btn-wheel" title="Middle Click (Button 1) &amp; Scroll">
-										<span class="wheel-notch up" id="notch-up" title="Scroll Up">
+									<div class="mouse-btn mouse-btn-wheel" id="btn-wheel">
+										<span class="wheel-notch up" id="notch-up">
 											<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
 												<polyline points="18 15 12 9 6 15"></polyline>
 											</svg>
 										</span>
 										<span class="wheel-center"></span>
-										<span class="wheel-notch down" id="notch-down" title="Scroll Down">
+										<span class="wheel-notch down" id="notch-down">
 											<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
 												<polyline points="6 9 12 15 18 9"></polyline>
 											</svg>
@@ -136,7 +136,7 @@
 								</div>
 
 								<!-- RIGHT MOUSE BUTTON (RMB) -->
-								<div class="mouse-btn mouse-btn-main mouse-btn-right" id="btn-rmb" title="Right Click (Button 2)">
+								<div class="mouse-btn mouse-btn-main mouse-btn-right" id="btn-rmb">
 									<span class="mb-label">RMB</span>
 								</div>
 							</div>
@@ -576,30 +576,23 @@
 			const dir = e.deltaY < 0 ? '\u25B2 Up' : '\u25BC Down';
 			const delta = Math.round(e.deltaY);
 
-			if (wheelEl) wheelEl.classList.add('btn-active', 'btn-tested');
-			testedButtons.add(1); // MMB/wheel tested
-
-			if (e.deltaY < 0 && notchUpEl) {
-				notchUpEl.classList.add('notch-active');
+			if (e.deltaY < 0) {
+				if (notchUpEl) {
+					notchUpEl.classList.add('notch-active', 'notch-tested');
+				}
 				if (notchDownEl) notchDownEl.classList.remove('notch-active');
-			} else if (e.deltaY > 0 && notchDownEl) {
-				notchDownEl.classList.add('notch-active');
+			} else if (e.deltaY > 0) {
+				if (notchDownEl) {
+					notchDownEl.classList.add('notch-active', 'notch-tested');
+				}
 				if (notchUpEl) notchUpEl.classList.remove('notch-active');
 			}
 
 			if (scrollDeltaEl) scrollDeltaEl.textContent = dir;
 			if (scrollTotalEl) scrollTotalEl.textContent = `${delta > 0 ? '+' : ''}${delta}px • ${totalScrollTicks} ticks`;
-			if (btnCountEl) btnCountEl.textContent = `${testedButtons.size} / 5 tested`;
-			if (mouseBadge) {
-				mouseBadge.textContent = `${testedButtons.size} / 5 tested`;
-				if (testedButtons.size === 5) {
-					mouseBadge.className = 'badge mono badge-orange';
-				}
-			}
 
 			clearTimeout(wheelTimer);
 			wheelTimer = setTimeout(() => {
-				if (wheelEl) wheelEl.classList.remove('btn-active');
 				if (notchUpEl) notchUpEl.classList.remove('notch-active');
 				if (notchDownEl) notchDownEl.classList.remove('notch-active');
 			}, 240);
@@ -638,8 +631,8 @@
 				[lmbEl, rmbEl, wheelEl, thumb1El, thumb2El].forEach(el => {
 					if (el) el.classList.remove('btn-active', 'btn-tested');
 				});
-				if (notchUpEl) notchUpEl.classList.remove('notch-active');
-				if (notchDownEl) notchDownEl.classList.remove('notch-active');
+				if (notchUpEl) notchUpEl.classList.remove('notch-active', 'notch-tested');
+				if (notchDownEl) notchDownEl.classList.remove('notch-active', 'notch-tested');
 				if (lastBtnEl) lastBtnEl.textContent = '--';
 				if (btnCountEl) btnCountEl.textContent = '0 / 5 tested';
 				if (mouseBadge) {
@@ -962,7 +955,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
-		z-index: 2;
+		z-index: 4;
 	}
 
 	.mouse-btn-thumb {
@@ -981,7 +974,7 @@
 		color: rgb(var(--gray-dark));
 		cursor: pointer;
 		user-select: none;
-		transition: all 0.08s ease;
+		transition: background-color 0.12s ease;
 		box-shadow: -2px 1px 5px rgba(0, 0, 0, 0.06);
 		box-sizing: border-box;
 	}
@@ -991,39 +984,33 @@
 		color: #cbd5e1;
 		box-shadow: -2px 1px 6px rgba(0, 0, 0, 0.35);
 	}
+	/* Hover should NOT light up outline */
 	.mouse-btn-thumb:hover {
-		border-color: var(--accent);
-		color: var(--accent);
+		background: #f1f5f9;
 	}
 	:global(html[data-theme="dark"]) .mouse-btn-thumb:hover {
-		border-color: var(--accent);
-		color: #ffedd5;
+		background: #232736;
 	}
 
-	/* Ergonomic Mouse Body Shell */
+	/* Ergonomic Mouse Body Shell - no border or overflow:hidden so full button perimeters light up */
 	.mouse-body {
 		width: 76px;
 		height: 122px;
-		border: 1.5px solid var(--border-color);
-		border-radius: 22px 22px 30px 30px;
-		background: #ffffff;
 		display: flex;
 		flex-direction: column;
-		overflow: hidden;
-		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
 		position: relative;
 		z-index: 1;
+		filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.08));
 	}
 	:global(html[data-theme="dark"]) .mouse-body {
-		background: #13161f;
-		border-color: rgba(255, 255, 255, 0.14);
-		box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+		filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.45));
 	}
 
 	.mouse-top-buttons {
 		display: flex;
 		height: 56px;
 		position: relative;
+		z-index: 2;
 	}
 
 	.mouse-btn-main {
@@ -1035,49 +1022,46 @@
 		font-weight: 700;
 		color: rgb(var(--gray-dark));
 		cursor: pointer;
-		transition: all 0.08s ease;
-		background: rgba(0, 0, 0, 0.01);
+		transition: background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+		background: #ffffff;
 		user-select: none;
 		box-sizing: border-box;
 		position: relative;
-		border: 1.5px solid transparent;
-		border-bottom: 1px solid var(--border-color);
+		border: 1.5px solid var(--border-color);
 	}
 	:global(html[data-theme="dark"]) .mouse-btn-main {
 		color: #cbd5e1;
-		background: rgba(255, 255, 255, 0.02);
+		background: #13161f;
+		border-color: rgba(255, 255, 255, 0.14);
 	}
 	.mouse-btn-left {
-		border-top-left-radius: 20px;
-		border-right: 0.5px solid var(--border-color);
-		margin: -1.5px 0 0 -1.5px;
+		border-top-left-radius: 22px;
+		margin-right: -1.5px;
+		z-index: 1;
 	}
 	.mouse-btn-right {
-		border-top-right-radius: 20px;
-		border-left: 0.5px solid var(--border-color);
-		margin: -1.5px -1.5px 0 0;
-	}
-	:global(html[data-theme="dark"]) .mouse-btn-left {
-		border-right-color: rgba(255, 255, 255, 0.08);
-		border-bottom-color: rgba(255, 255, 255, 0.1);
-	}
-	:global(html[data-theme="dark"]) .mouse-btn-right {
-		border-left-color: rgba(255, 255, 255, 0.08);
-		border-bottom-color: rgba(255, 255, 255, 0.1);
+		border-top-right-radius: 22px;
+		margin-left: -1.5px;
+		z-index: 1;
 	}
 
 	.mouse-wheel-wrap {
 		width: 20px;
+		flex-shrink: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: rgba(0, 0, 0, 0.03);
-		border-bottom: 1px solid var(--border-color);
+		background: rgba(0, 0, 0, 0.02);
+		border-top: 1.5px solid var(--border-color);
+		border-bottom: 1.5px solid var(--border-color);
 		box-sizing: border-box;
+		position: relative;
+		z-index: 0;
 	}
 	:global(html[data-theme="dark"]) .mouse-wheel-wrap {
-		background: rgba(255, 255, 255, 0.03);
-		border-bottom-color: rgba(255, 255, 255, 0.1);
+		background: rgba(255, 255, 255, 0.02);
+		border-top-color: rgba(255, 255, 255, 0.14);
+		border-bottom-color: rgba(255, 255, 255, 0.14);
 	}
 
 	.mouse-btn-wheel {
@@ -1116,6 +1100,13 @@
 	:global(html[data-theme="dark"]) .wheel-notch {
 		color: rgba(255, 255, 255, 0.4);
 	}
+	.wheel-notch.notch-tested {
+		color: #ea580c !important;
+	}
+	:global(html[data-theme="dark"]) .wheel-notch.notch-tested {
+		color: #f97316 !important;
+	}
+
 	.wheel-center {
 		width: 4px;
 		height: 5px;
@@ -1131,13 +1122,21 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: rgba(0, 0, 0, 0.01);
+		background: #ffffff;
+		border: 1.5px solid var(--border-color);
+		border-top: none;
+		border-radius: 0 0 30px 30px;
+		margin-top: -1.5px;
+		box-sizing: border-box;
+		position: relative;
+		z-index: 1;
 	}
 	:global(html[data-theme="dark"]) .mouse-palm {
-		background: rgba(255, 255, 255, 0.01);
+		background: #13161f;
+		border-color: rgba(255, 255, 255, 0.14);
 	}
 
-	/* BUTTON ACTIVE & TESTED STATES (CONSISTENT OUTLINE & VIBRANT GLOW) */
+	/* BUTTON ACTIVE & TESTED STATES (FULL PERIMETER OUTLINE & VIBRANT GLOW) */
 	.mouse-btn.btn-active {
 		background: #ea580c !important;
 		border-color: #c2410c !important;
@@ -1158,14 +1157,14 @@
 		box-shadow: 0 0 16px rgba(249, 115, 22, 0.85), inset 0 0 4px #ffffff !important;
 	}
 
-	/* ALL BUTTONS LIGHT UP OUTLINE CONSISTENTLY */
+	/* ALL BUTTONS LIGHT UP OUTLINE CONSISTENTLY ON ALL 4 SIDES */
 	.mouse-btn.btn-tested {
 		border-color: #f97316 !important;
 		border-width: 1.5px !important;
 		border-style: solid !important;
 		background: rgba(249, 115, 22, 0.35) !important;
 		box-shadow: 0 0 10px rgba(249, 115, 22, 0.5), inset 0 0 8px rgba(249, 115, 22, 0.25) !important;
-		z-index: 2 !important;
+		z-index: 3 !important;
 	}
 	:global(html[data-theme="light"]) .mouse-btn.btn-tested {
 		border-color: rgba(234, 88, 12, 0.85) !important;
@@ -1184,7 +1183,13 @@
 		text-shadow: 0 0 8px rgba(249, 115, 22, 0.7);
 	}
 
-	/* SCROLL NOTCH ACTIVE STATE (HIGH-VISIBILITY DIRECTIONAL FEEDBACK) */
+	/* Thumb buttons keep border-right: none when active or tested */
+	.mouse-btn-thumb.btn-active,
+	.mouse-btn-thumb.btn-tested {
+		border-right: none !important;
+	}
+
+	/* SCROLL NOTCH ACTIVE & TESTED STATES (SEPARATED DIRECTIONAL FEEDBACK) */
 	.notch-active {
 		background: #f97316 !important;
 		color: #ffffff !important;
@@ -1202,7 +1207,6 @@
 		transform: translateY(2px) scale(1.15);
 	}
 
-	/* MINI METRICS ROW - ZERO SIDEWAYS LAYOUT SHIFT */
 	.metrics-row {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));

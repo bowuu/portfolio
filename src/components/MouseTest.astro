@@ -29,161 +29,145 @@
 
 	<!-- TWO-COLUMN BENCHMARK WORKBENCH -->
 	<div class="lab-grid">
-		<!-- APPLET 1: POLLING & REFLEX BENCHMARK (EXPANDABLE) -->
-		<details class="lab-col applet-details" id="poll-details">
-			<summary class="applet-summary">
-				<div class="applet-summary-left">
-					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="applet-summary-icon">
+		<!-- COLUMN 1: MOUSE POLLING & REFLEX BENCHMARK -->
+		<div class="lab-col" id="poll-col">
+			<div class="col-head">
+				<div class="col-head-left">
+					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="col-icon">
 						<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
 					</svg>
-					<span class="applet-title">Polling &amp; Reflex Benchmark</span>
-					<span class="badge mono" id="poll-tier-badge">Idle</span>
+					<span class="col-title">Polling &amp; Reflex Benchmark</span>
 				</div>
-				<span class="applet-summary-toggle">
-					<span class="applet-summary-toggle-label">Benchmark Applet</span>
-					<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" class="applet-summary-chevron">
-						<polyline points="6 9 12 15 18 9"/>
-					</svg>
-				</span>
-			</summary>
+				<span class="badge mono" id="poll-tier-badge">Idle</span>
+			</div>
 
-			<div class="applet-body">
-				<!-- UNIFIED POLLING CANVAS & REFLEX TARGET -->
-				<div class="poll-reflex-box idle" id="poll-reflex-box" role="button" tabindex="0">
-					<canvas id="poll-sparkline" width="460" height="90"></canvas>
-					<div class="poll-reflex-overlay">
-						<span class="reaction-headline" id="reaction-headline">Click to Test Reflex</span>
-						<span class="reaction-sub" id="reaction-sub">Move cursor rapidly to test polling</span>
-					</div>
-				</div>
-
-				<!-- UNIFIED POLLING & REFLEX READOUTS (3 BALANCED CARDS) -->
-				<div class="metrics-row">
-					<div class="metric-mini">
-						<span class="m-label">Polling Rate</span>
-						<div class="m-val-wrap">
-							<span class="m-val mono" id="poll-current-hz">0</span>
-							<span class="m-unit">Hz</span>
-						</div>
-						<span class="m-sub mono" id="poll-peak-sub">Peak: 0 Hz</span>
-					</div>
-
-					<div class="metric-mini">
-						<span class="m-label">Visual Reflex</span>
-						<div class="m-val-wrap">
-							<span class="m-val mono" id="reaction-time-val">--</span>
-							<span class="m-unit">ms</span>
-						</div>
-						<span class="m-sub mono" id="reaction-best-sub">Best: -- ms</span>
-					</div>
-
-					<div class="metric-mini">
-						<span class="m-label">Jitter Stability</span>
-						<div class="m-val-wrap">
-							<span class="m-val mono" id="poll-stability-val">&plusmn;0.0</span>
-							<span class="m-unit">ms</span>
-						</div>
-						<span class="m-sub mono" id="reaction-count-sub">0 reflex tests</span>
-					</div>
+			<!-- UNIFIED POLLING CANVAS & REFLEX TARGET -->
+			<div class="poll-reflex-box idle" id="poll-reflex-box" role="button" tabindex="0">
+				<canvas id="poll-sparkline" width="460" height="90"></canvas>
+				<div class="poll-reflex-overlay">
+					<span class="reaction-headline" id="reaction-headline">Click to Test Reflex</span>
+					<span class="reaction-sub" id="reaction-sub">Move cursor rapidly to test polling</span>
 				</div>
 			</div>
-		</details>
 
-		<!-- APPLET 2: MOUSE BUTTONS & SCROLL TESTER (EXPANDABLE) -->
-		<details class="lab-col applet-details" id="mouse-btn-details">
-			<summary class="applet-summary">
-				<div class="applet-summary-left">
-					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="applet-summary-icon">
+			<!-- UNIFIED POLLING & REFLEX READOUTS (3 BALANCED CARDS) -->
+			<div class="metrics-row">
+				<div class="metric-mini">
+					<span class="m-label">Polling Rate</span>
+					<div class="m-val-wrap">
+						<span class="m-val mono" id="poll-current-hz">0</span>
+						<span class="m-unit">Hz</span>
+					</div>
+					<span class="m-sub mono" id="poll-peak-sub">Peak: 0 Hz</span>
+				</div>
+
+				<div class="metric-mini">
+					<span class="m-label">Visual Reflex</span>
+					<div class="m-val-wrap">
+						<span class="m-val mono" id="reaction-time-val">--</span>
+						<span class="m-unit">ms</span>
+					</div>
+					<span class="m-sub mono" id="reaction-best-sub">Best: -- ms</span>
+				</div>
+
+				<div class="metric-mini" title="Polling stability: Standard deviation of packet delivery intervals (±ms). Lower values indicate cleaner polling cadence without micro-stutter.">
+					<span class="m-label">Stability</span>
+					<div class="m-val-wrap">
+						<span class="m-val mono" id="poll-stability-val">&plusmn;0.0</span>
+						<span class="m-unit">ms</span>
+					</div>
+					<span class="m-sub mono" id="reaction-count-sub">0 reflex tests</span>
+				</div>
+			</div>
+		</div>
+
+		<!-- COLUMN 2: MOUSE BUTTONS & SCROLL TESTER -->
+		<div class="lab-col" id="mouse-btn-col">
+			<div class="col-head">
+				<div class="col-head-left">
+					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="col-icon">
 						<rect x="5" y="2" width="14" height="20" rx="7"/>
 						<line x1="12" y1="6" x2="12" y2="10"/>
 					</svg>
-					<span class="applet-title">Mouse Buttons &amp; Scroll</span>
-					<span class="badge mono" id="mouse-btns-badge">0 / 5 tested</span>
+					<span class="col-title">Mouse Buttons &amp; Scroll</span>
 				</div>
-				<span class="applet-summary-toggle">
-					<span class="applet-summary-toggle-label">Hardware Tester</span>
-					<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" class="applet-summary-chevron">
-						<polyline points="6 9 12 15 18 9"/>
-					</svg>
-				</span>
-			</summary>
+				<span class="badge mono" id="mouse-btns-badge">0 / 5 tested</span>
+			</div>
 
-			<div class="applet-body">
-				<!-- INTERACTIVE MOUSE HARDWARE TEST ZONE -->
-				<div class="mouse-hardware-zone" id="mouse-btn-zone" tabindex="0" title="Click buttons or scroll wheel anywhere inside this zone">
-					<div class="mouse-device-wrap">
-						<!-- ERGONOMIC MOUSE CHASSIS -->
-						<div class="mouse-chassis">
-							<!-- INTEGRATED THUMB REST & BUTTONS (LEFT FLANK) -->
-							<div class="mouse-thumb-wing">
-								<div class="mouse-btn mouse-btn-thumb thumb-fwd" id="btn-thumb2" title="Forward (Button 4)">
-									<span>Fwd</span>
+			<!-- INTERACTIVE MOUSE HARDWARE TEST ZONE -->
+			<div class="mouse-hardware-zone" id="mouse-btn-zone" tabindex="0" title="Click buttons or scroll wheel anywhere inside this zone">
+				<div class="mouse-device-wrap">
+					<!-- ERGONOMIC MOUSE CHASSIS -->
+					<div class="mouse-chassis">
+						<!-- INTEGRATED CONTOURED THUMB REST & BUTTONS (LEFT FLANK) -->
+						<div class="mouse-thumb-wing">
+							<div class="mouse-btn mouse-btn-thumb thumb-fwd" id="btn-thumb2" title="Forward (Button 4)">
+								<span>Fwd</span>
+							</div>
+							<div class="mouse-btn mouse-btn-thumb thumb-back" id="btn-thumb1" title="Back (Button 3)">
+								<span>Back</span>
+							</div>
+							<div class="thumb-ledge" title="Ergonomic Thumb Rest Ledge"></div>
+						</div>
+
+						<!-- MAIN MOUSE SHELL -->
+						<div class="mouse-body">
+							<!-- TOP PRIMARY BUTTONS -->
+							<div class="mouse-top-buttons">
+								<!-- LEFT MOUSE BUTTON (LMB) -->
+								<div class="mouse-btn mouse-btn-main mouse-btn-left" id="btn-lmb" title="Left Click (Button 0)">
+									<span class="mb-label">LMB</span>
 								</div>
-								<div class="mouse-btn mouse-btn-thumb thumb-back" id="btn-thumb1" title="Back (Button 3)">
-									<span>Back</span>
+
+								<!-- SCROLL WHEEL & MMB -->
+								<div class="mouse-wheel-wrap">
+									<div class="mouse-btn mouse-btn-wheel" id="btn-wheel" title="Middle Click (Button 1) &amp; Scroll">
+										<span class="wheel-notch up" id="notch-up">&and;</span>
+										<span class="wheel-center"></span>
+										<span class="wheel-notch down" id="notch-down">&or;</span>
+									</div>
+								</div>
+
+								<!-- RIGHT MOUSE BUTTON (RMB) -->
+								<div class="mouse-btn mouse-btn-main mouse-btn-right" id="btn-rmb" title="Right Click (Button 2)">
+									<span class="mb-label">RMB</span>
 								</div>
 							</div>
 
-							<!-- MAIN MOUSE SHELL -->
-							<div class="mouse-body">
-								<!-- TOP PRIMARY BUTTONS -->
-								<div class="mouse-top-buttons">
-									<!-- LEFT MOUSE BUTTON (LMB) -->
-									<div class="mouse-btn mouse-btn-main mouse-btn-left" id="btn-lmb" title="Left Click (Button 0)">
-										<span class="mb-label">LMB</span>
-									</div>
-
-									<!-- SCROLL WHEEL & MMB -->
-									<div class="mouse-wheel-wrap">
-										<div class="mouse-btn mouse-btn-wheel" id="btn-wheel" title="Middle Click (Button 1) &amp; Scroll">
-											<span class="wheel-notch up" id="notch-up">&and;</span>
-											<span class="wheel-center"></span>
-											<span class="wheel-notch down" id="notch-down">&or;</span>
-										</div>
-									</div>
-
-									<!-- RIGHT MOUSE BUTTON (RMB) -->
-									<div class="mouse-btn mouse-btn-main mouse-btn-right" id="btn-rmb" title="Right Click (Button 2)">
-										<span class="mb-label">RMB</span>
-									</div>
-								</div>
-
-								<!-- CLEAN PALM REST (NO CLUTTERED TEXT, NO ORANGE DOT) -->
-								<div class="mouse-palm"></div>
-							</div>
+							<!-- CLEAN PALM REST (SMOOTH SATIN FINISH) -->
+							<div class="mouse-palm"></div>
 						</div>
-					</div>
-				</div>
-
-				<!-- BUTTON & SCROLL TELEMETRY READOUTS -->
-				<div class="metrics-row">
-					<div class="metric-mini">
-						<span class="m-label">Last Button</span>
-						<div class="m-val-wrap">
-							<span class="m-val mono" id="mouse-last-btn">--</span>
-						</div>
-						<span class="m-sub mono" id="mouse-btn-count">0 / 5 tested</span>
-					</div>
-
-					<div class="metric-mini">
-						<span class="m-label">Scroll Delta</span>
-						<div class="m-val-wrap">
-							<span class="m-val mono" id="mouse-scroll-delta">--</span>
-							<span class="m-unit mono" id="mouse-scroll-px"></span>
-						</div>
-						<span class="m-sub mono" id="mouse-scroll-total">0 total ticks</span>
-					</div>
-
-					<div class="metric-mini">
-						<span class="m-label">Switch Chatter</span>
-						<div class="m-val-wrap">
-							<span class="m-val mono" id="mouse-chatter-status">Clean</span>
-						</div>
-						<span class="m-sub mono" id="mouse-chatter-sub">0 bounces &lt; 30ms</span>
 					</div>
 				</div>
 			</div>
-		</details>
+
+			<!-- BUTTON & SCROLL TELEMETRY READOUTS -->
+			<div class="metrics-row">
+				<div class="metric-mini">
+					<span class="m-label">Last Button</span>
+					<div class="m-val-wrap">
+						<span class="m-val mono" id="mouse-last-btn">--</span>
+					</div>
+					<span class="m-sub mono" id="mouse-btn-count">0 / 5 tested</span>
+				</div>
+
+				<div class="metric-mini">
+					<span class="m-label">Scroll Delta</span>
+					<div class="m-val-wrap">
+						<span class="m-val mono" id="mouse-scroll-delta">--</span>
+					</div>
+					<span class="m-sub mono" id="mouse-scroll-total">0 total ticks</span>
+				</div>
+
+				<div class="metric-mini" title="Switch debounce threshold (30ms): Human fingers cannot click faster than ~70ms (~14 CPS). Successive click actuations under 30ms are physically impossible for humans and indicate microswitch contact bounce (worn leaf springs causing phantom double-clicks).">
+					<span class="m-label">Switch Chatter</span>
+					<div class="m-val-wrap">
+						<span class="m-val mono" id="mouse-chatter-status">Clean</span>
+					</div>
+					<span class="m-sub mono" id="mouse-chatter-sub">0 bounces &lt; 30ms</span>
+				</div>
+			</div>
+		</div>
 	</div>
 </section>
 
@@ -193,8 +177,6 @@
 		// 1. UNIFIED MOUSE POLLING & REFLEX BENCHMARK
 		// ==========================================
 		const pollReflexBox = document.getElementById('poll-reflex-box');
-		const pollDetails = document.getElementById('poll-details') as HTMLDetailsElement | null;
-		const mouseBtnDetails = document.getElementById('mouse-btn-details') as HTMLDetailsElement | null;
 		const reactionHeadline = document.getElementById('reaction-headline');
 		const reactionSub = document.getElementById('reaction-sub');
 		const tierBadgeEl = document.getElementById('poll-tier-badge');
@@ -599,8 +581,7 @@
 			}
 
 			if (scrollDeltaEl) scrollDeltaEl.textContent = dir;
-			if (scrollPxEl) scrollPxEl.textContent = `(${delta > 0 ? '+' : ''}${delta}px)`;
-			if (scrollTotalEl) scrollTotalEl.textContent = `${totalScrollTicks} total ticks`;
+			if (scrollTotalEl) scrollTotalEl.textContent = `${delta > 0 ? '+' : ''}${delta}px • ${totalScrollTicks} ticks`;
 			if (btnCountEl) btnCountEl.textContent = `${testedButtons.size} / 5 tested`;
 			if (mouseBadge) {
 				mouseBadge.textContent = `${testedButtons.size} / 5 tested`;
@@ -680,7 +661,6 @@
 					tierBadgeEl.textContent = 'Idle';
 					tierBadgeEl.className = 'badge mono';
 				}
-				if (reactionStateBadge) reactionStateBadge.textContent = 'Ready';
 				if (pollReflexBox) pollReflexBox.className = 'poll-reflex-box idle';
 				if (reactionHeadline) reactionHeadline.textContent = 'Click to Test Reflex';
 				if (reactionSub) reactionSub.textContent = 'Move cursor rapidly to test polling';
@@ -690,11 +670,6 @@
 
 		drawSparkline();
 		window.addEventListener('resize', drawSparkline);
-		pollDetails?.addEventListener('toggle', () => {
-			if (pollDetails.open) {
-				setTimeout(drawSparkline, 30);
-			}
-		});
 	}
 
 	if (document.readyState === 'loading') {
@@ -772,7 +747,7 @@
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 1.25em;
-		align-items: start;
+		align-items: stretch;
 	}
 
 	@media (max-width: 820px) {
@@ -781,61 +756,51 @@
 		}
 	}
 
-	/* EXPANDABLE APPLET COLUMNS (Styled consistently with Keyboard & Disclaimer) */
-	.applet-details {
-		border: 1px solid rgba(234, 88, 12, 0.3);
-		border-radius: 8px;
-		background: rgba(234, 88, 12, 0.05);
-		overflow: hidden;
-		transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
-	}
-	:global(html[data-theme="dark"]) .applet-details {
-		background: rgba(255, 107, 0, 0.06);
-		border-color: rgba(255, 107, 0, 0.3);
-	}
-	.applet-details:hover {
-		background: rgba(234, 88, 12, 0.10);
-		border-color: rgba(234, 88, 12, 0.55);
-		box-shadow: 0 3px 12px rgba(234, 88, 12, 0.12);
-	}
-	:global(html[data-theme="dark"]) .applet-details:hover {
-		background: rgba(255, 107, 0, 0.14);
-		border-color: rgba(255, 107, 0, 0.55);
-		box-shadow: 0 3px 14px rgba(255, 107, 0, 0.16);
-	}
-
-	.applet-summary {
+	.lab-col {
 		display: flex;
-		align-items: center;
+		flex-direction: column;
 		justify-content: space-between;
-		padding: 0.65em 0.95em;
-		cursor: pointer;
-		user-select: none;
-		list-style: none;
+		background: rgba(0, 0, 0, 0.02);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		padding: 1.1em;
+		box-sizing: border-box;
+		height: 100%;
 	}
-	.applet-summary::-webkit-details-marker {
-		display: none;
+	:global(html[data-theme="dark"]) .lab-col {
+		background: rgba(255, 255, 255, 0.015);
 	}
 
-	.applet-summary-left {
+	.col-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		min-height: 28px;
+		margin-bottom: 0.85em;
+		gap: 0.5em;
+	}
+
+	.col-head-left {
 		display: flex;
 		align-items: center;
-		gap: 0.55em;
-		flex-wrap: wrap;
+		gap: 0.5em;
+		min-width: 0;
 	}
-	.applet-summary-icon {
+
+	.col-icon {
 		color: var(--accent);
 		flex-shrink: 0;
-		transition: color 0.15s ease;
 	}
-	.applet-title {
+
+	.col-title {
 		font-size: 0.82em;
 		font-weight: 700;
-		color: rgb(var(--black));
-		transition: color 0.15s ease;
-	}
-	:global(html[data-theme="dark"]) .applet-title {
-		color: #f1f5f9;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		color: var(--text-color);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.badge {
@@ -860,68 +825,21 @@
 		font-weight: 600;
 	}
 
-	.applet-summary-toggle {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.35em;
-		font-size: 0.76em;
-		font-weight: 600;
-		color: var(--accent);
-		transition: color 0.15s ease;
-	}
-	.applet-summary-chevron {
-		transition: transform 0.2s ease, color 0.15s ease;
-	}
-	.applet-details[open] .applet-summary-chevron {
-		transform: rotate(180deg);
-	}
-
-	.applet-details:hover .applet-title {
-		color: rgb(var(--black));
-	}
-	.applet-details:hover .applet-summary-toggle,
-	.applet-details:hover .applet-summary-chevron {
-		color: #c2410c;
-	}
-	:global(html[data-theme="dark"]) .applet-details:hover .applet-title {
-		color: #ffffff;
-	}
-	:global(html[data-theme="dark"]) .applet-details:hover .applet-summary-toggle,
-	:global(html[data-theme="dark"]) .applet-details:hover .applet-summary-chevron {
-		color: #ff9800;
-	}
-
-	.applet-body {
-		padding: 0.9em 1.1em 1.1em 1.1em;
-		border-top: 1px solid rgba(234, 88, 12, 0.2);
-		animation: fadeIn 0.2s ease-in-out;
-		display: flex;
-		flex-direction: column;
-		gap: 0.85em;
-	}
-	:global(html[data-theme="dark"]) .applet-body {
-		border-top-color: rgba(255, 107, 0, 0.2);
-	}
-
-	@keyframes fadeIn {
-		from { opacity: 0; transform: translateY(-3px); }
-		to { opacity: 1; transform: translateY(0); }
-	}
-
 	/* UNIFIED POLLING CANVAS & REFLEX BOX */
 	.poll-reflex-box {
 		position: relative;
-		height: 138px;
+		height: 140px;
 		border-radius: 8px;
 		overflow: hidden;
 		user-select: none;
-		margin-bottom: 0;
+		margin-bottom: 0.85em;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		cursor: pointer;
 		transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 		padding: 1em;
+		box-sizing: border-box;
 	}
 	.poll-reflex-box.idle {
 		background: rgba(0, 0, 0, 0.02);
@@ -992,19 +910,20 @@
 	/* COLUMN 2: MOUSE HARDWARE CHASSIS & SCROLL TESTER */
 	.mouse-hardware-zone {
 		position: relative;
-		height: 138px;
+		height: 140px;
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
 		background: rgba(0, 0, 0, 0.02);
 		overflow: hidden;
 		user-select: none;
-		margin-bottom: 0;
+		margin-bottom: 0.85em;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		outline: none;
 		cursor: default;
 		transition: border-color 0.15s ease, box-shadow 0.15s ease;
+		box-sizing: border-box;
 	}
 	:global(html[data-theme="dark"]) .mouse-hardware-zone {
 		background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.008) 100%);
@@ -1029,39 +948,69 @@
 		height: 122px;
 	}
 
-	/* Sculpted Left Thumb Wing */
+	/* Ergonomic Contoured Left Thumb Wing */
 	.mouse-thumb-wing {
 		position: absolute;
-		left: -20px;
-		top: 30px;
+		left: -17px;
+		top: 22px;
+		width: 18px;
+		height: 80px;
 		display: flex;
 		flex-direction: column;
-		gap: 3px;
+		background: #f8fafc;
+		border: 1.5px solid var(--border-color);
+		border-right: none;
+		border-radius: 12px 0 0 16px;
+		box-shadow: -3px 2px 6px rgba(0, 0, 0, 0.05);
+		overflow: hidden;
 		z-index: 2;
+		box-sizing: border-box;
+	}
+	:global(html[data-theme="dark"]) .mouse-thumb-wing {
+		background: #181b24;
+		border-color: rgba(255, 255, 255, 0.14);
+		box-shadow: -3px 2px 8px rgba(0, 0, 0, 0.3);
 	}
 
 	.mouse-btn-thumb {
-		width: 22px;
-		height: 22px;
-		background: #ffffff;
-		border: 1px solid var(--border-color);
-		border-right: none;
-		border-radius: 6px 0 0 6px;
+		width: 100%;
+		height: 25px;
+		background: transparent;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 0.6em;
+		font-size: 0.58em;
 		font-weight: 700;
 		color: rgb(var(--gray-dark));
 		cursor: pointer;
+		user-select: none;
 		transition: all 0.08s ease;
-		box-shadow: -2px 1px 4px rgba(0, 0, 0, 0.06);
+		box-sizing: border-box;
 	}
 	:global(html[data-theme="dark"]) .mouse-btn-thumb {
-		background: #181b24;
-		border-color: rgba(255, 255, 255, 0.12);
 		color: #cbd5e1;
-		box-shadow: -2px 1px 6px rgba(0, 0, 0, 0.3);
+	}
+	.thumb-fwd {
+		border-bottom: 1px solid var(--border-color);
+		border-radius: 10px 0 0 2px;
+	}
+	.thumb-back {
+		border-bottom: 1px solid var(--border-color);
+		border-radius: 2px 0 0 4px;
+	}
+	:global(html[data-theme="dark"]) .thumb-fwd,
+	:global(html[data-theme="dark"]) .thumb-back {
+		border-bottom-color: rgba(255, 255, 255, 0.1);
+	}
+
+	.thumb-ledge {
+		flex: 1;
+		background: rgba(0, 0, 0, 0.03);
+		border-radius: 0 0 0 14px;
+		pointer-events: none;
+	}
+	:global(html[data-theme="dark"]) .thumb-ledge {
+		background: rgba(255, 255, 255, 0.02);
 	}
 
 	/* Ergonomic Mouse Body Shell */
@@ -1239,11 +1188,11 @@
 		background: rgba(0, 0, 0, 0.03);
 		border: 1px solid var(--border-color);
 		border-radius: 6px;
-		padding: 0.6em 0.55em;
+		padding: 0.65em 0.7em;
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
-		min-height: 82px;
+		min-height: 80px;
 		box-sizing: border-box;
 		overflow: hidden;
 		width: 100%;
@@ -1261,8 +1210,6 @@
 		letter-spacing: 0.03em;
 		margin-bottom: 0.25em;
 		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
 	}
 
 	.m-val-wrap {
@@ -1271,7 +1218,6 @@
 		gap: 0.25em;
 		margin-bottom: 0.15em;
 		white-space: nowrap;
-		overflow: hidden;
 		min-width: 0;
 	}
 
@@ -1281,8 +1227,6 @@
 		color: var(--text-color);
 		letter-spacing: -0.02em;
 		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
 	}
 
 	.m-unit {

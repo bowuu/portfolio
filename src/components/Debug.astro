@@ -501,12 +501,39 @@
 		if (orientEl) {
 			const updateOrient = () => {
 				if (screen.orientation) {
-					const type = screen.orientation.type.replace('-', ' ');
-					const angle = screen.orientation.angle;
-					orientEl.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} (${angle}°)`;
+					const angle = screen.orientation.angle || 0;
+					const rawType = screen.orientation.type || '';
+					let label = 'Standard Landscape';
+					let desc = 'Standard horizontal desktop display (0° rotation)';
+
+					if (rawType.startsWith('landscape')) {
+						if (angle === 180) {
+							label = 'Inverted Landscape (180°)';
+							desc = 'Horizontal display inverted upside-down (180° rotation)';
+						} else {
+							label = 'Standard Landscape (Horizontal)';
+							desc = 'Standard horizontal desktop display (0° rotation)';
+						}
+					} else if (rawType.startsWith('portrait')) {
+						if (angle === 180) {
+							label = 'Inverted Portrait (180°)';
+							desc = 'Vertical display rotated upside-down (180° rotation)';
+						} else {
+							label = 'Standard Portrait (Vertical)';
+							desc = 'Vertical upright display orientation (90° or 270° rotation)';
+						}
+					} else {
+						const isLand = window.innerWidth > window.innerHeight;
+						label = isLand ? 'Standard Landscape (Horizontal)' : 'Standard Portrait (Vertical)';
+						desc = isLand ? 'Standard horizontal display' : 'Standard vertical display';
+					}
+
+					orientEl.textContent = label;
+					orientEl.title = `${desc}. Angle: ${angle}°.`;
 				} else {
 					const isLand = window.innerWidth > window.innerHeight;
-					orientEl.textContent = isLand ? 'Landscape (0°)' : 'Portrait (0°)';
+					orientEl.textContent = isLand ? 'Standard Landscape (Horizontal)' : 'Standard Portrait (Vertical)';
+					orientEl.title = isLand ? 'Standard horizontal display.' : 'Standard vertical display.';
 				}
 			};
 			updateOrient();
@@ -525,12 +552,12 @@
 				touchEl.textContent = `${points}-Point Multitouch`;
 				touchEl.title = `${points}-point hardware multitouch digitizer.`;
 			} else {
-				touchEl.textContent = '0 (Precision Mouse / No Touch)';
-				touchEl.title = 'No touch digitizer detected (mouse/pointer input).';
+				touchEl.textContent = 'Precision Mouse / No Touch';
+				touchEl.title = 'No touch digitizer detected (desktop mouse or trackpad pointer input).';
 			}
 		}
 
-		// 9. Audio Pipeline Latency
+		// 11. Audio Pipeline Latency
 		if (audioEl) {
 			try {
 				const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -541,14 +568,14 @@
 					const rateKhz = (actx.sampleRate / 1000).toFixed(0);
 					
 					if (outLatMs) {
-						audioEl.textContent = `${baseLatMs} ms buffer (${outLatMs} ms sink) • ${rateKhz} kHz DAC`;
+						audioEl.textContent = `${baseLatMs} ms buffer (${outLatMs} ms sink) • ${rateKhz} kHz`;
 					} else {
-						audioEl.textContent = `${baseLatMs} ms buffer • ${rateKhz} kHz DAC`;
+						audioEl.textContent = `${baseLatMs} ms buffer • ${rateKhz} kHz`;
 					}
-					audioEl.title = `Buffer latency: ${baseLatMs} ms • DAC: ${rateKhz} kHz`;
+					audioEl.title = `Audio pipeline latency: ${baseLatMs} ms buffer • Sample rate: ${rateKhz} kHz`;
 					actx.close();
 				} else {
-					audioEl.textContent = 'Standard Audio (DAC Output)';
+					audioEl.textContent = 'Hardware Audio Output';
 				}
 			} catch (_) {
 				audioEl.textContent = 'Hardware Audio Output';

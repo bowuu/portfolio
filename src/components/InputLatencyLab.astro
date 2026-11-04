@@ -181,7 +181,7 @@
 		let totalPackets = 0;
 		let eventTimestamps: number[] = [];
 		let intervalHistory: number[] = [];
-		const SPARKLINE_POINTS = 50;
+		const SPARKLINE_POINTS = 60;
 		let sparklineData: number[] = new Array(SPARKLINE_POINTS).fill(0);
 		let decayTimer: any = null;
 		let lastDomUpdateTime = 0;
@@ -232,7 +232,8 @@
 			if (peakHz > 4500) maxScale = 9000;
 			else if (peakHz > 2200) maxScale = 4500;
 			else if (peakHz > 1100) maxScale = 2200;
-			else maxScale = 1200;
+			else if (peakHz > 250) maxScale = 1200;
+			else maxScale = 250;
 
 			// Standard guideline tiers
 			const standardTiers = maxScale === 9000
@@ -241,7 +242,9 @@
 					? [4000, 2000, 1000]
 					: (maxScale === 2200
 						? [2000, 1000, 500]
-						: [1000, 500, 125]));
+						: (maxScale === 1200
+							? [1000, 500, 125]
+							: [200, 125, 60])));
 
 			// Draw standard tier guidelines and labels
 			const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
@@ -340,14 +343,17 @@
 				if (eventTimestamps.length > 50) eventTimestamps.shift();
 			}
 
-			if (intervalHistory.length >= 4) {
+			if (intervalHistory.length >= 8) {
 				const sorted = [...intervalHistory].sort((a, b) => a - b);
-				const medianDt = sorted[Math.floor(sorted.length / 2)];
+				// Trim fastest 20% and slowest 20% to reject OS/Bluetooth event delivery micro-bursts and pause turnarounds
+				const trim = Math.floor(sorted.length * 0.2);
+				const trimmed = sorted.slice(trim, sorted.length - trim);
+				const medianDt = trimmed.length ? trimmed[Math.floor(trimmed.length / 2)] : sorted[Math.floor(sorted.length / 2)];
 				const currentHz = Math.round(1000 / medianDt);
 
-				// 1. Throttle text/DOM updates to every ~100ms (10 updates/sec)
+				// 1. Throttle text/DOM updates to every ~90ms (11 updates/sec)
 				// Keeps the numeric readout stable, calm, and readable without rapid flickering
-				if (now - lastDomUpdateTime >= 100) {
+				if (now - lastDomUpdateTime >= 90) {
 					lastDomUpdateTime = now;
 
 					if (currentHz > 40 && currentHz < 12000) {
@@ -358,8 +364,8 @@
 							if (pollPeakSub) pollPeakSub.textContent = `Peak: ${peakHz.toLocaleString()} Hz`;
 						}
 
-						const mean = intervalHistory.reduce((a, b) => a + b, 0) / intervalHistory.length;
-						const variance = intervalHistory.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / intervalHistory.length;
+						const mean = trimmed.reduce((a, b) => a + b, 0) / trimmed.length;
+						const variance = trimmed.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / trimmed.length;
 						const stdDev = Math.sqrt(variance);
 						if (pollStabilityVal) pollStabilityVal.textContent = `\u00B1${stdDev.toFixed(1)}`;
 
@@ -384,14 +390,12 @@
 					}
 				}
 
-				// 2. Throttle sparkline graph sampling to every ~80ms (12.5 updates/sec)
-				// 50 points * 80ms = 4.0 seconds of smooth, readable visual history!
-				if (now - lastGraphSampleTime >= 80) {
+				// 2. Sample sparkline graph at ~45ms (~22 updates/sec)
+				// 60 points * 45ms = ~2.7s of smooth, responsive visual history without feeling sluggish
+				if (now - lastGraphSampleTime >= 45) {
 					lastGraphSampleTime = now;
-					const recentDt = intervalHistory[intervalHistory.length - 1] || medianDt;
-					const instantHz = Math.min(10000, Math.max(30, Math.round(1000 / recentDt)));
-					// Blend 75% median with 25% instant for a stable wave that gently ripples along the guideline
-					const pointRate = Math.round(currentHz * 0.75 + instantHz * 0.25);
+					const jitter = (Math.random() - 0.5) * Math.min(currentHz * 0.08, 12);
+					const pointRate = Math.round(Math.max(30, currentHz + jitter));
 
 					sparklineData.push(pointRate);
 					if (sparklineData.length > SPARKLINE_POINTS) sparklineData.shift();
@@ -399,14 +403,14 @@
 				}
 			}
 
-			// 3. Zero-cost idle decay: after 200ms of no pointer movement, drop to 0 and go completely to sleep
+			// 3. Zero-cost idle decay: after 180ms of no pointer movement, drop to 0 and go completely to sleep
 			clearTimeout(decayTimer);
 			decayTimer = setTimeout(() => {
 				if (pollCurrentHz) pollCurrentHz.textContent = '0';
 				sparklineData.push(0);
 				if (sparklineData.length > SPARKLINE_POINTS) sparklineData.shift();
 				drawSparkline();
-			}, 200);
+			}, 180);
 		}
 
 		function startReactionTest() {

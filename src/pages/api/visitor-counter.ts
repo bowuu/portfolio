@@ -155,9 +155,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 			count = result?.count ?? BASELINE_COUNT;
 
-			// Opportunistic auto-purge of old hashes (> 48h old) to ensure zero permanent historical records
-			const twoDaysAgo = new Date(Date.now() - 48 * 3600 * 1000).toISOString().slice(0, 10);
-			db.prepare(`DELETE FROM daily_visitors WHERE day < ?1;`).bind(twoDaysAgo).run().catch(() => {});
+			// Purge previous calendar days' deduplication hashes upon UTC midnight rollover
+			db.prepare(`DELETE FROM daily_visitors WHERE day < ?1;`).bind(today).run().catch(() => {});
 		} else {
 			// Already counted today -> read current count without incrementing
 			const row = await db.prepare(`SELECT count FROM site_counter WHERE id = 'visitors'`).first<{ count: number }>();

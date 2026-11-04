@@ -70,13 +70,13 @@
 					<span class="m-sub mono" id="reaction-best-sub">Best: -- ms</span>
 				</div>
 
-				<div class="metric-mini" title="Polling stability: Standard deviation of packet delivery intervals (±ms). Lower values indicate cleaner polling cadence without micro-stutter.">
-					<span class="m-label">Stability</span>
+				<div class="metric-mini" title="Polling jitter: Standard deviation of packet delivery intervals (±ms). Lower values indicate cleaner, more consistent polling cadence without micro-stutter.">
+					<span class="m-label">Jitter</span>
 					<div class="m-val-wrap">
 						<span class="m-val mono" id="poll-stability-val">&plusmn;0.0</span>
 						<span class="m-unit">ms</span>
 					</div>
-					<span class="m-sub mono" id="reaction-count-sub">0 reflex tests</span>
+					<span class="m-sub mono" id="poll-jitter-sub">Interval Std Dev</span>
 				</div>
 			</div>
 		</div>
@@ -99,7 +99,7 @@
 				<div class="mouse-device-wrap">
 					<!-- ERGONOMIC MOUSE CHASSIS -->
 					<div class="mouse-chassis">
-						<!-- INTEGRATED CONTOURED THUMB REST & BUTTONS (LEFT FLANK) -->
+						<!-- INTEGRATED THUMB BUTTONS (LEFT FLANK) -->
 						<div class="mouse-thumb-wing">
 							<div class="mouse-btn mouse-btn-thumb thumb-fwd" id="btn-thumb2" title="Forward (Button 4)">
 								<span>Fwd</span>
@@ -107,7 +107,6 @@
 							<div class="mouse-btn mouse-btn-thumb thumb-back" id="btn-thumb1" title="Back (Button 3)">
 								<span>Back</span>
 							</div>
-							<div class="thumb-ledge" title="Ergonomic Thumb Rest Ledge"></div>
 						</div>
 
 						<!-- MAIN MOUSE SHELL -->
@@ -189,7 +188,6 @@
 		const reactionTimeVal = document.getElementById('reaction-time-val');
 		const reactionBestSub = document.getElementById('reaction-best-sub');
 		const pollStabilityVal = document.getElementById('poll-stability-val');
-		const reactionCountSub = document.getElementById('reaction-count-sub');
 
 		// Polling State
 		let peakHz = 0;
@@ -464,11 +462,12 @@
 					reactionScores.push(reactionDelta);
 					if (reactionDelta < bestReflex) {
 						bestReflex = reactionDelta;
-						if (reactionBestSub) reactionBestSub.textContent = `Best: ${bestReflex} ms`;
+					}
+					if (reactionBestSub) {
+						reactionBestSub.textContent = `Best: ${bestReflex} ms (${reactionScores.length} test${reactionScores.length === 1 ? '' : 's'})`;
 					}
 
 					if (reactionTimeVal) reactionTimeVal.textContent = `${reactionDelta}`;
-					if (reactionCountSub) reactionCountSub.textContent = `${reactionScores.length} reflex test(s)`;
 
 					let rating = 'Average';
 					if (reactionDelta < 185) rating = 'Pro Esports';
@@ -656,7 +655,6 @@
 				if (pollStabilityVal) pollStabilityVal.textContent = '\u00B10.0';
 				if (reactionTimeVal) reactionTimeVal.textContent = '--';
 				if (reactionBestSub) reactionBestSub.textContent = 'Best: -- ms';
-				if (reactionCountSub) reactionCountSub.textContent = '0 reflex tests';
 				if (tierBadgeEl) {
 					tierBadgeEl.textContent = 'Idle';
 					tierBadgeEl.className = 'badge mono';
@@ -948,69 +946,50 @@
 		height: 122px;
 	}
 
-	/* Ergonomic Contoured Left Thumb Wing */
+	/* Contoured Left Thumb Buttons */
 	.mouse-thumb-wing {
 		position: absolute;
-		left: -17px;
-		top: 22px;
-		width: 18px;
-		height: 80px;
+		left: -27px;
+		top: 26px;
 		display: flex;
 		flex-direction: column;
-		background: #f8fafc;
-		border: 1.5px solid var(--border-color);
-		border-right: none;
-		border-radius: 12px 0 0 16px;
-		box-shadow: -3px 2px 6px rgba(0, 0, 0, 0.05);
-		overflow: hidden;
+		gap: 4px;
 		z-index: 2;
-		box-sizing: border-box;
-	}
-	:global(html[data-theme="dark"]) .mouse-thumb-wing {
-		background: #181b24;
-		border-color: rgba(255, 255, 255, 0.14);
-		box-shadow: -3px 2px 8px rgba(0, 0, 0, 0.3);
 	}
 
 	.mouse-btn-thumb {
-		width: 100%;
-		height: 25px;
-		background: transparent;
+		width: 28px;
+		height: 23px;
+		background: #ffffff;
+		border: 1.5px solid var(--border-color);
+		border-right: none;
+		border-radius: 7px 0 0 7px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 0.58em;
+		font-size: 0.62em;
 		font-weight: 700;
+		letter-spacing: 0.02em;
 		color: rgb(var(--gray-dark));
 		cursor: pointer;
 		user-select: none;
 		transition: all 0.08s ease;
+		box-shadow: -2px 1px 5px rgba(0, 0, 0, 0.06);
 		box-sizing: border-box;
 	}
 	:global(html[data-theme="dark"]) .mouse-btn-thumb {
+		background: #181b24;
+		border-color: rgba(255, 255, 255, 0.16);
 		color: #cbd5e1;
+		box-shadow: -2px 1px 6px rgba(0, 0, 0, 0.35);
 	}
-	.thumb-fwd {
-		border-bottom: 1px solid var(--border-color);
-		border-radius: 10px 0 0 2px;
+	.mouse-btn-thumb:hover {
+		border-color: var(--accent);
+		color: var(--accent);
 	}
-	.thumb-back {
-		border-bottom: 1px solid var(--border-color);
-		border-radius: 2px 0 0 4px;
-	}
-	:global(html[data-theme="dark"]) .thumb-fwd,
-	:global(html[data-theme="dark"]) .thumb-back {
-		border-bottom-color: rgba(255, 255, 255, 0.1);
-	}
-
-	.thumb-ledge {
-		flex: 1;
-		background: rgba(0, 0, 0, 0.03);
-		border-radius: 0 0 0 14px;
-		pointer-events: none;
-	}
-	:global(html[data-theme="dark"]) .thumb-ledge {
-		background: rgba(255, 255, 255, 0.02);
+	:global(html[data-theme="dark"]) .mouse-btn-thumb:hover {
+		border-color: var(--accent);
+		color: #ffedd5;
 	}
 
 	/* Ergonomic Mouse Body Shell */

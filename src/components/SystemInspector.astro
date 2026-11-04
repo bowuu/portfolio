@@ -154,11 +154,7 @@
 				<span id="t-audio" class="t-val">Probing DAC sink...</span>
 			</div>
 			<div class="telemetry-item">
-				<span class="t-label">Audio Codecs</span>
-				<span id="t-audio-codecs" class="t-val">Probing decoders...</span>
-			</div>
-			<div class="telemetry-item">
-				<span class="t-label">Hardware Video Codecs</span>
+				<span class="t-label">Hardware Video Decoder</span>
 				<span id="t-codecs" class="t-val">Probing ASIC decoders...</span>
 			</div>
 			<div class="telemetry-item">
@@ -211,6 +207,12 @@
 		}
 	}
 
+	function buildOSDisplay(osName: string, version: string, arch: string, device: string): string {
+		const main = version ? `${osName} ${version}` : osName;
+		const details = [arch, device].filter(Boolean).join(' • ');
+		return details ? `${main} (${details})` : main;
+	}
+
 	function detectOS(gpu: string): string {
 		const ua = navigator.userAgent;
 		const navData = (navigator as any).userAgentData;
@@ -218,43 +220,48 @@
 		const isMobileARM = /(Adreno|Mali|Immortalis|Xclipse|PowerVR)/i.test(gpu);
 		const hasTouch = (navigator.maxTouchPoints && navigator.maxTouchPoints > 1) || ('ontouchstart' in window);
 
-		// Direct Android UA pattern
+		// 1. Android
 		if (/Android (\d+(\.\d+)?)/i.test(ua)) {
 			const match = ua.match(/Android (\d+(\.\d+)?)/i);
 			const ver = match ? match[1] : '';
 			const isTablet = hasTouch && !/Mobile/i.test(ua);
-			return ver ? `Android ${ver}${isTablet ? ' (Tablet)' : ''}` : 'Android Device';
+			const modelMatch = ua.match(/\((?:Linux; Android[^;]+;\s*)([a-zA-Z0-9\-_ ]+)\s+Build/i);
+			const model = modelMatch ? modelMatch[1].trim() : (isTablet ? 'Tablet' : 'Mobile');
+			return buildOSDisplay('Android', ver, 'ARM64', model);
 		}
 
 		// Android Tablet in "Desktop Site" Mode (Chromium sends (X11; Linux x86_64) on tablets)
 		if ((/Linux/i.test(ua) || /Linux/i.test(platform)) && (isMobileARM || (hasTouch && !/Macintosh|Windows/i.test(ua)))) {
-			return isMobileARM ? 'Android (ARM64 Tablet)' : 'Android Tablet (Desktop Mode)';
+			return buildOSDisplay('Android', '', 'ARM64', 'Tablet');
 		}
 
-		// iOS / iPadOS
+		// 2. iOS / iPadOS
 		if (/iPhone OS (\d+[._]\d+)/.test(ua)) {
 			const match = ua.match(/iPhone OS (\d+[._]\d+)/);
-			return `iOS ${match ? match[1].replace('_', '.') : ''} (iPhone)`;
+			const ver = match ? match[1].replace('_', '.') : '';
+			return buildOSDisplay('iOS', ver, 'ARM64', 'iPhone');
 		}
 		if (/iPad/.test(ua) || (ua.includes('Macintosh') && hasTouch)) {
-			return 'Apple iPadOS (iPad)';
+			return buildOSDisplay('iPadOS', '', 'ARM64', 'iPad');
 		}
 
-		// macOS
+		// 3. macOS
 		if (/Macintosh; Intel Mac OS X (\d+[._]\d+)/.test(ua)) {
 			const match = ua.match(/Macintosh; Intel Mac OS X (\d+[._]\d+)/);
+			const ver = match ? match[1].replace(/_/g, '.') : '';
 			const isAppleSilicon = /Apple/i.test(gpu);
-			return `macOS ${match ? match[1].replace(/_/g, '.') : ''}${isAppleSilicon ? ' (Apple Silicon)' : ''}`;
+			return buildOSDisplay('macOS', ver, isAppleSilicon ? 'ARM64' : 'x86_64', isAppleSilicon ? 'Apple Silicon' : 'Mac');
 		}
 
-		// Windows
+		// 4. Windows
 		if (/Windows NT 10.0/.test(ua) || platform === 'Windows') {
-			return 'Windows 10 / 11 (64-bit)';
+			const isLaptop = /Laptop|Mobile/i.test(gpu);
+			return buildOSDisplay('Windows', '10 / 11', 'x86_64', isLaptop ? 'Laptop' : 'PC');
 		}
 
-		// Genuine Desktop GNU/Linux (no mobile ARM GPU and no multitouch)
+		// 5. Genuine Desktop GNU/Linux (no mobile ARM GPU and no multitouch)
 		if (/Linux/i.test(ua) || /Linux/i.test(platform)) {
-			return 'GNU/Linux (x86_64 Desktop)';
+			return buildOSDisplay('GNU/Linux', '', 'x86_64', 'PC');
 		}
 
 		return platform || 'Unknown OS';
@@ -321,7 +328,6 @@
 
 		// Audio & Media elements
 		const audioEl = document.getElementById('t-audio');
-		const audioCodecsEl = document.getElementById('t-audio-codecs');
 		const codecsEl = document.getElementById('t-codecs');
 		const encoderEl = document.getElementById('t-encoder');
 		const drmEl = document.getElementById('t-drm');
@@ -336,33 +342,36 @@
 			const navData = (navigator as any).userAgentData;
 			const isMobileARM = /(Adreno|Mali|Immortalis|Xclipse|PowerVR)/i.test(gpuString);
 			const hasTouch = (navigator.maxTouchPoints && navigator.maxTouchPoints > 1) || ('ontouchstart' in window);
+			const ua = navigator.userAgent;
 
 			if (navData && navData.getHighEntropyValues) {
 				navData.getHighEntropyValues(['platform', 'platformVersion', 'architecture', 'bitness', 'model'])
 					.then((hints: any) => {
 						if (hints.platform === 'Windows') {
 							const major = parseInt(hints.platformVersion?.split('.')[0] || '0', 10);
-							const winVer = major >= 13 ? 'Windows 11' : 'Windows 10';
-							const arch = hints.architecture ? ` (${hints.architecture}, ${hints.bitness || 64}-bit)` : '';
-							osEl.textContent = `${winVer}${arch}`;
+							const winVer = major >= 13 ? '11' : (major >= 1 ? '10' : '');
+							const arch = (hints.architecture === 'arm' || hints.architecture === 'arm64') ? 'ARM64' : 'x86_64';
+							const isLaptop = /Laptop|Mobile/i.test(gpuString);
+							osEl.textContent = buildOSDisplay('Windows', winVer, arch, isLaptop ? 'Laptop' : 'PC');
 						} else if (
 							hints.platform === 'Android' || 
 							isMobileARM || 
 							(hints.architecture?.toLowerCase().includes('arm') && /Linux/i.test(hints.platform || ''))
 						) {
-							const ver = hints.platformVersion ? ` ${hints.platformVersion.split('.')[0]}` : '';
-							let device = '';
-							if (hints.model) {
-								device = ` (${hints.model})`;
-							} else if (hasTouch) {
-								device = ' (ARM64 Tablet)';
-							} else {
-								device = ' (Mobile)';
+							let ver = hints.platformVersion ? hints.platformVersion.split('.')[0] : '';
+							if (!ver) {
+								const match = ua.match(/Android (\d+(\.\d+)?)/i);
+								if (match) ver = match[1];
 							}
-							osEl.textContent = `Android${ver}${device}`;
+							const isTablet = (hasTouch && !/Mobile/i.test(ua)) || /Tablet/i.test(ua);
+							const model = hints.model || (isTablet ? 'Tablet' : 'Mobile');
+							osEl.textContent = buildOSDisplay('Android', ver, 'ARM64', model);
 						} else if (hints.platform === 'Linux' && !isMobileARM && !hasTouch) {
-							const arch = hints.architecture ? ` (${hints.architecture})` : ' (x86_64 Desktop)';
-							osEl.textContent = `GNU/Linux${arch}`;
+							const arch = hints.architecture?.includes('64') || hints.bitness === '64' ? 'x86_64' : (hints.architecture || 'x86_64');
+							osEl.textContent = buildOSDisplay('GNU/Linux', '', arch, 'PC');
+						} else if (hints.platform === 'macOS') {
+							const isAppleSilicon = /Apple/i.test(gpuString) || hints.architecture === 'arm';
+							osEl.textContent = buildOSDisplay('macOS', '', isAppleSilicon ? 'ARM64' : 'x86_64', isAppleSilicon ? 'Apple Silicon' : 'Mac');
 						}
 					})
 					.catch(() => {});
@@ -511,34 +520,7 @@
 			}
 		}
 
-		// 10. Audio Codec Playback Matrix
-		if (audioCodecsEl) {
-			try {
-				const audioTest = document.createElement('audio');
-				const list = [
-					{ name: 'MP3', type: 'audio/mpeg' },
-					{ name: 'AAC', type: 'audio/mp4; codecs="mp4a.40.2"' },
-					{ name: 'FLAC', type: 'audio/flac' },
-					{ name: 'Opus', type: 'audio/ogg; codecs="opus"' },
-					{ name: 'Vorbis', type: 'audio/ogg; codecs="vorbis"' },
-					{ name: 'ALAC', type: 'audio/mp4; codecs="alac"' },
-					{ name: 'PCM', type: 'audio/wav; codecs="1"' },
-				];
-				const supported: string[] = [];
-				for (const item of list) {
-					const res = audioTest.canPlayType(item.type);
-					if (res === 'probably' || res === 'maybe') {
-						supported.push(item.name);
-					}
-				}
-				audioCodecsEl.textContent = supported.length > 0 ? supported.join(' • ') : 'Standard Audio (PCM/AAC)';
-				audioCodecsEl.title = `Host OS media framework native audio decoding capabilities: ${supported.join(', ')}`;
-			} catch {
-				audioCodecsEl.textContent = 'Standard Audio';
-			}
-		}
-
-		// 11. Hardware Video Codecs (MediaCapabilities API Decoders)
+		// 10. Hardware Video Decoder (MediaCapabilities API Decoders)
 		if (codecsEl) {
 			const probeCodecs = async () => {
 				if (navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo) {
@@ -570,7 +552,7 @@
 			codecsEl.title = 'W3C MediaCapabilities API checking GPU silicon ASIC hardware-accelerated video decoding.';
 		}
 
-		// 12. Hardware Video Encoder (WebCodecs API)
+		// 11. Hardware Video Encoder (WebCodecs API)
 		if (encoderEl) {
 			const probeEncoder = async () => {
 				if (typeof VideoEncoder !== 'undefined' && VideoEncoder.isConfigSupported) {
@@ -609,7 +591,7 @@
 			probeEncoder();
 		}
 
-		// 13. Hardware DRM Key System (EME)
+		// 12. Hardware DRM Key System (EME)
 		if (drmEl) {
 			const probeDRM = async () => {
 				if (navigator.requestMediaKeySystemAccess) {

@@ -82,46 +82,56 @@
 				<span class="col-title">Mouse Buttons &amp; Scroll</span>
 			</div>
 
-			<!-- INTERACTIVE MOUSE CHASSIS / TEST ZONE -->
-			<div class="mouse-hardware-zone" id="mouse-btn-zone" tabindex="0" title="Click buttons or scroll wheel inside this zone">
-				<div class="mouse-chassis">
-					<!-- SIDE THUMB BUTTONS -->
-					<div class="mouse-thumb-col">
-						<div class="mouse-btn mouse-btn-thumb" id="btn-thumb2" title="Forward (Button 4)">
-							<span>Fwd</span>
-						</div>
-						<div class="mouse-btn mouse-btn-thumb" id="btn-thumb1" title="Back (Button 3)">
-							<span>Back</span>
-						</div>
-					</div>
-
-					<!-- MAIN MOUSE BODY -->
-					<div class="mouse-body">
-						<div class="mouse-top-buttons">
-							<!-- LEFT MOUSE BUTTON -->
-							<div class="mouse-btn mouse-btn-main mouse-btn-left" id="btn-lmb">
-								<span class="mb-label">LMB</span>
+			<!-- INTERACTIVE MOUSE HARDWARE TEST ZONE -->
+			<div class="mouse-hardware-zone" id="mouse-btn-zone" tabindex="0" title="Click buttons or scroll wheel anywhere inside this zone">
+				<div class="mouse-device-wrap">
+					<!-- ERGONOMIC MOUSE CHASSIS -->
+					<div class="mouse-chassis">
+						<!-- INTEGRATED THUMB REST & BUTTONS (LEFT FLANK) -->
+						<div class="mouse-thumb-wing">
+							<div class="mouse-btn mouse-btn-thumb thumb-fwd" id="btn-thumb2" title="Forward (Button 4)">
+								<span>Fwd</span>
 							</div>
+							<div class="mouse-btn mouse-btn-thumb thumb-back" id="btn-thumb1" title="Back (Button 3)">
+								<span>Back</span>
+							</div>
+						</div>
 
-							<!-- MIDDLE / SCROLL WHEEL -->
-							<div class="mouse-wheel-wrap">
-								<div class="mouse-btn mouse-btn-wheel" id="btn-wheel">
-									<span class="wheel-notch up" id="notch-up">&and;</span>
-									<span class="wheel-center"></span>
-									<span class="wheel-notch down" id="notch-down">&or;</span>
+						<!-- MAIN MOUSE SHELL -->
+						<div class="mouse-body">
+							<!-- TOP PRIMARY BUTTONS -->
+							<div class="mouse-top-buttons">
+								<!-- LEFT MOUSE BUTTON (LMB) -->
+								<div class="mouse-btn mouse-btn-main mouse-btn-left" id="btn-lmb" title="Left Click (Button 0)">
+									<span class="mb-label">LMB</span>
+								</div>
+
+								<!-- SCROLL WHEEL & MMB -->
+								<div class="mouse-wheel-wrap">
+									<div class="mouse-btn mouse-btn-wheel" id="btn-wheel" title="Middle Click (Button 1) &amp; Scroll">
+										<span class="wheel-notch up" id="notch-up">&and;</span>
+										<span class="wheel-center"></span>
+										<span class="wheel-notch down" id="notch-down">&or;</span>
+									</div>
+								</div>
+
+								<!-- RIGHT MOUSE BUTTON (RMB) -->
+								<div class="mouse-btn mouse-btn-main mouse-btn-right" id="btn-rmb" title="Right Click (Button 2)">
+									<span class="mb-label">RMB</span>
 								</div>
 							</div>
 
-							<!-- RIGHT MOUSE BUTTON -->
-							<div class="mouse-btn mouse-btn-main mouse-btn-right" id="btn-rmb">
-								<span class="mb-label">RMB</span>
+							<!-- CONTOURED PALM REST -->
+							<div class="mouse-palm">
+								<div class="palm-accent">
+									<span class="sensor-dot"></span>
+									<span class="palm-tag">5-Btn Optical</span>
+								</div>
 							</div>
 						</div>
-
-						<div class="mouse-palm">
-							<span class="palm-hint">Click &amp; Scroll Zone</span>
-						</div>
 					</div>
+
+					<div class="zone-hint">Click &amp; Scroll Zone</div>
 				</div>
 			</div>
 
@@ -139,6 +149,7 @@
 					<span class="m-label">Scroll Delta</span>
 					<div class="m-val-wrap">
 						<span class="m-val mono" id="mouse-scroll-delta">--</span>
+						<span class="m-unit mono" id="mouse-scroll-px"></span>
 					</div>
 					<span class="m-sub mono" id="mouse-scroll-total">0 total ticks</span>
 				</div>
@@ -480,6 +491,7 @@
 		const lastBtnEl = document.getElementById('mouse-last-btn');
 		const btnCountEl = document.getElementById('mouse-btn-count');
 		const scrollDeltaEl = document.getElementById('mouse-scroll-delta');
+		const scrollPxEl = document.getElementById('mouse-scroll-px');
 		const scrollTotalEl = document.getElementById('mouse-scroll-total');
 		const mouseChatterEl = document.getElementById('mouse-chatter-status');
 		const mouseChatterSubEl = document.getElementById('mouse-chatter-sub');
@@ -563,7 +575,8 @@
 				if (notchUpEl) notchUpEl.classList.remove('notch-active');
 			}
 
-			if (scrollDeltaEl) scrollDeltaEl.textContent = `${dir} (${delta > 0 ? '+' : ''}${delta} px)`;
+			if (scrollDeltaEl) scrollDeltaEl.textContent = dir;
+			if (scrollPxEl) scrollPxEl.textContent = `(${delta > 0 ? '+' : ''}${delta}px)`;
 			if (scrollTotalEl) scrollTotalEl.textContent = `${totalScrollTicks} total ticks`;
 			if (btnCountEl) btnCountEl.textContent = `${testedButtons.size} / 5 tested`;
 			if (mouseBadge) mouseBadge.textContent = `Wheel ${dir}`;
@@ -614,6 +627,7 @@
 				if (lastBtnEl) lastBtnEl.textContent = '--';
 				if (btnCountEl) btnCountEl.textContent = '0 / 5 tested';
 				if (scrollDeltaEl) scrollDeltaEl.textContent = '--';
+				if (scrollPxEl) scrollPxEl.textContent = '';
 				if (scrollTotalEl) scrollTotalEl.textContent = '0 total ticks';
 				if (mouseChatterEl) {
 					mouseChatterEl.textContent = 'Clean';
@@ -793,8 +807,8 @@
 	/* UNIFIED POLLING CANVAS & REFLEX BOX */
 	.poll-reflex-box {
 		position: relative;
-		height: 120px;
-		border-radius: 6px;
+		height: 138px;
+		border-radius: 8px;
 		overflow: hidden;
 		user-select: none;
 		margin-bottom: 1em;
@@ -806,11 +820,11 @@
 		padding: 1em;
 	}
 	.poll-reflex-box.idle {
-		background: rgba(0, 0, 0, 0.03);
-		border: 1px dashed var(--border-color);
+		background: rgba(0, 0, 0, 0.02);
+		border: 1px solid var(--border-color);
 	}
 	:global(html[data-theme="dark"]) .poll-reflex-box.idle {
-		background: rgba(255, 255, 255, 0.02);
+		background: rgba(255, 255, 255, 0.015);
 	}
 	.poll-reflex-box.idle:hover {
 		border-color: var(--accent);
@@ -871,12 +885,12 @@
 		opacity: 0.85;
 	}
 
-	/* COLUMN 3: MOUSE HARDWARE CHASSIS & SCROLL TESTER */
+	/* COLUMN 2: MOUSE HARDWARE CHASSIS & SCROLL TESTER */
 	.mouse-hardware-zone {
 		position: relative;
-		height: 120px;
-		border: 1px dashed var(--border-color);
-		border-radius: 6px;
+		height: 138px;
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
 		background: rgba(0, 0, 0, 0.02);
 		overflow: hidden;
 		user-select: none;
@@ -886,70 +900,93 @@
 		justify-content: center;
 		outline: none;
 		cursor: default;
-		transition: border-color 0.15s ease;
+		transition: border-color 0.15s ease, box-shadow 0.15s ease;
 	}
 	:global(html[data-theme="dark"]) .mouse-hardware-zone {
-		background: rgba(255, 255, 255, 0.01);
+		background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.008) 100%);
 	}
 	.mouse-hardware-zone:hover {
 		border-color: rgba(234, 88, 12, 0.4);
+		box-shadow: 0 0 16px rgba(234, 88, 12, 0.06);
+	}
+
+	.mouse-device-wrap {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.mouse-chassis {
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		height: 104px;
+		position: relative;
+		height: 122px;
 	}
 
-	.mouse-thumb-col {
+	/* Sculpted Left Thumb Wing */
+	.mouse-thumb-wing {
+		position: absolute;
+		left: -20px;
+		top: 30px;
 		display: flex;
 		flex-direction: column;
-		gap: 5px;
-		justify-content: center;
+		gap: 3px;
+		z-index: 2;
 	}
 
 	.mouse-btn-thumb {
-		width: 32px;
-		height: 24px;
+		width: 22px;
+		height: 22px;
 		background: #ffffff;
 		border: 1px solid var(--border-color);
-		border-radius: 4px;
+		border-right: none;
+		border-radius: 6px 0 0 6px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 0.62em;
+		font-size: 0.6em;
 		font-weight: 700;
 		color: rgb(var(--gray-dark));
 		cursor: pointer;
 		transition: all 0.08s ease;
+		box-shadow: -2px 1px 4px rgba(0, 0, 0, 0.06);
 	}
 	:global(html[data-theme="dark"]) .mouse-btn-thumb {
-		background: #191c26;
+		background: #181b24;
+		border-color: rgba(255, 255, 255, 0.12);
 		color: #cbd5e1;
+		box-shadow: -2px 1px 6px rgba(0, 0, 0, 0.3);
 	}
 
+	/* Ergonomic Mouse Body Shell */
 	.mouse-body {
-		width: 90px;
-		height: 102px;
+		width: 76px;
+		height: 122px;
 		border: 1.5px solid var(--border-color);
-		border-radius: 20px 20px 26px 26px;
+		border-radius: 22px 22px 30px 30px;
 		background: #ffffff;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+		position: relative;
+		z-index: 1;
 	}
 	:global(html[data-theme="dark"]) .mouse-body {
-		background: #13151f;
-		border-color: rgba(255, 255, 255, 0.12);
-		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+		background: #13161f;
+		border-color: rgba(255, 255, 255, 0.14);
+		box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
 	}
 
 	.mouse-top-buttons {
 		display: flex;
-		height: 52px;
+		height: 56px;
 		border-bottom: 1px solid var(--border-color);
+	}
+	:global(html[data-theme="dark"]) .mouse-top-buttons {
+		border-bottom-color: rgba(255, 255, 255, 0.1);
 	}
 
 	.mouse-btn-main {
@@ -963,6 +1000,7 @@
 		cursor: pointer;
 		transition: all 0.08s ease;
 		background: rgba(0, 0, 0, 0.01);
+		user-select: none;
 	}
 	:global(html[data-theme="dark"]) .mouse-btn-main {
 		color: #cbd5e1;
@@ -974,9 +1012,15 @@
 	.mouse-btn-right {
 		border-left: 0.5px solid var(--border-color);
 	}
+	:global(html[data-theme="dark"]) .mouse-btn-left {
+		border-right-color: rgba(255, 255, 255, 0.08);
+	}
+	:global(html[data-theme="dark"]) .mouse-btn-right {
+		border-left-color: rgba(255, 255, 255, 0.08);
+	}
 
 	.mouse-wheel-wrap {
-		width: 22px;
+		width: 20px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1002,8 +1046,8 @@
 		box-sizing: border-box;
 	}
 	:global(html[data-theme="dark"]) .mouse-btn-wheel {
-		background: #242938;
-		border-color: rgba(255, 255, 255, 0.15);
+		background: #202433;
+		border-color: rgba(255, 255, 255, 0.18);
 	}
 
 	.wheel-notch {
@@ -1019,6 +1063,9 @@
 		border-radius: 2px;
 		background: var(--border-color);
 	}
+	:global(html[data-theme="dark"]) .wheel-center {
+		background: rgba(255, 255, 255, 0.25);
+	}
 
 	.mouse-palm {
 		flex: 1;
@@ -1027,12 +1074,46 @@
 		justify-content: center;
 		background: rgba(0, 0, 0, 0.01);
 	}
-	.palm-hint {
-		font-size: 0.6em;
+	:global(html[data-theme="dark"]) .mouse-palm {
+		background: rgba(255, 255, 255, 0.01);
+	}
+
+	.palm-accent {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 3px;
+	}
+
+	.sensor-dot {
+		width: 4px;
+		height: 4px;
+		border-radius: 50%;
+		background: var(--accent);
+		opacity: 0.7;
+		box-shadow: 0 0 6px var(--accent);
+	}
+
+	.palm-tag {
+		font-size: 0.56em;
+		font-weight: 700;
+		letter-spacing: 0.06em;
 		color: rgb(var(--gray));
-		opacity: 0.6;
-		text-align: center;
-		letter-spacing: -0.02em;
+		opacity: 0.65;
+		text-transform: uppercase;
+	}
+
+	.zone-hint {
+		position: absolute;
+		bottom: 4px;
+		right: 8px;
+		font-size: 0.58em;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: rgb(var(--gray));
+		opacity: 0.45;
+		pointer-events: none;
 	}
 
 	/* BUTTON ACTIVE & TESTED STATES */
@@ -1075,6 +1156,9 @@
 		padding: 0.6em 0.55em;
 		display: flex;
 		flex-direction: column;
+		justify-content: space-between;
+		min-height: 82px;
+		box-sizing: border-box;
 	}
 	:global(html[data-theme="dark"]) .metric-mini {
 		background: rgba(255, 255, 255, 0.02);
@@ -1087,26 +1171,33 @@
 		text-transform: uppercase;
 		letter-spacing: 0.03em;
 		margin-bottom: 0.25em;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.m-val-wrap {
 		display: flex;
 		align-items: baseline;
-		gap: 0.25em;
+		gap: 0.3em;
 		margin-bottom: 0.15em;
+		white-space: nowrap;
+		overflow: hidden;
 	}
 
 	.m-val {
-		font-size: 1.25em;
+		font-size: 1.15em;
 		font-weight: 700;
 		color: var(--text-color);
 		letter-spacing: -0.02em;
+		white-space: nowrap;
 	}
 
 	.m-unit {
-		font-size: 0.7em;
+		font-size: 0.72em;
 		font-weight: 600;
 		color: rgb(var(--gray));
+		white-space: nowrap;
 	}
 
 	.m-sub {

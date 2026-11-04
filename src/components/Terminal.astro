@@ -1,0 +1,613 @@
+---
+// Terminal.astro - Interactive CLI Console & Navigation Drawer
+---
+
+<div id="terminal-modal" class="terminal-modal" aria-hidden="true">
+	<div class="terminal-backdrop" id="terminal-backdrop"></div>
+	<div class="terminal-window" role="dialog" aria-modal="true" aria-label="Terminal Console">
+		<!-- HEADER BAR -->
+		<div class="terminal-header">
+			<div class="terminal-title-group">
+				<span class="status-dot"></span>
+				<span class="terminal-title mono">visitor@brob.uk: ~ (brobOS v1.0)</span>
+			</div>
+			<div class="terminal-actions">
+				<button class="term-btn term-clear-btn" id="term-clear-btn" type="button" title="Clear console (clear)">
+					Clear
+				</button>
+				<button class="term-btn term-close-btn" id="term-close-btn" type="button" title="Close console (Esc or exit)">
+					&times;
+				</button>
+			</div>
+		</div>
+
+		<!-- OUTPUT LOG -->
+		<div class="terminal-body" id="terminal-output">
+			<div class="term-banner mono">
+				<pre class="ascii-art">
+ _              _     ___  ____  
+| |__  _ __ ___| |__ / _ \/ ___| 
+| '_ \| '__/ _ \ '_ \ | | \___ \ 
+| |_) | | |  __/ |_) | |_| |___) |
+|_.__/|_|  \___|_.__/ \___/|____/ 
+				</pre>
+				<p class="banner-sub">brobOS [Version 1.0.0] &bull; Silicon &amp; Systems Console</p>
+				<p class="banner-hint">Type <span class="term-hl">'help'</span> for available commands or <span class="term-hl">'exit'</span> to close. Press <span class="term-hl">Tab</span> to autocomplete.</p>
+			</div>
+		</div>
+
+		<!-- INPUT ROW -->
+		<form class="terminal-input-row" id="terminal-form">
+			<span class="term-prompt mono">visitor@brob.uk:~$</span>
+			<input 
+				type="text" 
+				id="terminal-input" 
+				class="term-input mono" 
+				autocomplete="off" 
+				autocorrect="off" 
+				autocapitalize="off" 
+				spellcheck="false" 
+				placeholder="type command..." 
+			/>
+		</form>
+	</div>
+</div>
+
+<script>
+	function initTerminal() {
+		const modal = document.getElementById('terminal-modal');
+		const backdrop = document.getElementById('terminal-backdrop');
+		const closeBtn = document.getElementById('term-close-btn');
+		const clearBtn = document.getElementById('term-clear-btn');
+		const form = document.getElementById('terminal-form');
+		const input = document.getElementById('terminal-input') as HTMLInputElement | null;
+		const output = document.getElementById('terminal-output');
+		const headerToggle = document.getElementById('terminal-toggle-btn');
+
+		if (!modal || !input || !output) return;
+
+		let history: string[] = [];
+		let historyIndex = -1;
+
+		const COMMANDS = [
+			'help',
+			'about',
+			'skills',
+			'projects',
+			'tests',
+			'network',
+			'mouse',
+			'keyboard',
+			'debug',
+			'cad',
+			'theme',
+			'visitor',
+			'whoami',
+			'date',
+			'clear',
+			'exit'
+		];
+
+		function openTerminal() {
+			modal?.classList.add('open');
+			modal?.setAttribute('aria-hidden', 'false');
+			setTimeout(() => input?.focus(), 50);
+		}
+
+		function closeTerminal() {
+			modal?.classList.remove('open');
+			modal?.setAttribute('aria-hidden', 'true');
+		}
+
+		function toggleTerminal() {
+			if (modal?.classList.contains('open')) {
+				closeTerminal();
+			} else {
+				openTerminal();
+			}
+		}
+
+		// Button listeners
+		headerToggle?.addEventListener('click', toggleTerminal);
+		closeBtn?.addEventListener('click', closeTerminal);
+		backdrop?.addEventListener('click', closeTerminal);
+
+		// Global keyboard toggle (`~` or `Esc`)
+		window.addEventListener('keydown', (e: KeyboardEvent) => {
+			const target = e.target as HTMLElement | null;
+			const isTyping = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') && target !== input;
+
+			if ((e.key === '`' || e.key === '~') && !isTyping) {
+				e.preventDefault();
+				toggleTerminal();
+			} else if (e.key === 'Escape' && modal.classList.contains('open')) {
+				closeTerminal();
+			}
+		});
+
+		function printLine(html: string) {
+			const row = document.createElement('div');
+			row.className = 'term-line mono';
+			row.innerHTML = html;
+			output?.appendChild(row);
+			if (output) output.scrollTop = output.scrollHeight;
+		}
+
+		function clearOutput() {
+			if (output) {
+				output.innerHTML = '';
+				printLine('<span class="term-dim">Console cleared. Type </span><span class="term-hl">help</span><span class="term-dim"> for commands.</span>');
+			}
+		}
+
+		clearBtn?.addEventListener('click', clearOutput);
+
+		function executeCommand(rawCmd: string) {
+			const trimmed = rawCmd.trim();
+			if (!trimmed) return;
+
+			// Add to history
+			history.push(trimmed);
+			historyIndex = history.length;
+
+			// Echo user command
+			printLine(`<span class="term-prompt">visitor@brob.uk:~$</span> <span class="term-cmd">${escapeHtml(trimmed)}</span>`);
+
+			const parts = trimmed.split(/\s+/);
+			const cmd = parts[0].toLowerCase();
+			const args = parts.slice(1);
+
+			switch (cmd) {
+				case 'help':
+					printLine(`
+<div class="help-grid">
+  <div><span class="term-hl">about</span>      — Hardware engineer focus, background & profile links</div>
+  <div><span class="term-hl">skills</span>     — Silicon validation, embedded Linux, 3D CAD platforms</div>
+  <div><span class="term-hl">projects</span>   — Featured projects & 3D CAD design portfolio</div>
+  <div><span class="term-hl">tests</span>      — Jump to hardware & network test suites (#lab)</div>
+  <div><span class="term-hl">network</span>    — Jump to Anycast edge throughput benchmark (#benchmark)</div>
+  <div><span class="term-hl">mouse</span>      — Jump to mouse polling rate & button tester (#input-lab)</div>
+  <div><span class="term-hl">keyboard</span>   — Jump to 104-key switch matrix & latency lab (#keyboard-lab)</div>
+  <div><span class="term-hl">debug</span>      — Jump to client hardware & edge telemetry (#debug)</div>
+  <div><span class="term-hl">cad</span>        — List 11 Autodesk Inventor functional CAD models</div>
+  <div><span class="term-hl">theme</span>      — Toggle or set theme [dark | light | toggle]</div>
+  <div><span class="term-hl">visitor</span>    — Query anonymous D1 visitor counter</div>
+  <div><span class="term-hl">whoami</span>     — Display client connection & edge session info</div>
+  <div><span class="term-hl">date</span>       — Display current UTC timestamp</div>
+  <div><span class="term-hl">clear</span>      — Clear the terminal screen</div>
+  <div><span class="term-hl">exit</span>       — Close the terminal console</div>
+</div>
+<span class="term-dim">Tip: Use Up/Down arrows for command history, and Tab for autocompletion.</span>
+					`);
+					break;
+
+				case 'about':
+					printLine(`
+<span class="term-title">Bo Wu — Hardware Engineer</span>
+Silicon Validation &bull; Embedded Linux &bull; Hardware Systems
+
+Specializing in ATE die sort & yield optimization, high-speed interfaces (PCIe, Ethernet),
+and precision 3D CAD parametric modeling for custom functional hardware.
+
+Verified Links:
+  &bull; <a href="https://www.linkedin.com/in/bowu/" target="_blank" class="term-link">LinkedIn Profile</a>
+  &bull; <a href="https://github.com/bowuu" target="_blank" class="term-link">GitHub Profile</a>
+  &bull; <a href="https://makerworld.com/en/@brob" target="_blank" class="term-link">MakerWorld 3D CAD Portfolio</a>
+					`);
+					break;
+
+				case 'skills':
+					printLine(`
+<span class="term-title">Core Technical Competencies:</span>
+  [Silicon & Validation] Automated Test Equipment (ATE), Die Sort & Yield, Power & Electrical Debug
+  [Embedded Platforms]  Embedded Linux (Yocto, Debian, RHEL), RISC Architectures, PCIe, High-Speed I/O
+  [CAD & Prototyping]   Autodesk Inventor, 3D Parametric Modeling, FDM Rapid Prototyping
+  [Cloud & Edge Systems] Cloudflare Workers, Cloudflare D1 SQL, TypeScript, WebGL (Three.js)
+					`);
+					break;
+
+				case 'projects':
+					printLine(`
+<span class="term-title">Featured Projects & Hardware:</span>
+  1. <span class="term-hl">PlayKeys</span> — Zero-dependency Manifest V3 browser extension for global OS media key control.
+  2. <span class="term-hl">3D CAD Repository</span> — 11 production-grade Autodesk Inventor models with authentic .stp downloads.
+  3. <span class="term-hl">Hardware Test Triad</span> — Anycast edge network benchmark, mouse polling oscilloscope, 104-key switch matrix.
+  4. <span class="term-hl">D1 Visitor Counter</span> — Zero-logging privacy-first engagement-verified counter with daily rotating salt.
+					`);
+					break;
+
+				case 'tests':
+				case 'test':
+				case 'lab':
+					scrollToSection('lab');
+					printLine('Navigating to Hardware & Network Tests (#lab)...');
+					break;
+
+				case 'network':
+				case 'ping':
+				case 'speed':
+					scrollToSection('benchmark');
+					printLine('Navigating to Network Edge Benchmark (#benchmark)...');
+					break;
+
+				case 'mouse':
+					scrollToSection('input-lab');
+					printLine('Navigating to Mouse Polling & Button Lab (#input-lab)...');
+					break;
+
+				case 'keyboard':
+				case 'keys':
+					scrollToSection('keyboard-lab');
+					printLine('Navigating to 104-Key Switch Matrix (#keyboard-lab)...');
+					break;
+
+				case 'debug':
+				case 'telemetry':
+					scrollToSection('debug');
+					printLine('Navigating to Client Hardware & Edge Telemetry (#debug)...');
+					break;
+
+				case 'cad':
+					printLine(`
+<span class="term-title">Autodesk Inventor 3D CAD Catalog (11 Models):</span>
+  1. ASUS RT-BE92U Router Mount
+  2. IKEA Tertial Desk Lamp Heavy Mount
+  3. Audio-Technica ATH-R70x Headband Joiner
+  4. Subaru BRZ / GR86 Armrest Blocker
+  5. Skil 12V Battery Holder
+  6. Hakko FX-888D Soldering Tip Holder
+  7. Micro-USB to USB-C Adapter Leash
+  8. Logitech MX Master Vertical Charging Stand
+  9. Low-Profile Mechanical Keyboard Display Stand
+  10. Wi-Fi 7 Antenna Wall Standoff
+  11. Magnetic Cable Management Guide
+<span class="term-dim">All models render in WebGL with authentic .stp downloads under /public/models/.</span>
+					`);
+					break;
+
+				case 'theme':
+					const sub = args[0]?.toLowerCase();
+					if (sub === 'dark') {
+						document.documentElement.setAttribute('data-theme', 'dark');
+						localStorage.setItem('theme', 'dark');
+						printLine('Theme set to: <span class="term-hl">Obsidian Dark</span>');
+					} else if (sub === 'light') {
+						document.documentElement.removeAttribute('data-theme');
+						localStorage.setItem('theme', 'light');
+						printLine('Theme set to: <span class="term-hl">Clean Light</span>');
+					} else {
+						const current = document.documentElement.getAttribute('data-theme');
+						if (current === 'dark') {
+							document.documentElement.removeAttribute('data-theme');
+							localStorage.setItem('theme', 'light');
+							printLine('Theme toggled to: <span class="term-hl">Clean Light</span>');
+						} else {
+							document.documentElement.setAttribute('data-theme', 'dark');
+							localStorage.setItem('theme', 'dark');
+							printLine('Theme toggled to: <span class="term-hl">Obsidian Dark</span>');
+						}
+					}
+					break;
+
+				case 'visitor':
+				case 'counter':
+					const counterEl = document.getElementById('visitor-count-val');
+					const currentCount = counterEl ? counterEl.textContent : 'active';
+					printLine(`Visitor counter: <span class="term-hl">${currentCount}</span> verified visitors.`);
+					printLine('<span class="term-dim">Backed by Cloudflare D1 with zero IP persistence and daily rotating volatile salts.</span>');
+					break;
+
+				case 'whoami':
+					const ipEl = document.getElementById('t-ip');
+					const locEl = document.getElementById('t-loc');
+					const coloEl = document.getElementById('t-colo');
+					const ip = ipEl ? ipEl.textContent : 'Detected at edge';
+					const loc = locEl ? locEl.textContent : 'Global';
+					const colo = coloEl ? coloEl.textContent : 'Cloudflare Anycast';
+					printLine(`Visitor Identity: <span class="term-hl">visitor@brob.uk</span>`);
+					printLine(`Edge PoP:         <span class="term-dim">${colo} &bull; ${loc}</span>`);
+					printLine(`IP (Ephemeral):   <span class="term-dim">${ip}</span>`);
+					break;
+
+				case 'date':
+					printLine(`UTC Date: <span class="term-hl">${new Date().toUTCString()}</span>`);
+					break;
+
+				case 'clear':
+					clearOutput();
+					break;
+
+				case 'exit':
+				case 'quit':
+					closeTerminal();
+					break;
+
+				default:
+					printLine(`<span class="term-err">Command not found: '${escapeHtml(cmd)}'</span>. Type <span class="term-hl">'help'</span> for available commands.`);
+					break;
+			}
+		}
+
+		function scrollToSection(id: string) {
+			closeTerminal();
+			const el = document.getElementById(id);
+			if (el) {
+				el.scrollIntoView({ behavior: 'smooth' });
+			}
+		}
+
+		function escapeHtml(str: string): string {
+			return str
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;')
+				.replace(/'/g, '&#039;');
+		}
+
+		// Form submit
+		form?.addEventListener('submit', (e) => {
+			e.preventDefault();
+			const cmd = input?.value || '';
+			if (input) input.value = '';
+			executeCommand(cmd);
+		});
+
+		// History & Tab completion
+		input?.addEventListener('keydown', (e: KeyboardEvent) => {
+			if (e.key === 'ArrowUp') {
+				e.preventDefault();
+				if (history.length > 0 && historyIndex > 0) {
+					historyIndex--;
+					input.value = history[historyIndex];
+				}
+			} else if (e.key === 'ArrowDown') {
+				e.preventDefault();
+				if (historyIndex < history.length - 1) {
+					historyIndex++;
+					input.value = history[historyIndex];
+				} else {
+					historyIndex = history.length;
+					input.value = '';
+				}
+			} else if (e.key === 'Tab') {
+				e.preventDefault();
+				const current = input.value.trim().toLowerCase();
+				if (!current) return;
+				const match = COMMANDS.find(c => c.startsWith(current));
+				if (match) {
+					input.value = match;
+				}
+			} else if (e.ctrlKey && e.key.toLowerCase() === 'l') {
+				e.preventDefault();
+				clearOutput();
+			}
+		});
+	}
+
+	initTerminal();
+	document.addEventListener('astro:page-load', initTerminal);
+</script>
+
+<style>
+	.terminal-modal {
+		position: fixed;
+		inset: 0;
+		z-index: 9999;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+		padding: 1.5rem;
+	}
+
+	.terminal-modal.open {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.terminal-backdrop {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.65);
+		backdrop-filter: blur(6px);
+		-webkit-backdrop-filter: blur(6px);
+	}
+
+	.terminal-window {
+		position: relative;
+		width: 100%;
+		max-width: 720px;
+		height: 480px;
+		max-height: 85vh;
+		background: #0d0f14;
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 10px;
+		box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(249, 115, 22, 0.15);
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		transform: scale(0.96) translateY(-8px);
+		transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.terminal-modal.open .terminal-window {
+		transform: scale(1) translateY(0);
+	}
+
+	.terminal-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.65em 1em;
+		background: #141720;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+		user-select: none;
+	}
+
+	.terminal-title-group {
+		display: flex;
+		align-items: center;
+		gap: 0.6em;
+	}
+
+	.status-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: #22c55e;
+		box-shadow: 0 0 8px #22c55e;
+	}
+
+	.terminal-title {
+		font-size: 0.8em;
+		font-weight: 600;
+		color: #94a3b8;
+		letter-spacing: 0.02em;
+	}
+
+	.terminal-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.5em;
+	}
+
+	.term-btn {
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		color: #cbd5e1;
+		border-radius: 4px;
+		padding: 0.2em 0.6em;
+		font-size: 0.75em;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+	.term-btn:hover {
+		background: rgba(255, 255, 255, 0.12);
+		color: #ffffff;
+		border-color: rgba(255, 255, 255, 0.2);
+	}
+
+	.term-close-btn {
+		font-size: 1.1em;
+		padding: 0.05em 0.45em;
+		line-height: 1;
+	}
+	.term-close-btn:hover {
+		background: #ef4444;
+		border-color: #ef4444;
+		color: #ffffff;
+	}
+
+	.terminal-body {
+		flex: 1;
+		padding: 1em;
+		overflow-y: auto;
+		color: #e2e8f0;
+		font-size: 0.84em;
+		line-height: 1.6;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	}
+
+	.terminal-body::-webkit-scrollbar {
+		width: 6px;
+	}
+	.terminal-body::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.15);
+		border-radius: 3px;
+	}
+
+	.ascii-art {
+		margin: 0 0 0.5em 0;
+		font-size: 0.72em;
+		line-height: 1.15;
+		color: var(--accent);
+		opacity: 0.95;
+	}
+
+	.banner-sub {
+		margin: 0;
+		font-weight: 600;
+		color: #f1f5f9;
+	}
+
+	.banner-hint {
+		margin: 0.3em 0 1.2em 0;
+		color: #64748b;
+		font-size: 0.92em;
+	}
+
+	:global(.term-line) {
+		margin-bottom: 0.6em;
+		word-break: break-word;
+	}
+
+	:global(.term-prompt) {
+		color: #22c55e;
+		font-weight: 700;
+	}
+
+	:global(.term-cmd) {
+		color: #ffffff;
+		font-weight: 600;
+	}
+
+	:global(.term-hl) {
+		color: var(--accent);
+		font-weight: 600;
+	}
+
+	:global(.term-dim) {
+		color: #64748b;
+	}
+
+	:global(.term-title) {
+		color: #38bdf8;
+		font-weight: 700;
+		display: block;
+		margin-bottom: 0.25em;
+	}
+
+	:global(.term-err) {
+		color: #f87171;
+	}
+
+	:global(.term-link) {
+		color: #38bdf8;
+		text-decoration: underline;
+	}
+	:global(.term-link:hover) {
+		color: var(--accent);
+	}
+
+	:global(.help-grid) {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25em;
+		margin: 0.4em 0;
+	}
+
+	.terminal-input-row {
+		display: flex;
+		align-items: center;
+		gap: 0.6em;
+		padding: 0.65em 1em;
+		background: #141720;
+		border-top: 1px solid rgba(255, 255, 255, 0.08);
+	}
+
+	.term-input {
+		flex: 1;
+		background: transparent;
+		border: none;
+		outline: none;
+		color: #ffffff;
+		font-size: 0.88em;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	}
+	.term-input::placeholder {
+		color: #475569;
+	}
+</style>

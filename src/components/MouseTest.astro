@@ -1106,7 +1106,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: rgba(0, 0, 0, 0.02);
+		background: #ffffff;
 		border-top: 1.5px solid var(--border-color);
 		border-bottom: 1.5px solid var(--border-color);
 		box-sizing: border-box;
@@ -1114,7 +1114,7 @@
 		z-index: 0;
 	}
 	:global(html[data-theme="dark"]) .mouse-wheel-wrap {
-		background: rgba(255, 255, 255, 0.02);
+		background: #13161f;
 		border-top-color: rgba(255, 255, 255, 0.14);
 		border-bottom-color: rgba(255, 255, 255, 0.14);
 	}
@@ -1185,14 +1185,14 @@
 		border-color: rgba(255, 255, 255, 0.14);
 	}
 
-	/* BUTTON ACTIVE & TESTED STATES (FULL PERIMETER OUTLINE & VIBRANT GLOW) */
+	/* BUTTON ACTIVE STATES (UNIFIED, BALANCED SIGNAL ORANGE GLOW) */
 	.mouse-btn.btn-active {
 		background: #ea580c !important;
 		border-color: #c2410c !important;
 		border-width: 1.5px !important;
 		border-style: solid !important;
 		color: #ffffff !important;
-		box-shadow: 0 0 14px rgba(234, 88, 12, 0.75), inset 0 0 4px #ffffff !important;
+		box-shadow: 0 0 8px rgba(234, 88, 12, 0.45) !important;
 		transition: none !important;
 		z-index: 3 !important;
 	}
@@ -1203,28 +1203,29 @@
 	}
 	:global(html[data-theme="dark"]) .mouse-btn.btn-active {
 		background: #f97316 !important;
-		border-color: #ff9838 !important;
-		box-shadow: 0 0 16px rgba(249, 115, 22, 0.85), inset 0 0 4px #ffffff !important;
+		border-color: #ea580c !important;
+		box-shadow: 0 0 10px rgba(249, 115, 22, 0.5) !important;
 	}
 
-	
-
-	/* Thumb buttons keep border-right: none when active or tested */
-	.mouse-btn-thumb.btn-active,
-	.mouse-btn-thumb.btn-tested {
+	/* Thumb buttons keep border-right: none when active */
+	.mouse-btn-thumb.btn-active {
 		border-right: none !important;
 	}
 
-	/* SCROLL NOTCH ACTIVE & TESTED STATES (SEPARATED DIRECTIONAL FEEDBACK) */
+	/* SCROLL NOTCH ACTIVE STATE (MATCHING BUTTON GLOW INTENSITY) */
 	.notch-active {
-		background: #f97316 !important;
+		background: #ea580c !important;
 		color: #ffffff !important;
-		box-shadow: 0 0 10px rgba(249, 115, 22, 0.95), 0 0 4px #ffffff !important;
+		box-shadow: 0 0 8px rgba(234, 88, 12, 0.45) !important;
 		border-radius: 3px;
+	}
+	:global(html[data-theme="dark"]) .notch-active {
+		background: #f97316 !important;
+		box-shadow: 0 0 10px rgba(249, 115, 22, 0.5) !important;
 	}
 	.notch-active svg {
 		stroke: #ffffff !important;
-		stroke-width: 4 !important;
+		stroke-width: 3.5 !important;
 	}
 	.notch-up.notch-active {
 		transform: translateY(-2px) scale(1.15);

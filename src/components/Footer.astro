@@ -17,11 +17,40 @@ const isoTimestamp = now.toISOString();
 
 <footer>
 	<!-- BUILD TIMESTAMP -->
-	<p class="last-updated">Last updated: <time datetime={isoTimestamp}>{lastUpdated}</time></p>
+	<p class="last-updated">Last updated: <time id="footer-build-time" datetime={isoTimestamp}>{lastUpdated}</time></p>
 
 	<!-- COPYRIGHT -->
 	<p class="copyright">&copy; {currentYear} Bo Wu. All rights reserved.</p>
 </footer>
+
+<script>
+	function formatLocalTimestamp() {
+		const timeEl = document.getElementById('footer-build-time');
+		if (!timeEl) return;
+		const iso = timeEl.getAttribute('datetime');
+		if (!iso) return;
+
+		const date = new Date(iso);
+		if (isNaN(date.getTime())) return;
+
+		try {
+			// Dynamically formats the timestamp to the visitor's device locale and local timezone (e.g., PST in CA, CST in TX, EST in NY)
+			timeEl.textContent = new Intl.DateTimeFormat('en-US', {
+				month: 'long',
+				day: 'numeric',
+				year: 'numeric',
+				hour: 'numeric',
+				minute: '2-digit',
+				timeZoneName: 'short',
+			}).format(date);
+		} catch {
+			// Keep build-time fallback if Intl formatting encounters an issue
+		}
+	}
+
+	formatLocalTimestamp();
+	document.addEventListener('astro:page-load', formatLocalTimestamp);
+</script>
 
 <style>
 	footer {

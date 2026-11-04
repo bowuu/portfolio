@@ -181,14 +181,11 @@
 		let totalPackets = 0;
 		let eventTimestamps: number[] = [];
 		let intervalHistory: number[] = [];
-		const SPARKLINE_POINTS = 60;
+		const SPARKLINE_POINTS = 50;
 		let sparklineData: number[] = new Array(SPARKLINE_POINTS).fill(0);
-
-		let lastPointerEventTime = 0;
-		let packetsInCurrentSlice = 0;
-		let lastSliceTime = performance.now();
-		let animFrameId: number | null = null;
-		let isSamplingRunning = false;
+		let decayTimer: any = null;
+		let lastDomUpdateTime = 0;
+		let lastGraphSampleTime = 0;
 
 		// Reflex State
 		type ReactionState = 'IDLE' | 'WAITING' | 'READY' | 'TOO_SOON' | 'RESULT';
@@ -227,7 +224,7 @@
 			const labelMargin = 58;
 			const plotW = Math.max(10, w - labelMargin);
 			const yBaseline = h - 10;
-			const yTop = 12;
+			const yTop = 14;
 			const usableH = yBaseline - yTop;
 
 			// Determine dynamic scale ceiling based on observed peak
@@ -295,7 +292,7 @@
 				ctx.lineTo(0, yBaseline);
 				ctx.closePath();
 				const grad = ctx.createLinearGradient(0, yTop, 0, yBaseline);
-				grad.addColorStop(0, isDark ? 'rgba(255, 107, 0, 0.28)' : 'rgba(234, 88, 12, 0.18)');
+				grad.addColorStop(0, isDark ? 'rgba(255, 107, 0, 0.25)' : 'rgba(234, 88, 12, 0.16)');
 				grad.addColorStop(1, 'rgba(255, 107, 0, 0.0)');
 				ctx.fillStyle = grad;
 				ctx.fill();
@@ -307,7 +304,7 @@
 					const headY = yBaseline - lastNorm * usableH;
 
 					ctx.beginPath();
-					ctx.arc(plotW, headY, 5, 0, Math.PI * 2);
+					ctx.arc(plotW, headY, 4.5, 0, Math.PI * 2);
 					ctx.fillStyle = 'rgba(255, 107, 0, 0.35)';
 					ctx.fill();
 
@@ -321,38 +318,43 @@
 			ctx.restore();
 		}
 
-		function startSamplingLoop() {
-			let idleSlices = 0;
+		function handlePointerMove(e: PointerEvent) {
+			const events: PointerEvent[] = (typeof (e as any).getCoalescedEvents === 'function')
+				? (e as any).getCoalescedEvents()
+				: [e];
 
-			function tick() {
-				const now = performance.now();
-				const dtSlice = now - lastSliceTime;
+			const now = performance.now();
 
-				// Sample every ~28ms (~35 updates/sec gives silky smooth rolling waveform)
-				if (dtSlice >= 28) {
-					const isMoving = (now - lastPointerEventTime) < 95;
-					let currentRate = 0;
+			for (const evt of events) {
+				const t = (evt.timeStamp && evt.timeStamp > 0) ? evt.timeStamp : now;
+				totalPackets++;
 
-					if (isMoving && intervalHistory.length >= 3) {
-						// Calculate median dt from hardware intervals
-						const sorted = [...intervalHistory].sort((a, b) => a - b);
-						const medianDt = sorted[Math.floor(sorted.length / 2)];
-						const medianHz = Math.round(1000 / medianDt);
+				if (eventTimestamps.length > 0) {
+					const dt = t - eventTimestamps[eventTimestamps.length - 1];
+					if (dt > 0.05 && dt < 80) {
+						intervalHistory.push(dt);
+						if (intervalHistory.length > 40) intervalHistory.shift();
+					}
+				}
+				eventTimestamps.push(t);
+				if (eventTimestamps.length > 50) eventTimestamps.shift();
+			}
 
-						// Calculate packet throughput in this 28ms window
-						const windowHz = Math.round((packetsInCurrentSlice / (dtSlice / 1000)));
+			if (intervalHistory.length >= 4) {
+				const sorted = [...intervalHistory].sort((a, b) => a - b);
+				const medianDt = sorted[Math.floor(sorted.length / 2)];
+				const currentHz = Math.round(1000 / medianDt);
 
-						// Blend throughput with median to capture authentic hand movements & micro-jitter
-						if (windowHz > 0) {
-							currentRate = Math.min(10000, Math.max(40, Math.round(windowHz * 0.45 + medianHz * 0.55)));
-						} else {
-							currentRate = medianHz;
-						}
+				// 1. Throttle text/DOM updates to every ~100ms (10 updates/sec)
+				// Keeps the numeric readout stable, calm, and readable without rapid flickering
+				if (now - lastDomUpdateTime >= 100) {
+					lastDomUpdateTime = now;
 
-						if (pollCurrentHz) pollCurrentHz.textContent = `${currentRate}`;
+					if (currentHz > 40 && currentHz < 12000) {
+						if (pollCurrentHz) pollCurrentHz.textContent = `${currentHz}`;
 
-						if (currentRate > peakHz) {
-							peakHz = currentRate;
+						if (currentHz > peakHz) {
+							peakHz = currentHz;
 							if (pollPeakSub) pollPeakSub.textContent = `Peak: ${peakHz.toLocaleString()} Hz`;
 						}
 
@@ -379,66 +381,32 @@
 								tierBadgeEl.className = 'badge mono';
 							}
 						}
-						idleSlices = 0;
-					} else {
-						// Cursor stopped moving: drop rate cleanly to 0
-						currentRate = 0;
-						if (pollCurrentHz) pollCurrentHz.textContent = '0';
-						idleSlices++;
 					}
+				}
 
-					packetsInCurrentSlice = 0;
-					lastSliceTime = now;
+				// 2. Throttle sparkline graph sampling to every ~80ms (12.5 updates/sec)
+				// 50 points * 80ms = 4.0 seconds of smooth, readable visual history!
+				if (now - lastGraphSampleTime >= 80) {
+					lastGraphSampleTime = now;
+					const recentDt = intervalHistory[intervalHistory.length - 1] || medianDt;
+					const instantHz = Math.min(10000, Math.max(30, Math.round(1000 / recentDt)));
+					// Blend 75% median with 25% instant for a stable wave that gently ripples along the guideline
+					const pointRate = Math.round(currentHz * 0.75 + instantHz * 0.25);
 
-					sparklineData.push(currentRate);
+					sparklineData.push(pointRate);
 					if (sparklineData.length > SPARKLINE_POINTS) sparklineData.shift();
-
 					drawSparkline();
-
-					// When idle and the entire sparkline has completely cleared back to 0, stop loop to save battery
-					if (idleSlices > SPARKLINE_POINTS + 10) {
-						isSamplingRunning = false;
-						if (animFrameId) cancelAnimationFrame(animFrameId);
-						animFrameId = null;
-						return;
-					}
 				}
-
-				animFrameId = requestAnimationFrame(tick);
 			}
 
-			lastSliceTime = performance.now();
-			animFrameId = requestAnimationFrame(tick);
-		}
-
-		function handlePointerMove(e: PointerEvent) {
-			const events: PointerEvent[] = (typeof (e as any).getCoalescedEvents === 'function')
-				? (e as any).getCoalescedEvents()
-				: [e];
-
-			const now = performance.now();
-			lastPointerEventTime = now;
-
-			for (const evt of events) {
-				const t = (evt.timeStamp && evt.timeStamp > 0) ? evt.timeStamp : now;
-				totalPackets++;
-				packetsInCurrentSlice++;
-
-				if (eventTimestamps.length > 0) {
-					const dt = t - eventTimestamps[eventTimestamps.length - 1];
-					if (dt > 0.05 && dt < 80) {
-						intervalHistory.push(dt);
-						if (intervalHistory.length > 40) intervalHistory.shift();
-					}
-				}
-				eventTimestamps.push(t);
-				if (eventTimestamps.length > 50) eventTimestamps.shift();
-			}
-
-			if (!isSamplingRunning) {
-				isSamplingRunning = true;
-				startSamplingLoop();
-			}
+			// 3. Zero-cost idle decay: after 200ms of no pointer movement, drop to 0 and go completely to sleep
+			clearTimeout(decayTimer);
+			decayTimer = setTimeout(() => {
+				if (pollCurrentHz) pollCurrentHz.textContent = '0';
+				sparklineData.push(0);
+				if (sparklineData.length > SPARKLINE_POINTS) sparklineData.shift();
+				drawSparkline();
+			}, 200);
 		}
 
 		function startReactionTest() {
@@ -621,9 +589,9 @@
 				eventTimestamps = [];
 				intervalHistory = [];
 				sparklineData = new Array(SPARKLINE_POINTS).fill(0);
-				if (animFrameId) cancelAnimationFrame(animFrameId);
-				animFrameId = null;
-				isSamplingRunning = false;
+				clearTimeout(decayTimer);
+				lastDomUpdateTime = 0;
+				lastGraphSampleTime = 0;
 				reactionScores = [];
 				bestReflex = Infinity;
 				clearTimeout(stateTimer);

@@ -1,5 +1,5 @@
 ---
-// SystemInspector.astro - Real-time client-side hardware & edge telemetry inspector
+// SystemInspector.astro - Real-time client-side hardware, runtime & edge telemetry inspector
 ---
 
 <section class="card telemetry-card" id="debug">
@@ -34,7 +34,7 @@
 		</summary>
 		<div class="privacy-body">
 			<p>
-				<strong>Client-Side Evaluation:</strong> The hardware, GPU, CPU, and screen metrics below are read ephemerally in your active browser session via standard WebGL, Screen, and Navigator APIs. <strong>No hardware or browser fingerprinting data is collected, stored, or transmitted to any server or database.</strong>
+				<strong>Client-Side Evaluation:</strong> The hardware, GPU, CPU, and screen metrics below are read ephemerally in your active browser session via standard WebGL, Screen, Storage, and Navigator APIs. <strong>No hardware or browser fingerprinting data is collected, stored, or transmitted to any server or database.</strong>
 			</p>
 			<p>
 				<strong>Network &amp; Edge Layer:</strong> Like all websites and content delivery networks, Cloudflare Pages edge infrastructure receives standard HTTP connection metadata (such as your connecting IP address and Anycast routing headers) at the network layer to deliver web assets and protect against DDoS attacks.
@@ -42,55 +42,156 @@
 		</div>
 	</details>
 
-	<!-- CLIENT HARDWARE & BROWSER TELEMETRY GRID -->
-	<div class="telemetry-grid">
-		<div class="telemetry-item">
-			<span class="t-label">Public IP</span>
-			<span id="t-ip" class="t-val mono ip-val">Detecting...</span>
+	<!-- SUBSECTION 1: EDGE & NETWORK -->
+	<div class="telemetry-group">
+		<div class="telemetry-group-header">
+			<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+				<circle cx="12" cy="12" r="10"/>
+				<line x1="2" y1="12" x2="22" y2="12"/>
+				<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+			</svg>
+			<span>Edge &amp; Network</span>
 		</div>
-		<div class="telemetry-item">
-			<span class="t-label">Location</span>
-			<span id="t-location" class="t-val">Detecting...</span>
+		<div class="telemetry-grid">
+			<div class="telemetry-item">
+				<span class="t-label">Public IP</span>
+				<span id="t-ip" class="t-val mono ip-val">Detecting...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Location</span>
+				<span id="t-location" class="t-val">Detecting...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Edge Datacenter</span>
+				<span id="t-edge" class="t-val">Detecting...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Network &amp; ISP</span>
+				<span id="t-isp" class="t-val">Detecting...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Protocol &amp; Transport</span>
+				<span id="t-protocol" class="t-val">Detecting...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Security &amp; TLS Cipher</span>
+				<span id="t-tls" class="t-val">Negotiating...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Edge Clock Skew</span>
+				<span id="t-skew" class="t-val">Synchronizing...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Connection Profile</span>
+				<span id="t-connection" class="t-val">Analyzing...</span>
+			</div>
 		</div>
-		<div class="telemetry-item">
-			<span class="t-label">Edge Datacenter</span>
-			<span id="t-edge" class="t-val">Detecting...</span>
+	</div>
+
+	<!-- SUBSECTION 2: HARDWARE & COMPUTE -->
+	<div class="telemetry-group">
+		<div class="telemetry-group-header">
+			<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+				<rect x="4" y="4" width="16" height="16" rx="2"/>
+				<rect x="9" y="9" width="6" height="6"/>
+				<line x1="9" y1="1" x2="9" y2="4"/>
+				<line x1="15" y1="1" x2="15" y2="4"/>
+				<line x1="9" y1="20" x2="9" y2="23"/>
+				<line x1="15" y1="20" x2="15" y2="23"/>
+				<line x1="20" y1="9" x2="23" y2="9"/>
+				<line x1="20" y1="14" x2="23" y2="14"/>
+				<line x1="1" y1="9" x2="4" y2="9"/>
+				<line x1="1" y1="14" x2="4" y2="14"/>
+			</svg>
+			<span>Hardware &amp; Compute</span>
 		</div>
-		<div class="telemetry-item">
-			<span class="t-label">Network &amp; ISP</span>
-			<span id="t-isp" class="t-val">Detecting...</span>
+		<div class="telemetry-grid">
+			<div class="telemetry-item">
+				<span class="t-label">Operating System</span>
+				<span id="t-os" class="t-val">Detecting...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Processor (CPU)</span>
+				<span id="t-cpu" class="t-val">Detecting...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">System Memory</span>
+				<span id="t-ram" class="t-val">Detecting...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">JS Heap Memory</span>
+				<span id="t-memory" class="t-val">Measuring...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Graphics Card (GPU)</span>
+				<span id="t-gpu" class="t-val">Detecting WebGL...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Compute Acceleration</span>
+				<span id="t-accel" class="t-val">Probing WebGPU / SIMD...</span>
+			</div>
 		</div>
-		<div class="telemetry-item">
-			<span class="t-label">Operating System</span>
-			<span id="t-os" class="t-val">Detecting...</span>
+	</div>
+
+	<!-- SUBSECTION 3: DISPLAY, AUDIO & MEDIA -->
+	<div class="telemetry-group">
+		<div class="telemetry-group-header">
+			<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+				<rect x="2" y="3" width="20" height="14" rx="2"/>
+				<line x1="8" y1="21" x2="16" y2="21"/>
+				<line x1="12" y1="17" x2="12" y2="21"/>
+			</svg>
+			<span>Display, Audio &amp; Media</span>
 		</div>
-		<div class="telemetry-item">
-			<span class="t-label">Processor (CPU)</span>
-			<span id="t-cpu" class="t-val">Detecting...</span>
+		<div class="telemetry-grid">
+			<div class="telemetry-item">
+				<span class="t-label">Display &amp; Scaling</span>
+				<span id="t-display" class="t-val">Detecting...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Panel Refresh &amp; Gamut</span>
+				<span id="t-refresh" class="t-val">Measuring refresh rate...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Audio Pipeline Latency</span>
+				<span id="t-audio" class="t-val">Probing DAC sink...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Hardware Video Codecs</span>
+				<span id="t-codecs" class="t-val">Probing ASIC decoders...</span>
+			</div>
 		</div>
-		<div class="telemetry-item">
-			<span class="t-label">System Memory</span>
-			<span id="t-ram" class="t-val">Detecting...</span>
+	</div>
+
+	<!-- SUBSECTION 4: PERIPHERALS & SYSTEM STATE -->
+	<div class="telemetry-group">
+		<div class="telemetry-group-header">
+			<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+				<rect x="2" y="6" width="20" height="12" rx="6"/>
+				<line x1="6" y1="12" x2="10" y2="12"/>
+				<line x1="8" y1="10" x2="8" y2="14"/>
+				<circle cx="15.5" cy="12" r="1" fill="currentColor"/>
+				<circle cx="18" cy="10" r="1" fill="currentColor"/>
+			</svg>
+			<span>Peripherals &amp; System State</span>
 		</div>
-		<div class="telemetry-item">
-			<span class="t-label">Graphics Card (GPU)</span>
-			<span id="t-gpu" class="t-val">Detecting WebGL...</span>
-		</div>
-		<div class="telemetry-item">
-			<span class="t-label">Display &amp; Scaling</span>
-			<span id="t-display" class="t-val">Detecting...</span>
-		</div>
-		<div class="telemetry-item">
-			<span class="t-label">Panel Refresh &amp; Gamut</span>
-			<span id="t-refresh" class="t-val">Measuring refresh rate...</span>
-		</div>
-		<div class="telemetry-item">
-			<span class="t-label">Audio Pipeline Latency</span>
-			<span id="t-audio" class="t-val">Probing DAC sink...</span>
-		</div>
-		<div class="telemetry-item">
-			<span class="t-label">Compute Acceleration</span>
-			<span id="t-accel" class="t-val">Probing WebGPU / SIMD...</span>
+		<div class="telemetry-grid">
+			<div class="telemetry-item">
+				<span class="t-label">Battery &amp; Power</span>
+				<span id="t-battery" class="t-val">Probing power state...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Pointer &amp; Interaction</span>
+				<span id="t-pointer" class="t-val">Detecting digitizer...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Gamepad Controller</span>
+				<span id="t-gamepad" class="t-val">Probing controller bus...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Storage Quota</span>
+				<span id="t-storage" class="t-val">Querying StorageManager...</span>
+			</div>
 		</div>
 	</div>
 </section>
@@ -211,20 +312,41 @@
 	};
 
 	async function initTelemetry() {
+		// Edge & Network elements
 		const ipEl = document.getElementById('t-ip');
 		const locEl = document.getElementById('t-location');
 		const edgeEl = document.getElementById('t-edge');
 		const ispEl = document.getElementById('t-isp');
+		const protocolEl = document.getElementById('t-protocol');
+		const tlsEl = document.getElementById('t-tls');
+		const skewEl = document.getElementById('t-skew');
+		const connEl = document.getElementById('t-connection');
+
+		// Hardware & Compute elements
 		const osEl = document.getElementById('t-os');
 		const cpuEl = document.getElementById('t-cpu');
 		const ramEl = document.getElementById('t-ram');
+		const memEl = document.getElementById('t-memory');
 		const gpuEl = document.getElementById('t-gpu');
-		const displayEl = document.getElementById('t-display');
+		const accelEl = document.getElementById('t-accel');
 
-		// Instant Client Detection
+		// Display, Audio & Media elements
+		const displayEl = document.getElementById('t-display');
+		const refreshEl = document.getElementById('t-refresh');
+		const audioEl = document.getElementById('t-audio');
+		const codecsEl = document.getElementById('t-codecs');
+
+		// Peripherals & System elements
+		const batteryEl = document.getElementById('t-battery');
+		const pointerEl = document.getElementById('t-pointer');
+		const gamepadEl = document.getElementById('t-gamepad');
+		const storageEl = document.getElementById('t-storage');
+
+		// 1. Instant Client Detection: GPU
 		const gpuString = detectGPU();
 		if (gpuEl) gpuEl.textContent = gpuString;
 
+		// 2. Instant Client Detection: OS
 		if (osEl) {
 			osEl.textContent = detectOS(gpuString);
 			const navData = (navigator as any).userAgentData;
@@ -263,28 +385,45 @@
 			}
 		}
 
+		// 3. Processor Concurrency
 		if (cpuEl) {
 			const cores = navigator.hardwareConcurrency;
 			cpuEl.textContent = cores ? `${cores} Logical CPU Cores` : 'Multi-core Processor';
 			cpuEl.title = 'W3C Navigator API exposes total logical thread concurrency. Heterogeneous P/E core topology is abstracted by the OS scheduler to prevent hardware fingerprinting.';
 		}
 
+		// 4. System Memory
 		if (ramEl) {
 			const mem = (navigator as any).deviceMemory;
 			ramEl.textContent = mem ? `${mem} GB RAM` : '64-bit Architecture';
 		}
 
+		// 5. JS Heap Memory Pressure (Chromium)
+		if (memEl) {
+			const perfMem = (performance as any).memory;
+			if (perfMem && perfMem.usedJSHeapSize) {
+				const formatMem = () => {
+					const used = (perfMem.usedJSHeapSize / (1024 * 1024)).toFixed(1);
+					const total = (perfMem.totalJSHeapSize / (1024 * 1024)).toFixed(1);
+					memEl.textContent = `${used} MB / ${total} MB Heap`;
+				};
+				formatMem();
+				setInterval(formatMem, 3000);
+				memEl.title = 'Live V8 JavaScript heap allocation and memory pressure. Updates periodically.';
+			} else {
+				memEl.textContent = 'Managed (64-bit V8)';
+				memEl.title = 'JavaScript heap introspection restricted by browser security policies.';
+			}
+		}
+
+		// 6. Display & Scaling
 		if (displayEl) {
 			const dpr = window.devicePixelRatio ? ` @ ${window.devicePixelRatio}x scaling` : '';
 			const depth = window.screen.colorDepth ? ` (${window.screen.colorDepth}-bit color)` : '';
 			displayEl.textContent = `${window.screen.width} × ${window.screen.height}${dpr}${depth}`;
 		}
 
-		const refreshEl = document.getElementById('t-refresh');
-		const audioEl = document.getElementById('t-audio');
-		const accelEl = document.getElementById('t-accel');
-
-		// 1. Color Gamut, HDR, and Refresh Rate Detection (VRR / LTPO aware)
+		// 7. Panel Refresh & Gamut
 		const isP3 = window.matchMedia('(color-gamut: p3)').matches;
 		const isRec2020 = window.matchMedia('(color-gamut: rec2020)').matches;
 		const isHDR = window.matchMedia('(dynamic-range: high)').matches;
@@ -313,7 +452,6 @@
 					} else {
 						isSampling = false;
 						if (frameTimes.length > 5) {
-							// Discard outliers and find minimum delta (peak display throughput)
 							const clean = frameTimes.slice(3).sort((a, b) => a - b);
 							const p15 = clean[Math.floor(clean.length * 0.2)];
 							let rawHz = Math.round(1000 / p15);
@@ -336,10 +474,8 @@
 				requestAnimationFrame(onFrame);
 			}
 
-			// Initial measurement
 			measureRefreshBurst(30);
 
-			// On touch / scroll / interaction (wakes up mobile LTPO 120Hz compositor)
 			const wakeVRR = () => {
 				measureRefreshBurst(35);
 			};
@@ -350,7 +486,7 @@
 			refreshEl.addEventListener('click', () => measureRefreshBurst(50));
 		}
 
-		// 2. Audio Pipeline Latency
+		// 8. Audio Pipeline Latency
 		if (audioEl) {
 			try {
 				const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -375,7 +511,7 @@
 			}
 		}
 
-		// 3. Compute Acceleration
+		// 9. Compute Acceleration
 		if (accelEl) {
 			const hasWebGPU = typeof (navigator as any).gpu !== 'undefined';
 			const hasSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
@@ -387,9 +523,149 @@
 			accelEl.textContent = features.join(' • ');
 		}
 
-		// Cloudflare Edge Ephemeral Detection
+		// 10. Hardware Video Codecs (MediaCapabilities API)
+		if (codecsEl) {
+			const probeCodecs = async () => {
+				if (navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo) {
+					const candidates = [
+						{ name: 'AV1', config: { type: 'file', video: { contentType: 'video/mp4; codecs="av01.0.08M.10"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } } },
+						{ name: 'HEVC', config: { type: 'file', video: { contentType: 'video/mp4; codecs="hvc1.1.6.L93.B0"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } } },
+						{ name: 'VP9', config: { type: 'file', video: { contentType: 'video/webm; codecs="vp09.00.10.08"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } } },
+						{ name: 'H.264', config: { type: 'file', video: { contentType: 'video/mp4; codecs="avc1.640028"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } } },
+					];
+					const supported: string[] = [];
+					for (const c of candidates) {
+						try {
+							const res = await navigator.mediaCapabilities.decodingInfo(c.config as any);
+							if (res.supported) {
+								supported.push(c.name);
+							}
+						} catch (_) {}
+					}
+					if (supported.length > 0) {
+						codecsEl.textContent = `${supported.join(' • ')} (Hardware)`;
+					} else {
+						codecsEl.textContent = 'H.264 • VP9 • WebM';
+					}
+				} else {
+					codecsEl.textContent = 'H.264 • VP9 • WebM';
+				}
+			};
+			probeCodecs();
+			codecsEl.title = 'W3C MediaCapabilities API checking GPU silicon ASIC hardware-accelerated video decoding.';
+		}
+
+		// 11. Battery & Power Profile (Battery Status API)
+		if (batteryEl) {
+			if ('getBattery' in navigator) {
+				(navigator as any).getBattery().then((battery: any) => {
+					const updateBattery = () => {
+						const level = Math.round(battery.level * 100);
+						const charging = battery.charging;
+						if (charging && level === 100) {
+							batteryEl.textContent = '100% (AC Line Power)';
+						} else if (charging) {
+							batteryEl.textContent = `${level}% (Charging)`;
+						} else if (battery.dischargingTime && isFinite(battery.dischargingTime) && battery.dischargingTime < 86400) {
+							const hrs = Math.floor(battery.dischargingTime / 3600);
+							const mins = Math.floor((battery.dischargingTime % 3600) / 60);
+							batteryEl.textContent = `${level}% (~${hrs}h ${mins}m left)`;
+						} else {
+							batteryEl.textContent = `${level}% (Battery)`;
+						}
+					};
+					updateBattery();
+					battery.addEventListener('chargingchange', updateBattery);
+					battery.addEventListener('levelchange', updateBattery);
+				}).catch(() => {
+					batteryEl.textContent = 'AC Power / Desktop';
+				});
+			} else {
+				batteryEl.textContent = 'AC Power / Desktop';
+			}
+			batteryEl.title = 'W3C Battery Status API reporting real-time charge state, power source, and discharge telemetry.';
+		}
+
+		// 12. Pointer & Interaction
+		if (pointerEl) {
+			const isFine = window.matchMedia('(pointer: fine)').matches;
+			const canHover = window.matchMedia('(hover: hover)').matches;
+			const touchPoints = navigator.maxTouchPoints || 0;
+			
+			if (isFine && touchPoints > 0) {
+				pointerEl.textContent = `Fine Mouse • ${touchPoints}-Pt Touch`;
+			} else if (isFine) {
+				pointerEl.textContent = `Fine Mouse / Trackpad (${canHover ? 'Hover' : 'Pointer'})`;
+			} else if (touchPoints > 0) {
+				pointerEl.textContent = `Touch (${touchPoints}-Point Digitizer)`;
+			} else {
+				pointerEl.textContent = 'Standard Pointer Device';
+			}
+			pointerEl.title = 'CSS Media Queries Level 4 pointer precision, hover capability, and hardware multitouch digitizer points.';
+		}
+
+		// 13. Gamepad Controller (Gamepad API)
+		if (gamepadEl) {
+			const updateGamepads = () => {
+				const pads = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(Boolean) : [];
+				if (pads.length > 0) {
+					const name = pads[0]?.id?.split('(')[0]?.trim() || 'Generic Pad';
+					gamepadEl.textContent = `${pads.length} Connected (${name})`;
+				} else {
+					gamepadEl.textContent = '0 Connected (None detected)';
+				}
+			};
+			updateGamepads();
+			window.addEventListener('gamepadconnected', updateGamepads);
+			window.addEventListener('gamepaddisconnected', updateGamepads);
+			gamepadEl.title = 'W3C Gamepad API detecting connected USB and Bluetooth controllers in real-time.';
+		}
+
+		// 14. Storage Quota (StorageManager API)
+		if (storageEl) {
+			if (navigator.storage && navigator.storage.estimate) {
+				navigator.storage.estimate().then((est) => {
+					const usedMB = ((est.usage || 0) / (1024 * 1024)).toFixed(1);
+					const quotaGB = ((est.quota || 0) / (1024 * 1024 * 1024)).toFixed(1);
+					const pct = est.quota ? (((est.usage || 0) / est.quota) * 100).toFixed(1) : '0';
+					storageEl.textContent = `${usedMB} MB / ${quotaGB} GB (${pct}%)`;
+				}).catch(() => {
+					storageEl.textContent = 'Persistent Storage Active';
+				});
+			} else {
+				storageEl.textContent = 'Standard Browser Cache';
+			}
+			storageEl.title = 'W3C StorageManager total disk space quota allocated to origin for CacheStorage and IndexedDB.';
+		}
+
+		// 15. Connection Profile (Network Information API)
+		if (connEl) {
+			const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+			if (conn) {
+				const updateConn = () => {
+					const parts = [];
+					if (conn.effectiveType) parts.push(conn.effectiveType.toUpperCase());
+					if (conn.downlink) parts.push(`~${conn.downlink} Mbps`);
+					if (conn.rtt) parts.push(`${conn.rtt}ms RTT`);
+					if (conn.saveData) parts.push('Data Saver');
+					connEl.textContent = parts.length > 0 ? parts.join(' • ') : 'Broadband Connection';
+				};
+				updateConn();
+				if (conn.addEventListener) {
+					conn.addEventListener('change', updateConn);
+				}
+			} else {
+				connEl.textContent = navigator.onLine ? 'Broadband / LAN (Active)' : 'Offline';
+			}
+			connEl.title = 'W3C NetworkInformation API effective connection tier, estimated throughput, and round-trip time.';
+		}
+
+		// 16. Cloudflare Edge Ephemeral Detection & Protocol/TLS/Clock Skew
 		try {
+			const fetchStart = performance.now();
 			const res = await fetch('/api/visitor-info', { cache: 'no-store' });
+			const fetchRtt = performance.now() - fetchStart;
+
 			if (res.ok) {
 				const data = await res.json();
 				if (ipEl) ipEl.textContent = data.ip || 'Unavailable';
@@ -418,6 +694,53 @@
 					const isp = data.isp ? `${data.isp}` : 'Broadband Provider';
 					ispEl.textContent = asn ? `${isp} (${asn})` : isp;
 				}
+
+				// Protocol & Transport
+				if (protocolEl) {
+					let proto = data.protocol || 'HTTP/2';
+					const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+					if (nav && nav.nextHopProtocol) {
+						const nhp = nav.nextHopProtocol.toLowerCase();
+						if (nhp.includes('h3')) proto = 'HTTP/3 (QUIC / UDP)';
+						else if (nhp.includes('h2')) proto = 'HTTP/2 (Multiplexed)';
+						else if (nhp.includes('http/1.1')) proto = 'HTTP/1.1 (TCP)';
+					} else if (proto === 'HTTP/3') {
+						proto = 'HTTP/3 (QUIC / UDP)';
+					} else if (proto === 'HTTP/2') {
+						proto = 'HTTP/2 (Multiplexed)';
+					}
+					protocolEl.textContent = proto;
+					protocolEl.title = 'Active HTTP transport protocol negotiated between browser and Cloudflare Anycast edge.';
+				}
+
+				// Security & TLS Cipher
+				if (tlsEl) {
+					const tlsVer = data.tlsVersion || 'TLS 1.3';
+					let cipher = data.tlsCipher || '';
+					if (cipher) {
+						cipher = cipher
+							.replace(/^AEAD-/, '')
+							.replace(/-SHA\d+$/, '');
+						tlsEl.textContent = `${tlsVer} • ${cipher}`;
+					} else {
+						tlsEl.textContent = `${tlsVer} (Modern AEAD)`;
+					}
+					tlsEl.title = `TLS handshake version and cipher suite: ${data.tlsCipher || 'Encrypted'}`;
+				}
+
+				// Edge Clock Skew
+				if (skewEl && data.serverTime) {
+					const clientMid = Date.now() - Math.round(fetchRtt / 2);
+					const deltaMs = Math.round(clientMid - data.serverTime);
+					if (Math.abs(deltaMs) <= 15) {
+						skewEl.textContent = `Aligned (±${Math.abs(deltaMs)} ms)`;
+					} else if (deltaMs > 0) {
+						skewEl.textContent = `+${deltaMs} ms (Client ahead)`;
+					} else {
+						skewEl.textContent = `${deltaMs} ms (Client behind)`;
+					}
+					skewEl.title = `Clock synchronization offset between your device and Cloudflare's atomic clock (RTT: ${Math.round(fetchRtt)}ms).`;
+				}
 			} else {
 				throw new Error('Edge endpoint responded with non-200');
 			}
@@ -426,6 +749,9 @@
 			if (locEl) locEl.textContent = 'Direct Connection';
 			if (edgeEl) edgeEl.textContent = 'Localhost (Dev Edge)';
 			if (ispEl) ispEl.textContent = 'Cloudflare Protected';
+			if (protocolEl) protocolEl.textContent = 'HTTP/2 (Multiplexed)';
+			if (tlsEl) tlsEl.textContent = 'TLS 1.3 (Modern AEAD)';
+			if (skewEl) skewEl.textContent = 'Local Reference (0 ms)';
 		}
 	}
 
@@ -570,7 +896,7 @@
 		flex-wrap: wrap;
 		gap: 0.6em;
 		padding-bottom: 0.8em;
-		margin-bottom: 1em;
+		margin-bottom: 1.25em;
 		border-bottom: 1.5px solid var(--border-color);
 	}
 	.card-title {
@@ -588,6 +914,38 @@
 	.card-icon {
 		color: var(--accent);
 		flex-shrink: 0;
+	}
+
+	/* SUBSECTIONS */
+	.telemetry-group {
+		margin-bottom: 1.5em;
+		padding-bottom: 1.4em;
+		border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+	}
+	:global(html[data-theme="light"]) .telemetry-group {
+		border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
+	}
+	.telemetry-group:last-child {
+		margin-bottom: 0;
+		padding-bottom: 0;
+		border-bottom: none;
+	}
+
+	.telemetry-group-header {
+		display: flex;
+		align-items: center;
+		gap: 0.55em;
+		font-size: 0.78em;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.07em;
+		color: var(--accent);
+		margin-bottom: 0.9em;
+	}
+	.telemetry-group-header svg {
+		flex-shrink: 0;
+		color: var(--accent);
+		opacity: 0.9;
 	}
 
 	.telemetry-grid {

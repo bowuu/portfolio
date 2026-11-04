@@ -16,8 +16,14 @@ const isoTimestamp = now.toISOString();
 ---
 
 <footer>
-	<!-- BUILD TIMESTAMP -->
-	<p class="last-updated">Last updated: <time id="footer-build-time" datetime={isoTimestamp}>{lastUpdated}</time></p>
+	<!-- BUILD TIMESTAMP & ANONYMOUS VISITOR COUNT -->
+	<div class="footer-meta">
+		<span class="last-updated">Last updated: <time id="footer-build-time" datetime={isoTimestamp}>{lastUpdated}</time></span>
+		<span id="footer-visitor-wrap" class="visitor-wrap hidden">
+			<span class="meta-dot" aria-hidden="true">&bull;</span>
+			<span class="visitor-counter">Visitor #<span id="visitor-count-val">...</span></span>
+		</span>
+	</div>
 
 	<!-- COPYRIGHT -->
 	<p class="copyright">&copy; {currentYear} Bo Wu. All rights reserved.</p>
@@ -48,8 +54,66 @@ const isoTimestamp = now.toISOString();
 		}
 	}
 
-	formatLocalTimestamp();
-	document.addEventListener('astro:page-load', formatLocalTimestamp);
+	function initVisitorCounter() {
+		const wrapEl = document.getElementById('footer-visitor-wrap');
+		const countEl = document.getElementById('visitor-count-val');
+		if (!wrapEl || !countEl) return;
+
+		function updateDisplay(count: number | string) {
+			countEl!.textContent = Number(count).toLocaleString();
+			wrapEl!.classList.remove('hidden');
+		}
+
+		// 1. If already counted in this browser session, fetch read-only count without re-incrementing
+		const sessionCounted = sessionStorage.getItem('brob_session_visited');
+		if (sessionCounted) {
+			fetch('/api/visitor-counter')
+				.then((r) => (r.ok ? r.json() : null))
+				.then((data) => {
+					if (data && typeof data.count === 'number') updateDisplay(data.count);
+				})
+				.catch(() => {});
+			return;
+		}
+
+		// 2. Wait for verified human engagement (active dwell time or scroll) to filter automated crawlers
+		let triggered = false;
+		function triggerIncrement() {
+			if (triggered) return;
+			triggered = true;
+			try {
+				sessionStorage.setItem('brob_session_visited', '1');
+			} catch {}
+
+			window.removeEventListener('scroll', onScroll);
+			window.removeEventListener('click', triggerIncrement);
+			window.removeEventListener('keydown', triggerIncrement);
+
+			fetch('/api/visitor-counter', { method: 'POST' })
+				.then((r) => (r.ok ? r.json() : null))
+				.then((data) => {
+					if (data && typeof data.count === 'number') updateDisplay(data.count);
+				})
+				.catch(() => {});
+		}
+
+		function onScroll() {
+			if (window.scrollY > 80) triggerIncrement();
+		}
+
+		window.addEventListener('scroll', onScroll, { passive: true });
+		window.addEventListener('click', triggerIncrement, { once: true, passive: true });
+		window.addEventListener('keydown', triggerIncrement, { once: true, passive: true });
+		setTimeout(triggerIncrement, 3500);
+	}
+
+	function initFooter() {
+		formatLocalTimestamp();
+		initVisitorCounter();
+	}
+
+	initFooter();
+	document.addEventListener('astro:page-load', initFooter);
 </script>
 
 <style>
@@ -62,7 +126,12 @@ const isoTimestamp = now.toISOString();
 		width: 100%;
 		transition: background-color 0.2s ease, border-color 0.2s ease;
 	}
-	.last-updated {
+	.footer-meta {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.35em 0.7em;
 		margin: 0;
 		font-size: 0.86em;
 		font-weight: 400;
@@ -70,7 +139,22 @@ const isoTimestamp = now.toISOString();
 		opacity: 0.85;
 		letter-spacing: 0.01em;
 	}
-	.last-updated time {
+	.meta-dot {
+		color: rgba(var(--gray), 0.4);
+		font-size: 0.85em;
+		user-select: none;
+	}
+	.visitor-wrap {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.7em;
+		transition: opacity 0.25s ease;
+	}
+	.visitor-wrap.hidden {
+		display: none;
+	}
+	.last-updated time,
+	.visitor-counter {
 		font-variant-numeric: tabular-nums;
 	}
 	.copyright {

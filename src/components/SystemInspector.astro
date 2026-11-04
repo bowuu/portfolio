@@ -106,10 +106,6 @@
 				<span class="t-label">Graphics Card (GPU)</span>
 				<span id="t-gpu" class="t-val">Detecting WebGL...</span>
 			</div>
-			<div class="telemetry-item">
-				<span class="t-label">WebGPU Silicon</span>
-				<span id="t-webgpu" class="t-val">Probing native driver...</span>
-			</div>
 		</div>
 	</div>
 
@@ -192,16 +188,24 @@
 			const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
 			if (!renderer) return 'Hardware Accelerated GPU';
 
-			// Format ANGLE strings cleanly and strip trademark noise (e.g. Adreno (TM) -> Adreno)
+			// Format ANGLE strings cleanly and strip trademark noise (e.g. Adreno (TM) -> Qualcomm Adreno)
 			const angleMatch = renderer.match(/ANGLE \([^,]+,\s*([^,]+)/);
 			const raw = angleMatch && angleMatch[1] ? angleMatch[1] : renderer;
-			return raw
+			let cleaned = raw
 				.replace(/\sDirect3D.*$/, '')
 				.replace(/\s*\((?:0x)?[0-9a-fA-F]{4,8}\)/g, '')
 				.replace(/\s*\((?:TM|tm|R|r)\)/gi, '')
 				.replace(/[™®]/g, '')
+				.replace(/\s+GPU$/i, '')
 				.replace(/\s+/g, ' ')
-				.trim() || 'Hardware Accelerated GPU';
+				.trim();
+
+			// Add Qualcomm prefix if Adreno is missing vendor name
+			if (/^Adreno\b/i.test(cleaned)) {
+				cleaned = 'Qualcomm ' + cleaned;
+			}
+
+			return cleaned || 'Hardware Accelerated GPU';
 		} catch {
 			return 'Generic Graphics Accelerator';
 		}
@@ -308,7 +312,6 @@
 		const cpuEl = document.getElementById('t-cpu');
 		const ramEl = document.getElementById('t-ram');
 		const gpuEl = document.getElementById('t-gpu');
-		const webgpuEl = document.getElementById('t-webgpu');
 
 		// Display & Touch elements
 		const displayEl = document.getElementById('t-display');
@@ -379,58 +382,7 @@
 			ramEl.textContent = mem ? `${mem} GB RAM` : '64-bit Architecture';
 		}
 
-		// 5. WebGPU Silicon Architecture (Direct Native Driver)
-		if (webgpuEl) {
-			if ('gpu' in navigator && (navigator as any).gpu) {
-				(navigator as any).gpu.requestAdapter()
-					.then(async (adapter: any) => {
-						if (!adapter) {
-							webgpuEl.textContent = 'Hardware Blocked';
-							return;
-						}
-						const info = adapter.info || (adapter.requestAdapterInfo ? await adapter.requestAdapterInfo() : null);
-						if (info) {
-							const arch = (info.architecture || '')
-								.replace(/\s*\((?:TM|tm|R|r)\)/gi, '')
-								.replace(/[™®]/g, '')
-								.trim();
-							let vendor = (info.vendor || '')
-								.replace(/\s*\((?:TM|tm|R|r)\)/gi, '')
-								.replace(/[™®]/g, '')
-								.trim();
-							if (vendor) vendor = vendor.charAt(0).toUpperCase() + vendor.slice(1);
-							let desc = (info.description || '')
-								.replace(/\sDirect3D.*$/, '')
-								.replace(/\s*\((?:0x)?[0-9a-fA-F]{4,8}\)/g, '')
-								.replace(/\s*\((?:TM|tm|R|r)\)/gi, '')
-								.replace(/[™®]/g, '')
-								.replace(/\s+/g, ' ')
-								.trim();
-
-							if (arch && vendor) {
-								webgpuEl.textContent = `${vendor} ${arch.toUpperCase()}`;
-							} else if (desc) {
-								webgpuEl.textContent = `${desc} (Direct Driver)`;
-							} else if (arch) {
-								webgpuEl.textContent = `${arch.toUpperCase()} Silicon`;
-							} else {
-								webgpuEl.textContent = `${vendor || 'Native'} Direct Vulkan / D3D12`;
-							}
-							webgpuEl.title = `Native WebGPU driver adapter info: vendor=${info.vendor || 'n/a'}, architecture=${info.architecture || 'n/a'}, device=${info.device || 'n/a'}. Direct OS driver pipeline without ANGLE translation.`;
-						} else {
-							webgpuEl.textContent = 'Active Direct Driver';
-						}
-					})
-					.catch(() => {
-						webgpuEl.textContent = 'Disabled / Blocked';
-					});
-			} else {
-				webgpuEl.textContent = 'Not Supported (Legacy Browser)';
-				webgpuEl.title = 'WebGPU API is not supported by this browser engine or requires enabling experimental flags.';
-			}
-		}
-
-		// 6. Display & Scaling
+		// 5. Display & Scaling
 		if (displayEl) {
 			const dpr = window.devicePixelRatio ? ` @ ${window.devicePixelRatio}x scaling` : '';
 			const depth = window.screen.colorDepth ? ` (${window.screen.colorDepth}-bit color)` : '';

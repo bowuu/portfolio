@@ -25,7 +25,21 @@
 
 	<!-- BENCHMARK TILES -->
 	<div class="benchmark-tiles">
-		<div class="b-tile b-tile-highlight">
+		<div class="b-tile">
+			<span class="b-tile-label">Ping / Packet Loss</span>
+			<div class="b-tile-value-wrap">
+				<span id="speed-ping" class="b-tile-num mono">--</span>
+				<span class="b-tile-unit">ms</span>
+				<span class="loss-badge mono" id="speed-loss-badge" title="Packet Loss: 0 / 16 packets lost">
+					<span id="speed-loss">0</span>% loss
+				</span>
+			</div>
+			<span class="b-tile-sub">
+				<span id="speed-jitter">Jitter: -- ms</span> &bull; <span id="speed-loss-sub">0/16 lost</span>
+			</span>
+		</div>
+
+		<div class="b-tile">
 			<span class="b-tile-label">Download Speed</span>
 			<div class="b-tile-value-wrap">
 				<span id="speed-down" class="b-tile-num mono">--</span>
@@ -41,20 +55,6 @@
 				<span class="b-tile-unit">Mbps</span>
 			</div>
 			<span id="speed-up-sub" class="b-tile-sub">Return Pipeline</span>
-		</div>
-
-		<div class="b-tile">
-			<span class="b-tile-label">Ping / Packet Loss</span>
-			<div class="b-tile-value-wrap">
-				<span id="speed-ping" class="b-tile-num mono">--</span>
-				<span class="b-tile-unit">ms</span>
-				<span class="loss-badge mono" id="speed-loss-badge" title="Packet Loss: 0 / 16 packets lost">
-					<span id="speed-loss">0</span>% loss
-				</span>
-			</div>
-			<span class="b-tile-sub">
-				<span id="speed-jitter">Jitter: -- ms</span> &bull; <span id="speed-loss-sub">0/16 lost</span>
-			</span>
 		</div>
 
 		<div class="b-tile">

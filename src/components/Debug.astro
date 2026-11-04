@@ -40,7 +40,7 @@
 				<strong>Client-Side Evaluation:</strong> The hardware, GPU, CPU, screen, audio, and media metrics below are read ephemerally in your active browser session via standard WebGL, Screen, Audio, and Navigator APIs. <strong>No hardware or browser fingerprinting data is collected, stored, or transmitted to any server or database.</strong>
 			</p>
 			<p>
-				<strong>Visitor Counter:</strong> The footer tally stores only an anonymous aggregate count in Cloudflare D1. To deduplicate visits across tabs without tracking individuals, an ephemeral one-way hash with a daily rotating salt is evaluated in volatile memory. <strong>Raw IP addresses are never saved.</strong> Temporary deduplication hashes are purged at UTC midnight rollover, while the total visitor count remains permanent.
+				<strong>Visitor Counter:</strong> The footer tally stores only an anonymous aggregate count in Cloudflare D1. To deduplicate visits across tabs and shared networks without tracking individuals, an ephemeral one-way hash combining connection headers with a daily rotating salt is evaluated in volatile memory. <strong>Raw IP addresses and device identifiers are never stored.</strong> Temporary deduplication hashes are purged at UTC midnight rollover, while the total visitor count remains permanent.
 			</p>
 		</div>
 	</details>

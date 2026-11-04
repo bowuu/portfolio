@@ -144,11 +144,11 @@
 				</div>
 
 				<div class="metric-mini">
-					<span class="m-label">Switch Health</span>
+					<span class="m-label">Switch Chatter</span>
 					<div class="m-val-wrap">
 						<span class="m-val mono" id="mouse-chatter-status">Clean</span>
 					</div>
-					<span class="m-sub mono" id="mouse-chatter-sub">Debounce healthy</span>
+					<span class="m-sub mono" id="mouse-chatter-sub">0 bounces &lt; 30ms</span>
 				</div>
 			</div>
 		</div>
@@ -518,11 +518,11 @@
 			if (prevTime && (now - prevTime) < 30) {
 				mouseChatterCount++;
 				if (mouseChatterEl) {
-					mouseChatterEl.textContent = 'Chatter!';
+					mouseChatterEl.textContent = 'Warning';
 					mouseChatterEl.style.color = '#ef4444';
 				}
 				if (mouseChatterSubEl) {
-					mouseChatterSubEl.textContent = `${info.name.split(' ')[0]} bounced in ${(now - prevTime).toFixed(1)}ms`;
+					mouseChatterSubEl.textContent = `${mouseChatterCount} bounce(s) on ${info.name.split(' ')[0]} (${(now - prevTime).toFixed(1)}ms)`;
 					mouseChatterSubEl.style.color = '#ef4444';
 				}
 			}
@@ -620,7 +620,7 @@
 					mouseChatterEl.style.color = '';
 				}
 				if (mouseChatterSubEl) {
-					mouseChatterSubEl.textContent = 'Debounce healthy';
+					mouseChatterSubEl.textContent = '0 bounces < 30ms';
 					mouseChatterSubEl.style.color = '';
 				}
 				if (mouseBadge) mouseBadge.textContent = 'Ready';

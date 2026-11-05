@@ -18,7 +18,7 @@
 
 			<!-- Center: session title -->
 			<div class="terminal-title mono">
-				<span>visitor@brob.uk:&thinsp;~</span>
+				<span>guest@brob:&thinsp;~</span>
 			</div>
 
 			<!-- Right: flat GTK-style window controls -->
@@ -54,7 +54,7 @@
 			<!-- INLINE ACTIVE PROMPT (Flows naturally at bottom of buffer) -->
 			<form class="terminal-prompt-row mono" id="terminal-form">
 				<label for="terminal-input" class="term-prompt">
-					<span class="p-user">visitor@brob.uk</span><span class="p-sep">:</span><span class="p-path">~</span><span class="p-char">$</span>
+					<span class="p-user">guest@brob</span><span class="p-sep">:</span><span class="p-path">~</span><span class="p-char">$</span>
 				</label>
 				<div class="term-input-wrap">
 					<input 
@@ -181,7 +181,7 @@
 		function appendEchoLine(cmdText: string) {
 			const row = document.createElement('div');
 			row.className = 'term-line mono';
-			row.innerHTML = `<span class="term-prompt"><span class="p-user">visitor@brob.uk</span><span class="p-sep">:</span><span class="p-path">~</span><span class="p-char">$</span></span> <span class="term-cmd">${escapeHtml(cmdText)}</span>`;
+			row.innerHTML = `<span class="term-prompt"><span class="p-user">guest@brob</span><span class="p-sep">:</span><span class="p-path">~</span><span class="p-char">$</span></span> <span class="term-cmd">${escapeHtml(cmdText)}</span>`;
 			historyEl?.appendChild(row);
 			if (screen) screen.scrollTop = screen.scrollHeight;
 		}
@@ -368,7 +368,7 @@ Verified Profiles:
 					const colo = coloEl ? coloEl.textContent : 'Cloudflare Anycast';
 					appendOutput(`
 <span class="term-head">Visitor Telemetry Identity:</span>
-  USER:       visitor@brob.uk
+  USER:       guest@brob
   EDGE POP:   <span class="term-cyan">${colo} &bull; ${loc}</span>
   CLIENT IP:  <span class="term-dim">${ip} (ephemeral, zero persistence)</span>
   HOST:       brob.uk (Cloudflare Workers Anycast)

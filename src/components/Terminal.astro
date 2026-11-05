@@ -5,31 +5,33 @@
 <div id="terminal-modal" class="terminal-modal" aria-hidden="true">
 	<div class="terminal-backdrop" id="terminal-backdrop"></div>
 	<div class="terminal-window" id="terminal-window" role="dialog" aria-modal="true" aria-label="Terminal Console">
-		<!-- AUTHENTIC TERMINAL HEADER BAR -->
+		<!-- LINUX-STYLE TERMINAL TITLEBAR -->
 		<div class="terminal-header">
-			<div class="terminal-traffic-lights" aria-label="Window controls">
-				<button class="win-btn win-close" id="term-close-btn" type="button" title="Close (exit / Esc)" aria-label="Close">
-					<span class="win-glyph">&times;</span>
-				</button>
-				<button class="win-btn win-minimize" id="term-min-btn" type="button" title="Minimize (Esc)" aria-label="Minimize">
-					<span class="win-glyph">&minus;</span>
-				</button>
-				<button class="win-btn win-maximize" id="term-max-btn" type="button" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">
-					<span class="win-glyph">&#43;</span>
-				</button>
-			</div>
-
-			<div class="terminal-title mono">
-				<svg class="term-title-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+			<!-- Left: shell info badge -->
+			<div class="terminal-header-meta mono">
+				<svg class="term-title-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
 					<polyline points="4 17 10 11 4 5"></polyline>
 					<line x1="12" y1="19" x2="20" y2="19"></line>
 				</svg>
-				<span>visitor@brob.uk: ~ (brobOS v1.0.0)</span>
+				<span class="term-meta-shell">brobsh</span>
 			</div>
 
-			<div class="terminal-header-meta mono">
-				<span class="term-meta-tag">brobsh</span>
-				<span class="term-meta-dim">80&times;24</span>
+			<!-- Center: session title -->
+			<div class="terminal-title mono">
+				<span>visitor@brob.uk:&thinsp;~</span>
+			</div>
+
+			<!-- Right: flat GTK-style window controls -->
+			<div class="terminal-wm-btns" aria-label="Window controls">
+				<button class="wm-btn wm-min" id="term-min-btn" type="button" title="Close (Esc)" aria-label="Minimize">
+					<svg viewBox="0 0 10 10" width="10" height="10"><line x1="1" y1="5" x2="9" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+				</button>
+				<button class="wm-btn wm-max" id="term-max-btn" type="button" title="Toggle fullscreen" aria-label="Maximize">
+					<svg viewBox="0 0 10 10" width="10" height="10"><rect x="1.5" y="1.5" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+				</button>
+				<button class="wm-btn wm-close" id="term-close-btn" type="button" title="Close (exit / Esc)" aria-label="Close">
+					<svg viewBox="0 0 10 10" width="10" height="10"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+				</button>
 			</div>
 		</div>
 
@@ -514,107 +516,97 @@ Verified Profiles:
 		transform: scale(1) translateY(0);
 	}
 
-	/* HEADER WITH CLASSIC TRAFFIC LIGHTS */
+	/* LINUX / GTK-STYLE TITLEBAR */
 	.terminal-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0.6em 0.9em;
-		background: #12151d;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+		padding: 0 0.75em 0 0.85em;
+		height: 32px;
+		background: #1a1d26;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 		user-select: none;
+		flex-shrink: 0;
+		position: relative;
+	}
+
+	/* Left badge: shell name + prompt icon */
+	.terminal-header-meta {
+		display: flex;
+		align-items: center;
+		gap: 0.5em;
+		font-size: 0.74em;
+		color: #64748b;
+		min-width: 90px;
+	}
+
+	.term-title-icon {
+		color: #475569;
 		flex-shrink: 0;
 	}
 
-	.terminal-traffic-lights {
-		display: flex;
-		align-items: center;
-		gap: 7px;
+	.term-meta-shell {
+		color: #f97316;
+		font-weight: 700;
+		letter-spacing: 0.03em;
 	}
 
-	.win-btn {
-		width: 12px;
-		height: 12px;
-		border-radius: 50%;
+	/* Center: session title */
+	.terminal-title {
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		font-size: 0.76em;
+		font-weight: 500;
+		color: #94a3b8;
+		letter-spacing: 0.02em;
+		white-space: nowrap;
+		pointer-events: none;
+	}
+
+	/* Right: flat GTK-style buttons (−  □  ×) */
+	.terminal-wm-btns {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+		min-width: 90px;
+		justify-content: flex-end;
+	}
+
+	.wm-btn {
+		width: 26px;
+		height: 20px;
 		border: none;
+		border-radius: 4px;
+		background: transparent;
+		color: #64748b;
 		cursor: pointer;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 		padding: 0;
 		outline: none;
-		transition: transform 0.1s ease, filter 0.1s ease;
+		transition: background 0.1s ease, color 0.1s ease;
 	}
 
-	.win-glyph {
-		opacity: 0;
-		font-size: 9px;
-		line-height: 1;
-		font-weight: 900;
-		color: rgba(0, 0, 0, 0.65);
-		transition: opacity 0.12s ease;
+	.wm-btn:hover {
+		background: rgba(255, 255, 255, 0.08);
+		color: #cbd5e1;
 	}
 
-	.terminal-traffic-lights:hover .win-glyph {
-		opacity: 1;
+	.wm-close:hover {
+		background: rgba(239, 68, 68, 0.75);
+		color: #fff;
 	}
 
-	.win-close {
-		background: #ff5f56;
-		border: 1px solid #e0443e;
-	}
-	.win-close:hover {
-		filter: brightness(1.1);
+	.wm-min:hover {
+		background: rgba(255, 255, 255, 0.1);
+		color: #fff;
 	}
 
-	.win-minimize {
-		background: #ffbd2e;
-		border: 1px solid #dea123;
-	}
-	.win-minimize:hover {
-		filter: brightness(1.1);
-	}
-
-	.win-maximize {
-		background: #27c93f;
-		border: 1px solid #1aab29;
-	}
-	.win-maximize:hover {
-		filter: brightness(1.1);
-	}
-
-	.terminal-title {
-		display: flex;
-		align-items: center;
-		gap: 0.45em;
-		font-size: 0.76em;
-		font-weight: 600;
-		color: #94a3b8;
-		letter-spacing: 0.02em;
-	}
-
-	.term-title-icon {
-		color: #64748b;
-	}
-
-	.terminal-header-meta {
-		display: flex;
-		align-items: center;
-		gap: 0.6em;
-		font-size: 0.72em;
-	}
-
-	.term-meta-tag {
-		color: #f97316;
-		font-weight: 700;
-		background: rgba(249, 115, 22, 0.12);
-		padding: 0.1em 0.45em;
-		border-radius: 3px;
-		border: 1px solid rgba(249, 115, 22, 0.25);
-	}
-
-	.term-meta-dim {
-		color: #64748b;
+	.wm-max:hover {
+		background: rgba(255, 255, 255, 0.1);
+		color: #fff;
 	}
 
 	/* UNIFIED TERMINAL SCREEN BUFFER */

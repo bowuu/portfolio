@@ -582,71 +582,149 @@
 			}
 		}
 
-		// 10. Hardware Video Decoder (MediaCapabilities API Decoders)
+		// 10. Hardware Video Decoder (MediaCapabilities powerEfficient & WebCodecs prefer-hardware)
 		if (codecsEl) {
 			const probeCodecs = async () => {
-				if (navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo) {
-					const candidates = [
-						{ name: 'AV1', config: { type: 'file', video: { contentType: 'video/mp4; codecs="av01.0.08M.10"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } } },
-						{ name: 'HEVC', config: { type: 'file', video: { contentType: 'video/mp4; codecs="hvc1.1.6.L93.B0"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } } },
-						{ name: 'VP9', config: { type: 'file', video: { contentType: 'video/webm; codecs="vp09.00.10.08"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } } },
-						{ name: 'H.264', config: { type: 'file', video: { contentType: 'video/mp4; codecs="avc1.640028"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } } },
-					];
-					const supported: string[] = [];
-					for (const c of candidates) {
+				const candidates = [
+					{
+						name: 'AV1',
+						codec: 'av01.0.08M.10',
+						configs: [
+							{ type: 'file', video: { contentType: 'video/mp4; codecs="av01.0.08M.10"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } },
+							{ type: 'file', video: { contentType: 'video/webm; codecs="av01.0.08M.10"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } }
+						]
+					},
+					{
+						name: 'HEVC',
+						codec: 'hvc1.1.6.L93.B0',
+						configs: [
+							{ type: 'file', video: { contentType: 'video/mp4; codecs="hvc1.1.6.L93.B0"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } },
+							{ type: 'file', video: { contentType: 'video/mp4; codecs="hev1.1.6.L93.B0"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } }
+						]
+					},
+					{
+						name: 'VP9',
+						codec: 'vp09.00.10.08',
+						configs: [
+							{ type: 'file', video: { contentType: 'video/webm; codecs="vp09.00.10.08"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } },
+							{ type: 'file', video: { contentType: 'video/mp4; codecs="vp09.00.10.08"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } }
+						]
+					},
+					{
+						name: 'H.264',
+						codec: 'avc1.640028',
+						configs: [
+							{ type: 'file', video: { contentType: 'video/mp4; codecs="avc1.640028"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } }
+						]
+					}
+				];
+
+				const supported: string[] = [];
+
+				for (const c of candidates) {
+					let isHw = false;
+					let hasExplicitSwOnly = false;
+
+					// 1. Probe MediaCapabilities for powerEfficient (hardware-accelerated) decoding
+					if (navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo) {
+						for (const cfg of c.configs) {
+							try {
+								const res = await navigator.mediaCapabilities.decodingInfo(cfg as any);
+								if (res.supported) {
+									if (res.powerEfficient) {
+										isHw = true;
+										hasExplicitSwOnly = false;
+										break;
+									} else {
+										// Supported strictly via software/CPU decoding (e.g. dav1d for AV1 on Turing GPUs)
+										hasExplicitSwOnly = true;
+									}
+								}
+							} catch (_) {}
+						}
+					}
+
+					// 2. Cross-verify or fallback to WebCodecs VideoDecoder with prefer-hardware
+					if (typeof VideoDecoder !== 'undefined' && typeof VideoDecoder.isConfigSupported === 'function') {
 						try {
-							const res = await navigator.mediaCapabilities.decodingInfo(c.config as any);
-							if (res.supported) {
-								supported.push(c.name);
+							const wcRes = await VideoDecoder.isConfigSupported({
+								codec: c.codec,
+								codedWidth: 1920,
+								codedHeight: 1080,
+								hardwareAcceleration: 'prefer-hardware'
+							});
+							if (wcRes) {
+								if (wcRes.supported === false) {
+									// WebCodecs explicitly confirms no hardware decoder is available
+									isHw = false;
+								} else if (wcRes.supported === true && !hasExplicitSwOnly) {
+									isHw = true;
+								}
 							}
 						} catch (_) {}
 					}
-					if (supported.length > 0) {
-						codecsEl.textContent = supported.join(' • ');
-					} else {
-						codecsEl.textContent = 'H.264 • VP9 • WebM';
+
+					if (isHw && !hasExplicitSwOnly) {
+						supported.push(c.name);
 					}
+				}
+
+				if (supported.length > 0) {
+					codecsEl.textContent = supported.join(' • ');
+					codecsEl.title = 'Hardware-accelerated video decoding support.';
 				} else {
-					codecsEl.textContent = 'H.264 • VP9 • WebM';
+					codecsEl.textContent = 'Software / CPU Decoding';
+					codecsEl.title = 'Hardware video decoding not supported.';
 				}
 			};
 			probeCodecs();
-			codecsEl.title = 'Hardware-accelerated video decoding support.';
 		}
 
-		// 11. Hardware Video Encoder (WebCodecs API)
+		// 11. Hardware Video Encoder (WebCodecs API with strict prefer-hardware)
 		if (encoderEl) {
 			const probeEncoder = async () => {
-				if (typeof VideoEncoder !== 'undefined' && VideoEncoder.isConfigSupported) {
+				if (typeof VideoEncoder !== 'undefined' && typeof VideoEncoder.isConfigSupported === 'function') {
 					const encCandidates = [
-						{ name: 'AV1', codec: 'av01.0.08M.10' },
-						{ name: 'HEVC', codec: 'hvc1.1.6.L93.B0' },
-						{ name: 'VP9', codec: 'vp09.00.10.08' },
-						{ name: 'H.264', codec: 'avc1.42001f' }
+						{ name: 'AV1', codecs: ['av01.0.08M.10', 'av01.0.05M.08'] },
+						{ name: 'HEVC', codecs: ['hvc1.1.6.L93.B0', 'hev1.1.6.L93.B0'] },
+						{ name: 'VP9', codecs: ['vp09.00.10.08'] },
+						{ name: 'H.264', codecs: ['avc1.42001f', 'avc1.4d002a', 'avc1.64002a', 'avc1.640028'] }
 					];
 					const supported: string[] = [];
+
 					for (const c of encCandidates) {
-						try {
-							const res = await VideoEncoder.isConfigSupported({
-								codec: c.codec,
-								width: 1920,
-								height: 1080,
-								bitrate: 5000000,
-								framerate: 60
-							});
-							if (res.supported) {
-								supported.push(c.name);
-							}
-						} catch (_) {}
+						let isHw = false;
+						for (const codec of c.codecs) {
+							try {
+								const res = await VideoEncoder.isConfigSupported({
+									codec: codec,
+									width: 1920,
+									height: 1080,
+									bitrate: 5000000,
+									framerate: 60,
+									hardwareAcceleration: 'prefer-hardware'
+								});
+								if (res && res.supported === true) {
+									isHw = true;
+									break;
+								}
+							} catch (_) {}
+						}
+
+						if (isHw) {
+							supported.push(c.name);
+						}
 					}
+
 					if (supported.length > 0) {
 						encoderEl.textContent = supported.join(' • ');
 						encoderEl.title = 'Hardware-accelerated video encoding support.';
 					} else {
 						encoderEl.textContent = 'Software / CPU Encoding';
+						encoderEl.title = 'Hardware video encoding not supported.';
 					}
 				} else {
-					encoderEl.textContent = 'Not Supported';
+					encoderEl.textContent = 'Software / CPU Encoding';
 					encoderEl.title = 'Hardware video encoding not supported.';
 				}
 			};

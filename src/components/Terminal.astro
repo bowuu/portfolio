@@ -39,14 +39,6 @@
 		<div class="terminal-screen" id="terminal-screen">
 			<div class="terminal-history" id="terminal-history">
 				<div class="term-banner mono">
-					<pre class="ascii-art">
- _               _      ____   _____ 
-| |             | |    / __ \ / ____|
-| |__  _ __ ___ | |__ | |  | | (___  
-| '_ \| '__/ _ \| '_ \| |  | |\___ \ 
-| |_) | | | (_) | |_) | |__| |____) |
-|_.__/|_|  \___/|_.__/ \____/|_____/ </pre>
-					<p class="banner-sub">brobOS [Version 1.0.0(1)-release] &bull; Silicon &amp; Systems Console</p>
 					<p class="banner-hint">Type <span class="term-hl">help</span> for available commands, <span class="term-hl">clear</span> to wipe screen, or <span class="term-hl">exit</span> to close. Tab autocompletes.</p>
 				</div>
 			</div>
@@ -636,32 +628,13 @@ Verified Profiles:
 		background: rgba(255, 255, 255, 0.26);
 	}
 
-	/* ASCII ART BANNER */
+	/* TERMINAL BANNER */
 	.term-banner {
 		margin-bottom: 0.85em;
 	}
 
-	.ascii-art {
-		margin: 0 0 0.55em 0;
-		font-size: clamp(0.48em, 1.4vw, 0.72em);
-		line-height: 1.18;
-		letter-spacing: 0.02em;
-		color: #f97316;
-		white-space: pre;
-		overflow-x: auto;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
-		text-shadow: 0 0 10px rgba(249, 115, 22, 0.35);
-	}
-
-	.banner-sub {
-		margin: 0;
-		font-weight: 700;
-		color: #f1f5f9;
-		font-size: 0.94em;
-	}
-
 	.banner-hint {
-		margin: 0.25em 0 0.85em 0;
+		margin: 0 0 0.85em 0;
 		color: #64748b;
 		font-size: 0.86em;
 	}

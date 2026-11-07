@@ -302,37 +302,40 @@
 <span class="term-head">brobOS 1.0.0(1)-release (x86_64-brob-linux-edge)</span>
 These shell commands are defined internally. Type <span class="term-hl">'help'</span> to see this list.
 
-  <span class="term-col">Command</span>        <span class="term-col">Description</span>
-  <span class="term-dim">------------   ------------------------------------------------------------</span>
-  <span class="term-hl">about</span>          Hardware engineering background, focus &amp; profile links
-  <span class="term-hl">skills</span>         Silicon validation, embedded Linux &amp; 3D CAD platforms
-  <span class="term-hl">projects</span>       Featured engineering projects &amp; 3D CAD portfolio
-  <span class="term-hl">tests</span>          Navigate to hardware &amp; network test suites (#lab)
-  <span class="term-hl">network</span>        Navigate to Anycast edge throughput benchmark (#benchmark)
-  <span class="term-hl">mouse</span>          Navigate to mouse polling oscilloscope &amp; button lab (#input-lab)
-  <span class="term-hl">keyboard</span>       Navigate to 104-key switch matrix &amp; latency lab (#keyboard-lab)
-  <span class="term-hl">cad</span> [spin]     List 11 3D CAD models (or 'cad spin' for 10,000 RPM centrifuge)
-  <span class="term-hl">debug</span>          Navigate to client hardware &amp; edge telemetry (#debug)
-  <span class="term-hl">theme</span> [mode]   Obsidian Dark / Clean Light theme toggle [dark|light|toggle]
-  <span class="term-hl">visitor</span>        Query anonymous Cloudflare D1 visitor counter
-  <span class="term-hl">whoami</span>         Display client session &amp; Anycast edge telemetry info
-  <span class="term-hl">date</span>           Print current UTC timestamp
-  <span class="term-hl">clear</span>          Clear console screen buffer (Ctrl+L)
-  <span class="term-hl">exit</span>           Close terminal console (Esc or \`)
+  <span class="term-col">Core System &amp; Navigation</span> <span class="term-col">Description</span>
+  <span class="term-dim">------------------------ ------------------------------------------------------------</span>
+  <span class="term-hl">about</span>                    Hardware engineering background, focus &amp; profile links
+  <span class="term-hl">skills</span>                   Silicon validation, embedded Linux &amp; 3D CAD platforms
+  <span class="term-hl">projects</span>                 Featured engineering projects &amp; 3D CAD portfolio
+  <span class="term-hl">tests</span>                    Navigate to hardware &amp; network test suites (#lab)
+  <span class="term-hl">network</span>                  Navigate to Anycast edge throughput benchmark (#benchmark)
+  <span class="term-hl">mouse</span>                    Navigate to mouse polling oscilloscope &amp; button lab (#input-lab)
+  <span class="term-hl">keyboard</span>                 Navigate to 104-key switch matrix &amp; latency lab (#keyboard-lab)
+  <span class="term-hl">cad</span>                      List 11 Autodesk Inventor functional 3D CAD models
+  <span class="term-hl">debug</span>                    Navigate to client hardware &amp; edge telemetry (#debug)
+  <span class="term-hl">theme</span> [mode]             Obsidian Dark / Clean Light theme toggle [dark|light|toggle]
+  <span class="term-hl">visitor</span>                  Query anonymous Cloudflare D1 visitor counter
+  <span class="term-hl">whoami</span>                   Display client session &amp; Anycast edge telemetry info
+  <span class="term-hl">date</span> / <span class="term-hl">clear</span> / <span class="term-hl">exit</span>      Standard shell session utilities
 
-  <span class="term-col">Diagnostics &amp; Extras</span>
-  <span class="term-dim">------------   ------------------------------------------------------------</span>
-  <span class="term-hl">neofetch</span>       Silicon validation station summary &amp; die specs
-  <span class="term-hl">dmesg</span>          Simulated silicon bringup &amp; ATE kernel ring buffer
-  <span class="term-hl">jtag</span>           JTAG TAP diagnostic &amp; boundary scan report
-  <span class="term-hl">peek</span> [addr]    Read 32-bit hardware register (e.g. peek 0xdeadbeef)
-  <span class="term-hl">gcode</span>          3D printer telemetry &amp; bed mesh leveling report
-  <span class="term-hl">matrix</span>         Cascading digital rain diagnostic (cmatrix)
-  <span class="term-hl">sl</span>             Scenic locomotive journey (steam train)
-  <span class="term-hl">ls</span> / <span class="term-hl">cat</span> [file]Explore simulated filesystem (README.md, silicon_spec.json)
-  <span class="term-hl">sudo</span> [cmd]     Request elevated root privileges
-  <span class="term-hl">uptime</span> / <span class="term-hl">uname</span> System runtime &amp; kernel platform flags
-  <span class="term-hl">fortune</span>        Random hardware &amp; silicon engineering aphorism
+  <span class="term-col">Hardware Diagnostics</span>     <span class="term-col">Description</span>
+  <span class="term-dim">------------------------ ------------------------------------------------------------</span>
+  <span class="term-hl">neofetch</span>                 Silicon validation bench summary &amp; die specs
+  <span class="term-hl">dmesg</span>                    Simulated silicon bringup &amp; ATE kernel ring buffer
+  <span class="term-hl">jtag</span>                     JTAG TAP controller diagnostic &amp; boundary scan report
+  <span class="term-hl">peek</span> [addr]              Read 32-bit hardware register (e.g. peek 0xdeadbeef)
+  <span class="term-hl">poke</span> [addr] [val]        Write 32-bit register via ATE JTAG interface
+  <span class="term-hl">gcode</span>                    3D printer telemetry &amp; bed mesh leveling report
+  <span class="term-hl">uptime</span> / <span class="term-hl">uname</span>           Kernel platform flags &amp; continuous session runtime
+
+  <span class="term-col">Undocumented Opcodes</span>     <span class="term-col">Description</span>
+  <span class="term-dim">------------------------ ------------------------------------------------------------</span>
+  <span class="term-hl">matrix</span>                   Cascading digital rain diagnostic (cmatrix)
+  <span class="term-hl">sl</span>                       Scenic steam locomotive journey (mistyped 'ls')
+  <span class="term-hl">sudo</span> [cmd]               Privilege escalation request (try 'sudo rm -rf /')
+  <span class="term-hl">cad spin</span>                 Engage 10,000 RPM centrifuge stress test on 3D viewer
+  <span class="term-hl">ls</span> / <span class="term-hl">cat</span> [file]          Inspect simulated rootfs (README.md, silicon_spec.json)
+  <span class="term-hl">fortune</span>                  Random silicon engineering aphorism &amp; hardware wisdom
 
 <span class="term-dim">Tip: Use Up/Down arrows for command history; press Tab for autocompletion.</span>`);
 					break;

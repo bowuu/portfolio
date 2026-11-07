@@ -251,7 +251,7 @@
 				try {
 					const ctrl = new AbortController();
 					const timeout = setTimeout(() => ctrl.abort(), 1200);
-					const res = await fetch(`https://speed.cloudflare.com/__down?bytes=0&_p=${i}_${Date.now()}`, {
+					const res = await fetch(`/api/ping?_p=${i}_${Date.now()}`, {
 						signal: ctrl.signal,
 						cache: 'no-store',
 					});
@@ -352,7 +352,7 @@
 				if (isDownDone) return;
 				const t0 = performance.now();
 				try {
-					const res = await fetch(`https://speed.cloudflare.com/__down?bytes=0&_bld=${Date.now()}`, { cache: 'no-store' });
+					const res = await fetch(`/api/ping?_bld=${Date.now()}`, { cache: 'no-store' });
 					if (res.ok) loadedPings.push(performance.now() - t0);
 				} catch (_) {}
 			}, 350);
@@ -449,7 +449,7 @@
 				if (isUpDone) return;
 				const t0 = performance.now();
 				try {
-					const res = await fetch(`https://speed.cloudflare.com/__down?bytes=0&_blu=${Date.now()}`, { cache: 'no-store' });
+					const res = await fetch(`/api/ping?_blu=${Date.now()}`, { cache: 'no-store' });
 					if (res.ok) loadedPings.push(performance.now() - t0);
 				} catch (_) {}
 			}, 350);

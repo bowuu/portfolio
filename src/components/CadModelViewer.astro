@@ -73,7 +73,7 @@
 		<canvas id="cad-canvas"></canvas>
 		<div id="cad-centrifuge-hud" class="cad-centrifuge-hud hidden">
 			<span class="hud-pulse-dot"></span>
-			<span>CENTRIFUGE STRESS TEST: <strong>10,000 RPM</strong> &bull; VIBRATION: 0.014G [NOMINAL]</span>
+			<span>CENTRIFUGE STRESS TEST: <strong id="hud-rpm-val">0 RPM</strong> &bull; VIBRATION: <span id="hud-vib-val">0.014G</span> [NOMINAL]</span>
 		</div>
 		<div id="cad-loading-overlay" class="cad-loading hidden">
 			<div class="spinner"></div>
@@ -170,7 +170,7 @@
 		controls.dampingFactor = 0.06;
 		controls.minDistance = 15;
 		controls.maxDistance = 220;
-		controls.maxPolarAngle = Math.PI / 2 + 0.15; // Don't flip under build plate
+		controls.maxPolarAngle = Math.PI - 0.02; // Full orbital freedom to inspect underside
 
 		// Lighting
 		const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
@@ -184,9 +184,13 @@
 		fillLight.position.set(-60, 40, -50);
 		scene.add(fillLight);
 
-		const rimLight = new THREE.DirectionalLight(0xffedd5, 1.0);
+		const rimLight = new THREE.DirectionalLight(0xffedd5, 1.2);
 		rimLight.position.set(0, -50, 40);
 		scene.add(rimLight);
+
+		const underLight = new THREE.DirectionalLight(0xffffff, 1.1);
+		underLight.position.set(0, -70, -30);
+		scene.add(underLight);
 
 		// Build Plate Grid
 		const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -229,7 +233,11 @@
 
 		let centrifugeActive = false;
 		let centrifugeSpeed = 0;
-		const TARGET_CENTRIFUGE_SPEED = 0.20;
+		let currentRpm = 0;
+		const TARGET_CENTRIFUGE_SPEED = 1.35; // Rapid forward optical rotation
+		const TARGET_RPM = 10000;
+		const hudRpmEl = document.getElementById('hud-rpm-val');
+		const hudVibEl = document.getElementById('hud-vib-val');
 
 		function setCentrifuge(active: boolean) {
 			centrifugeActive = active;
@@ -407,9 +415,19 @@
 			controls.update();
 
 			if (centrifugeActive) {
-				centrifugeSpeed = THREE.MathUtils.lerp(centrifugeSpeed, TARGET_CENTRIFUGE_SPEED, 0.05);
+				centrifugeSpeed = THREE.MathUtils.lerp(centrifugeSpeed, TARGET_CENTRIFUGE_SPEED, 0.06);
+				currentRpm = THREE.MathUtils.lerp(currentRpm, TARGET_RPM, 0.06);
+				const vib = (Math.random() - 0.5) * 0.08;
+				modelGroup.position.x = vib;
+				modelGroup.position.z = vib;
+				if (hudRpmEl) hudRpmEl.textContent = Math.round(currentRpm).toLocaleString() + ' RPM';
+				if (hudVibEl) hudVibEl.textContent = (0.012 + Math.abs(vib) * 0.05).toFixed(3) + 'G';
 			} else {
-				centrifugeSpeed = THREE.MathUtils.lerp(centrifugeSpeed, 0, 0.05);
+				centrifugeSpeed = THREE.MathUtils.lerp(centrifugeSpeed, 0, 0.06);
+				currentRpm = THREE.MathUtils.lerp(currentRpm, 0, 0.09);
+				modelGroup.position.x = THREE.MathUtils.lerp(modelGroup.position.x, 0, 0.1);
+				modelGroup.position.z = THREE.MathUtils.lerp(modelGroup.position.z, 0, 0.1);
+				if (hudRpmEl) hudRpmEl.textContent = Math.round(currentRpm).toLocaleString() + ' RPM';
 			}
 			if (centrifugeSpeed > 0.0005) {
 				modelGroup.rotation.y += centrifugeSpeed;

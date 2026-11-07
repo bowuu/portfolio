@@ -74,7 +74,7 @@
 		<canvas id="cad-canvas"></canvas>
 		<div id="cad-centrifuge-hud" class="cad-centrifuge-hud hidden">
 			<span class="hud-pulse-dot"></span>
-			<span>CENTRIFUGE STRESS TEST: <strong id="hud-rpm-val">0 RPM</strong> &bull; VIBRATION: <span id="hud-vib-val">0.014G</span> [NOMINAL]</span>
+			<span>CENTRIFUGE STRESS TEST: <strong id="hud-rpm-val">0 RPM</strong> &bull; PEAK LOAD: <strong id="hud-g-val">0G</strong> &bull; DYNAMIC IMBALANCE: <span id="hud-vib-val">0.0G</span></span>
 		</div>
 		<div id="cad-loading-overlay" class="cad-loading hidden">
 			<div class="spinner"></div>
@@ -238,7 +238,9 @@
 		let currentRpm = 0;
 		const TARGET_CENTRIFUGE_SPEED = 1.35; // Rapid forward optical rotation
 		const TARGET_RPM = 10000;
+		let activeModelRadiusM = 0.1205; // Default to 120.5mm (half-width of ASUS mount)
 		const hudRpmEl = document.getElementById('hud-rpm-val');
+		const hudGEl = document.getElementById('hud-g-val');
 		const hudVibEl = document.getElementById('hud-vib-val');
 
 		function setCentrifuge(active: boolean) {
@@ -333,10 +335,11 @@
 				controls.target.set(0, (geometry.boundingBox.max.y + geometry.boundingBox.min.y) / 2, 0);
 			}
 
-			// Update spec labels
+			// Update spec labels and active radius for centrifuge physics
 			const w = data.bbox?.width || (meta ? parseInt(meta.dimensions.split('x')[0]) : 0);
 			const h = data.bbox?.height || (meta ? parseInt(meta.dimensions.split('x')[1]) : 0);
 			const d = data.bbox?.depth || (meta ? parseInt(meta.dimensions.split('x')[2]) : 0);
+			activeModelRadiusM = Math.max(w, d) > 0 ? (Math.max(w, d) / 2) / 1000 : 0.05;
 			if (specDimEl) specDimEl.textContent = `${w} x ${h} x ${d} mm`;
 			if (specPolyEl) specPolyEl.textContent = `${(data.indices.length / 3).toLocaleString()} Triangles`;
 			if (specVertsEl) specVertsEl.textContent = `${(data.positions.length / 3).toLocaleString()} Vertices`;
@@ -431,17 +434,35 @@
 			if (centrifugeActive) {
 				centrifugeSpeed = THREE.MathUtils.lerp(centrifugeSpeed, TARGET_CENTRIFUGE_SPEED, 0.06);
 				currentRpm = THREE.MathUtils.lerp(currentRpm, TARGET_RPM, 0.06);
+
+				// True Centripetal Acceleration: a_c = omega^2 * r
+				const omega = (currentRpm * 2 * Math.PI) / 60;
+				const currentG = (omega * omega * activeModelRadiusM) / 9.80665;
+				const vibG = (currentRpm / TARGET_RPM) * (18.2 + (Math.random() - 0.5) * 3.4);
+
+				// Harmonic micro-vibration
 				const vib = (Math.random() - 0.5) * 0.08;
 				modelGroup.position.x = vib;
 				modelGroup.position.z = vib;
+
 				if (hudRpmEl) hudRpmEl.textContent = Math.round(currentRpm).toLocaleString() + ' RPM';
-				if (hudVibEl) hudVibEl.textContent = (0.012 + Math.abs(vib) * 0.05).toFixed(3) + 'G';
+				if (hudGEl) hudGEl.textContent = Math.round(currentG).toLocaleString() + 'G';
+				if (hudVibEl) hudVibEl.textContent = (currentRpm > 100 ? vibG.toFixed(1) : '0.0') + 'G';
 			} else {
 				centrifugeSpeed = THREE.MathUtils.lerp(centrifugeSpeed, 0, 0.06);
 				currentRpm = THREE.MathUtils.lerp(currentRpm, 0, 0.09);
 				modelGroup.position.x = THREE.MathUtils.lerp(modelGroup.position.x, 0, 0.1);
 				modelGroup.position.z = THREE.MathUtils.lerp(modelGroup.position.z, 0, 0.1);
 				if (hudRpmEl) hudRpmEl.textContent = Math.round(currentRpm).toLocaleString() + ' RPM';
+				if (hudGEl) {
+					const omega = (currentRpm * 2 * Math.PI) / 60;
+					const currentG = (omega * omega * activeModelRadiusM) / 9.80665;
+					hudGEl.textContent = Math.round(currentG).toLocaleString() + 'G';
+				}
+				if (hudVibEl) {
+					const vibG = (currentRpm / TARGET_RPM) * 18.2;
+					hudVibEl.textContent = (currentRpm > 100 ? vibG.toFixed(1) : '0.0') + 'G';
+				}
 			}
 			if (centrifugeSpeed > 0.0005) {
 				modelGroup.rotation.y += centrifugeSpeed;

@@ -46,6 +46,7 @@
 		<div class="cad-controls-top">
 			<button id="cad-reset-cam-btn" class="cad-mini-btn" type="button" title="Reset Viewpoint">Reset View</button>
 			<button id="cad-wireframe-btn" class="cad-mini-btn" type="button">Wireframe: OFF</button>
+			<button id="cad-centrifuge-btn" class="cad-mini-btn" type="button" title="Centrifuge Stress Test (10,000 RPM)">Centrifuge: OFF</button>
 		</div>
 	</div>
 
@@ -70,6 +71,10 @@
 	<!-- 3D WEBGL CANVAS -->
 	<div class="canvas-wrapper" id="canvas-container">
 		<canvas id="cad-canvas"></canvas>
+		<div id="cad-centrifuge-hud" class="cad-centrifuge-hud hidden">
+			<span class="hud-pulse-dot"></span>
+			<span>CENTRIFUGE STRESS TEST: <strong>10,000 RPM</strong> &bull; VIBRATION: 0.014G [NOMINAL]</span>
+		</div>
 		<div id="cad-loading-overlay" class="cad-loading hidden">
 			<div class="spinner"></div>
 			<span>Tessellating 3D B-Rep Mesh...</span>
@@ -218,7 +223,68 @@
 		const loadingOverlay = document.getElementById('cad-loading-overlay');
 		const wireframeBtn = document.getElementById('cad-wireframe-btn');
 		const resetCamBtn = document.getElementById('cad-reset-cam-btn');
+		const centrifugeBtn = document.getElementById('cad-centrifuge-btn');
+		const centrifugeHud = document.getElementById('cad-centrifuge-hud');
 		const colorDots = document.querySelectorAll('.color-dot');
+
+		let centrifugeActive = false;
+		let centrifugeSpeed = 0;
+		const TARGET_CENTRIFUGE_SPEED = 0.20;
+
+		function setCentrifuge(active: boolean) {
+			centrifugeActive = active;
+			if (centrifugeBtn) {
+				centrifugeBtn.textContent = active ? 'Centrifuge: ON' : 'Centrifuge: OFF';
+				centrifugeBtn.classList.toggle('active-centrifuge', active);
+			}
+			if (centrifugeHud) {
+				centrifugeHud.classList.toggle('hidden', !active);
+			}
+		}
+
+		function toggleCentrifuge() {
+			setCentrifuge(!centrifugeActive);
+		}
+
+		if (centrifugeBtn) {
+			centrifugeBtn.addEventListener('click', toggleCentrifuge);
+		}
+
+		// Triple-click canvas trigger
+		let clickCount = 0;
+		let clickTimer: any = null;
+		canvas.addEventListener('click', () => {
+			clickCount++;
+			clearTimeout(clickTimer);
+			clickTimer = setTimeout(() => {
+				if (clickCount >= 3) toggleCentrifuge();
+				clickCount = 0;
+			}, 350);
+		});
+
+		// Spacebar shortcut when hovering viewer
+		let isViewerHovered = false;
+		container.addEventListener('mouseenter', () => { isViewerHovered = true; });
+		container.addEventListener('mouseleave', () => { isViewerHovered = false; });
+		window.addEventListener('keydown', (e) => {
+			if (e.code === 'Space' && isViewerHovered) {
+				const activeEl = document.activeElement;
+				if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')) {
+					return;
+				}
+				e.preventDefault();
+				toggleCentrifuge();
+			}
+		});
+
+		// Global hook for CLI terminal command
+		(window as any).__triggerCadCentrifuge = (active?: boolean) => {
+			if (typeof active === 'boolean') {
+				setCentrifuge(active);
+			} else {
+				toggleCentrifuge();
+			}
+		};
 
 		function resize() {
 			const width = container!.clientWidth;
@@ -339,6 +405,16 @@
 		function animate() {
 			animationFrameId = requestAnimationFrame(animate);
 			controls.update();
+
+			if (centrifugeActive) {
+				centrifugeSpeed = THREE.MathUtils.lerp(centrifugeSpeed, TARGET_CENTRIFUGE_SPEED, 0.05);
+			} else {
+				centrifugeSpeed = THREE.MathUtils.lerp(centrifugeSpeed, 0, 0.05);
+			}
+			if (centrifugeSpeed > 0.0005) {
+				modelGroup.rotation.y += centrifugeSpeed;
+			}
+
 			renderer.render(scene, camera);
 		}
 		animate();
@@ -446,6 +522,51 @@
 		background: var(--accent);
 		color: #ffffff;
 		border-color: var(--accent);
+	}
+	.cad-mini-btn.active-centrifuge {
+		background: rgba(234, 88, 12, 0.16);
+		border-color: #ea580c;
+		color: #ea580c;
+		font-weight: 700;
+		box-shadow: 0 0 10px rgba(234, 88, 12, 0.25);
+	}
+
+	.cad-centrifuge-hud {
+		position: absolute;
+		top: 14px;
+		left: 50%;
+		transform: translateX(-50%);
+		background: rgba(15, 23, 42, 0.88);
+		backdrop-filter: blur(8px);
+		border: 1px solid #ea580c;
+		box-shadow: 0 0 16px rgba(234, 88, 12, 0.35);
+		color: #f8fafc;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		font-size: 0.76em;
+		letter-spacing: 0.04em;
+		padding: 0.4em 0.95em;
+		border-radius: 20px;
+		display: flex;
+		align-items: center;
+		gap: 0.55em;
+		pointer-events: none;
+		z-index: 10;
+		transition: all 0.25s ease;
+	}
+	.cad-centrifuge-hud.hidden {
+		display: none;
+	}
+	.hud-pulse-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: #ea580c;
+		box-shadow: 0 0 8px #ea580c;
+		animation: pulseDot 0.8s infinite alternate ease-in-out;
+	}
+	@keyframes pulseDot {
+		from { opacity: 0.35; transform: scale(0.85); }
+		to { opacity: 1; transform: scale(1.15); }
 	}
 
 	/* MODEL DESCRIPTION STRIP */

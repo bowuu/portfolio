@@ -45,6 +45,7 @@
 
 		<div class="cad-controls-top">
 			<button id="cad-reset-cam-btn" class="cad-mini-btn" type="button" title="Reset Viewpoint">Reset View</button>
+			<button id="cad-grid-btn" class="cad-mini-btn" type="button" title="Toggle XY Build Plate Grid">Grid: ON</button>
 			<button id="cad-wireframe-btn" class="cad-mini-btn" type="button">Wireframe: OFF</button>
 			<button id="cad-centrifuge-btn" class="cad-mini-btn" type="button" title="Centrifuge Stress Test (10,000 RPM)">Centrifuge: OFF</button>
 		</div>
@@ -225,6 +226,7 @@
 		const specPolyEl = document.getElementById('spec-poly');
 		const specVertsEl = document.getElementById('spec-verts');
 		const loadingOverlay = document.getElementById('cad-loading-overlay');
+		const gridBtn = document.getElementById('cad-grid-btn');
 		const wireframeBtn = document.getElementById('cad-wireframe-btn');
 		const resetCamBtn = document.getElementById('cad-reset-cam-btn');
 		const centrifugeBtn = document.getElementById('cad-centrifuge-btn');
@@ -383,6 +385,18 @@
 				loadModel(selectEl.value);
 			});
 		}
+
+		if (gridBtn) {
+			gridBtn.addEventListener('click', () => {
+				grid.visible = !grid.visible;
+				gridBtn.textContent = `Grid: ${grid.visible ? 'ON' : 'OFF'}`;
+				gridBtn.classList.toggle('active', !grid.visible);
+			});
+		}
+
+		(window as any).__toggleCadGrid = () => {
+			if (gridBtn) gridBtn.click();
+		};
 
 		if (wireframeBtn) {
 			wireframeBtn.addEventListener('click', () => {

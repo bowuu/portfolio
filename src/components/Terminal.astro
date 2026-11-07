@@ -311,7 +311,7 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-hl">network</span>                  Navigate to Anycast edge throughput benchmark (#benchmark)
   <span class="term-hl">mouse</span>                    Navigate to mouse polling oscilloscope &amp; button lab (#input-lab)
   <span class="term-hl">keyboard</span>                 Navigate to 104-key switch matrix &amp; latency lab (#keyboard-lab)
-  <span class="term-hl">cad</span>                      List 11 Autodesk Inventor functional 3D CAD models
+  <span class="term-hl">cad</span> [spin|grid]          List 11 3D CAD models ('cad spin' or 'cad grid')
   <span class="term-hl">debug</span>                    Navigate to client hardware &amp; edge telemetry (#debug)
   <span class="term-hl">theme</span> [mode]             Obsidian Dark / Clean Light theme toggle [dark|light|toggle]
   <span class="term-hl">visitor</span>                  Query anonymous Cloudflare D1 visitor counter
@@ -405,6 +405,12 @@ Verified Profiles:
 
 				case 'cad':
 					const cadSub = args[0]?.toLowerCase();
+					if (cadSub === 'grid') {
+						scrollToSection('cad-viewer');
+						(window as any).__toggleCadGrid?.();
+						appendOutput('<span class="term-cyan">&rarr; Toggled 3D CAD XY-axis build plate grid.</span>');
+						break;
+					}
 					if (cadSub === 'centrifuge' || cadSub === 'spin') {
 						scrollToSection('cad-viewer');
 						(window as any).__triggerCadCentrifuge?.(true);

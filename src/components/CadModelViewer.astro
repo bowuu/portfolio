@@ -48,6 +48,7 @@
 			<button id="cad-grid-btn" class="cad-mini-btn" type="button" title="Toggle XY Build Plate Grid">Grid: ON</button>
 			<button id="cad-wireframe-btn" class="cad-mini-btn" type="button">Wireframe: OFF</button>
 			<button id="cad-centrifuge-btn" class="cad-mini-btn" type="button" title="Centrifuge Stress Test (10,000 RPM)">Centrifuge: OFF</button>
+			<button id="cad-slicer-btn" class="cad-mini-btn" type="button" title="Interactive FDM Slicer Layer View">Slicer: OFF</button>
 		</div>
 	</div>
 
@@ -75,6 +76,23 @@
 		<div id="cad-centrifuge-hud" class="cad-centrifuge-hud hidden">
 			<span class="hud-pulse-dot"></span>
 			<span>CENTRIFUGE STRESS TEST: <strong id="hud-rpm-val">0 RPM</strong> &bull; PEAK LOAD: <strong id="hud-g-val">0G</strong> &bull; DYNAMIC IMBALANCE: <span id="hud-vib-val">0.0G</span></span>
+		</div>
+		<div id="cad-slicer-hud" class="cad-slicer-hud hidden">
+			<div class="slicer-hud-info">
+				<span class="slicer-pulse-dot"></span>
+				<span class="slicer-hud-title">FDM TOOLPATH SLICER:</span>
+				<strong id="slicer-hud-layer">Layer 140 / 140</strong>
+				<span class="slicer-hud-sub" id="slicer-hud-mm">(28.0 mm)</span>
+				<span class="slicer-hud-sep">&bull;</span>
+				<span id="slicer-hud-filament">PETG-CF: ~48g</span>
+				<span class="slicer-hud-sep">&bull;</span>
+				<span id="slicer-hud-time">Est: 1h 42m</span>
+			</div>
+			<div class="slicer-slider-bar">
+				<span class="slicer-bound">0mm</span>
+				<input type="range" id="cad-slicer-slider" min="1" max="100" value="100" class="slicer-range-input" aria-label="Slicer Layer Height">
+				<span class="slicer-bound" id="slicer-bound-max">28mm</span>
+			</div>
 		</div>
 		<div id="cad-loading-overlay" class="cad-loading hidden">
 			<div class="spinner"></div>
@@ -161,6 +179,7 @@
 		renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 		renderer.toneMapping = THREE.ACESFilmicToneMapping;
 		renderer.toneMappingExposure = 1.15;
+		renderer.localClippingEnabled = true;
 
 		const scene = new THREE.Scene();
 		const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 1000);
@@ -201,6 +220,16 @@
 		grid.position.y = -18;
 		scene.add(grid);
 
+		// Slicer Toolpath Plane & Group
+		const slicePlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 1000);
+		const toolpathGroup = new THREE.Group();
+		const toolpathGrid = new THREE.GridHelper(60, 30, 0x38bdf8, 0x0ea5e9);
+		(toolpathGrid.material as THREE.Material).transparent = true;
+		(toolpathGrid.material as THREE.Material).opacity = 0.55;
+		toolpathGroup.add(toolpathGrid);
+		scene.add(toolpathGroup);
+		toolpathGroup.visible = false;
+
 		// Model Group
 		const modelGroup = new THREE.Group();
 		scene.add(modelGroup);
@@ -239,9 +268,80 @@
 		const TARGET_CENTRIFUGE_SPEED = 1.35; // Rapid forward optical rotation
 		const TARGET_RPM = 10000;
 		let activeModelRadiusM = 0.1205; // Default to 120.5mm (half-width of ASUS mount)
+		let activeModelMinY = -18;
+		let activeModelMaxY = 10;
+		let activeModelHeightMm = 28;
+		let activeTotalLayers = 140;
+		let slicerActive = false;
+
 		const hudRpmEl = document.getElementById('hud-rpm-val');
 		const hudGEl = document.getElementById('hud-g-val');
 		const hudVibEl = document.getElementById('hud-vib-val');
+
+		const slicerBtn = document.getElementById('cad-slicer-btn');
+		const slicerHud = document.getElementById('cad-slicer-hud');
+		const slicerSliderEl = document.getElementById('cad-slicer-slider') as HTMLInputElement | null;
+		const slicerHudLayerEl = document.getElementById('slicer-hud-layer');
+		const slicerHudMmEl = document.getElementById('slicer-hud-mm');
+		const slicerHudFilamentEl = document.getElementById('slicer-hud-filament');
+		const slicerHudTimeEl = document.getElementById('slicer-hud-time');
+		const slicerBoundMaxEl = document.getElementById('slicer-bound-max');
+
+		function updateSlicer() {
+			if (!currentMeshObj || !currentMeshObj.geometry.boundingBox) return;
+			const sliderVal = slicerSliderEl ? parseInt(slicerSliderEl.value, 10) : 100;
+			const pct = sliderVal / 100;
+			const currentY = activeModelMinY + pct * (activeModelMaxY - activeModelMinY);
+
+			slicePlane.constant = currentY;
+			toolpathGroup.position.y = currentY;
+
+			const currentLayer = Math.max(1, Math.round(activeTotalLayers * pct));
+			const currentMm = (currentLayer * 0.20).toFixed(1);
+
+			const estFilamentG = Math.round((activeModelRadiusM * 500) * pct + 12);
+			const estHours = Math.floor((activeTotalLayers * 0.45 * pct) / 60);
+			const estMins = Math.round((activeTotalLayers * 0.45 * pct) % 60);
+
+			if (slicerHudLayerEl) slicerHudLayerEl.textContent = `Layer ${currentLayer} / ${activeTotalLayers}`;
+			if (slicerHudMmEl) slicerHudMmEl.textContent = `(${currentMm} mm)`;
+			if (slicerHudFilamentEl) slicerHudFilamentEl.textContent = `PETG-CF: ~${estFilamentG}g`;
+			if (slicerHudTimeEl) slicerHudTimeEl.textContent = `Est: ${estHours > 0 ? `${estHours}h ` : ''}${estMins}m`;
+		}
+
+		function setSlicer(active: boolean) {
+			slicerActive = active;
+			if (centrifugeActive && active) setCentrifuge(false);
+			if (slicerBtn) {
+				slicerBtn.textContent = active ? 'Slicer: ON' : 'Slicer: OFF';
+				slicerBtn.classList.toggle('active-slicer', active);
+			}
+			if (slicerHud) {
+				slicerHud.classList.toggle('hidden', !active);
+			}
+			material.clippingPlanes = active ? [slicePlane] : [];
+			toolpathGroup.visible = active;
+			if (active) updateSlicer();
+		}
+
+		if (slicerBtn) {
+			slicerBtn.addEventListener('click', () => setSlicer(!slicerActive));
+		}
+		if (slicerSliderEl) {
+			slicerSliderEl.addEventListener('input', updateSlicer);
+		}
+
+		(window as any).__toggleCadSlicer = (layerPct?: number) => {
+			if (typeof layerPct === 'number') {
+				if (!slicerActive) setSlicer(true);
+				if (slicerSliderEl) {
+					slicerSliderEl.value = Math.max(1, Math.min(100, layerPct)).toString();
+					updateSlicer();
+				}
+			} else {
+				setSlicer(!slicerActive);
+			}
+		};
 
 		function setCentrifuge(active: boolean) {
 			centrifugeActive = active;
@@ -331,8 +431,15 @@
 			// Center vertically on build plate
 			if (geometry.boundingBox) {
 				const minY = geometry.boundingBox.min.y;
+				const maxY = geometry.boundingBox.max.y;
+				activeModelMinY = minY;
+				activeModelMaxY = maxY;
 				grid.position.y = minY - 0.2;
-				controls.target.set(0, (geometry.boundingBox.max.y + geometry.boundingBox.min.y) / 2, 0);
+				controls.target.set(0, (maxY + minY) / 2, 0);
+				activeModelHeightMm = Math.max(1, data.bbox?.height || (maxY - minY));
+				activeTotalLayers = Math.max(1, Math.round(activeModelHeightMm / 0.20));
+				if (slicerBoundMaxEl) slicerBoundMaxEl.textContent = `${Math.round(activeModelHeightMm)}mm`;
+				if (slicerActive) updateSlicer();
 			}
 
 			// Update spec labels and active radius for centrifuge physics
@@ -608,6 +715,81 @@
 	}
 	.cad-centrifuge-hud.hidden {
 		display: none;
+	}
+	.cad-slicer-hud {
+		position: absolute;
+		top: 14px;
+		left: 50%;
+		transform: translateX(-50%);
+		background: rgba(15, 23, 42, 0.92);
+		backdrop-filter: blur(10px);
+		border: 1px solid #0ea5e9;
+		box-shadow: 0 0 16px rgba(14, 165, 233, 0.35);
+		color: #f8fafc;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		font-size: 0.74em;
+		letter-spacing: 0.03em;
+		padding: 0.5em 1em;
+		border-radius: 12px;
+		display: flex;
+		flex-direction: column;
+		gap: 0.4em;
+		z-index: 10;
+		max-width: 90%;
+		width: 440px;
+		pointer-events: auto;
+	}
+	.cad-slicer-hud.hidden {
+		display: none;
+	}
+	.slicer-hud-info {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.45em;
+		flex-wrap: wrap;
+	}
+	.slicer-pulse-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: #0ea5e9;
+		box-shadow: 0 0 8px #0ea5e9;
+		animation: pulseDot 0.8s infinite alternate ease-in-out;
+	}
+	.slicer-hud-title {
+		color: #0ea5e9;
+		font-weight: 700;
+	}
+	.slicer-hud-sub {
+		color: #94a3b8;
+	}
+	.slicer-hud-sep {
+		color: #475569;
+	}
+	.slicer-slider-bar {
+		display: flex;
+		align-items: center;
+		gap: 0.6em;
+		width: 100%;
+	}
+	.slicer-bound {
+		font-size: 0.85em;
+		color: #94a3b8;
+		min-width: 3.2em;
+		text-align: center;
+	}
+	.slicer-range-input {
+		flex: 1;
+		accent-color: #0ea5e9;
+		cursor: pointer;
+		height: 4px;
+	}
+	.cad-mini-btn.active-slicer {
+		border-color: #0ea5e9;
+		color: #38bdf8;
+		background: rgba(14, 165, 233, 0.15);
+		box-shadow: 0 0 10px rgba(14, 165, 233, 0.35);
 	}
 	.hud-pulse-dot {
 		width: 8px;

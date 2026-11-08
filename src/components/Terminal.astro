@@ -112,6 +112,9 @@
 			'neofetch',
 			'fastfetch',
 			'dmesg',
+			'bringup',
+			'uboot',
+			'boot',
 			'gcode',
 			'slice',
 			'matrix',
@@ -423,12 +426,14 @@
     cad - 3D parametric CAD viewer controller
 
 <span class="term-head">SYNOPSIS</span>
-    <span class="term-hl">cad</span> [spin|grid|list]
+    <span class="term-hl">cad</span> [spin|grid|slice|list]
 
 <span class="term-head">DESCRIPTION</span>
     Query or control the Three.js WebGL CAD model viewport directly from shell.
 
 <span class="term-head">SUBCOMMANDS</span>
+    <span class="term-cyan">slice [0-100]</span>
+        toggle interactive layer slicer toolpath visualizer or set cut plane (0-100%)
     <span class="term-cyan">spin</span>
         engage 10,000 RPM centrifuge dynamic stress test with dynamic g-force HUD
     <span class="term-cyan">grid</span>
@@ -459,6 +464,39 @@
 <span class="term-head">OPTIONS</span>
     <span class="term-cyan">-f, --fahrenheit</span>
         display thermal junction probes in degrees Fahrenheit instead of Celsius`,
+
+			bringup: `
+<span class="term-head">NAME</span>
+    bringup - automated test equipment (ATE) silicon validation sequencer
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">bringup</span> [-f, --fast]
+
+<span class="term-head">DESCRIPTION</span>
+    Execute multi-stage hardware validation across PMIC voltage rails, clock PLL lock,
+    LPDDR5 PHY eye training, PCIe Gen5 SerDes link training, and BIST scan chains.
+
+<span class="term-head">OPTIONS</span>
+    <span class="term-cyan">-f, --fast</span>
+        skip simulated stage delays and output full validation report immediately`,
+
+			uboot: `
+<span class="term-head">NAME</span>
+    uboot - embedded Linux Universal Bootloader firmware interface
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">uboot</span> [boot | env | printenv | bdinfo | md &lt;addr&gt;]
+    <span class="term-hl">boot</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Simulate embedded Linux platform bootloader. Inspect device tree blobs (FDT),
+    U-Boot environment variables, DRAM bank registers, or trigger kernel execution.
+
+<span class="term-head">SUBCOMMANDS</span>
+    <span class="term-cyan">boot</span>       execute full bootloader autoboot sequence to Linux kernel
+    <span class="term-cyan">printenv</span>   dump U-Boot bootloader environment variables
+    <span class="term-cyan">bdinfo</span>     display board architecture and DRAM mapping
+    <span class="term-cyan">md &lt;addr&gt;</span>  display memory dump at hexadecimal address (e.g. md 0x40000000)`,
 
 			dmesg: `
 <span class="term-head">NAME</span>
@@ -698,7 +736,8 @@
 		};
 
 		function showManPage(page: string) {
-			const p = page.toLowerCase();
+			const rawP = page.toLowerCase();
+			const p = rawP === 'boot' ? 'uboot' : rawP;
 			if (MAN_PAGES[p]) {
 				appendOutput(MAN_PAGES[p]);
 			} else {
@@ -751,18 +790,18 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
 
   <span class="term-col">Core System &amp; Navigation</span> <span class="term-col">Description</span>
   <span class="term-dim">------------------------ ------------------------------------------------------------</span>
-  <span class="term-hl">about</span>                    Hardware engineering background, focus &amp; profile links
-  <span class="term-hl">skills</span>                   Silicon validation, embedded Linux &amp; 3D CAD platforms
-  <span class="term-hl">projects</span>                 Featured engineering projects &amp; 3D CAD portfolio
+  <span class="term-hl">about</span>                    Hardware engineering background &amp; focus
+  <span class="term-hl">skills</span>                   Silicon validation, Linux &amp; 3D CAD platforms
+  <span class="term-hl">projects</span>                 Featured engineering projects &amp; 3D models
   <span class="term-hl">tests</span>                    Navigate to hardware &amp; network test suites (#lab)
-  <span class="term-hl">network</span>                  Navigate to Anycast edge throughput benchmark (#benchmark)
-  <span class="term-hl">mouse</span>                    Mouse polling &amp; button latency lab (#input-lab)
-  <span class="term-hl">keyboard</span>                 104-key switch matrix &amp; latency lab (#keyboard-lab)
-  <span class="term-hl">cad</span> [spin|grid]          List 11 3D CAD models ('cad spin' or 'cad grid')
-  <span class="term-hl">debug</span>                    Navigate to client hardware &amp; edge telemetry (#debug)
-  <span class="term-hl">theme</span> [mode]             Obsidian Dark / Clean Light theme toggle [dark|light|toggle]
+  <span class="term-hl">network</span>                  Anycast edge throughput benchmark (#benchmark)
+  <span class="term-hl">mouse</span>                    Mouse polling &amp; latency lab (#input-lab)
+  <span class="term-hl">keyboard</span>                 104-key switch matrix lab (#keyboard-lab)
+  <span class="term-hl">cad</span> [spin|grid|slice]    3D CAD viewer controls &amp; slicer (#cad-viewer)
+  <span class="term-hl">debug</span>                    Navigate to client hardware &amp; telemetry (#debug)
+  <span class="term-hl">theme</span> [mode]             Obsidian Dark / Clean Light toggle
   <span class="term-hl">visitor</span>                  Query anonymous Cloudflare D1 visitor counter
-  <span class="term-hl">whoami</span>                   Display client session &amp; Anycast edge telemetry info
+  <span class="term-hl">whoami</span>                   Display client session &amp; Anycast edge telemetry
   <span class="term-hl">man</span> [cmd]                Reference manual page for shell commands
   <span class="term-hl">date</span> / <span class="term-hl">clear</span> / <span class="term-hl">exit</span>      Standard shell session utilities
 
@@ -770,7 +809,7 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-dim">------------------------ ------------------------------------------------------------</span>
   <span class="term-hl">pwd</span>                      Print current working directory path
   <span class="term-hl">cd</span> [dir]                 Change directory (supports ~, .., -)
-  <span class="term-hl">ls</span> [flags] [path]        List repository files &amp; directories (-l, -a, -h)
+  <span class="term-hl">ls</span> [flags] [path]        List repository files &amp; dirs (-l, -a, -h)
   <span class="term-hl">tree</span> [-L depth] [dir]    Visual ASCII directory tree diagram
   <span class="term-hl">cat</span> [file]               Inspect repository source code file
   <span class="term-hl">head</span> / <span class="term-hl">tail</span> [-n] [file] Output first / last lines of file (e.g. head -n 25)
@@ -779,19 +818,19 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-col">Hardware Diagnostics</span>     <span class="term-col">Description</span>
   <span class="term-dim">------------------------ ------------------------------------------------------------</span>
   <span class="term-hl">neofetch</span>                 Silicon validation bench summary &amp; die specs
-  <span class="term-hl">dmesg</span>                    Simulated silicon bringup &amp; ATE kernel ring buffer
-  <span class="term-hl">wafer</span>                    300mm silicon wafer die sort map &amp; bin yield report
-  <span class="term-hl">sensors</span>                  Thermal junction probes, PMIC voltages &amp; power draw
+  <span class="term-hl">bringup</span> [-f]             Automated ATE silicon bringup sequence
+  <span class="term-hl">uboot</span> / <span class="term-hl">boot</span>             Universal Bootloader (SPL, DRAM, FDT &amp; kernel)
+  <span class="term-hl">dmesg</span>                    Simulated silicon bringup &amp; ATE ring buffer
+  <span class="term-hl">wafer</span>                    300mm wafer die sort map &amp; bin yield report
+  <span class="term-hl">sensors</span>                  Thermal junction probes, PMIC voltages &amp; power
   <span class="term-hl">gcode</span>                    3D printer telemetry &amp; bed mesh leveling report
-  <span class="term-hl">uptime</span> / <span class="term-hl">uname</span>           Kernel platform flags &amp; continuous session runtime
+  <span class="term-hl">uptime</span> / <span class="term-hl">uname</span>           Kernel platform flags &amp; session runtime
 
   <span class="term-col">Undocumented Opcodes</span>     <span class="term-col">Description</span>
   <span class="term-dim">------------------------ ------------------------------------------------------------</span>
   <span class="term-hl">matrix</span>                   Cascading digital rain diagnostic (cmatrix)
   <span class="term-hl">sl</span>                       Scenic steam locomotive journey (mistyped 'ls')
   <span class="term-hl">sudo</span> [cmd]               Privilege escalation request (try 'sudo rm -rf /')
-  <span class="term-hl">cad spin</span>                 Engage 10,000 RPM centrifuge stress test on 3D viewer
-  <span class="term-hl">ls</span> / <span class="term-hl">cat</span> [file]          Inspect simulated rootfs (README.md, silicon_spec.json)
 
 <span class="term-dim">Tip: Use Up/Down arrows for command history; press Tab for autocompletion.</span>`);
 					break;
@@ -865,6 +904,18 @@ Verified Profiles:
 						scrollToSection('cad-viewer');
 						(window as any).__toggleCadGrid?.();
 						appendOutput('<span class="term-cyan">&rarr; Toggled 3D CAD XY-axis build plate grid.</span>');
+						break;
+					}
+					if (cadSub === 'slice') {
+						scrollToSection('cad-viewer');
+						const layerArg = parseInt(args[1], 10);
+						if (!isNaN(layerArg)) {
+							(window as any).__toggleCadSlicer?.(layerArg);
+							appendOutput(`<span class="term-cyan">&rarr; Set 3D CAD Slicer layer to ${layerArg}% (#cad-viewer).</span>`);
+						} else {
+							(window as any).__toggleCadSlicer?.();
+							appendOutput('<span class="term-cyan">&rarr; Toggled 3D CAD interactive layer slicer toolpath mode (#cad-viewer).</span>');
+						}
 						break;
 					}
 					if (cadSub === 'centrifuge' || cadSub === 'spin') {
@@ -999,6 +1050,140 @@ Verified Profiles:
     </div>
   </div>
 </div>`);
+					break;
+
+				case 'bringup':
+					appendOutput(`
+<span class="term-head">=== AUTOMATED TEST EQUIPMENT (ATE) SILICON BRINGUP SEQUENCE ===</span>
+<span class="term-dim">Target Die: LOT #850C-W14 (Part: BROB-VAL-SILICON, 3nm FinFET, Stepping A0)</span>
+<span class="term-dim">Probe Card: Pogo-Pin Matrix #07 | ATE Station: Teradyne UltraFLEXplus</span>
+
+[<span class="term-cyan">+0.000s</span>] <span class="term-hl">POWER_DOMAIN_INIT:</span>
+         VDD_CORE: <span class="term-cyan">0.852 V</span> (0.850V &plusmn; 2mV) &bull; Rail Inrush: 14.8A OK
+         VDD_SOC:  <span class="term-cyan">1.050 V</span> &bull; VDD_DDR5: <span class="term-cyan">1.204 V</span> &bull; VCC_3V3: <span class="term-cyan">3.314 V</span>
+         <span class="term-hl">[PWRGD ASSERTED - POWER SEQUENCING NOMINAL]</span>
+
+[<span class="term-cyan">+0.045s</span>] <span class="term-hl">CLOCK_PLL_LOCK:</span>
+         Oscillator: 100.000 MHz (TCXO Ref)
+         VCO locked @ 9.600 GHz &rarr; Core PLL locked @ <span class="term-hl">4.800 GHz</span>
+         Phase Jitter: <span class="term-cyan">0.118 ps RMS</span> (Budget: 0.200 ps) &bull; Lock Time: 12.4 &mu;s
+         <span class="term-hl">[PLL LOCK VERIFIED]</span>
+
+[<span class="term-cyan">+0.112s</span>] <span class="term-hl">MEMORY_PHY_TRAINING (LPDDR5-6400):</span>
+         CA Training: Completed &bull; Read DQS Centering: +42 ps OK
+         Write DQ Eye: Height: <span class="term-cyan">185 mV</span>, Width: <span class="term-cyan">88 ps</span> (BER &lt; 1e-15)
+         Sideband ECC: <span class="term-cyan">64 GiB Verified (0 Parity / Bit Errors)</span>
+         <span class="term-hl">[DRAM PHY CALIBRATION PASSED]</span>
+
+[<span class="term-cyan">+0.198s</span>] <span class="term-hl">HIGH_SPEED_SERDES_TRAINING (PCIe Gen5 x16):</span>
+         LTSSM: Detect &rarr; Polling &rarr; Config &rarr; Recovery
+         Equalization Phase 0-3: CTLE Boost +6dB, DFE Tap 1: -45mV
+         Link Active: <span class="term-hl">Gen5 x16 @ 32.0 GT/s</span> (128b/130b encoding, 64 GB/s)
+         <span class="term-hl">[SERDES LINK NEGOTIATION L0 ACTIVE]</span>
+
+[<span class="term-cyan">+0.264s</span>] <span class="term-hl">BIST_AND_BOUNDARY_SCAN:</span>
+         1,024 On-Die Scan Chains Tested &bull; Total Flops: 2,418,920
+         Stuck-At Fault Coverage: <span class="term-cyan">99.84%</span> &bull; At-Speed Delay Faults: 0
+         IDCODE: <span class="term-hl">0x850C6005</span> &bull; Fused Silicon MAC: e4:5f:01:8a:32:00
+         <span class="term-hl">[ATE SCAN COMPLETE - ZERO SILICON DEFECTS]</span>
+
+<span class="term-head">=== BRINGUP VERDICT: PASS [BIN 1 - ULTRA HIGH PERFORMANCE 4.80 GHz] ===</span>
+Silicon die validated and ready for bootloader handoff. Type <span class="term-hl">'uboot'</span> to initialize firmware.`);
+					break;
+
+				case 'uboot':
+				case 'boot':
+					const ubootSub = (args[0] || '').toLowerCase();
+					if (ubootSub === 'env' || ubootSub === 'printenv') {
+						appendOutput(`
+<span class="term-head">=== U-BOOT ENVIRONMENT VARIABLES (uboot printenv) ===</span>
+baudrate=115200
+board=brob-eval-rev-b
+boot_fdt=try
+bootargs=console=ttyS0,115200 root=/dev/mmcblk0p2 rw rootwait earlycon quiet
+bootcmd=run mmcboot
+bootdelay=2
+cpu=brob-val-3nm
+ethact=Cloudflare-Anycast-100G
+ethaddr=e4:5f:01:8a:32:00
+fdt_addr=0x44000000
+fdtfile=brob-silicon-eval.dtb
+initrd_addr=0x44100000
+ipaddr=192.168.1.100
+kernel_addr=0x40080000
+loadaddr=0x40000000
+mmcboot=echo Loading FIT image...; bootm ${loadaddr}#config-1
+serverip=192.168.1.1
+soc=brob-val
+stderr=serial@fe660000
+stdin=serial@fe660000
+stdout=serial@fe660000
+<span class="term-dim">Tip: Run 'uboot bdinfo' or 'uboot md 0x40000000'.</span>`);
+						break;
+					}
+					if (ubootSub === 'bdinfo') {
+						appendOutput(`
+<span class="term-head">=== U-BOOT BOARD INFORMATION (bdinfo) ===</span>
+boot_params = <span class="term-cyan">0x0000000000000000</span>
+DRAM bank   = 0
+-&gt; start   = <span class="term-cyan">0x0000000040000000</span>
+-&gt; size    = <span class="term-cyan">0x0000001000000000</span> (64 GiB)
+flashstart  = <span class="term-cyan">0x0000000000000000</span>
+flashsize   = <span class="term-cyan">0x0000000000000000</span>
+ethaddr     = <span class="term-hl">e4:5f:01:8a:32:00</span>
+IP addr     = 192.168.1.100
+baudrate    = 115200 bps
+relocaddr   = <span class="term-cyan">0x000000103ff2a000</span>
+reloc off   = <span class="term-cyan">0x000000103ff2a000</span>`);
+						break;
+					}
+					if (ubootSub === 'md') {
+						const addrHex = args[1] ? args[1].toUpperCase() : '0x40000000';
+						appendOutput(`
+<span class="term-head">Memory Dump [FIT Image Header @ ${escapeHtml(addrHex)}]:</span>
+  ${escapeHtml(addrHex)}: 44535446 00000840 00000000 00000038  <span class="term-dim">FITD@.......8</span>
+  ${escapeHtml(addrHex.slice(0, -1))}8: 00000028 00000011 00000010 00000000  <span class="term-dim">(...........</span>
+  ${escapeHtml(addrHex.slice(0, -2))}10: 6b65726e 656c2d31 00000000 00000001  <span class="term-dim">kernel-1....</span>
+  ${escapeHtml(addrHex.slice(0, -2))}18: 7838365f 36340000 6c696e75 78000000  <span class="term-dim">x86_64..linux...</span>`);
+						break;
+					}
+
+					// Default: Run full autoboot sequence
+					appendOutput(`
+<span class="term-head">U-Boot SPL 2024.10-brob (Nov 08 2026 - 02:30:00 -0500)</span>
+DRAM: 64 GiB LPDDR5-6400 ECC initialized
+Trying to boot from MMC2 (eMMC 5.1 HS400) ... <span class="term-hl">OK</span>
+
+<span class="term-cyan">U-Boot 2024.10-brob-linux-edge (x86_64-brob-edge)</span>
+
+CPU:   BROB-VAL 3nm FinFET (Stepping A0) @ 4.80 GHz
+Model: Bo Silicon Engineering Reference Board (Rev B)
+DRAM:  64 GiB
+Core:  24 devices, 14 uclasses, devicetree: separate
+MMC:   mmc@fe320000: 0, mmc@fe330000: 1
+Loading Environment from MMC... <span class="term-hl">OK</span>
+In:    serial@fe660000
+Out:   serial@fe660000
+Err:   serial@fe660000
+Net:   eth0: Cloudflare-Anycast-100G [PRIME]
+Hit any key to stop autoboot:  0
+
+## Loading kernel from FIT Image at 0x40000000 ...
+   Using 'config-1' configuration
+   Verifying Hash Integrity ... sha256+ <span class="term-hl">OK</span>
+   Kernel 6.12.0-ate-val (x86_64) @ 0x40080000 [6.2 MiB]
+   FDT (Flat Device Tree): brob-silicon-eval.dtb @ 0x44000000 [48 KiB]
+   Initrd: rootfs.cpio.gz @ 0x44100000 [18.4 MiB]
+## Starting Linux kernel at 0x40080000 with FDT at 0x44000000 ...
+
+<span class="term-dim">[    0.000000]</span> Linux version 6.12.0-ate-val #1 SMP PREEMPT_DYNAMIC
+<span class="term-dim">[    0.000000]</span> Machine model: Bo Silicon Evaluation Platform (Rev B)
+<span class="term-dim">[    0.000000]</span> Early console on serial0 at 0xfe660000 (115200 8n1)
+<span class="term-dim">[    0.024109]</span> <span class="term-cyan">ATE:</span> Automated Test Equipment interface verified
+<span class="term-dim">[    0.118934]</span> <span class="term-cyan">PCIe:</span> Gen5 x16 negotiated (32.0 GT/s, 128b/130b)
+<span class="term-dim">[    0.312049]</span> <span class="term-cyan">EXT4-fs:</span> (nvme0n1p2): mounted filesystem with ordered data mode
+<span class="term-dim">[    0.485112]</span> <span class="term-hl">brobOS:</span> Silicon bringup and kernel handoff complete! Welcome to brobsh.
+<span class="term-dim">Tip: Run 'uboot printenv' or 'uboot bdinfo' to inspect bootloader parameters.</span>`);
 					break;
 
 				case 'dmesg':

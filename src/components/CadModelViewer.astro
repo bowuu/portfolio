@@ -49,6 +49,14 @@
 			<button id="cad-wireframe-btn" class="cad-mini-btn" type="button">Wireframe: OFF</button>
 			<button id="cad-centrifuge-btn" class="cad-mini-btn" type="button" title="Centrifuge Stress Test (10,000 RPM)">Centrifuge: OFF</button>
 			<button id="cad-slicer-btn" class="cad-mini-btn" type="button" title="Interactive FDM Slicer Layer View">Slicer: OFF</button>
+			<a id="cad-download-btn" class="cad-mini-btn cad-download-btn" href="/models/BE92UMount.stp" download="BE92UMount.stp" title="Download ASUS RT-BE92U Router Mount (BE92UMount.stp)" aria-label="Download CAD STEP File">
+				<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+					<polyline points="7 10 12 15 17 10"></polyline>
+					<line x1="12" y1="15" x2="12" y2="3"></line>
+				</svg>
+				<span>Download .STP</span>
+			</a>
 		</div>
 	</div>
 
@@ -254,6 +262,7 @@
 		const specDimEl = document.getElementById('spec-dim');
 		const specPolyEl = document.getElementById('spec-poly');
 		const specVertsEl = document.getElementById('spec-verts');
+		const downloadBtn = document.getElementById('cad-download-btn') as HTMLAnchorElement | null;
 		const loadingOverlay = document.getElementById('cad-loading-overlay');
 		const gridBtn = document.getElementById('cad-grid-btn');
 		const wireframeBtn = document.getElementById('cad-wireframe-btn');
@@ -451,6 +460,14 @@
 			if (specPolyEl) specPolyEl.textContent = `${(data.indices.length / 3).toLocaleString()} Triangles`;
 			if (specVertsEl) specVertsEl.textContent = `${(data.positions.length / 3).toLocaleString()} Vertices`;
 			if (descTextEl && meta) descTextEl.textContent = meta.desc;
+
+			// Update download button to match active model
+			const activeMeta = meta || manifestMap[data.id];
+			if (downloadBtn && activeMeta) {
+				downloadBtn.href = activeMeta.stepFile;
+				downloadBtn.download = activeMeta.file;
+				downloadBtn.title = `Download ${activeMeta.name} (${activeMeta.file})`;
+			}
 		}
 
 		async function loadModel(id: string) {
@@ -666,6 +683,7 @@
 		display: flex;
 		align-items: center;
 		gap: 0.6em;
+		flex-wrap: wrap;
 	}
 	.cad-mini-btn {
 		font-size: 0.78em;
@@ -677,6 +695,24 @@
 		color: rgb(var(--gray-dark));
 		cursor: pointer;
 		transition: all 0.15s ease;
+		text-decoration: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4em;
+	}
+	.cad-download-btn {
+		color: var(--accent);
+		border-color: rgba(var(--accent-rgb), 0.4);
+		font-weight: 700;
+	}
+	.cad-download-btn:hover {
+		background: var(--accent);
+		color: #ffffff;
+		border-color: var(--accent);
+		box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.3);
+	}
+	.cad-download-btn svg {
+		flex-shrink: 0;
 	}
 	.cad-mini-btn:hover, .cad-mini-btn.active {
 		background: var(--accent);

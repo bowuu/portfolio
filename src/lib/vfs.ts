@@ -138,14 +138,6 @@ for (const [key, content] of Object.entries(rawSourceFiles)) {
 	addFile(vfsPath, content);
 }
 
-// Add simulated repository files
-addFile('/home/guest/portfolio/brobOS.bin', '<ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, stripped>\n', true);
-
-// Add CAD models README
-addFile('/home/guest/portfolio/public/models/README.md', `# 3D Parametric CAD Models (Autodesk Inventor)
-High-density triangulated boundary representation meshes (.json) and authentic .stp engineering files.
-Enumerate catalog with 'cad list' or inspect dimensions in 'manifest.json'.
-`);
 
 // Path resolution helper
 export function resolvePath(pathInput: string, baseCwd: string = currentWorkingDir): string {

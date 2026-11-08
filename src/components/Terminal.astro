@@ -104,9 +104,6 @@
 			'neofetch',
 			'fastfetch',
 			'dmesg',
-			'jtag',
-			'peek',
-			'poke',
 			'gcode',
 			'slice',
 			'matrix',
@@ -311,8 +308,8 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-hl">projects</span>                 Featured engineering projects &amp; 3D CAD portfolio
   <span class="term-hl">tests</span>                    Navigate to hardware &amp; network test suites (#lab)
   <span class="term-hl">network</span>                  Navigate to Anycast edge throughput benchmark (#benchmark)
-  <span class="term-hl">mouse</span>                    Navigate to mouse polling oscilloscope &amp; button lab (#input-lab)
-  <span class="term-hl">keyboard</span>                 Navigate to 104-key switch matrix &amp; latency lab (#keyboard-lab)
+  <span class="term-hl">mouse</span>                    Mouse polling &amp; button latency lab (#input-lab)
+  <span class="term-hl">keyboard</span>                 104-key switch matrix &amp; latency lab (#keyboard-lab)
   <span class="term-hl">cad</span> [spin|grid]          List 11 3D CAD models ('cad spin' or 'cad grid')
   <span class="term-hl">debug</span>                    Navigate to client hardware &amp; edge telemetry (#debug)
   <span class="term-hl">theme</span> [mode]             Obsidian Dark / Clean Light theme toggle [dark|light|toggle]
@@ -326,9 +323,6 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-hl">dmesg</span>                    Simulated silicon bringup &amp; ATE kernel ring buffer
   <span class="term-hl">wafer</span>                    300mm silicon wafer die sort map &amp; bin yield report
   <span class="term-hl">sensors</span>                  Thermal junction probes, PMIC voltages &amp; power draw
-  <span class="term-hl">jtag</span>                     JTAG TAP controller diagnostic &amp; boundary scan report
-  <span class="term-hl">peek</span> [addr]              Read 32-bit hardware register (e.g. peek 0xdeadbeef)
-  <span class="term-hl">poke</span> [addr] [val]        Write 32-bit register via ATE JTAG interface
   <span class="term-hl">gcode</span>                    3D printer telemetry &amp; bed mesh leveling report
   <span class="term-hl">uptime</span> / <span class="term-hl">uname</span>           Kernel platform flags &amp; continuous session runtime
 
@@ -609,41 +603,6 @@ VCC_3V3:       <span class="term-hl">3.314 V</span>  (min =  3.135 V, max =  3.4
 Current Draw:  <span class="term-cyan">17.8 A</span>   (Package Power: 15.2 W TDP idle)`);
 					break;
 
-				case 'jtag':
-					appendOutput(`
-<span class="term-head">=== JTAG TAP CONTROLLER DIAGNOSTIC ===</span>
-TAP State: RUN-TEST/IDLE  |  IR Length: 5 bits
-Device IDCODE: <span class="term-hl">0x1A2B3C4D</span> (Part: BROB-VAL-SILICON, Rev: 0x1, Mfr: Bo Silicon Corp)
-Boundary Scan Chain: 1,024 cells detected, 0 breaks found.
-
-Pin Net Status:
-  VDD_CORE:    <span class="term-cyan">0.850V [NOMINAL]</span>
-  VDD_IO:      <span class="term-cyan">1.200V [NOMINAL]</span>
-  VREF_DDR:    <span class="term-cyan">0.600V [NOMINAL]</span>
-  SCAN_ENABLE: LOW (Functional Mode Active)
-  BIST Result: <span class="term-hl">[PASS - ZERO DEFECTS DETECTED]</span>`);
-					break;
-
-				case 'peek':
-					const peekAddr = args[0] ? args[0].toUpperCase() : '';
-					if (peekAddr) {
-						appendOutput(`[${escapeHtml(peekAddr)}] =&gt; <span class="term-hl">0xCAFEBABE</span> (<span class="term-cyan">MAGIC_SMOKE_STATUS: CONTAINED | REG_OK</span>)`);
-					} else {
-						appendOutput(`
-<span class="term-head">Silicon Register Map Dump (Base: 0x00000000):</span>
-  [0x00000000] = <span class="term-cyan">0x850C6005</span> (SILICON_DIE_ID)
-  [0x00000004] = <span class="term-cyan">0x00000001</span> (STEPPING_A0_VALID)
-  [0x00000008] = <span class="term-cyan">0xCAFEBABE</span> (CLOCK_PLL_LOCKED)
-  [0x0000000C] = <span class="term-hl">0xDEADBEEF</span> (MAGIC_SMOKE_CONTAINED)
-<span class="term-dim">Tip: Run 'peek &lt;hex_address&gt;' to probe arbitrary registers.</span>`);
-					}
-					break;
-
-				case 'poke':
-					const pokeAddr = args[0] ? args[0].toUpperCase() : '0x00000000';
-					const pokeVal = args[1] ? args[1].toUpperCase() : '0x00000000';
-					appendOutput(`[${escapeHtml(pokeAddr)}] &lt;= <span class="term-hl">${escapeHtml(pokeVal)}</span> (Register write committed via ATE JTAG interface).`);
-					break;
 
 				case 'gcode':
 				case 'slice':
@@ -1089,8 +1048,6 @@ Hosted on Cloudflare Edge with zero-logging ephemeral telemetry.`);
 		color: #94a3b8;
 		font-weight: 700;
 		text-transform: uppercase;
-		font-size: 0.88em;
-		letter-spacing: 0.04em;
 	}
 
 	:global(.term-hl) {

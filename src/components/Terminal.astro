@@ -46,7 +46,7 @@
 			<!-- INLINE ACTIVE PROMPT (Flows naturally at bottom of buffer) -->
 			<form class="terminal-prompt-row mono" id="terminal-form">
 				<label for="terminal-input" class="term-prompt">
-					<span class="p-user">guest@brob</span><span class="p-sep">:</span><span class="p-path">~</span><span class="p-char">$</span>
+					<span class="p-user">guest@brob</span><span class="p-sep">:</span><span class="p-path" id="term-active-path">~/portfolio</span><span class="p-char">$</span>
 				</label>
 				<div class="term-input-wrap">
 					<input 
@@ -66,6 +66,7 @@
 </div>
 
 <script>
+	import * as vfs from '../lib/vfs';
 	function initTerminal() {
 		const modal = document.getElementById('terminal-modal');
 		const win = document.getElementById('terminal-window');
@@ -99,6 +100,12 @@
 			'visitor',
 			'whoami',
 			'man',
+			'pwd',
+			'cd',
+			'tree',
+			'head',
+			'tail',
+			'grep',
 			'date',
 			'clear',
 			'exit',
@@ -190,7 +197,7 @@
 		function appendEchoLine(cmdText: string) {
 			const row = document.createElement('div');
 			row.className = 'term-line mono';
-			row.innerHTML = `<span class="term-prompt"><span class="p-user">guest@brob</span><span class="p-sep">:</span><span class="p-path">~</span><span class="p-char">$</span></span> <span class="term-cmd">${escapeHtml(cmdText)}</span>`;
+			row.innerHTML = `<span class="term-prompt"><span class="p-user">guest@brob</span><span class="p-sep">:</span><span class="p-path">${escapeHtml(vfs.getDisplayPath())}</span><span class="p-char">$</span></span> <span class="term-cmd">${escapeHtml(cmdText)}</span>`;
 			historyEl?.appendChild(row);
 			if (screen) screen.scrollTop = screen.scrollHeight;
 		}
@@ -289,6 +296,67 @@
 <span class="term-head">DESCRIPTION</span>
     Format and display reference manual pages for brobOS internal commands.
     Try <span class="term-hl">'man uname'</span>, <span class="term-hl">'man ls'</span>, <span class="term-hl">'man cad'</span>, or <span class="term-hl">'man sensors'</span>.`,
+
+			pwd: `
+<span class="term-head">NAME</span>
+    pwd - print name of current/working directory
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">pwd</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Print the full resolved pathname of the current working directory.`,
+
+			cd: `
+<span class="term-head">NAME</span>
+    cd - change the shell working directory
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">cd</span> [DIRECTORY]
+
+<span class="term-head">DESCRIPTION</span>
+    Change the working directory. With no argument, defaults to ~/portfolio.
+    Supports ~, .., and - (previous working directory).`,
+
+			tree: `
+<span class="term-head">NAME</span>
+    tree - list directory contents in a tree-like hierarchy
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">tree</span> [-L LEVEL] [DIRECTORY]
+
+<span class="term-head">DESCRIPTION</span>
+    Produce a depth-indented visual listing of files and directories in the VFS.`,
+
+			head: `
+<span class="term-head">NAME</span>
+    head - output the first part of files
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">head</span> [-n LINES] [FILE]
+
+<span class="term-head">DESCRIPTION</span>
+    Print the first 10 lines (or LINES lines) of FILE to standard output.`,
+
+			tail: `
+<span class="term-head">NAME</span>
+    tail - output the last part of files
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">tail</span> [-n LINES] [FILE]
+
+<span class="term-head">DESCRIPTION</span>
+    Print the last 10 lines (or LINES lines) of FILE to standard output.`,
+
+			grep: `
+<span class="term-head">NAME</span>
+    grep - search file for lines matching a pattern
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">grep</span> PATTERN FILE
+
+<span class="term-head">DESCRIPTION</span>
+    Search for PATTERN in FILE and print matching lines with highlighted syntax.`,
 
 			help: `
 <span class="term-head">NAME</span>
@@ -698,6 +766,16 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-hl">man</span> [cmd]                Reference manual page for shell commands
   <span class="term-hl">date</span> / <span class="term-hl">clear</span> / <span class="term-hl">exit</span>      Standard shell session utilities
 
+  <span class="term-col">Filesystem &amp; Source VFS</span>  <span class="term-col">Description</span>
+  <span class="term-dim">------------------------ ------------------------------------------------------------</span>
+  <span class="term-hl">pwd</span>                      Print current working directory path
+  <span class="term-hl">cd</span> [dir]                 Change directory (supports ~, .., -)
+  <span class="term-hl">ls</span> [flags] [path]        List repository files &amp; directories (-l, -a, -h)
+  <span class="term-hl">tree</span> [-L depth] [dir]    Visual ASCII directory tree diagram
+  <span class="term-hl">cat</span> [file]               Inspect repository source code file
+  <span class="term-hl">head</span> / <span class="term-hl">tail</span> [-n] [file] Output first / last lines of file (e.g. head -n 25)
+  <span class="term-hl">grep</span> [pattern] [file]    Search file contents with highlighted matches
+
   <span class="term-col">Hardware Diagnostics</span>     <span class="term-col">Description</span>
   <span class="term-dim">------------------------ ------------------------------------------------------------</span>
   <span class="term-hl">neofetch</span>                 Silicon validation bench summary &amp; die specs
@@ -1072,63 +1150,71 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 					}
 					break;
 
+				case 'pwd':
+					appendOutput(escapeHtml(vfs.getCwd()));
+					break;
+
+				case 'cd':
+					const cdTarget = args[0] || '';
+					const cdRes = vfs.changeDirectory(cdTarget);
+					if (!cdRes.success) {
+						appendOutput(`<span class="term-err">${escapeHtml(cdRes.error || 'cd: error')}</span>`);
+					} else {
+						const activePathEl = document.getElementById('term-active-path');
+						if (activePathEl) activePathEl.textContent = vfs.getDisplayPath();
+					}
+					break;
+
 				case 'ls':
 				case 'dir':
 					const lsIsAll = args.some(a => a.startsWith('-') && a.includes('a'));
 					const lsIsLong = args.some(a => a.startsWith('-') && a.includes('l'));
 					const lsIsHuman = args.some(a => a.startsWith('-') && a.includes('h'));
-
-					if (lsIsLong) {
-						const totalLine = lsIsAll ? 'total 64' : 'total 48';
-						const dotLines = lsIsAll ? `drwxr-xr-x 5 guest brob ${lsIsHuman ? '4.0K' : '4096'} Nov 06 23:30 <span class="term-cyan">.</span>
-drwxr-xr-x 3 root  root ${lsIsHuman ? '4.0K' : '4096'} Nov 06 23:30 <span class="term-cyan">..</span>
--rw-r--r-- 1 guest brob ${lsIsHuman ? ' 220' : ' 220'} Nov 06 23:30 .brobrc
-drwxr-xr-x 8 guest brob ${lsIsHuman ? '4.0K' : '4096'} Nov 06 23:30 <span class="term-cyan">.git/</span>\n` : '';
-						appendOutput(`
-<span class="term-dim">${totalLine}</span>
-${dotLines}drwxr-xr-x 2 guest brob ${lsIsHuman ? '4.0K' : '4096'} Nov 06 23:30 <span class="term-cyan">models/</span>
-drwxr-xr-x 4 guest brob ${lsIsHuman ? '4.0K' : '4096'} Nov 06 23:30 <span class="term-cyan">src/</span>
--rwxr-xr-x 1 guest brob ${lsIsHuman ? '8.0K' : '8192'} Nov 06 23:30 <span class="term-hl">brobOS.bin</span>*
--rw-r--r-- 1 guest brob ${lsIsHuman ? '1.0K' : '1064'} Nov 06 23:30 LICENSE
--rw-r--r-- 1 guest brob ${lsIsHuman ? '2.0K' : '2048'} Nov 06 23:30 README.md
--rw-r--r-- 1 guest brob ${lsIsHuman ? ' 512' : ' 512'} Nov 06 23:30 silicon_spec.json
-<span class="term-dim">Tip: Try 'cat README.md' or 'cat silicon_spec.json'. Mistyped? Try 'sl'.</span>`);
-					} else {
-						if (lsIsAll) {
-							appendOutput(`<span class="term-cyan">.</span>  <span class="term-cyan">..</span>  .brobrc  <span class="term-cyan">.git/</span>  <span class="term-hl">brobOS.bin</span>*  LICENSE  <span class="term-cyan">models/</span>  README.md  silicon_spec.json  <span class="term-cyan">src/</span>`);
-						} else {
-							appendOutput(`<span class="term-hl">brobOS.bin</span>*  LICENSE  <span class="term-cyan">models/</span>  README.md  silicon_spec.json  <span class="term-cyan">src/</span>`);
-					}
-					}
+					const lsPath = args.find(a => !a.startsWith('-')) || '';
+					const lsRes = vfs.listDirectory(lsPath, { all: lsIsAll, long: lsIsLong, human: lsIsHuman });
+					appendOutput(lsRes.output);
 					break;
 
 				case 'cat':
-					const targetFile = (args[0] || '').toLowerCase();
-					if (!targetFile) {
-						appendOutput('<span class="term-err">cat: missing file operand. Try "cat README.md" or "cat silicon_spec.json"</span>');
-					} else if (targetFile === 'readme.md' || targetFile === 'readme') {
-						appendOutput(`
-<span class="term-head"># Bo Wu &bull; brob.uk</span>
-Personal Portfolio &amp; Interactive Engineering Showcase.
-Focusing on Silicon Validation, Embedded Linux &amp; 3D Parametric CAD.
-Hosted on Cloudflare Edge with zero-logging ephemeral telemetry.`);
-					} else if (targetFile === 'silicon_spec.json') {
-						appendOutput(`
-<span class="term-cyan">{
-  "part": "BROB-VAL-SILICON",
-  "die_id": "0x850C6005",
-  "stepping": "A0",
-  "process_node": "3nm FinFET",
-  "interfaces": ["PCIe Gen5 x16", "DDR5-6400", "100GbE", "JTAG IEEE 1149.1"],
-  "bist_status": "PASSED_100_PERCENT"
-}</span>`);
-					} else if (targetFile === 'license') {
-						appendOutput('<span class="term-dim">MIT License &bull; Copyright (c) Bo Wu. Free to inspect, adapt, and build upon.</span>');
-					} else if (targetFile === 'brobos.bin') {
-						appendOutput('<span class="term-dim">&lt;ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, stripped&gt;</span>');
+					if (args.length === 0) {
+						appendOutput('<span class="term-err">cat: missing file operand. Try "cat README.md" or "cat package.json"</span>');
 					} else {
-						appendOutput(`<span class="term-err">cat: ${escapeHtml(targetFile)}: No such file or directory</span>`);
+						for (const target of args) {
+							const catRes = vfs.readFile(target);
+							appendOutput(catRes.output);
+						}
 					}
+					break;
+
+				case 'head':
+					const headNIdx = args.findIndex(a => a === '-n');
+					const headLines = headNIdx !== -1 && args[headNIdx + 1] ? parseInt(args[headNIdx + 1], 10) || 10 : 10;
+					const headTarget = args.find((a, i) => !a.startsWith('-') && (headNIdx === -1 || i !== headNIdx + 1)) || '';
+					const headRes = vfs.headFile(headTarget, headLines);
+					appendOutput(headRes.output);
+					break;
+
+				case 'tail':
+					const tailNIdx = args.findIndex(a => a === '-n');
+					const tailLines = tailNIdx !== -1 && args[tailNIdx + 1] ? parseInt(args[tailNIdx + 1], 10) || 10 : 10;
+					const tailTarget = args.find((a, i) => !a.startsWith('-') && (tailNIdx === -1 || i !== tailNIdx + 1)) || '';
+					const tailRes = vfs.tailFile(tailTarget, tailLines);
+					appendOutput(tailRes.output);
+					break;
+
+				case 'grep':
+					const grepPattern = args[0] || '';
+					const grepTarget = args[1] || '';
+					const grepRes = vfs.grepFile(grepPattern, grepTarget);
+					appendOutput(grepRes.output);
+					break;
+
+				case 'tree':
+					const treeLIdx = args.findIndex(a => a === '-L' || a === '-d');
+					const treeDepth = treeLIdx !== -1 && args[treeLIdx + 1] ? parseInt(args[treeLIdx + 1], 10) || 3 : 3;
+					const treeTarget = args.find((a, i) => !a.startsWith('-') && (treeLIdx === -1 || i !== treeLIdx + 1)) || '';
+					const treeRes = vfs.tree(treeTarget, treeDepth);
+					appendOutput(treeRes.output);
 					break;
 
 				case 'uname':
@@ -1229,11 +1315,26 @@ Hosted on Cloudflare Edge with zero-logging ephemeral telemetry.`);
 				}
 			} else if (e.key === 'Tab') {
 				e.preventDefault();
-				const current = input.value.trim().toLowerCase();
-				if (!current) return;
-				const match = COMMANDS.find(c => c.startsWith(current));
-				if (match) {
-					input.value = match;
+				const current = input.value;
+				if (!current.trim()) return;
+
+				const tokens = current.split(/\s+/);
+				if (tokens.length <= 1) {
+					const prefix = tokens[0].toLowerCase();
+					const match = COMMANDS.find(c => c.startsWith(prefix));
+					if (match) {
+						input.value = match + ' ';
+					}
+				} else {
+					const lastToken = tokens[tokens.length - 1];
+					const matches = vfs.autocompletePath(lastToken);
+					if (matches.length === 1) {
+						tokens[tokens.length - 1] = matches[0];
+						input.value = tokens.join(' ');
+					} else if (matches.length > 1) {
+						appendEchoLine(current);
+						appendOutput(matches.map(m => `<span class="term-cyan">${escapeHtml(m)}</span>`).join('  '));
+					}
 				}
 			} else if (e.ctrlKey && e.key.toLowerCase() === 'l') {
 				e.preventDefault();

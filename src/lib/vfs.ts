@@ -139,16 +139,6 @@ for (const [key, content] of Object.entries(rawSourceFiles)) {
 }
 
 // Add simulated repository files
-addFile('/home/guest/portfolio/silicon_spec.json', `{
-  "part": "BROB-VAL-SILICON",
-  "die_id": "0x850C6005",
-  "stepping": "A0",
-  "process_node": "3nm FinFET",
-  "interfaces": ["PCIe Gen5 x16", "DDR5-6400", "100GbE", "JTAG IEEE 1149.1"],
-  "bist_status": "PASSED_100_PERCENT"
-}
-`);
-
 addFile('/home/guest/portfolio/brobOS.bin', '<ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, stripped>\n', true);
 
 // Add CAD models README

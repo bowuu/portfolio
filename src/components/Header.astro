@@ -4,9 +4,21 @@ import ThemeToggle from './ThemeToggle.astro';
 
 <header id="site-header">
 	<nav>
-		<!-- Left: Light/Dark Theme Toggle & Terminal Console Button -->
+		<!-- Left: Mobile Hamburger Toggle + Light/Dark Theme Toggle & Terminal Console Button -->
 		<div class="nav-left">
 			<div class="header-tools">
+				<!-- Mobile Hamburger Toggle Button (Hidden on desktop) -->
+				<button id="mobile-menu-btn" class="mobile-menu-btn" type="button" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-dropdown">
+					<svg class="hamburger-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<line x1="3" y1="6" x2="21" y2="6"></line>
+						<line x1="3" y1="12" x2="21" y2="12"></line>
+						<line x1="3" y1="18" x2="21" y2="18"></line>
+					</svg>
+					<svg class="close-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<line x1="18" y1="6" x2="6" y2="18"></line>
+						<line x1="6" y1="6" x2="18" y2="18"></line>
+					</svg>
+				</button>
 				<ThemeToggle />
 				<button id="terminal-toggle-btn" class="terminal-toggle-btn" type="button" aria-label="Open Interactive Terminal" title="Terminal Console (` or click)">
 					<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -26,7 +38,7 @@ import ThemeToggle from './ThemeToggle.astro';
 			<a href="/#debug" class="nav-link">Debug</a>
 		</div>
 
-		<!-- Right: Social Links & Mobile Hamburger Menu Button -->
+		<!-- Right: Social Links -->
 		<div class="actions-right">
 			<div class="social-links">
 				<a href="https://www.linkedin.com/in/bowu/" target="_blank" rel="noopener" title="LinkedIn">
@@ -48,19 +60,6 @@ import ThemeToggle from './ThemeToggle.astro';
 					</svg>
 				</a>
 			</div>
-
-			<!-- Mobile Hamburger Toggle Button (Hidden on desktop) -->
-			<button id="mobile-menu-btn" class="mobile-menu-btn" type="button" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-dropdown">
-				<svg class="hamburger-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<line x1="3" y1="6" x2="21" y2="6"></line>
-					<line x1="3" y1="12" x2="21" y2="12"></line>
-					<line x1="3" y1="18" x2="21" y2="18"></line>
-				</svg>
-				<svg class="close-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-					<line x1="18" y1="6" x2="6" y2="18"></line>
-					<line x1="6" y1="6" x2="18" y2="18"></line>
-				</svg>
-			</button>
 		</div>
 	</nav>
 
@@ -353,8 +352,11 @@ import ThemeToggle from './ThemeToggle.astro';
 		.actions-right {
 			display: flex;
 			align-items: center;
-			gap: 0.45rem;
+			gap: 0.35rem;
 			flex-shrink: 0;
+		}
+		.header-tools {
+			gap: 0.35rem;
 		}
 		.mobile-menu-btn {
 			display: inline-flex;

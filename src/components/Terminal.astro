@@ -116,7 +116,10 @@
 			'cat',
 			'sudo',
 			'uname',
-			'uptime'
+			'uptime',
+			'wafer',
+			'sensors',
+			'temp'
 		];
 
 		function openTerminal() {
@@ -321,6 +324,8 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-dim">------------------------ ------------------------------------------------------------</span>
   <span class="term-hl">neofetch</span>                 Silicon validation bench summary &amp; die specs
   <span class="term-hl">dmesg</span>                    Simulated silicon bringup &amp; ATE kernel ring buffer
+  <span class="term-hl">wafer</span>                    300mm silicon wafer die sort map &amp; bin yield report
+  <span class="term-hl">sensors</span>                  Thermal junction probes, PMIC voltages &amp; power draw
   <span class="term-hl">jtag</span>                     JTAG TAP controller diagnostic &amp; boundary scan report
   <span class="term-hl">peek</span> [addr]              Read 32-bit hardware register (e.g. peek 0xdeadbeef)
   <span class="term-hl">poke</span> [addr] [val]        Write 32-bit register via ATE JTAG interface
@@ -558,6 +563,50 @@ Verified Profiles:
 <span class="term-dim">[    0.312049]</span> <span class="term-cyan">EXT4-fs:</span> (nvme0n1p2): mounted filesystem with ordered data mode
 <span class="term-dim">[    0.419200]</span> <span class="term-cyan">NET:</span> Cloudflare Anycast edge interface eth0: Link is Up - 100Gbps Full Duplex
 <span class="term-dim">[    0.485112]</span> <span class="term-hl">brobOS:</span> Silicon validation suite initialized. All 104 test scan chains nominal.`);
+					break;
+
+				case 'wafer':
+					appendOutput(`
+<span class="term-head">=== 300mm ATE SILICON WAFER SORT MAP (LOT #850C-W14) ===</span>
+<span class="term-cyan">                   . . . . . .
+               . . # # # # # # . .
+             . # # # # # # # # # # .
+           . # # # # # # + # # # # # .
+          . # # # # x # # # # # # # # .
+         . # # # # # # # # # # + # # # .
+         . # # + # # # # # # # # # # # .
+          . # # # # # # # # x # # # # .
+           . # # # # + # # # # # # # .
+             . # # # # # # # # # # .
+               . . # # # # # # . .
+                   . . . . . .
+                      \\_/ (Wafer Notch)</span>
+
+<span class="term-col">Wafer Sort Summary</span>:
+  Diameter: 300 mm (12 in)  |  Process: 3nm FinFET  |  Gross Die: 684
+  Functional Die Yield:     <span class="term-hl">96.2%</span> (Defect Density D0: 0.078 / cm&sup2;)
+  Bin 1 (3.8 GHz+ Nominal): <span class="term-cyan">518 dies [75.7%]</span> - High Frequency Core
+  Bin 2 (3.2 GHz Eco-Mode): <span class="term-cyan">140 dies [20.5%]</span> - Low-Power / Efficiency
+  Parametric Fallout:       <span class="term-err"> 26 dies [ 3.8%]</span> - Edge litho &amp; SRAM retention`);
+					break;
+
+				case 'sensors':
+				case 'temp':
+				case 'thermals':
+					appendOutput(`
+<span class="term-head">coretemp-isa-0000 (Silicon Validation Interposer)</span>
+Adapter: ISA adapter
+Package id 0:  <span class="term-cyan">+37.4&deg;C</span>  (high = +85.0&deg;C, crit = +105.0&deg;C)
+Core 0 (Die A): <span class="term-cyan">+35.8&deg;C</span>  (high = +85.0&deg;C, crit = +105.0&deg;C)
+Core 1 (Die B): <span class="term-cyan">+36.2&deg;C</span>  (high = +85.0&deg;C, crit = +105.0&deg;C)
+
+<span class="term-head">pmic-i2c-0-5a (Renesas VR14 Digital Multiphase)</span>
+Adapter: I2C PMIC Bus 0
+VDD_CORE:      <span class="term-hl">0.852 V</span>  (min =  0.750 V, max =  0.950 V)
+VDD_SOC:       <span class="term-hl">1.050 V</span>  (min =  0.950 V, max =  1.150 V)
+VDD_DDR5:      <span class="term-hl">1.204 V</span>  (min =  1.140 V, max =  1.260 V)
+VCC_3V3:       <span class="term-hl">3.314 V</span>  (min =  3.135 V, max =  3.465 V)
+Current Draw:  <span class="term-cyan">17.8 A</span>   (Package Power: 15.2 W TDP idle)`);
 					break;
 
 				case 'jtag':

@@ -116,8 +116,7 @@
 			'cat',
 			'sudo',
 			'uname',
-			'uptime',
-			'fortune'
+			'uptime'
 		];
 
 		function openTerminal() {
@@ -335,7 +334,6 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-hl">sudo</span> [cmd]               Privilege escalation request (try 'sudo rm -rf /')
   <span class="term-hl">cad spin</span>                 Engage 10,000 RPM centrifuge stress test on 3D viewer
   <span class="term-hl">ls</span> / <span class="term-hl">cat</span> [file]          Inspect simulated rootfs (README.md, silicon_spec.json)
-  <span class="term-hl">fortune</span>                  Random silicon engineering aphorism &amp; hardware wisdom
 
 <span class="term-dim">Tip: Use Up/Down arrows for command history; press Tab for autocompletion.</span>`);
 					break;
@@ -699,21 +697,6 @@ Hosted on Cloudflare Edge with zero-logging ephemeral telemetry.`);
 					const remM = upMins % 60;
 					const timeNow = new Date().toTimeString().split(' ')[0];
 					appendOutput(`${timeNow} up ${upHours > 0 ? `${upHours}h ` : ''}${remM} min, 1 user, load average: 0.04, 0.02, 0.00`);
-					break;
-
-				case 'fortune':
-				case 'quote':
-					const quotes = [
-						'There are two types of hardware engineers: those who have shorted VDD to GND, and those who will.',
-						'A capacitor installed backwards is just a chemical reaction waiting for a catalyst.',
-						'If first tapeout works without a metal spin, check your validation test benches immediately.',
-						'Software engineers think a byte is 8 bits; hardware engineers know a byte is 8 differential pairs, 16 termination resistors, and an EMI headache.',
-						'Hardware is the part of the computer you can kick; software is the part you can only curse at.',
-						'In theory, theory and practice are the same. In silicon, they are separated by 3 process nodes and a 20% yield drop.',
-						'The fastest I/O is the I/O you never perform.'
-					];
-					const pick = quotes[Math.floor(Math.random() * quotes.length)];
-					appendOutput(`<span class="term-cyan">&ldquo;${escapeHtml(pick)}&rdquo;</span>`);
 					break;
 
 				default:

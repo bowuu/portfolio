@@ -1,0 +1,6 @@
+# RFC 9116 Responsible Disclosure Policy
+# Security advisories & vulnerability reports for brob.uk
+Contact: https://github.com/bowuu/portfolio/security/advisories/new
+Expires: 2027-11-01T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://brob.uk/.well-known/security.txt

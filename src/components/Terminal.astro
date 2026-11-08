@@ -130,11 +130,6 @@
 			'temp',
 			'gravity',
 			'zerog',
-			'thermal',
-			'flir',
-			'pcb',
-			'xray',
-			'tapeout',
 			'tilt',
 			'extras'
 		];
@@ -836,9 +831,6 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-col">Hardware Lab Extras</span>      <span class="term-col">Description</span>
   <span class="term-dim">------------------------ ------------------------------------------------------------</span>
   <span class="term-hl">gravity</span> / <span class="term-hl">zerog</span>          Zero-G Verlet physics element collapse &amp; throw
-  <span class="term-hl">thermal</span> / <span class="term-hl">flir</span>           FLIR infrared thermal camera hotspot overlay
-  <span class="term-hl">pcb</span> / <span class="term-hl">xray</span>               PCB substrate &amp; copper traces X-Ray inspection
-  <span class="term-hl">tapeout</span>                  Silicon wafer GDSII release confetti shower
   <span class="term-hl">tilt</span>                     3D viewport parallax hologram perspective
   <span class="term-hl">extras</span>                   Open the Hardware Lab Extras drawer
 
@@ -1337,43 +1329,9 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 				case 'drop':
 					if (typeof (window as any).__toggleZeroG === 'function') {
 						(window as any).__toggleZeroG();
-						appendOutput('<span class="term-hl">[Zero-G Verlet Physics]</span> Gravity simulation toggled. Drag or fling cards across the screen. Press <span class="term-cyan">G</span> or click <span class="term-cyan">Resolder</span> to reassemble.');
+						appendOutput('<span class="term-hl">[Zero-G Verlet Physics]</span> Gravity simulation toggled. Drag or fling cards across the screen. Press <span class="term-cyan">Ctrl+Alt+G</span> or click <span class="term-cyan">Resolder</span> to reassemble.');
 					} else {
 						appendOutput('<span class="term-err">Zero-G physics engine not initialized.</span>');
-					}
-					break;
-
-				case 'thermal':
-				case 'flir':
-				case 'ir':
-				case 'heat':
-					if (typeof (window as any).__toggleThermal === 'function') {
-						(window as any).__toggleThermal();
-						appendOutput('<span class="term-hl">[FLIR T1020 HD]</span> Thermal infrared camera toggled. Move pointer or test components to observe junction thermal dissipation. Press <span class="term-cyan">T</span> or <span class="term-cyan">Esc</span> to exit.');
-					} else {
-						appendOutput('<span class="term-err">Thermal imaging module not initialized.</span>');
-					}
-					break;
-
-				case 'pcb':
-				case 'xray':
-				case 'fr4':
-				case 'traces':
-					if (typeof (window as any).__togglePCB === 'function') {
-						(window as any).__togglePCB();
-						appendOutput('<span class="term-hl">[PCB Substrate X-Ray]</span> Solder mask stripped. FR4 dielectric &amp; top copper traces revealed. Press <span class="term-cyan">P</span> or <span class="term-cyan">Esc</span> to exit.');
-					} else {
-						appendOutput('<span class="term-err">PCB X-Ray module not initialized.</span>');
-					}
-					break;
-
-				case 'tapeout':
-				case 'confetti':
-					if (typeof (window as any).__triggerTapeout === 'function') {
-						(window as any).__triggerTapeout();
-						appendOutput('<span class="term-hl">🎉 [TAPE-OUT CELEBRATION]</span> 3nm FinFET GDSII Mask Released! 100% Silicon Yield! 🚀');
-					} else {
-						appendOutput('<span class="term-err">Tapeout celebration module not initialized.</span>');
 					}
 					break;
 
@@ -1382,7 +1340,7 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 				case 'parallax':
 					if (typeof (window as any).__toggleTilt === 'function') {
 						(window as any).__toggleTilt();
-						appendOutput('<span class="term-hl">[3D Parallax Hologram]</span> Viewport tilt toggled. Move your mouse or tilt your device to view perspective depth. Press <span class="term-cyan">H</span> or <span class="term-cyan">Esc</span> to exit.');
+						appendOutput('<span class="term-hl">[3D Parallax Hologram]</span> Viewport tilt toggled. Move your mouse or tilt your device to view perspective depth. Press <span class="term-cyan">Ctrl+Alt+H</span> or <span class="term-cyan">Esc</span> to exit.');
 					} else {
 						appendOutput('<span class="term-err">3D Tilt module not initialized.</span>');
 					}

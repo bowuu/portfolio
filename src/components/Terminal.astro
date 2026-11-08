@@ -98,6 +98,7 @@
 			'theme',
 			'visitor',
 			'whoami',
+			'man',
 			'date',
 			'clear',
 			'exit',
@@ -277,6 +278,366 @@
 			}, 3500);
 		}
 
+		const MAN_PAGES: Record<string, string> = {
+			man: `
+<span class="term-head">NAME</span>
+    man - interface to system reference manuals
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">man</span> [COMMAND]
+
+<span class="term-head">DESCRIPTION</span>
+    Format and display reference manual pages for brobOS internal commands.
+    Try <span class="term-hl">'man uname'</span>, <span class="term-hl">'man ls'</span>, <span class="term-hl">'man cad'</span>, or <span class="term-hl">'man sensors'</span>.`,
+
+			help: `
+<span class="term-head">NAME</span>
+    help - display quick command reference table
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">help</span> [COMMAND]
+
+<span class="term-head">DESCRIPTION</span>
+    Display two-column command table, or call <span class="term-hl">man [COMMAND]</span> when passed a target.`,
+
+			uname: `
+<span class="term-head">NAME</span>
+    uname - print system and silicon kernel architecture
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">uname</span> [OPTION]...
+
+<span class="term-head">DESCRIPTION</span>
+    Print platform and kernel architecture information. With no OPTION, same as -s.
+
+<span class="term-head">OPTIONS</span>
+    <span class="term-cyan">-a, --all</span>
+        print all information in sequence
+    <span class="term-cyan">-s, --kernel-name</span>
+        print the operating system / kernel name (Linux)
+    <span class="term-cyan">-n, --nodename</span>
+        print the network node hostname (brob-edge)
+    <span class="term-cyan">-r, --kernel-release</span>
+        print the operating system release (6.12.0-ate-val)
+    <span class="term-cyan">-v, --kernel-version</span>
+        print the operating system version (#1 SMP PREEMPT_DYNAMIC)
+    <span class="term-cyan">-m, --machine</span>
+        print the hardware machine architecture (x86_64)
+    <span class="term-cyan">-o, --operating-system</span>
+        print the operating system (GNU/Linux)
+
+<span class="term-head">SEE ALSO</span>
+    neofetch(1), dmesg(1), sensors(1)`,
+
+			ls: `
+<span class="term-head">NAME</span>
+    ls - list directory contents
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">ls</span> [OPTION]...
+
+<span class="term-head">DESCRIPTION</span>
+    List information about the simulated rootfs directory contents.
+
+<span class="term-head">OPTIONS</span>
+    <span class="term-cyan">-a, --all</span>
+        do not ignore hidden entries starting with . (.git, .brobrc)
+    <span class="term-cyan">-l</span>
+        use a long listing format with permissions, ownership, and sizes
+    <span class="term-cyan">-h, --human-readable</span>
+        with -l, print sizes in human readable format (e.g. 1K, 4K)
+
+<span class="term-head">SEE ALSO</span>
+    cat(1), sl(1)`,
+
+			cad: `
+<span class="term-head">NAME</span>
+    cad - 3D parametric CAD viewer controller
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">cad</span> [spin|grid|list]
+
+<span class="term-head">DESCRIPTION</span>
+    Query or control the Three.js WebGL CAD model viewport directly from shell.
+
+<span class="term-head">SUBCOMMANDS</span>
+    <span class="term-cyan">spin</span>
+        engage 10,000 RPM centrifuge dynamic stress test with dynamic g-force HUD
+    <span class="term-cyan">grid</span>
+        toggle the XY reference floor grid on / off
+    <span class="term-cyan">list</span>
+        list all 11 Autodesk Inventor CAD models in catalog`,
+
+			theme: `
+<span class="term-head">NAME</span>
+    theme - user interface display mode switcher
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">theme</span> [dark|light|toggle]
+
+<span class="term-head">DESCRIPTION</span>
+    Inspect or alter the active color system across the portfolio.`,
+
+			sensors: `
+<span class="term-head">NAME</span>
+    sensors - silicon junction thermal and voltage probes
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">sensors</span> [OPTION]...
+
+<span class="term-head">DESCRIPTION</span>
+    Query on-die thermal diodes and Renesas VR14 PMIC power delivery telemetry.
+
+<span class="term-head">OPTIONS</span>
+    <span class="term-cyan">-f, --fahrenheit</span>
+        display thermal junction probes in degrees Fahrenheit instead of Celsius`,
+
+			dmesg: `
+<span class="term-head">NAME</span>
+    dmesg - print or control the kernel ring buffer
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">dmesg</span> [OPTION]...
+
+<span class="term-head">DESCRIPTION</span>
+    Examine simulated silicon bringup and ATE automated test equipment ring buffer.
+
+<span class="term-head">OPTIONS</span>
+    <span class="term-cyan">-c, --clear</span>
+        clear the ring buffer after printing contents
+    <span class="term-cyan">-l, --level &lt;level&gt;</span>
+        filter messages by level (err, warn, info)`,
+
+			wafer: `
+<span class="term-head">NAME</span>
+    wafer - 300mm silicon wafer die sort map &amp; bin yield telemetry
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">wafer</span> [OPTION]...
+
+<span class="term-head">DESCRIPTION</span>
+    Render interactive ASCII die sort map for 300mm silicon wafer and compute bin defect yield.
+
+<span class="term-head">OPTIONS</span>
+    <span class="term-cyan">-s, --summary</span>
+        display yield summary and bin breakdown without full wafer ASCII map`,
+
+			cat: `
+<span class="term-head">NAME</span>
+    cat - concatenate and display file contents
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">cat</span> [FILE]...
+
+<span class="term-head">DESCRIPTION</span>
+    Output contents of simulated rootfs file to terminal standard output.
+
+<span class="term-head">FILES</span>
+    <span class="term-cyan">README.md</span>         Portfolio overview and engineering focus
+    <span class="term-cyan">silicon_spec.json</span> 3nm FinFET silicon validation specs
+    <span class="term-cyan">LICENSE</span>           MIT open source license
+    <span class="term-cyan">brobOS.bin</span>        Statically linked binary executable header`,
+
+			neofetch: `
+<span class="term-head">NAME</span>
+    neofetch - silicon validation bench specs and ASCII badge
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">neofetch</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Display silicon fabrication node, host specs, and color palette.`,
+
+			about: `
+<span class="term-head">NAME</span>
+    about - hardware systems engineer background
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">about</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Print technical focus, career highlights, and verified profile links.`,
+
+			skills: `
+<span class="term-head">NAME</span>
+    skills - core engineering competencies
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">skills</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Display competencies in Silicon Validation, Embedded Linux, and 3D Parametric CAD.`,
+
+			projects: `
+<span class="term-head">NAME</span>
+    projects - featured hardware and 3D CAD showcase
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">projects</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Enumerate featured physical engineering designs and models.`,
+
+			tests: `
+<span class="term-head">NAME</span>
+    tests - navigate to hardware and network test suites
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">tests</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Smooth scroll viewport to the live interactive hardware and network benchmark suites (#lab).`,
+
+			network: `
+<span class="term-head">NAME</span>
+    network - Anycast edge throughput and latency test
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">network</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Navigate to the Anycast edge throughput benchmark with unloaded ping, jitter, and bufferbloat (#benchmark).`,
+
+			mouse: `
+<span class="term-head">NAME</span>
+    mouse - mouse polling rate and switch debounce lab
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">mouse</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Navigate to the mouse polling oscilloscope, microswitch latency, and click counter lab (#input-lab).`,
+
+			keyboard: `
+<span class="term-head">NAME</span>
+    keyboard - 104-key switch matrix and latency lab
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">keyboard</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Navigate to the 104-key switch matrix, rollover test, and actuation latency lab (#keyboard-lab).`,
+
+			debug: `
+<span class="term-head">NAME</span>
+    debug - client hardware and edge telemetry inspector
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">debug</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Navigate to the ephemeral, zero-logging client hardware and Anycast edge telemetry inspector (#debug).`,
+
+			visitor: `
+<span class="term-head">NAME</span>
+    visitor - query anonymous Cloudflare D1 visitor counter
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">visitor</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Query ephemeral visitor metric stored securely on Cloudflare D1.`,
+
+			whoami: `
+<span class="term-head">NAME</span>
+    whoami - display current shell session and Anycast edge node
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">whoami</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Print authenticated user, terminal tty, and connected Cloudflare colocation airport code.`,
+
+			uptime: `
+<span class="term-head">NAME</span>
+    uptime - show how long system has been running
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">uptime</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Print current time, continuous session runtime, active users, and load averages.`,
+
+			date: `
+<span class="term-head">NAME</span>
+    date - print current system date and time
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">date</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Display current UTC and local timestamp according to edge runtime.`,
+
+			clear: `
+<span class="term-head">NAME</span>
+    clear - clear the terminal screen
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">clear</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Clear scrollback buffer history.`,
+
+			exit: `
+<span class="term-head">NAME</span>
+    exit - close the brobOS terminal session
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">exit</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Close the terminal modal interface.`,
+
+			gcode: `
+<span class="term-head">NAME</span>
+    gcode - 3D printer telemetry &amp; bed mesh leveling report
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">gcode</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Display simulated Bambu Lab PETG-CF print metrics, hotend thermals, and bed variance.`,
+
+			matrix: `
+<span class="term-head">NAME</span>
+    matrix - cascading digital rain diagnostic
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">matrix</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Stream simulated green phosphor digital rain (cmatrix).`,
+
+			sl: `
+<span class="term-head">NAME</span>
+    sl - cure your bad habit of mistyping
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">sl</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Steam Locomotive travels across your terminal when you mistype 'ls'.`,
+
+			sudo: `
+<span class="term-head">NAME</span>
+    sudo - execute a command as another user
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">sudo</span> COMMAND...
+
+<span class="term-head">DESCRIPTION</span>
+    Simulate administrative privilege escalation request.`
+		};
+
+		function showManPage(page: string) {
+			const p = page.toLowerCase();
+			if (MAN_PAGES[p]) {
+				appendOutput(MAN_PAGES[p]);
+			} else {
+				appendOutput(`<span class="term-err">No manual entry for ${escapeHtml(page)}</span>. Type <span class="term-hl">'help'</span> for available commands.`);
+			}
+		}
+
 		function executeCommand(rawCmd: string) {
 			const trimmed = rawCmd.trim();
 
@@ -295,7 +656,26 @@
 			const cmd = parts[0].toLowerCase();
 			const args = parts.slice(1);
 
+			// Check for --help or help <cmd>
+			if (args.includes('--help') || (args.includes('-h') && cmd !== 'ls')) {
+				showManPage(cmd);
+				return;
+			}
+			if (cmd === 'help' && args.length > 0) {
+				showManPage(args[0]);
+				return;
+			}
+
 			switch (cmd) {
+				case 'man':
+					const manTarget = (args[0] || '').toLowerCase();
+					if (!manTarget) {
+						appendOutput("What manual page do you want? Try <span class=\"term-hl\">'man uname'</span>, <span class=\"term-hl\">'man ls'</span>, <span class=\"term-hl\">'man cad'</span>, or <span class=\"term-hl\">'help'</span>.");
+					} else {
+						showManPage(manTarget);
+					}
+					break;
+
 				case 'help':
 					appendOutput(`
 <span class="term-head">brobOS 1.0.0(1)-release (x86_64-brob-linux-edge)</span>
@@ -315,6 +695,7 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-hl">theme</span> [mode]             Obsidian Dark / Clean Light theme toggle [dark|light|toggle]
   <span class="term-hl">visitor</span>                  Query anonymous Cloudflare D1 visitor counter
   <span class="term-hl">whoami</span>                   Display client session &amp; Anycast edge telemetry info
+  <span class="term-hl">man</span> [cmd]                Reference manual page for shell commands
   <span class="term-hl">date</span> / <span class="term-hl">clear</span> / <span class="term-hl">exit</span>      Standard shell session utilities
 
   <span class="term-col">Hardware Diagnostics</span>     <span class="term-col">Description</span>
@@ -543,7 +924,16 @@ Verified Profiles:
 					break;
 
 				case 'dmesg':
-					appendOutput(`
+					const isClear = args.some(a => a === '-c' || a === '--clear');
+					const levelIdx = args.findIndex(a => a === '-l' || a === '--level');
+					const filterLevel = levelIdx !== -1 && args[levelIdx + 1] ? args[levelIdx + 1].toLowerCase() : '';
+
+					if (filterLevel === 'err' || filterLevel === 'error') {
+						appendOutput('<span class="term-dim">[dmesg: 0 errors detected in ring buffer - all silicon validation checks passed]</span>');
+					} else if (filterLevel === 'warn' || filterLevel === 'warning') {
+						appendOutput('<span class="term-dim">[dmesg: 0 warnings detected - clock jitter 0.12ps RMS within 0.20ps tolerance]</span>');
+					} else {
+						appendOutput(`
 <span class="term-dim">[    0.000000]</span> Linux version brobOS (gcc version 14.2.1) #1 SMP PREEMPT_DYNAMIC
 <span class="term-dim">[    0.000000]</span> Command line: BOOT_IMAGE=/vmlinuz root=UUID=brob-val ro quiet console=tty0
 <span class="term-dim">[    0.012490]</span> x86/fpu: Supporting XSAVE feature 0x001: 'x87 floating point registers'
@@ -557,9 +947,25 @@ Verified Profiles:
 <span class="term-dim">[    0.312049]</span> <span class="term-cyan">EXT4-fs:</span> (nvme0n1p2): mounted filesystem with ordered data mode
 <span class="term-dim">[    0.419200]</span> <span class="term-cyan">NET:</span> Cloudflare Anycast edge interface eth0: Link is Up - 100Gbps Full Duplex
 <span class="term-dim">[    0.485112]</span> <span class="term-hl">brobOS:</span> Silicon validation suite initialized. All 104 test scan chains nominal.`);
+					}
+					if (isClear) {
+						appendOutput('<span class="term-dim">[dmesg: kernel ring buffer cleared]</span>');
+					}
 					break;
 
 				case 'wafer':
+					const isWaferSummary = args.some(a => a === '-s' || a === '--summary' || a === '--yield');
+					if (isWaferSummary) {
+						appendOutput(`
+<span class="term-head">=== 300mm ATE SILICON WAFER SORT SUMMARY (LOT #850C-W14) ===</span>
+<span class="term-col">Wafer Sort Summary</span>:
+  Diameter: 300 mm (12 in)  |  Process: 3nm FinFET  |  Gross Die: 684
+  Functional Die Yield:     <span class="term-hl">96.2%</span> (Defect Density D0: 0.078 / cm&sup2;)
+  Bin 1 (3.8 GHz+ Nominal): <span class="term-cyan">518 dies [75.7%]</span> - High Frequency Core
+  Bin 2 (3.2 GHz Eco-Mode): <span class="term-cyan">140 dies [20.5%]</span> - Low-Power / Efficiency
+  Parametric Fallout:       <span class="term-err"> 26 dies [ 3.8%]</span> - Edge litho &amp; SRAM retention`);
+						break;
+					}
 					appendOutput(`
 <span class="term-head">=== 300mm ATE SILICON WAFER SORT MAP (LOT #850C-W14) ===</span>
 <span class="term-cyan">                   . . . . . .
@@ -587,7 +993,24 @@ Verified Profiles:
 				case 'sensors':
 				case 'temp':
 				case 'thermals':
-					appendOutput(`
+					const isFahr = args.some(a => a === '-f' || a === '--fahrenheit');
+					if (isFahr) {
+						appendOutput(`
+<span class="term-head">coretemp-isa-0000 (Silicon Validation Interposer)</span>
+Adapter: ISA adapter
+Package id 0:  <span class="term-cyan">+99.3&deg;F</span>  (high = +185.0&deg;F, crit = +221.0&deg;F)
+Core 0 (Die A): <span class="term-cyan">+96.4&deg;F</span>  (high = +185.0&deg;F, crit = +221.0&deg;F)
+Core 1 (Die B): <span class="term-cyan">+97.2&deg;F</span>  (high = +185.0&deg;F, crit = +221.0&deg;F)
+
+<span class="term-head">pmic-i2c-0-5a (Renesas VR14 Digital Multiphase)</span>
+Adapter: I2C PMIC Bus 0
+VDD_CORE:      <span class="term-hl">0.852 V</span>  (min =  0.750 V, max =  0.950 V)
+VDD_SOC:       <span class="term-hl">1.050 V</span>  (min =  0.950 V, max =  1.150 V)
+VDD_DDR5:      <span class="term-hl">1.204 V</span>  (min =  1.140 V, max =  1.260 V)
+VCC_3V3:       <span class="term-hl">3.314 V</span>  (min =  3.135 V, max =  3.465 V)
+Current Draw:  <span class="term-cyan">17.8 A</span>   (Package Power: 15.2 W TDP idle)`);
+					} else {
+						appendOutput(`
 <span class="term-head">coretemp-isa-0000 (Silicon Validation Interposer)</span>
 Adapter: ISA adapter
 Package id 0:  <span class="term-cyan">+37.4&deg;C</span>  (high = +85.0&deg;C, crit = +105.0&deg;C)
@@ -601,6 +1024,7 @@ VDD_SOC:       <span class="term-hl">1.050 V</span>  (min =  0.950 V, max =  1.1
 VDD_DDR5:      <span class="term-hl">1.204 V</span>  (min =  1.140 V, max =  1.260 V)
 VCC_3V3:       <span class="term-hl">3.314 V</span>  (min =  3.135 V, max =  3.465 V)
 Current Draw:  <span class="term-cyan">17.8 A</span>   (Package Power: 15.2 W TDP idle)`);
+					}
 					break;
 
 
@@ -650,15 +1074,32 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 
 				case 'ls':
 				case 'dir':
-					appendOutput(`
-<span class="term-dim">total 48</span>
-drwxr-xr-x 2 guest brob 4096 Nov 06 23:30 <span class="term-cyan">models/</span>
-drwxr-xr-x 4 guest brob 4096 Nov 06 23:30 <span class="term-cyan">src/</span>
--rwxr-xr-x 1 guest brob 8192 Nov 06 23:30 <span class="term-hl">brobOS.bin</span>*
--rw-r--r-- 1 guest brob 1064 Nov 06 23:30 LICENSE
--rw-r--r-- 1 guest brob 2048 Nov 06 23:30 README.md
--rw-r--r-- 1 guest brob  512 Nov 06 23:30 silicon_spec.json
+					const lsIsAll = args.some(a => a.startsWith('-') && a.includes('a'));
+					const lsIsLong = args.some(a => a.startsWith('-') && a.includes('l'));
+					const lsIsHuman = args.some(a => a.startsWith('-') && a.includes('h'));
+
+					if (lsIsLong) {
+						const totalLine = lsIsAll ? 'total 64' : 'total 48';
+						const dotLines = lsIsAll ? `drwxr-xr-x 5 guest brob ${lsIsHuman ? '4.0K' : '4096'} Nov 06 23:30 <span class="term-cyan">.</span>
+drwxr-xr-x 3 root  root ${lsIsHuman ? '4.0K' : '4096'} Nov 06 23:30 <span class="term-cyan">..</span>
+-rw-r--r-- 1 guest brob ${lsIsHuman ? ' 220' : ' 220'} Nov 06 23:30 .brobrc
+drwxr-xr-x 8 guest brob ${lsIsHuman ? '4.0K' : '4096'} Nov 06 23:30 <span class="term-cyan">.git/</span>\n` : '';
+						appendOutput(`
+<span class="term-dim">${totalLine}</span>
+${dotLines}drwxr-xr-x 2 guest brob ${lsIsHuman ? '4.0K' : '4096'} Nov 06 23:30 <span class="term-cyan">models/</span>
+drwxr-xr-x 4 guest brob ${lsIsHuman ? '4.0K' : '4096'} Nov 06 23:30 <span class="term-cyan">src/</span>
+-rwxr-xr-x 1 guest brob ${lsIsHuman ? '8.0K' : '8192'} Nov 06 23:30 <span class="term-hl">brobOS.bin</span>*
+-rw-r--r-- 1 guest brob ${lsIsHuman ? '1.0K' : '1064'} Nov 06 23:30 LICENSE
+-rw-r--r-- 1 guest brob ${lsIsHuman ? '2.0K' : '2048'} Nov 06 23:30 README.md
+-rw-r--r-- 1 guest brob ${lsIsHuman ? ' 512' : ' 512'} Nov 06 23:30 silicon_spec.json
 <span class="term-dim">Tip: Try 'cat README.md' or 'cat silicon_spec.json'. Mistyped? Try 'sl'.</span>`);
+					} else {
+						if (lsIsAll) {
+							appendOutput(`<span class="term-cyan">.</span>  <span class="term-cyan">..</span>  .brobrc  <span class="term-cyan">.git/</span>  <span class="term-hl">brobOS.bin</span>*  LICENSE  <span class="term-cyan">models/</span>  README.md  silicon_spec.json  <span class="term-cyan">src/</span>`);
+						} else {
+							appendOutput(`<span class="term-hl">brobOS.bin</span>*  LICENSE  <span class="term-cyan">models/</span>  README.md  silicon_spec.json  <span class="term-cyan">src/</span>`);
+					}
+					}
 					break;
 
 				case 'cat':
@@ -691,10 +1132,41 @@ Hosted on Cloudflare Edge with zero-logging ephemeral telemetry.`);
 					break;
 
 				case 'uname':
-					if (args[0] === '-a' || args[0] === '--all') {
-						appendOutput('Linux brob-edge 6.12.0-ate-val #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux');
-					} else {
+					if (args.length === 0) {
 						appendOutput('Linux');
+					} else {
+						let printS = false, printN = false, printR = false, printV = false, printM = false, printO = false;
+						for (const a of args) {
+							if (a === '-a' || a === '--all') {
+								printS = printN = printR = printV = printM = printO = true;
+							} else if (a.startsWith('--')) {
+								if (a === '--kernel-name') printS = true;
+								if (a === '--nodename') printN = true;
+								if (a === '--kernel-release') printR = true;
+								if (a === '--kernel-version') printV = true;
+								if (a === '--machine') printM = true;
+								if (a === '--operating-system') printO = true;
+							} else if (a.startsWith('-')) {
+								for (let i = 1; i < a.length; i++) {
+									const c = a[i];
+									if (c === 'a') printS = printN = printR = printV = printM = printO = true;
+									else if (c === 's') printS = true;
+									else if (c === 'n') printN = true;
+									else if (c === 'r') printR = true;
+									else if (c === 'v') printV = true;
+									else if (c === 'm') printM = true;
+									else if (c === 'o') printO = true;
+								}
+							}
+						}
+						const uOut: string[] = [];
+						if (printS) uOut.push('Linux');
+						if (printN) uOut.push('brob-edge');
+						if (printR) uOut.push('6.12.0-ate-val');
+						if (printV) uOut.push('#1 SMP PREEMPT_DYNAMIC');
+						if (printM) uOut.push('x86_64');
+						if (printO) uOut.push('GNU/Linux');
+						appendOutput(uOut.length ? uOut.join(' ') : 'Linux');
 					}
 					break;
 

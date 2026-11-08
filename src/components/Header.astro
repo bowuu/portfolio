@@ -2,8 +2,9 @@
 import ThemeToggle from './ThemeToggle.astro';
 ---
 
-<header>
+<header id="site-header">
 	<nav>
+		<!-- Left: Light/Dark Theme Toggle & Terminal Console Button -->
 		<div class="nav-left">
 			<div class="header-tools">
 				<ThemeToggle />
@@ -15,6 +16,8 @@ import ThemeToggle from './ThemeToggle.astro';
 				</button>
 			</div>
 		</div>
+
+		<!-- Center: Desktop Navigation Links (Omitted on mobile top bar) -->
 		<div class="internal-links" id="nav-links">
 			<a href="/#about" class="nav-link active">About</a>
 			<a href="/#skills" class="nav-link">Skills</a>
@@ -22,6 +25,8 @@ import ThemeToggle from './ThemeToggle.astro';
 			<a href="/#lab" class="nav-link">Tests</a>
 			<a href="/#debug" class="nav-link">Debug</a>
 		</div>
+
+		<!-- Right: Social Links & Mobile Hamburger Menu Button -->
 		<div class="actions-right">
 			<div class="social-links">
 				<a href="https://www.linkedin.com/in/bowu/" target="_blank" rel="noopener" title="LinkedIn">
@@ -43,15 +48,78 @@ import ThemeToggle from './ThemeToggle.astro';
 					</svg>
 				</a>
 			</div>
+
+			<!-- Mobile Hamburger Toggle Button (Hidden on desktop) -->
+			<button id="mobile-menu-btn" class="mobile-menu-btn" type="button" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-dropdown">
+				<svg class="hamburger-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<line x1="3" y1="6" x2="21" y2="6"></line>
+					<line x1="3" y1="12" x2="21" y2="12"></line>
+					<line x1="3" y1="18" x2="21" y2="18"></line>
+				</svg>
+				<svg class="close-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<line x1="18" y1="6" x2="6" y2="18"></line>
+					<line x1="6" y1="6" x2="18" y2="18"></line>
+				</svg>
+			</button>
 		</div>
 	</nav>
+
+	<!-- Mobile Dropdown Navigation Menu (Hidden on desktop) -->
+	<div id="mobile-nav-dropdown" class="mobile-nav-dropdown" aria-hidden="true">
+		<a href="/#about" class="mobile-nav-link active">About</a>
+		<a href="/#skills" class="mobile-nav-link">Skills</a>
+		<a href="/#projects" class="mobile-nav-link">Projects</a>
+		<a href="/#lab" class="mobile-nav-link">Tests</a>
+		<a href="/#debug" class="mobile-nav-link">Debug</a>
+	</div>
 </header>
 
 <script>
-	function initNavHighlight() {
-		const navLinks = document.querySelectorAll<HTMLAnchorElement>('.nav-link');
-		if (!navLinks.length) return;
+	function setupHeader() {
+		const navLinks = document.querySelectorAll<HTMLAnchorElement>('.nav-link, .mobile-nav-link');
+		const menuBtn = document.getElementById('mobile-menu-btn');
+		const dropdown = document.getElementById('mobile-nav-dropdown');
 
+		// 1. Mobile Menu Toggle
+		if (menuBtn && dropdown) {
+			function closeMenu() {
+				dropdown?.classList.remove('open');
+				menuBtn?.classList.remove('open');
+				menuBtn?.setAttribute('aria-expanded', 'false');
+				dropdown?.setAttribute('aria-hidden', 'true');
+			}
+
+			function toggleMenu() {
+				const isOpen = dropdown?.classList.toggle('open');
+				menuBtn?.classList.toggle('open', isOpen);
+				menuBtn?.setAttribute('aria-expanded', String(isOpen));
+				dropdown?.setAttribute('aria-hidden', String(!isOpen));
+			}
+
+			menuBtn.addEventListener('click', (e) => {
+				e.stopPropagation();
+				toggleMenu();
+			});
+
+			dropdown.querySelectorAll('.mobile-nav-link').forEach((link) => {
+				link.addEventListener('click', () => {
+					closeMenu();
+				});
+			});
+
+			document.addEventListener('click', (e) => {
+				if (!dropdown.contains(e.target as Node) && !menuBtn.contains(e.target as Node)) {
+					closeMenu();
+				}
+			});
+
+			document.addEventListener('keydown', (e) => {
+				if (e.key === 'Escape') closeMenu();
+			});
+		}
+
+		// 2. Dynamic Scroll / Nav Highlight
+		if (!navLinks.length) return;
 		const sectionIds = ['about', 'skills', 'projects', 'lab', 'benchmark', 'input-lab', 'keyboard-lab', 'debug'];
 
 		function setActive(id: string) {
@@ -78,7 +146,6 @@ import ThemeToggle from './ThemeToggle.astro';
 			});
 		});
 
-		// Dynamic scroll observer
 		const observer = new IntersectionObserver(
 			(entries) => {
 				entries.forEach((entry) => {
@@ -95,7 +162,6 @@ import ThemeToggle from './ThemeToggle.astro';
 			if (el) observer.observe(el);
 		});
 
-		// Sync initial hash
 		const currentHash = window.location.hash.replace('#', '');
 		if (currentHash && sectionIds.includes(currentHash)) {
 			setActive(currentHash);
@@ -104,8 +170,8 @@ import ThemeToggle from './ThemeToggle.astro';
 		}
 	}
 
-	initNavHighlight();
-	document.addEventListener('astro:page-load', initNavHighlight);
+	setupHeader();
+	document.addEventListener('astro:page-load', setupHeader);
 </script>
 
 <style>
@@ -167,6 +233,7 @@ import ThemeToggle from './ThemeToggle.astro';
 		align-items: center;
 		justify-content: flex-end;
 		justify-self: end;
+		gap: 0.6em;
 	}
 	.social-links {
 		display: flex;
@@ -219,118 +286,146 @@ import ThemeToggle from './ThemeToggle.astro';
 		background: rgba(255, 255, 255, 0.05);
 	}
 
+	/* Mobile Menu Button - Hidden on desktop */
+	.mobile-menu-btn {
+		display: none;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		border-radius: 8px;
+		background: transparent;
+		border: 1px solid rgba(var(--gray), 0.25);
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+		padding: 0;
+		transition: all 0.2s ease;
+	}
+	.mobile-menu-btn:hover {
+		background: rgba(var(--gray-light), 0.4);
+		color: var(--accent);
+		border-color: var(--accent);
+	}
+	:global(html[data-theme="dark"]) .mobile-menu-btn {
+		color: #cbd5e1;
+		border-color: rgba(255, 255, 255, 0.15);
+	}
+	:global(html[data-theme="dark"]) .mobile-menu-btn:hover {
+		color: var(--accent);
+		border-color: var(--accent);
+		background: rgba(255, 255, 255, 0.05);
+	}
+	.mobile-menu-btn .close-icon {
+		display: none;
+	}
+	.mobile-menu-btn.open .hamburger-icon {
+		display: none;
+	}
+	.mobile-menu-btn.open .close-icon {
+		display: block;
+	}
+
+	/* Mobile Nav Dropdown - Hidden on desktop */
+	.mobile-nav-dropdown {
+		display: none;
+	}
+
+	/* Responsive Breakpoint for Mobile & Tablets */
 	@media (max-width: 768px) {
 		header {
-			padding: 0 0.5rem;
+			padding: 0 0.85rem;
 		}
 		nav {
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			gap: 0.35rem;
+			padding: 0.45em 0;
 		}
 		.nav-left {
 			display: flex;
 			align-items: center;
 			flex-shrink: 0;
+		}
+		/* Omit center links from the top bar on mobile */
+		.internal-links {
+			display: none;
 		}
 		.actions-right {
 			display: flex;
 			align-items: center;
+			gap: 0.45rem;
 			flex-shrink: 0;
 		}
-		.internal-links {
+		.mobile-menu-btn {
+			display: inline-flex;
+			width: 34px;
+			height: 34px;
+		}
+		.terminal-toggle-btn,
+		:global(#theme-toggle.theme-toggle) {
+			width: 34px;
+			height: 34px;
+		}
+		.social-links {
 			display: flex;
 			align-items: center;
-			justify-content: center;
-			flex: 1 1 auto;
-			min-width: 0;
-			gap: 0.12em;
-			overflow-x: auto;
-			scrollbar-width: none;
-			-webkit-overflow-scrolling: touch;
+			gap: 0.35rem;
 		}
-		.internal-links::-webkit-scrollbar {
+		.social-links a {
+			padding: 0.3rem;
+		}
+		.social-links svg {
+			width: 18px;
+			height: 18px;
+		}
+
+		/* Mobile Dropdown Styling */
+		.mobile-nav-dropdown {
 			display: none;
+			flex-direction: column;
+			width: calc(100% + 1.7rem);
+			margin: 0 -0.85rem;
+			padding: 0.5rem 0.85rem 0.85rem;
+			background: var(--header-bg);
+			border-top: 1px solid var(--border-color);
+			box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+			backdrop-filter: blur(12px);
+			-webkit-backdrop-filter: blur(12px);
 		}
-		.nav-link {
-			padding: 0.85em 0.32em;
-			font-size: clamp(0.74em, 2.3vw, 0.84em);
-			white-space: nowrap;
-			border-bottom-width: 3px;
+		.mobile-nav-dropdown.open {
+			display: flex;
+			animation: mobileSlide 0.18s ease-out forwards;
 		}
-		.header-tools {
-			gap: 0.28rem;
+		@keyframes mobileSlide {
+			from {
+				opacity: 0;
+				transform: translateY(-8px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
 		}
-		:global(#theme-toggle.theme-toggle),
-		.terminal-toggle-btn {
-			width: 32px;
-			height: 32px;
+		.mobile-nav-link {
+			padding: 0.7em 0.85em;
+			font-size: 0.95em;
+			font-weight: 500;
+			color: rgb(var(--black));
+			text-decoration: none;
 			border-radius: 6px;
+			border-left: 3px solid transparent;
+			transition: all 0.15s ease;
+			display: block;
 		}
-		:global(#theme-toggle svg),
-		.terminal-toggle-btn svg {
-			width: 15px;
-			height: 15px;
+		.mobile-nav-link:hover {
+			color: var(--accent);
+			background: rgba(var(--gray-light), 0.5);
 		}
-		.social-links {
-			display: flex;
-			align-items: center;
-			gap: 0.18rem;
-		}
-		.social-links a {
-			padding: 0.28em;
-		}
-		.social-links svg {
-			width: 17px;
-			height: 17px;
-		}
-	}
-
-	@media (max-width: 380px) {
-		header {
-			padding: 0 0.35rem;
-		}
-		nav {
-			gap: 0.2rem;
-		}
-		.nav-link {
-			padding: 0.85em 0.22em;
-			font-size: 0.72em;
-		}
-		:global(#theme-toggle.theme-toggle),
-		.terminal-toggle-btn {
-			width: 28px;
-			height: 28px;
-		}
-		:global(#theme-toggle svg),
-		.terminal-toggle-btn svg {
-			width: 14px;
-			height: 14px;
-		}
-		.social-links {
-			gap: 0.1rem;
-		}
-		.social-links a {
-			padding: 0.2em;
-		}
-		.social-links svg {
-			width: 15px;
-			height: 15px;
-		}
-	}
-
-	@media (max-width: 440px) {
-		nav {
-			display: flex;
-			justify-content: space-between;
-		}
-		.nav-left {
-			display: none;
-		}
-		.nav-link {
-			padding: 1em 0.35em;
-			font-size: 0.85em;
+		.mobile-nav-link.active {
+			color: var(--accent);
+			border-left-color: var(--accent);
+			font-weight: 700;
+			background: rgba(var(--accent-rgb), 0.08);
 		}
 	}
 </style>

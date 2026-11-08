@@ -8,6 +8,7 @@ import MouseTest from '../components/MouseTest.astro';
 import KeyboardTest from '../components/KeyboardTest.astro';
 import Debug from '../components/Debug.astro';
 import Terminal from '../components/Terminal.astro';
+import EasterEggs from '../components/EasterEggs.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 ---
 
@@ -23,10 +24,12 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 			<section class="hero" id="about">
 				<div class="avatar-wrap">
 					<img 
+						id="hero-dog-mascot"
 						src="/dog.jpg" 
 						alt="Dog mascot" 
-						title="Chief Morale Officer 🐾" 
-						class="avatar-img" 
+						title="Chief Morale Officer 🐾 (Click for Tapeout Confetti!)" 
+						class="avatar-img"
+						style="cursor: pointer;" 
 						width="144" 
 						height="144" 
 						loading="eager" 
@@ -156,6 +159,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
 		<Footer />
 		<Terminal />
+		<EasterEggs />
 	</body>
 </html>
 

@@ -1,0 +1,1000 @@
+---
+// EasterEggs.astro - Hardware & Silicon Validation Interactive Easter Eggs
+// 1. Zero-G Verlet Physics Drop (custom zero-dependency physics, drag & fling)
+// 2. FLIR Infrared Thermal Camera Hotspot Mode
+// 3. PCB Substrate & Silicon Traces X-Ray Mode
+// 4. Silicon "Tapeout Day" Wafer Confetti Burst
+// 5. 3D Viewport Parallax Hologram Tilt
+---
+
+<div id="easter-eggs-container">
+	<!-- FLOATING HUDS -->
+	<div id="zerog-hud" class="ee-hud zerog-hud hidden">
+		<span class="hud-pulse-dot"></span>
+		<span class="hud-title">⚡ ZERO-G COLLAPSE ACTIVE &bull; DRAG &amp; FLING CARDS</span>
+		<button id="zerog-reset-btn" type="button" class="ee-hud-btn">Resolder / Reassemble</button>
+	</div>
+
+	<div id="flir-hud" class="ee-hud flir-hud hidden">
+		<span class="hud-pulse-dot hot-dot"></span>
+		<span class="hud-title">FLIR T1020 HD THERMAL CAMERA &bull; PALETTE: IRONBOW &bull; &epsilon;=0.96</span>
+		<span id="flir-temp-readout" class="flir-temp-badge">SP01: 91.4&deg;C</span>
+		<button id="flir-exit-btn" type="button" class="ee-hud-btn">Exit (T)</button>
+	</div>
+
+	<div id="pcb-hud" class="ee-hud pcb-hud hidden">
+		<span class="hud-pulse-dot pcb-dot"></span>
+		<span class="hud-title">🔬 PCB SUBSTRATE X-RAY &bull; COPPER LAYER 1 (TOP) &bull; SOLDERMASK: FR4</span>
+		<button id="pcb-exit-btn" type="button" class="ee-hud-btn">Exit (P)</button>
+	</div>
+
+	<div id="tilt-hud" class="ee-hud tilt-hud hidden">
+		<span class="hud-pulse-dot"></span>
+		<span class="hud-title">📐 3D HOLOGRAM VIEWPORT TILT ACTIVE</span>
+		<button id="tilt-exit-btn" type="button" class="ee-hud-btn">Exit (H)</button>
+	</div>
+
+	<div id="tapeout-toast" class="ee-toast tapeout-toast hidden">
+		<span>🎉 <strong>TAPEOUT MILESTONE!</strong> 3nm FinFET GDSII Mask Released &bull; 100% Silicon Yield! 🚀</span>
+	</div>
+
+	<!-- CANVAS OVERLAYS -->
+	<canvas id="flir-canvas" class="ee-canvas flir-canvas hidden"></canvas>
+	<canvas id="tapeout-canvas" class="ee-canvas tapeout-canvas hidden"></canvas>
+
+	<!-- FLIR COLOR SCALE BAR -->
+	<div id="flir-scale-bar" class="flir-scale-bar hidden">
+		<span class="scale-label">100&deg;C</span>
+		<div class="scale-gradient"></div>
+		<span class="scale-label">20&deg;C</span>
+	</div>
+
+	<!-- LAB EXTRAS DRAWER / POPOVER -->
+	<div id="lab-extras-modal" class="lab-extras-modal hidden" role="dialog" aria-modal="false" aria-label="Hardware Lab Easter Eggs">
+		<div class="extras-header">
+			<div class="extras-title">
+				<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+				</svg>
+				<span>Hardware Lab Extras</span>
+			</div>
+			<button id="extras-close-btn" type="button" class="extras-close-btn" aria-label="Close Extras Drawer">&times;</button>
+		</div>
+		<div class="extras-grid">
+			<button id="trigger-zerog-btn" class="extra-item-btn" type="button" title="Zero-G Physics Collapse">
+				<span class="item-icon">🪐</span>
+				<div class="item-meta">
+					<strong class="item-name">Zero-G Drop</strong>
+					<span class="item-desc">Verlet physics element collapse</span>
+				</div>
+				<kbd class="item-kbd">G</kbd>
+			</button>
+			<button id="trigger-flir-btn" class="extra-item-btn" type="button" title="FLIR Infrared Thermal Camera">
+				<span class="item-icon">🌡️</span>
+				<div class="item-meta">
+					<strong class="item-name">FLIR Thermal</strong>
+					<span class="item-desc">Live infrared hotspot imaging</span>
+				</div>
+				<kbd class="item-kbd">T</kbd>
+			</button>
+			<button id="trigger-pcb-btn" class="extra-item-btn" type="button" title="PCB Substrate & Silicon Traces X-Ray">
+				<span class="item-icon">🔬</span>
+				<div class="item-meta">
+					<strong class="item-name">PCB X-Ray</strong>
+					<span class="item-desc">FR4 substrate &amp; copper traces</span>
+				</div>
+				<kbd class="item-kbd">P</kbd>
+			</button>
+			<button id="trigger-tapeout-btn" class="extra-item-btn" type="button" title="Silicon Tapeout Confetti">
+				<span class="item-icon">🎉</span>
+				<div class="item-meta">
+					<strong class="item-name">Wafer Tapeout</strong>
+					<span class="item-desc">300mm silicon die confetti shower</span>
+				</div>
+				<kbd class="item-kbd">W</kbd>
+			</button>
+			<button id="trigger-tilt-btn" class="extra-item-btn" type="button" title="3D Viewport Parallax Hologram Tilt">
+				<span class="item-icon">📐</span>
+				<div class="item-meta">
+					<strong class="item-name">3D Tilt</strong>
+					<span class="item-desc">Parallax hologram perspective</span>
+				</div>
+				<kbd class="item-kbd">H</kbd>
+			</button>
+		</div>
+		<div class="extras-footer">
+			<span>Press keyboard hotkeys or click buttons &bull; Also available in terminal (<code>gravity</code>, <code>thermal</code>, <code>pcb</code>, <code>tapeout</code>, <code>tilt</code>)</span>
+		</div>
+	</div>
+</div>
+
+<script>
+	function initEasterEggs() {
+		// State flags
+		let isZeroG = false;
+		let isThermal = false;
+		let isPCB = false;
+		let isTilt = false;
+
+		// UI Elements
+		const zerogHud = document.getElementById('zerog-hud');
+		const zerogResetBtn = document.getElementById('zerog-reset-btn');
+		const flirHud = document.getElementById('flir-hud');
+		const flirExitBtn = document.getElementById('flir-exit-btn');
+		const flirCanvas = document.getElementById('flir-canvas') as HTMLCanvasElement | null;
+		const flirScaleBar = document.getElementById('flir-scale-bar');
+		const flirTempReadout = document.getElementById('flir-temp-readout');
+		const pcbHud = document.getElementById('pcb-hud');
+		const pcbExitBtn = document.getElementById('pcb-exit-btn');
+		const tiltHud = document.getElementById('tilt-hud');
+		const tiltExitBtn = document.getElementById('tilt-exit-btn');
+		const tapeoutToast = document.getElementById('tapeout-toast');
+		const tapeoutCanvas = document.getElementById('tapeout-canvas') as HTMLCanvasElement | null;
+
+		const extrasModal = document.getElementById('lab-extras-modal');
+		const extrasCloseBtn = document.getElementById('extras-close-btn');
+		const dogMascot = document.getElementById('hero-dog-mascot');
+
+		// -------------------------------------------------------------
+		// 1. VANILLA VERLET PHYSICS ZERO-G COLLAPSE
+		// -------------------------------------------------------------
+		interface PhysicsBody {
+			el: HTMLElement;
+			x: number;
+			y: number;
+			prevX: number;
+			prevY: number;
+			angle: number;
+			prevAngle: number;
+			width: number;
+			height: number;
+			originX: number;
+			originY: number;
+		}
+
+		let bodies: PhysicsBody[] = [];
+		let physicsAnimId = 0;
+		let draggedBody: PhysicsBody | null = null;
+		let dragOffsetX = 0;
+		let dragOffsetY = 0;
+
+		function startZeroG() {
+			if (isZeroG) return;
+			isZeroG = true;
+			if (zerogHud) zerogHud.classList.remove('hidden');
+
+			const selector = '.hero .avatar-wrap, .hero .name, .hero .role-title, .hero .tagline, .hero .contact-links, .skill-group, .cad-viewer-container, #benchmark, #input-lab, #keyboard-lab, #debug, footer';
+			const elements = Array.from(document.querySelectorAll<HTMLElement>(selector));
+
+			bodies = elements.map((el) => {
+				const rect = el.getBoundingClientRect();
+				return {
+					el,
+					x: rect.left,
+					y: rect.top,
+					prevX: rect.left + (Math.random() - 0.5) * 4,
+					prevY: rect.top - Math.random() * 3,
+					angle: 0,
+					prevAngle: (Math.random() - 0.5) * 0.05,
+					width: rect.width,
+					height: rect.height,
+					originX: rect.left,
+					originY: rect.top
+				};
+			});
+
+			function step() {
+				if (!isZeroG) return;
+				const gravity = 0.52;
+				const damping = 0.984;
+				const bounce = 0.52;
+				const winW = window.innerWidth;
+				const winH = window.innerHeight;
+
+				for (const b of bodies) {
+					if (b === draggedBody) continue;
+
+					const vx = (b.x - b.prevX) * damping;
+					const vy = (b.y - b.prevY) * damping;
+
+					b.prevX = b.x;
+					b.prevY = b.y;
+
+					b.x += vx;
+					b.y += vy + gravity;
+
+					const vTheta = (b.angle - b.prevAngle) * 0.96;
+					b.prevAngle = b.angle;
+					b.angle += vTheta;
+
+					// Floor collision
+					if (b.y + b.height > winH) {
+						b.y = winH - b.height;
+						b.prevY = b.y - (-vy * bounce);
+						b.prevAngle -= vx * 0.005;
+					}
+					// Left wall
+					if (b.x < 0) {
+						b.x = 0;
+						b.prevX = b.x + (-vx * bounce);
+					}
+					// Right wall
+					if (b.x + b.width > winW) {
+						b.x = winW - b.width;
+						b.prevX = b.x + (-vx * bounce);
+					}
+
+					const dx = b.x - b.originX;
+					const dy = b.y - b.originY;
+					const deg = b.angle * (180 / Math.PI);
+					b.el.style.transform = `translate3d(${dx}px, ${dy}px, 0) rotate(${deg}deg)`;
+					b.el.style.willChange = 'transform';
+					b.el.style.cursor = 'grab';
+				}
+
+				physicsAnimId = requestAnimationFrame(step);
+			}
+
+			physicsAnimId = requestAnimationFrame(step);
+		}
+
+		function resetZeroG() {
+			if (!isZeroG) return;
+			isZeroG = false;
+			cancelAnimationFrame(physicsAnimId);
+			if (zerogHud) zerogHud.classList.add('hidden');
+			draggedBody = null;
+
+			bodies.forEach((b) => {
+				b.el.style.transition = 'transform 0.68s cubic-bezier(0.16, 1, 0.3, 1)';
+				b.el.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
+			});
+
+			setTimeout(() => {
+				bodies.forEach((b) => {
+					b.el.style.transition = '';
+					b.el.style.transform = '';
+					b.el.style.willChange = '';
+					b.el.style.cursor = '';
+				});
+				bodies = [];
+			}, 700);
+		}
+
+		// Drag & Toss handlers
+		window.addEventListener('pointerdown', (e) => {
+			if (!isZeroG) return;
+			const target = (e.target as HTMLElement).closest('.hero .avatar-wrap, .hero .name, .hero .role-title, .hero .tagline, .hero .contact-links, .skill-group, .cad-viewer-container, #benchmark, #input-lab, #keyboard-lab, #debug, footer') as HTMLElement | null;
+			if (!target) return;
+			const body = bodies.find((b) => b.el === target);
+			if (body) {
+				draggedBody = body;
+				dragOffsetX = e.clientX - body.x;
+				dragOffsetY = e.clientY - body.y;
+				body.el.style.cursor = 'grabbing';
+				body.el.style.zIndex = '999';
+				e.preventDefault();
+			}
+		});
+
+		window.addEventListener('pointermove', (e) => {
+			if (!isZeroG || !draggedBody) return;
+			draggedBody.prevX = draggedBody.x;
+			draggedBody.prevY = draggedBody.y;
+			draggedBody.x = e.clientX - dragOffsetX;
+			draggedBody.y = e.clientY - dragOffsetY;
+
+			const dx = draggedBody.x - draggedBody.originX;
+			const dy = draggedBody.y - draggedBody.originY;
+			const deg = draggedBody.angle * (180 / Math.PI);
+			draggedBody.el.style.transform = `translate3d(${dx}px, ${dy}px, 0) rotate(${deg}deg)`;
+		});
+
+		window.addEventListener('pointerup', () => {
+			if (draggedBody) {
+				draggedBody.el.style.cursor = 'grab';
+				draggedBody.el.style.zIndex = '';
+				draggedBody = null;
+			}
+		});
+
+		if (zerogResetBtn) zerogResetBtn.addEventListener('click', resetZeroG);
+
+		// -------------------------------------------------------------
+		// 2. FLIR INFRARED THERMAL CAMERA HOTSPOT MODE
+		// -------------------------------------------------------------
+		let thermalAnimId = 0;
+		let mouseX = window.innerWidth / 2;
+		let mouseY = window.innerHeight / 2;
+
+		window.addEventListener('pointermove', (e) => {
+			mouseX = e.clientX;
+			mouseY = e.clientY;
+		});
+
+		function toggleThermal(force?: boolean) {
+			const next = typeof force === 'boolean' ? force : !isThermal;
+			if (next === isThermal) return;
+			isThermal = next;
+
+			if (isThermal) {
+				flirHud?.classList.remove('hidden');
+				flirScaleBar?.classList.remove('hidden');
+				flirCanvas?.classList.remove('hidden');
+				runThermalLoop();
+			} else {
+				flirHud?.classList.add('hidden');
+				flirScaleBar?.classList.add('hidden');
+				flirCanvas?.classList.add('hidden');
+				cancelAnimationFrame(thermalAnimId);
+			}
+		}
+
+		function runThermalLoop() {
+			if (!flirCanvas) return;
+			const ctx = flirCanvas.getContext('2d');
+			if (!ctx) return;
+
+			function resizeCanvas() {
+				if (!flirCanvas) return;
+				flirCanvas.width = window.innerWidth;
+				flirCanvas.height = window.innerHeight;
+			}
+			resizeCanvas();
+
+			let frameCount = 0;
+
+			function draw() {
+				if (!isThermal || !ctx || !flirCanvas) return;
+				frameCount++;
+
+				ctx.clearRect(0, 0, flirCanvas.width, flirCanvas.height);
+
+				// Dark ambient cold overlay (ironbow base)
+				ctx.fillStyle = 'rgba(8, 12, 28, 0.74)';
+				ctx.fillRect(0, 0, flirCanvas.width, flirCanvas.height);
+
+				// Active component hotspots
+				// CAD Centrifuge Hotspot
+				const cadEl = document.getElementById('cad-viewer');
+				if (cadEl) {
+					const rect = cadEl.getBoundingClientRect();
+					if (rect.bottom > 0 && rect.top < window.innerHeight) {
+						const cx = rect.left + rect.width / 2;
+						const cy = rect.top + rect.height / 2;
+						const pulse = 1 + Math.sin(frameCount * 0.12) * 0.15;
+						const rad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 180 * pulse);
+						rad.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+						rad.addColorStop(0.2, 'rgba(250, 204, 21, 0.75)');
+						rad.addColorStop(0.5, 'rgba(234, 88, 12, 0.55)');
+						rad.addColorStop(0.8, 'rgba(147, 51, 234, 0.3)');
+						rad.addColorStop(1, 'rgba(8, 12, 28, 0)');
+						ctx.fillStyle = rad;
+						ctx.beginPath();
+						ctx.arc(cx, cy, 180 * pulse, 0, Math.PI * 2);
+						ctx.fill();
+					}
+				}
+
+				// Mouse Cursor Thermal Hotspot
+				const curRad = ctx.createRadialGradient(mouseX, mouseY, 5, mouseX, mouseY, 140);
+				curRad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+				curRad.addColorStop(0.25, 'rgba(250, 204, 21, 0.8)');
+				curRad.addColorStop(0.55, 'rgba(234, 88, 12, 0.6)');
+				curRad.addColorStop(0.85, 'rgba(126, 34, 206, 0.35)');
+				curRad.addColorStop(1, 'rgba(8, 12, 28, 0)');
+				ctx.fillStyle = curRad;
+				ctx.beginPath();
+				ctx.arc(mouseX, mouseY, 140, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Crosshair at pointer
+				ctx.strokeStyle = '#ffffff';
+				ctx.lineWidth = 1.5;
+				ctx.beginPath();
+				ctx.moveTo(mouseX - 14, mouseY);
+				ctx.lineTo(mouseX + 14, mouseY);
+				ctx.moveTo(mouseX, mouseY - 14);
+				ctx.lineTo(mouseX, mouseY + 14);
+				ctx.stroke();
+
+				// Live temp jitter readout
+				if (flirTempReadout && frameCount % 6 === 0) {
+					const jitter = (Math.sin(frameCount * 0.08) * 1.2).toFixed(1);
+					const baseTemp = 89.4 + parseFloat(jitter);
+					flirTempReadout.textContent = `SP01: ${baseTemp.toFixed(1)}°C`;
+				}
+
+				thermalAnimId = requestAnimationFrame(draw);
+			}
+
+			draw();
+		}
+
+		if (flirExitBtn) flirExitBtn.addEventListener('click', () => toggleThermal(false));
+
+		// -------------------------------------------------------------
+		// 3. PCB SUBSTRATE & SILICON TRACES X-RAY MODE
+		// -------------------------------------------------------------
+		function togglePCB(force?: boolean) {
+			const next = typeof force === 'boolean' ? force : !isPCB;
+			if (next === isPCB) return;
+			isPCB = next;
+
+			document.documentElement.classList.toggle('pcb-xray-active', isPCB);
+			if (isPCB) {
+				pcbHud?.classList.remove('hidden');
+			} else {
+				pcbHud?.classList.add('hidden');
+			}
+		}
+
+		if (pcbExitBtn) pcbExitBtn.addEventListener('click', () => togglePCB(false));
+
+		// -------------------------------------------------------------
+		// 4. SILICON TAPEOUT DAY WAFER CONFETTI
+		// -------------------------------------------------------------
+		interface WaferDie {
+			x: number;
+			y: number;
+			vx: number;
+			vy: number;
+			size: number;
+			angle: number;
+			vAngle: number;
+			hue: number;
+			shape: 'square' | 'hex';
+			life: number;
+		}
+
+		let tapeoutParticles: WaferDie[] = [];
+		let tapeoutAnimId = 0;
+
+		function triggerTapeout() {
+			if (!tapeoutCanvas) return;
+			tapeoutCanvas.classList.remove('hidden');
+			tapeoutToast?.classList.remove('hidden');
+
+			const ctx = tapeoutCanvas.getContext('2d');
+			if (!ctx) return;
+
+			tapeoutCanvas.width = window.innerWidth;
+			tapeoutCanvas.height = window.innerHeight;
+
+			const originX = window.innerWidth / 2;
+			const originY = window.innerHeight * 0.45;
+
+			// Generate 70 silicon IC dies
+			tapeoutParticles = Array.from({ length: 70 }, () => ({
+				x: originX + (Math.random() - 0.5) * 80,
+				y: originY + (Math.random() - 0.5) * 40,
+				vx: (Math.random() - 0.5) * 16,
+				vy: -Math.random() * 14 - 4,
+				size: Math.random() * 12 + 10,
+				angle: Math.random() * Math.PI * 2,
+				vAngle: (Math.random() - 0.5) * 0.25,
+				hue: Math.floor(Math.random() * 60) + 190, // Cyan-to-gold thin film interference
+				shape: Math.random() > 0.4 ? 'square' : 'hex',
+				life: 1.0
+			}));
+
+			function drawParticles() {
+				if (!ctx || !tapeoutCanvas) return;
+				ctx.clearRect(0, 0, tapeoutCanvas.width, tapeoutCanvas.height);
+
+				let alive = 0;
+				for (const p of tapeoutParticles) {
+					p.vy += 0.38; // gravity
+					p.vx *= 0.985;
+					p.x += p.vx;
+					p.y += p.vy;
+					p.angle += p.vAngle;
+
+					if (p.y < tapeoutCanvas.height + 40) alive++;
+
+					ctx.save();
+					ctx.translate(p.x, p.y);
+					ctx.rotate(p.angle);
+
+					// Draw metallic wafer die with wire-bond border
+					ctx.fillStyle = `hsl(${p.hue}, 80%, 65%)`;
+					ctx.strokeStyle = '#facc15';
+					ctx.lineWidth = 1.2;
+
+					if (p.shape === 'square') {
+						ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+						ctx.strokeRect(-p.size / 2, -p.size / 2, p.size, p.size);
+						// Center silicon die pattern cross
+						ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+						ctx.beginPath();
+						ctx.moveTo(-p.size / 4, 0);
+						ctx.lineTo(p.size / 4, 0);
+						ctx.stroke();
+					} else {
+						// Hexagonal die
+						ctx.beginPath();
+						for (let i = 0; i < 6; i++) {
+							const rad = (i * Math.PI) / 3;
+							const hx = (Math.cos(rad) * p.size) / 1.5;
+							const hy = (Math.sin(rad) * p.size) / 1.5;
+							if (i === 0) ctx.moveTo(hx, hy);
+							else ctx.lineTo(hx, hy);
+						}
+						ctx.closePath();
+						ctx.fill();
+						ctx.stroke();
+					}
+					ctx.restore();
+				}
+
+				if (alive > 0) {
+					tapeoutAnimId = requestAnimationFrame(drawParticles);
+				} else {
+					tapeoutCanvas.classList.add('hidden');
+					setTimeout(() => tapeoutToast?.classList.add('hidden'), 1500);
+				}
+			}
+
+			cancelAnimationFrame(tapeoutAnimId);
+			tapeoutAnimId = requestAnimationFrame(drawParticles);
+		}
+
+		if (dogMascot) {
+			dogMascot.style.cursor = 'pointer';
+			dogMascot.addEventListener('click', () => {
+				triggerTapeout();
+			});
+		}
+
+		// -------------------------------------------------------------
+		// 5. 3D VIEWPORT PARALLAX HOLOGRAM TILT
+		// -------------------------------------------------------------
+		const mainEl = document.querySelector('main') as HTMLElement | null;
+
+		function handleTiltMove(e: MouseEvent) {
+			if (!isTilt || !mainEl) return;
+			const nx = (e.clientX / window.innerWidth - 0.5) * 16;
+			const ny = (e.clientY / window.innerHeight - 0.5) * -16;
+			mainEl.style.transform = `perspective(1200px) rotateY(${nx.toFixed(2)}deg) rotateX(${ny.toFixed(2)}deg) scale(0.985)`;
+		}
+
+		function handleOrientation(e: DeviceOrientationEvent) {
+			if (!isTilt || !mainEl || !e.gamma || !e.beta) return;
+			const nx = Math.max(-15, Math.min(15, e.gamma));
+			const ny = Math.max(-15, Math.min(15, (e.beta - 45) * 0.7));
+			mainEl.style.transform = `perspective(1200px) rotateY(${nx.toFixed(2)}deg) rotateX(${-ny.toFixed(2)}deg) scale(0.985)`;
+		}
+
+		function toggleTilt(force?: boolean) {
+			const next = typeof force === 'boolean' ? force : !isTilt;
+			if (next === isTilt) return;
+			isTilt = next;
+
+			if (isTilt) {
+				tiltHud?.classList.remove('hidden');
+				window.addEventListener('mousemove', handleTiltMove);
+				window.addEventListener('deviceorientation', handleOrientation);
+				if (mainEl) {
+					mainEl.style.transition = 'transform 0.12s ease-out';
+				}
+			} else {
+				tiltHud?.classList.add('hidden');
+				window.removeEventListener('mousemove', handleTiltMove);
+				window.removeEventListener('deviceorientation', handleOrientation);
+				if (mainEl) {
+					mainEl.style.transition = 'transform 0.4s ease';
+					mainEl.style.transform = '';
+					setTimeout(() => {
+						if (mainEl) mainEl.style.transition = '';
+					}, 400);
+				}
+			}
+		}
+
+		if (tiltExitBtn) tiltExitBtn.addEventListener('click', () => toggleTilt(false));
+
+		// -------------------------------------------------------------
+		// 6. GLOBAL HOOKS & KEYBOARD SHORTCUTS (G, T, P, W, H)
+		// -------------------------------------------------------------
+		(window as any).__toggleZeroG = () => (isZeroG ? resetZeroG() : startZeroG());
+		(window as any).__toggleThermal = (force?: boolean) => toggleThermal(force);
+		(window as any).__togglePCB = (force?: boolean) => togglePCB(force);
+		(window as any).__triggerTapeout = () => triggerTapeout();
+		(window as any).__toggleTilt = (force?: boolean) => toggleTilt(force);
+		(window as any).__toggleLabExtras = () => {
+			extrasModal?.classList.toggle('hidden');
+		};
+
+		window.addEventListener('keydown', (e) => {
+			const activeTag = document.activeElement?.tagName;
+			if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return;
+			// Ignore if terminal window is open
+			const termModal = document.getElementById('terminal-modal');
+			if (termModal && termModal.classList.contains('open')) return;
+
+			const key = e.key.toUpperCase();
+			if (key === 'G') {
+				e.preventDefault();
+				(window as any).__toggleZeroG();
+			} else if (key === 'T') {
+				e.preventDefault();
+				toggleThermal();
+			} else if (key === 'P') {
+				e.preventDefault();
+				togglePCB();
+			} else if (key === 'W') {
+				e.preventDefault();
+				triggerTapeout();
+			} else if (key === 'H') {
+				e.preventDefault();
+				toggleTilt();
+			} else if (e.key === 'Escape') {
+				if (isZeroG) resetZeroG();
+				if (isThermal) toggleThermal(false);
+				if (isPCB) togglePCB(false);
+				if (isTilt) toggleTilt(false);
+				extrasModal?.classList.add('hidden');
+			}
+		});
+
+		// -------------------------------------------------------------
+		// 7. LAB EXTRAS DRAWER MODAL
+		// -------------------------------------------------------------
+		document.getElementById('trigger-zerog-btn')?.addEventListener('click', () => {
+			extrasModal?.classList.add('hidden');
+			(window as any).__toggleZeroG();
+		});
+		document.getElementById('trigger-flir-btn')?.addEventListener('click', () => {
+			extrasModal?.classList.add('hidden');
+			toggleThermal();
+		});
+		document.getElementById('trigger-pcb-btn')?.addEventListener('click', () => {
+			extrasModal?.classList.add('hidden');
+			togglePCB();
+		});
+		document.getElementById('trigger-tapeout-btn')?.addEventListener('click', () => {
+			extrasModal?.classList.add('hidden');
+			triggerTapeout();
+		});
+		document.getElementById('trigger-tilt-btn')?.addEventListener('click', () => {
+			extrasModal?.classList.add('hidden');
+			toggleTilt();
+		});
+		extrasCloseBtn?.addEventListener('click', () => extrasModal?.classList.add('hidden'));
+
+		// Close modal on click outside
+		document.addEventListener('click', (e) => {
+			const target = e.target as HTMLElement;
+			if (extrasModal && !extrasModal.classList.contains('hidden')) {
+				if (!extrasModal.contains(target) && !target.closest('#footer-extras-btn')) {
+					extrasModal.classList.add('hidden');
+				}
+			}
+		});
+	}
+
+	initEasterEggs();
+	document.addEventListener('astro:page-load', initEasterEggs);
+</script>
+
+<style>
+	/* FLOATING HUDS */
+	.ee-hud {
+		position: fixed;
+		top: 16px;
+		left: 50%;
+		transform: translateX(-50%);
+		background: rgba(15, 23, 42, 0.94);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		border: 1px solid var(--accent);
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 16px rgba(var(--accent-rgb), 0.35);
+		color: #f8fafc;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		font-size: 0.78em;
+		letter-spacing: 0.04em;
+		padding: 0.45em 1.1em;
+		border-radius: 24px;
+		display: flex;
+		align-items: center;
+		gap: 0.75em;
+		z-index: 100000;
+		transition: all 0.2s ease;
+		white-space: nowrap;
+	}
+	.ee-hud.hidden,
+	.ee-canvas.hidden,
+	.ee-toast.hidden,
+	.lab-extras-modal.hidden,
+	.flir-scale-bar.hidden {
+		display: none !important;
+	}
+
+	.hud-pulse-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: #22c55e;
+		box-shadow: 0 0 8px #22c55e;
+		animation: pulseDot 1.4s infinite ease-in-out;
+		flex-shrink: 0;
+	}
+	.hot-dot {
+		background: #ef4444;
+		box-shadow: 0 0 8px #ef4444;
+	}
+	.pcb-dot {
+		background: #eab308;
+		box-shadow: 0 0 8px #eab308;
+	}
+	@keyframes pulseDot {
+		0%, 100% { opacity: 1; transform: scale(1); }
+		50% { opacity: 0.4; transform: scale(0.85); }
+	}
+
+	.ee-hud-btn {
+		font-size: 0.9em;
+		font-weight: 700;
+		padding: 0.22em 0.7em;
+		border-radius: 12px;
+		background: rgba(255, 255, 255, 0.12);
+		border: 1px solid rgba(255, 255, 255, 0.25);
+		color: #ffffff;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+	.ee-hud-btn:hover {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: #ffffff;
+	}
+
+	/* FLIR SPECIFIC */
+	.flir-hud {
+		border-color: #ef4444;
+		box-shadow: 0 0 20px rgba(239, 68, 68, 0.45);
+	}
+	.flir-temp-badge {
+		background: rgba(239, 68, 68, 0.2);
+		border: 1px solid #ef4444;
+		color: #fca5a5;
+		padding: 0.15em 0.5em;
+		border-radius: 4px;
+		font-weight: 700;
+	}
+	.flir-scale-bar {
+		position: fixed;
+		right: 18px;
+		top: 50%;
+		transform: translateY(-50%);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.4em;
+		z-index: 100000;
+		font-family: ui-monospace, SFMono-Regular, monospace;
+		font-size: 0.72em;
+		color: #ffffff;
+		background: rgba(15, 23, 42, 0.85);
+		padding: 0.6em 0.45em;
+		border-radius: 8px;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+	}
+	.scale-gradient {
+		width: 12px;
+		height: 180px;
+		border-radius: 4px;
+		background: linear-gradient(to bottom, #ffffff, #facc15, #ea580c, #9333ea, #1e1b4b, #050818);
+	}
+
+	/* CANVAS OVERLAYS */
+	.ee-canvas {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: 100vh;
+		pointer-events: none;
+		z-index: 99998;
+	}
+
+	/* TAPEOUT TOAST */
+	.ee-toast {
+		position: fixed;
+		bottom: 24px;
+		left: 50%;
+		transform: translateX(-50%);
+		background: rgba(15, 23, 42, 0.95);
+		border: 1px solid #facc15;
+		box-shadow: 0 0 24px rgba(250, 204, 21, 0.4);
+		color: #f8fafc;
+		padding: 0.65em 1.4em;
+		border-radius: 30px;
+		font-size: 0.88em;
+		z-index: 100001;
+		white-space: nowrap;
+		animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	}
+	@keyframes toastSlideUp {
+		from { opacity: 0; transform: translate(-50%, 15px); }
+		to { opacity: 1; transform: translate(-50%, 0); }
+	}
+
+	/* LAB EXTRAS MODAL DRAWER */
+	.lab-extras-modal {
+		position: fixed;
+		bottom: 60px;
+		right: 24px;
+		width: 320px;
+		background: var(--bg-card);
+		border: 1px solid var(--border-color);
+		box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+		border-radius: 12px;
+		padding: 0.9em 1.1em;
+		z-index: 99999;
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		animation: extrasPop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	}
+	@keyframes extrasPop {
+		from { opacity: 0; transform: translateY(10px) scale(0.97); }
+		to { opacity: 1; transform: translateY(0) scale(1); }
+	}
+	.extras-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 0.75em;
+		border-bottom: 1px solid var(--border-color);
+		padding-bottom: 0.45em;
+	}
+	.extras-title {
+		display: flex;
+		align-items: center;
+		gap: 0.45em;
+		font-size: 0.82em;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--accent);
+	}
+	.extras-close-btn {
+		background: transparent;
+		border: none;
+		color: rgb(var(--gray));
+		font-size: 1.25em;
+		cursor: pointer;
+		padding: 0;
+		line-height: 1;
+		transition: color 0.15s ease;
+	}
+	.extras-close-btn:hover {
+		color: #ffffff;
+	}
+	.extras-grid {
+		display: flex;
+		flex-direction: column;
+		gap: 0.45em;
+	}
+	.extra-item-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.65em;
+		width: 100%;
+		padding: 0.45em 0.6em;
+		border-radius: 6px;
+		background: rgba(var(--gray-light), 0.5);
+		border: 1px solid transparent;
+		color: rgb(var(--black));
+		cursor: pointer;
+		text-align: left;
+		transition: all 0.15s ease;
+	}
+	.extra-item-btn:hover {
+		border-color: var(--accent);
+		background: rgba(var(--accent-rgb), 0.1);
+	}
+	.item-icon {
+		font-size: 1.25em;
+		flex-shrink: 0;
+	}
+	.item-meta {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+	.item-name {
+		font-size: 0.82em;
+	}
+	.item-desc {
+		font-size: 0.7em;
+		color: rgb(var(--gray));
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.item-kbd {
+		font-family: ui-monospace, SFMono-Regular, monospace;
+		font-size: 0.72em;
+		font-weight: 700;
+		padding: 0.15em 0.45em;
+		border-radius: 4px;
+		background: rgba(var(--gray), 0.2);
+		border: 1px solid rgba(var(--gray), 0.4);
+		color: rgb(var(--gray-dark));
+	}
+	:global(html[data-theme="dark"]) .item-kbd {
+		color: #cbd5e1;
+		border-color: rgba(255, 255, 255, 0.15);
+	}
+	.extras-footer {
+		margin-top: 0.75em;
+		font-size: 0.68em;
+		color: rgb(var(--gray));
+		line-height: 1.4;
+		border-top: 1px solid var(--border-color);
+		padding-top: 0.45em;
+	}
+
+	@media (max-width: 600px) {
+		.ee-hud {
+			font-size: 0.7em;
+			padding: 0.35em 0.85em;
+			width: 92%;
+			justify-content: space-between;
+		}
+		.hud-title {
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+		.lab-extras-modal {
+			right: 12px;
+			left: 12px;
+			width: auto;
+			bottom: 50px;
+		}
+	}
+</style>
+
+<style is:global>
+	/* PCB SUBSTRATE X-RAY GLOBAL INJECTION */
+	html.pcb-xray-active body {
+		background-color: #06190f !important;
+		background-image: 
+			radial-gradient(circle at 50% 50%, rgba(217, 119, 6, 0.08) 0%, transparent 60%),
+			linear-gradient(rgba(217, 119, 6, 0.1) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(217, 119, 6, 0.1) 1px, transparent 1px) !important;
+		background-size: 100% 100%, 28px 28px, 28px 28px !important;
+		color: #e2e8f0 !important;
+	}
+	html.pcb-xray-active .card,
+	html.pcb-xray-active .skill-group,
+	html.pcb-xray-active .cad-viewer-container,
+	html.pcb-xray-active .benchmark-card,
+	html.pcb-xray-active .debug-card {
+		background: #082115 !important;
+		border: 1.5px solid #d97706 !important;
+		box-shadow: 0 0 16px rgba(217, 119, 6, 0.25) !important;
+		position: relative;
+	}
+	html.pcb-xray-active .card::before,
+	html.pcb-xray-active .skill-group::before,
+	html.pcb-xray-active .cad-viewer-container::before,
+	html.pcb-xray-active .benchmark-card::before,
+	html.pcb-xray-active .debug-card::before {
+		content: "COPPER LAYER 1 [FR4]";
+		position: absolute;
+		top: -9px;
+		right: 16px;
+		background: #d97706;
+		color: #041009;
+		font-family: ui-monospace, SFMono-Regular, monospace;
+		font-size: 0.65em;
+		font-weight: 700;
+		padding: 0.1em 0.5em;
+		border-radius: 3px;
+		letter-spacing: 0.05em;
+	}
+</style>

@@ -219,13 +219,104 @@ import ThemeToggle from './ThemeToggle.astro';
 		background: rgba(255, 255, 255, 0.05);
 	}
 
-	@media (max-width: 600px) {
-		.social-links {
+	@media (max-width: 768px) {
+		header {
+			padding: 0 0.5rem;
+		}
+		nav {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 0.35rem;
+		}
+		.nav-left {
+			display: flex;
+			align-items: center;
+			flex-shrink: 0;
+		}
+		.actions-right {
+			display: flex;
+			align-items: center;
+			flex-shrink: 0;
+		}
+		.internal-links {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex: 1 1 auto;
+			min-width: 0;
+			gap: 0.12em;
+			overflow-x: auto;
+			scrollbar-width: none;
+			-webkit-overflow-scrolling: touch;
+		}
+		.internal-links::-webkit-scrollbar {
 			display: none;
 		}
 		.nav-link {
-			padding: 1em 0.55em;
-			font-size: 0.9em;
+			padding: 0.85em 0.32em;
+			font-size: clamp(0.74em, 2.3vw, 0.84em);
+			white-space: nowrap;
+			border-bottom-width: 3px;
+		}
+		.header-tools {
+			gap: 0.28rem;
+		}
+		:global(#theme-toggle.theme-toggle),
+		.terminal-toggle-btn {
+			width: 32px;
+			height: 32px;
+			border-radius: 6px;
+		}
+		:global(#theme-toggle svg),
+		.terminal-toggle-btn svg {
+			width: 15px;
+			height: 15px;
+		}
+		.social-links {
+			display: flex;
+			align-items: center;
+			gap: 0.18rem;
+		}
+		.social-links a {
+			padding: 0.28em;
+		}
+		.social-links svg {
+			width: 17px;
+			height: 17px;
+		}
+	}
+
+	@media (max-width: 380px) {
+		header {
+			padding: 0 0.35rem;
+		}
+		nav {
+			gap: 0.2rem;
+		}
+		.nav-link {
+			padding: 0.85em 0.22em;
+			font-size: 0.72em;
+		}
+		:global(#theme-toggle.theme-toggle),
+		.terminal-toggle-btn {
+			width: 28px;
+			height: 28px;
+		}
+		:global(#theme-toggle svg),
+		.terminal-toggle-btn svg {
+			width: 14px;
+			height: 14px;
+		}
+		.social-links {
+			gap: 0.1rem;
+		}
+		.social-links a {
+			padding: 0.2em;
+		}
+		.social-links svg {
+			width: 15px;
+			height: 15px;
 		}
 	}
 

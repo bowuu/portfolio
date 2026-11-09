@@ -2,6 +2,9 @@
 // EasterEggs.astro - Hardware & Silicon Validation Interactive Easter Eggs
 // 1. Zero-G Verlet Physics Element Collapse (pure vanilla physics, non-destructive GPU transforms)
 // 2. 3D Viewport Parallax Hologram Tilt (perspective matrix tracking cursor/orientation)
+// 3. 300mm ATE Silicon Wafer Die Sort Map & Yield Telemetry (interactive canvas & Konami code)
+// 4. Procedural Mechanical Switch Synthesizer (pure Web Audio API acoustics: Blue / Red / Model M)
+// 5. Chief Morale Officer "Boop the Dog" (+10 dBm RF Telemetry & Mascot Animation)
 ---
 
 <div id="easter-eggs-container">
@@ -18,6 +21,75 @@
 		<button id="tilt-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
 	</div>
 
+	<!-- 300MM SILICON WAFER DIE SORT MODAL -->
+	<div id="wafer-modal" class="wafer-modal hidden" role="dialog" aria-modal="true" aria-label="300mm Silicon Wafer Sort Inspector">
+		<div class="wafer-backdrop" id="wafer-backdrop"></div>
+		<div class="wafer-dialog">
+			<div class="wafer-modal-header">
+				<div class="wafer-title-wrap">
+					<span class="hud-pulse-dot"></span>
+					<div class="wafer-title-meta">
+						<span class="wafer-title">300mm ATE SILICON WAFER SORT</span>
+						<span class="wafer-sub mono">LOT #850C-W14 &bull; 3nm FinFET &bull; 684 Gross Dies</span>
+					</div>
+				</div>
+				<button id="wafer-close-btn" class="wafer-close-btn" type="button" aria-label="Close Wafer Inspector">&times;</button>
+			</div>
+
+			<div class="wafer-modal-body">
+				<div class="wafer-canvas-wrap">
+					<canvas id="wafer-canvas" width="400" height="400" aria-label="Wafer Die Sort Map"></canvas>
+					<div class="wafer-notch-indicator mono">▼ Wafer Notch (0° / Flat)</div>
+				</div>
+
+				<div class="wafer-telemetry-panel">
+					<!-- YIELD SUMMARY -->
+					<div class="wafer-telemetry-box">
+						<span class="w-box-title">Functional Yield</span>
+						<div class="w-yield-display">
+							<span class="w-yield-val mono" id="wafer-yield-val">96.2%</span>
+							<span class="w-yield-badge mono">D₀: 0.078/cm²</span>
+						</div>
+						<div class="w-yield-bar-wrap">
+							<div class="w-yield-bar" id="wafer-yield-bar" style="width: 96.2%;"></div>
+						</div>
+					</div>
+
+					<!-- ACTIVE DIE PROBE READOUT -->
+					<div class="wafer-telemetry-box">
+						<span class="w-box-title">Active Die Probe Telemetry</span>
+						<div class="wafer-probe-grid mono" id="wafer-probe-grid">
+							<div class="probe-row"><span class="p-k">Die ID:</span><span class="p-v" id="wp-id">0x850C6005</span></div>
+							<div class="probe-row"><span class="p-k">Position:</span><span class="p-v" id="wp-pos">X: 14, Y: 15</span></div>
+							<div class="probe-row"><span class="p-k">Bin Class:</span><span class="p-v" id="wp-bin">Bin 1 (Prime Core)</span></div>
+							<div class="probe-row"><span class="p-k">Fmax Target:</span><span class="p-v" id="wp-fmax">4.82 GHz</span></div>
+							<div class="probe-row"><span class="p-k">Vmin Voltage:</span><span class="p-v" id="wp-vmin">0.765 V</span></div>
+							<div class="probe-row"><span class="p-k">Iddq Leak:</span><span class="p-v" id="wp-leak">12.4 mA</span></div>
+						</div>
+					</div>
+
+					<!-- BIN DISTRIBUTION LEGEND -->
+					<div class="wafer-legend">
+						<div class="legend-item"><span class="leg-color bin1"></span><span>Bin 1 (Prime 3.8GHz+): 518 (75.7%)</span></div>
+						<div class="legend-item"><span class="leg-color bin2"></span><span>Bin 2 (Eco 3.2GHz): 140 (20.5%)</span></div>
+						<div class="legend-item"><span class="leg-color binx"></span><span>Parametric Defect: 26 (3.8%)</span></div>
+					</div>
+
+					<!-- ACTIONS -->
+					<div class="wafer-actions">
+						<button id="wafer-scan-btn" type="button" class="wafer-btn primary">
+							<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+							<span>Run ATE Pogo Probe Scan</span>
+						</button>
+						<button id="wafer-random-btn" type="button" class="wafer-btn">
+							<span>Probe Random Die</span>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<!-- LAB EXTRAS DRAWER / POPOVER -->
 	<div id="lab-extras-modal" class="lab-extras-modal hidden" role="dialog" aria-modal="false" aria-label="Hardware Lab Easter Eggs">
 		<div class="extras-header">
@@ -30,6 +102,33 @@
 			<button id="extras-close-btn" type="button" class="extras-close-btn" aria-label="Close Extras Drawer">&times;</button>
 		</div>
 		<div class="extras-grid">
+			<button id="trigger-wafer-btn" class="extra-item-btn" type="button" title="300mm Silicon Wafer Sort Map">
+				<span class="item-icon">🔬</span>
+				<div class="item-meta">
+					<strong class="item-name">Wafer Sort Map</strong>
+					<span class="item-desc">300mm ATE die sort &amp; bin yield inspector</span>
+				</div>
+				<kbd class="item-kbd">Konami / wafer</kbd>
+			</button>
+
+			<button id="trigger-switch-sound-btn" class="extra-item-btn" type="button" title="Cycle Mechanical Switch Acoustics">
+				<span class="item-icon">🔊</span>
+				<div class="item-meta">
+					<strong class="item-name">Switch Acoustics</strong>
+					<span class="item-desc" id="extras-sound-desc">Procedural Web Audio switch synth</span>
+				</div>
+				<kbd class="item-kbd" id="extras-sound-badge">Sound: Off</kbd>
+			</button>
+
+			<button id="trigger-boop-btn" class="extra-item-btn" type="button" title="Boop Chief Morale Officer">
+				<span class="item-icon">🐾</span>
+				<div class="item-meta">
+					<strong class="item-name">Chief Morale Officer</strong>
+					<span class="item-desc">Boop avatar for RF telemetry boost</span>
+				</div>
+				<kbd class="item-kbd">+10 dBm</kbd>
+			</button>
+
 			<button id="trigger-zerog-btn" class="extra-item-btn" type="button" title="Zero-G Physics Collapse">
 				<span class="item-icon">🪐</span>
 				<div class="item-meta">
@@ -38,6 +137,7 @@
 				</div>
 				<kbd class="item-kbd">Ctrl+Alt+G</kbd>
 			</button>
+
 			<button id="trigger-tilt-btn" class="extra-item-btn" type="button" title="3D Viewport Parallax Hologram Tilt">
 				<span class="item-icon">📐</span>
 				<div class="item-meta">
@@ -48,18 +148,556 @@
 			</button>
 		</div>
 		<div class="extras-footer">
-			<span>Click cards above, use hotkeys, or enter terminal commands (<code>gravity</code>, <code>tilt</code>).</span>
+			<span>Click cards above, use hotkeys, or enter terminal commands (<code>wafer</code>, <code>gravity</code>, <code>tilt</code>).</span>
 		</div>
 	</div>
 </div>
 
 <script>
+	// -------------------------------------------------------------
+	// PROCEDURAL MECHANICAL SWITCH AUDIO SYNTHESIZER
+	// -------------------------------------------------------------
+	class SwitchAudioEngine {
+		private ctx: AudioContext | null = null;
+		public profile: 'off' | 'blue' | 'red' | 'modelm' = 'off';
+		private noiseBuffer: AudioBuffer | null = null;
+
+		constructor() {
+			try {
+				const saved = localStorage.getItem('brob_switch_sound');
+				if (saved && ['blue', 'red', 'modelm'].includes(saved)) {
+					this.profile = saved as any;
+				}
+			} catch {}
+		}
+
+		private init() {
+			if (!this.ctx) {
+				const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+				if (AudioCtx) {
+					this.ctx = new AudioCtx();
+					// Pre-generate a 100ms noise buffer once to avoid garbage collection
+					const sampleRate = this.ctx.sampleRate;
+					const len = Math.floor(sampleRate * 0.1);
+					this.noiseBuffer = this.ctx.createBuffer(1, len, sampleRate);
+					const data = this.noiseBuffer.getChannelData(0);
+					for (let i = 0; i < len; i++) {
+						data[i] = Math.random() * 2 - 1;
+					}
+				}
+			}
+			if (this.ctx && this.ctx.state === 'suspended') {
+				this.ctx.resume().catch(() => {});
+			}
+		}
+
+		public setProfile(p: 'off' | 'blue' | 'red' | 'modelm') {
+			this.profile = p;
+			try {
+				localStorage.setItem('brob_switch_sound', p);
+			} catch {}
+			if (p !== 'off') this.init();
+			window.dispatchEvent(new CustomEvent('switch-sound-changed', { detail: { profile: p } }));
+		}
+
+		public play(code?: string) {
+			if (this.profile === 'off') return;
+			this.init();
+			if (!this.ctx || !this.noiseBuffer) return;
+
+			const t = this.ctx.currentTime;
+			const isBigKey = code === 'Space' || code === 'Enter' || code === 'Backspace';
+			const pitchMod = isBigKey ? 0.8 : (0.95 + Math.random() * 0.1);
+
+			if (this.profile === 'blue') {
+				// CLICKY BLUE: High-frequency sharp transient + resonant housing bottom-out
+				this.playNoise(t, 2800 * pitchMod, 0.012, 0.32);
+				this.playTone(t, 3200 * pitchMod, 'sine', 0.015, 0.2);
+				this.playTone(t + 0.003, 380 * pitchMod, 'triangle', 0.035, 0.24);
+			} else if (this.profile === 'red') {
+				// LINEAR RED: Soft, smooth bottom-out low-pass thump
+				this.playNoise(t, 550 * pitchMod, 0.02, 0.18);
+				this.playTone(t, 240 * pitchMod, 'sine', 0.035, 0.28);
+			} else if (this.profile === 'modelm') {
+				// BUCKLING SPRING: Sharp initial snap + dual-frequency metallic spring twang
+				this.playNoise(t, 2400 * pitchMod, 0.014, 0.28);
+				this.playTone(t + 0.002, 3120 * pitchMod, 'sine', 0.065, 0.18);
+				this.playTone(t + 0.002, 3210 * pitchMod, 'sine', 0.065, 0.16);
+				this.playTone(t + 0.005, 310 * pitchMod, 'triangle', 0.045, 0.22);
+			}
+		}
+
+		private playTone(time: number, freq: number, type: OscillatorType, dur: number, vol: number) {
+			if (!this.ctx) return;
+			const osc = this.ctx.createOscillator();
+			const gain = this.ctx.createGain();
+			osc.type = type;
+			osc.frequency.setValueAtTime(freq, time);
+
+			gain.gain.setValueAtTime(vol, time);
+			gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+
+			osc.connect(gain);
+			gain.connect(this.ctx.destination);
+			osc.start(time);
+			osc.stop(time + dur);
+		}
+
+		private playNoise(time: number, filterFreq: number, dur: number, vol: number) {
+			if (!this.ctx || !this.noiseBuffer) return;
+			const source = this.ctx.createBufferSource();
+			source.buffer = this.noiseBuffer;
+
+			const filter = this.ctx.createBiquadFilter();
+			filter.type = 'bandpass';
+			filter.frequency.setValueAtTime(filterFreq, time);
+			filter.Q.setValueAtTime(3.5, time);
+
+			const gain = this.ctx.createGain();
+			gain.gain.setValueAtTime(vol, time);
+			gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+
+			source.connect(filter);
+			filter.connect(gain);
+			gain.connect(this.ctx.destination);
+			source.start(time);
+			source.stop(time + dur);
+		}
+	}
+
+	const audioEngine = new SwitchAudioEngine();
+	(window as any).__playSwitchSound = (code?: string) => audioEngine.play(code);
+	(window as any).__setSwitchSound = (profile: any) => audioEngine.setProfile(profile);
+	(window as any).__getSwitchSound = () => audioEngine.profile;
+
+	// -------------------------------------------------------------
+	// CHIEF MORALE OFFICER: BOOP THE DOG (+10 dBm)
+	// -------------------------------------------------------------
+	function initDogBoop() {
+		const avatarImg = document.getElementById('hero-avatar-img') || document.querySelector('.hero .avatar-img');
+		const avatarWrap = document.getElementById('hero-avatar-wrap') || document.querySelector('.hero .avatar-wrap');
+		if (!avatarImg || !avatarWrap) return;
+
+		let streak = 0;
+		let streakTimer = 0;
+
+		const rfReadouts = [
+			'🐾 Morale: +3 dBm (2x)',
+			'🐾 Morale: +6 dBm (4x)',
+			'🐾 Morale: +10 dBm (10x Nominal)',
+			'🐾 Morale: +14 dBm (25x High Efficiency)',
+			'🐾 Morale: +20 dBm (100x Max Gain!)',
+			'🐾 Saturated: 0 dBFS (Peak Good Boy! 🎉)'
+		];
+
+		function playDogChime(step: number) {
+			try {
+				const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+				if (!AudioCtx) return;
+				const ctx = new AudioCtx();
+				const t = ctx.currentTime;
+				const notes = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50]; // C5 to C6
+				const baseFreq = notes[Math.min(step, notes.length - 1)];
+
+				const osc = ctx.createOscillator();
+				const gain = ctx.createGain();
+				osc.type = 'sine';
+				osc.frequency.setValueAtTime(baseFreq, t);
+				osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.35, t + 0.12);
+
+				gain.gain.setValueAtTime(0.18, t);
+				gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+
+				osc.connect(gain);
+				gain.connect(ctx.destination);
+				osc.start(t);
+				osc.stop(t + 0.22);
+			} catch {}
+		}
+
+		function triggerBoop() {
+			streak++;
+			window.clearTimeout(streakTimer);
+			streakTimer = window.setTimeout(() => { streak = 0; }, 3500);
+
+			// 1. Play cute procedural chime
+			playDogChime(streak);
+
+			// 2. Avatar squash & bounce animation
+			avatarImg.classList.remove('booped');
+			void (avatarImg as HTMLElement).offsetWidth; // trigger reflow
+			avatarImg.classList.add('booped');
+
+			// 3. Floating RF telemetry pill
+			const pill = document.createElement('div');
+			pill.className = 'morale-rf-pill mono';
+			const text = rfReadouts[Math.min(streak - 1, rfReadouts.length - 1)];
+			pill.textContent = text;
+			avatarWrap.appendChild(pill);
+
+			// Spawn confetti burst at 5+ streak
+			if (streak >= 5) {
+				const glyphs = ['🐾', '🦴', '⚡', '✨', '🐾', '🦴'];
+				glyphs.forEach((g, i) => {
+					const conf = document.createElement('span');
+					conf.className = 'boop-particle';
+					conf.textContent = g;
+					const angle = (i / glyphs.length) * Math.PI * 2;
+					const dist = 55 + Math.random() * 35;
+					const dx = Math.cos(angle) * dist;
+					const dy = Math.sin(angle) * dist - 25;
+					conf.style.setProperty('--dx', `${dx.toFixed(1)}px`);
+					conf.style.setProperty('--dy', `${dy.toFixed(1)}px`);
+					avatarWrap.appendChild(conf);
+					setTimeout(() => conf.remove(), 950);
+				});
+			}
+
+			setTimeout(() => {
+				pill.remove();
+			}, 1100);
+		}
+
+		avatarImg.addEventListener('click', triggerBoop);
+		(window as any).__boopDog = () => {
+			avatarImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			setTimeout(triggerBoop, 300);
+		};
+	}
+
+	// -------------------------------------------------------------
+	// 300MM SILICON WAFER DIE SORT INSPECTOR & KONAMI CODE
+	// -------------------------------------------------------------
+	function initWaferInspector() {
+		const modal = document.getElementById('wafer-modal');
+		const backdrop = document.getElementById('wafer-backdrop');
+		const closeBtn = document.getElementById('wafer-close-btn');
+		const scanBtn = document.getElementById('wafer-scan-btn');
+		const randomBtn = document.getElementById('wafer-random-btn');
+		const canvas = document.getElementById('wafer-canvas') as HTMLCanvasElement | null;
+		if (!modal || !canvas) return;
+
+		const ctx = canvas.getContext('2d');
+		if (!ctx) return;
+
+		// Wafer Grid Configuration (300mm wafer with ~684 gross dies)
+		const waferRadius = 175;
+		const cx = 200;
+		const cy = 200;
+		const dieW = 10.5;
+		const dieH = 10.5;
+		const step = 12.2;
+		const gridSize = 28;
+
+		interface WaferDie {
+			col: number;
+			row: number;
+			x: number;
+			y: number;
+			bin: 1 | 2 | 'x';
+			id: string;
+			fmax: number;
+			vmin: number;
+			leakage: number;
+			tested: boolean;
+		}
+
+		const dies: WaferDie[] = [];
+		let activeDie: WaferDie | null = null;
+		let isScanning = false;
+
+		// Deterministic pseudo-random die generation
+		let seed = 42;
+		function prng() {
+			seed = (seed * 16807) % 2147483647;
+			return (seed - 1) / 2147483646;
+		}
+
+		const half = (gridSize * step) / 2;
+		for (let r = 0; r < gridSize; r++) {
+			for (let c = 0; c < gridSize; c++) {
+				const x = cx - half + c * step;
+				const y = cy - half + r * step;
+
+				// Die bounds relative to center
+				const corners = [
+					[x, y],
+					[x + dieW, y],
+					[x, y + dieH],
+					[x + dieW, y + dieH]
+				];
+
+				// Wafer exclusion zone & notch test
+				const fits = corners.every(([px, py]) => {
+					const dx = px - cx;
+					const dy = py - cy;
+					const dist = Math.sqrt(dx * dx + dy * dy);
+					if (dist > waferRadius - 10) return false;
+					// Notch exclusion at bottom center
+					if (Math.abs(dx) < 14 && py > cy + waferRadius - 16) return false;
+					return true;
+				});
+
+				if (!fits) continue;
+
+				const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+				const normR = dist / (waferRadius - 10);
+				const rnd = prng();
+
+				// Binning logic matching 96.2% yield
+				let bin: 1 | 2 | 'x' = 1;
+				if (normR > 0.88 && rnd < 0.38) {
+					bin = 'x'; // Edge litho fallout
+				} else if (Math.abs(c - 8) < 2 && Math.abs(r - 18) < 2 && rnd < 0.6) {
+					bin = 'x'; // Particle defect cluster
+				} else if (rnd < 0.22) {
+					bin = 2; // Eco low-power harvest bin
+				} else {
+					bin = 1; // Prime high-frequency
+				}
+
+				const hexId = '0x850C' + ((r * gridSize + c) * 137).toString(16).toUpperCase().padStart(4, '0');
+				const fmax = bin === 1 ? +(4.7 + prng() * 0.28).toFixed(2) : bin === 2 ? +(3.2 + prng() * 0.18).toFixed(2) : +(1.8 + prng() * 0.5).toFixed(2);
+				const vmin = bin === 1 ? +(0.75 + prng() * 0.04).toFixed(3) : bin === 2 ? +(0.71 + prng() * 0.03).toFixed(3) : +(1.15 + prng() * 0.2).toFixed(3);
+				const leakage = bin === 1 ? +(11.5 + prng() * 3.5).toFixed(1) : bin === 2 ? +(7.2 + prng() * 1.8).toFixed(1) : +(48.0 + prng() * 20.0).toFixed(1);
+
+				dies.push({
+					col: c,
+					row: r,
+					x,
+					y,
+					bin,
+					id: hexId,
+					fmax,
+					vmin,
+					leakage,
+					tested: true
+				});
+			}
+		}
+
+		function drawWafer() {
+			if (!ctx || !canvas) return;
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+			// 1. Outer Wafer Substrate Circle
+			ctx.save();
+			ctx.beginPath();
+			ctx.arc(cx, cy, waferRadius, 0, Math.PI * 2);
+			const grad = ctx.createRadialGradient(cx - 30, cy - 30, 20, cx, cy, waferRadius);
+			grad.addColorStop(0, '#1a2233');
+			grad.addColorStop(0.7, '#111622');
+			grad.addColorStop(1, '#0b0f17');
+			ctx.fillStyle = grad;
+			ctx.fill();
+
+			// Wafer edge bevel
+			ctx.lineWidth = 3;
+			ctx.strokeStyle = '#38bdf8';
+			ctx.stroke();
+
+			// Wafer Notch at bottom (0° / 6 o'clock)
+			ctx.beginPath();
+			ctx.arc(cx, cy + waferRadius, 8, Math.PI, 0, true);
+			ctx.fillStyle = '#0f172a';
+			ctx.fill();
+			ctx.stroke();
+			ctx.restore();
+
+			// 2. Silicon Dies
+			for (const die of dies) {
+				if (!die.tested) {
+					ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+				} else if (die.bin === 1) {
+					ctx.fillStyle = '#10b981'; // Prime emerald
+				} else if (die.bin === 2) {
+					ctx.fillStyle = '#f59e0b'; // Amber eco
+				} else {
+					ctx.fillStyle = '#ef4444'; // Red fallout
+				}
+
+				ctx.fillRect(die.x, die.y, dieW, dieH);
+
+				// Subtle die border
+				ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+				ctx.lineWidth = 0.5;
+				ctx.strokeRect(die.x, die.y, dieW, dieH);
+			}
+
+			// 3. Highlight Active / Inspected Die
+			if (activeDie) {
+				ctx.save();
+				ctx.strokeStyle = '#00f0ff';
+				ctx.lineWidth = 2;
+				ctx.shadowColor = '#00f0ff';
+				ctx.shadowBlur = 8;
+				ctx.strokeRect(activeDie.x - 1, activeDie.y - 1, dieW + 2, dieH + 2);
+
+				// Reticle crosshair lines
+				ctx.strokeStyle = 'rgba(0, 240, 255, 0.45)';
+				ctx.lineWidth = 1;
+				ctx.setLineDash([3, 3]);
+				ctx.beginPath();
+				ctx.moveTo(activeDie.x + dieW / 2, 20);
+				ctx.lineTo(activeDie.x + dieW / 2, 380);
+				ctx.moveTo(20, activeDie.y + dieH / 2);
+				ctx.lineTo(380, activeDie.y + dieH / 2);
+				ctx.stroke();
+				ctx.restore();
+			}
+		}
+
+		function updateTelemetry(die: WaferDie) {
+			const idEl = document.getElementById('wp-id');
+			const posEl = document.getElementById('wp-pos');
+			const binEl = document.getElementById('wp-bin');
+			const fmaxEl = document.getElementById('wp-fmax');
+			const vminEl = document.getElementById('wp-vmin');
+			const leakEl = document.getElementById('wp-leak');
+
+			if (idEl) idEl.textContent = die.id;
+			if (posEl) posEl.textContent = `X: ${die.col}, Y: ${die.row}`;
+			if (binEl) {
+				if (die.bin === 1) {
+					binEl.textContent = 'Bin 1 (Prime Core)';
+					binEl.style.color = '#10b981';
+				} else if (die.bin === 2) {
+					binEl.textContent = 'Bin 2 (Eco Harvest)';
+					binEl.style.color = '#f59e0b';
+				} else {
+					binEl.textContent = 'Parametric Defect';
+					binEl.style.color = '#ef4444';
+				}
+			}
+			if (fmaxEl) fmaxEl.textContent = `${die.fmax} GHz`;
+			if (vminEl) vminEl.textContent = `${die.vmin} V`;
+			if (leakEl) leakEl.textContent = `${die.leakage} mA`;
+		}
+
+		function handleCanvasPointer(e: MouseEvent) {
+			if (!canvas) return;
+			const rect = canvas.getBoundingClientRect();
+			const px = (e.clientX - rect.left) * (canvas.width / rect.width);
+			const py = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+			const found = dies.find(d => px >= d.x && px <= d.x + dieW && py >= d.y && py <= d.y + dieH);
+			if (found) {
+				activeDie = found;
+				updateTelemetry(found);
+				drawWafer();
+			}
+		}
+
+		canvas.addEventListener('mousemove', handleCanvasPointer);
+		canvas.addEventListener('click', handleCanvasPointer);
+
+		function openWaferModal() {
+			modal.classList.remove('hidden');
+			if (!activeDie && dies.length) {
+				activeDie = dies[Math.floor(dies.length / 2)];
+				updateTelemetry(activeDie);
+			}
+			drawWafer();
+		}
+
+		function closeWaferModal() {
+			modal.classList.add('hidden');
+		}
+
+		closeBtn?.addEventListener('click', closeWaferModal);
+		backdrop?.addEventListener('click', closeWaferModal);
+
+		// Scan sweep animation
+		scanBtn?.addEventListener('click', () => {
+			if (isScanning) return;
+			isScanning = true;
+			dies.forEach(d => { d.tested = false; });
+			activeDie = null;
+			drawWafer();
+
+			const yieldValEl = document.getElementById('wafer-yield-val');
+			const yieldBarEl = document.getElementById('wafer-yield-bar');
+
+			let idx = 0;
+			const batchSize = 16;
+			const total = dies.length;
+
+			function stepScan() {
+				const end = Math.min(idx + batchSize, total);
+				for (let i = idx; i < end; i++) {
+					dies[i].tested = true;
+				}
+				idx = end;
+				activeDie = dies[idx - 1] || null;
+				if (activeDie) updateTelemetry(activeDie);
+
+				const testedCount = dies.filter(d => d.tested).length;
+				const goodCount = dies.filter(d => d.tested && d.bin !== 'x').length;
+				const curYield = testedCount ? ((goodCount / testedCount) * 100).toFixed(1) : '0.0';
+
+				if (yieldValEl) yieldValEl.textContent = `${curYield}%`;
+				if (yieldBarEl) yieldBarEl.style.width = `${curYield}%`;
+
+				drawWafer();
+
+				if (idx < total) {
+					requestAnimationFrame(stepScan);
+				} else {
+					isScanning = false;
+					if (yieldValEl) yieldValEl.textContent = '96.2%';
+					if (yieldBarEl) yieldBarEl.style.width = '96.2%';
+				}
+			}
+
+			requestAnimationFrame(stepScan);
+		});
+
+		randomBtn?.addEventListener('click', () => {
+			if (!dies.length) return;
+			const r = dies[Math.floor(Math.random() * dies.length)];
+			activeDie = r;
+			updateTelemetry(r);
+			drawWafer();
+		});
+
+		(window as any).__openWaferMap = openWaferModal;
+
+		// -------------------------------------------------------------
+		// KONAMI CODE DETECTOR: ↑ ↑ ↓ ↓ ← → ← → B A
+		// -------------------------------------------------------------
+		const konamiPattern = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'KeyB', 'KeyA'];
+		let konamiIndex = 0;
+
+		window.addEventListener('keydown', (e) => {
+			// Shield when typing in inputs or near keyboard lab
+			const tag = document.activeElement?.tagName;
+			if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+			const kbLab = document.getElementById('keyboard-lab');
+			if (kbLab) {
+				const r = kbLab.getBoundingClientRect();
+				if (r.bottom > -80 && r.top < window.innerHeight + 80) return;
+			}
+
+			const code = e.code;
+			if (code === konamiPattern[konamiIndex]) {
+				konamiIndex++;
+				if (konamiIndex === konamiPattern.length) {
+					konamiIndex = 0;
+					openWaferModal();
+				}
+			} else {
+				konamiIndex = code === konamiPattern[0] ? 1 : 0;
+			}
+		});
+	}
+
+	// -------------------------------------------------------------
+	// ZERO-G & 3D TILT CORE (PRESERVED)
+	// -------------------------------------------------------------
 	function initEasterEggs() {
-		// State flags
 		let isZeroG = false;
 		let isTilt = false;
 
-		// UI Elements
 		const zerogHud = document.getElementById('zerog-hud');
 		const zerogResetBtn = document.getElementById('zerog-reset-btn');
 		const tiltHud = document.getElementById('tilt-hud');
@@ -67,9 +705,6 @@
 		const extrasModal = document.getElementById('lab-extras-modal');
 		const extrasCloseBtn = document.getElementById('extras-close-btn');
 
-		// -------------------------------------------------------------
-		// 1. VANILLA VERLET PHYSICS ZERO-G COLLAPSE
-		// -------------------------------------------------------------
 		interface PhysicsBody {
 			el: HTMLElement;
 			x: number;
@@ -82,7 +717,6 @@
 			height: number;
 			initialLeft: number;
 			initialTop: number;
-			isDragged?: boolean;
 		}
 
 		let bodies: PhysicsBody[] = [];
@@ -96,10 +730,8 @@
 		function startZeroG() {
 			if (isZeroG) return;
 			isZeroG = true;
-
 			zerogHud?.classList.remove('hidden');
 
-			// Select targets: cards, benchmarks, viewer, hero elements
 			const selector = '.card, .benchmark-card, .debug-card, .cad-viewer-container, .hero .avatar-wrap, .hero .name, .hero .role-title, .hero .tagline, .hero .contact-links';
 			const elements = Array.from(document.querySelectorAll<HTMLElement>(selector));
 
@@ -132,10 +764,8 @@
 			if (!isZeroG) return;
 			isZeroG = false;
 			cancelAnimationFrame(animId);
-
 			zerogHud?.classList.add('hidden');
 
-			// Smoothly animate back to resting positions
 			bodies.forEach((b) => {
 				b.el.style.transition = 'transform 0.65s cubic-bezier(0.25, 1, 0.5, 1)';
 				b.el.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
@@ -159,7 +789,6 @@
 
 			function step() {
 				if (!isZeroG) return;
-
 				const winW = window.innerWidth;
 				const winH = window.innerHeight;
 
@@ -170,7 +799,6 @@
 						b.x = lastPointerX - dragOffsetX;
 						b.y = lastPointerY - dragOffsetY;
 					} else {
-						// Verlet numerical integration: x_new = 2*x - x_old + a * dt^2
 						const vx = (b.x - b.prevX) * friction;
 						const vy = (b.y - b.prevY) * friction + gravity;
 						const vAngle = (b.angle - b.prevAngle) * friction;
@@ -179,49 +807,38 @@
 						b.prevY = b.y;
 						b.x += vx;
 						b.y += vy;
-
 						b.prevAngle = b.angle;
 						b.angle += vAngle;
 
-						// Floor boundary
 						if (b.y + b.height > winH) {
 							b.y = winH - b.height;
 							b.prevY = b.y + vy * restitution;
 							b.prevAngle += vx * 0.003;
 						}
-
-						// Left wall
 						if (b.x < 0) {
 							b.x = 0;
 							b.prevX = b.x + vx * restitution;
 						}
-
-						// Right wall
 						if (b.x + b.width > winW) {
 							b.x = winW - b.width;
 							b.prevX = b.x + vx * restitution;
 						}
 					}
 
-					// Apply GPU transform relative to original coordinates
 					const dx = b.x - b.initialLeft;
 					const dy = b.y - b.initialTop;
 					const deg = (b.angle * 180) / Math.PI;
 					b.el.style.transform = `translate3d(${dx.toFixed(2)}px, ${dy.toFixed(2)}px, 0) rotate(${deg.toFixed(2)}deg)`;
 				}
-
 				animId = requestAnimationFrame(step);
 			}
-
 			animId = requestAnimationFrame(step);
 		}
 
-		// Drag & Throw interactions
 		window.addEventListener('pointerdown', (e) => {
 			if (!isZeroG) return;
 			const target = (e.target as HTMLElement).closest('.card, .benchmark-card, .debug-card, .cad-viewer-container, .hero .avatar-wrap, .hero .name, .hero .role-title, .hero .tagline, .hero .contact-links') as HTMLElement | null;
 			if (!target) return;
-
 			const body = bodies.find((b) => b.el === target);
 			if (body) {
 				draggedBody = body;
@@ -249,11 +866,8 @@
 
 		if (zerogResetBtn) zerogResetBtn.addEventListener('click', resetZeroG);
 
-		// -------------------------------------------------------------
-		// 2. 3D VIEWPORT PARALLAX HOLOGRAM TILT
-		// -------------------------------------------------------------
+		// 3D Tilt
 		const mainEl = document.querySelector('main') as HTMLElement | null;
-
 		function handleTiltMove(e: MouseEvent) {
 			if (!isTilt || !mainEl) return;
 			const nx = (e.clientX / window.innerWidth - 0.5) * 16;
@@ -277,9 +891,7 @@
 				tiltHud?.classList.remove('hidden');
 				window.addEventListener('mousemove', handleTiltMove);
 				window.addEventListener('deviceorientation', handleOrientation);
-				if (mainEl) {
-					mainEl.style.transition = 'transform 0.12s ease-out';
-				}
+				if (mainEl) mainEl.style.transition = 'transform 0.12s ease-out';
 			} else {
 				tiltHud?.classList.add('hidden');
 				window.removeEventListener('mousemove', handleTiltMove);
@@ -287,25 +899,18 @@
 				if (mainEl) {
 					mainEl.style.transition = 'transform 0.4s ease';
 					mainEl.style.transform = '';
-					setTimeout(() => {
-						if (mainEl) mainEl.style.transition = '';
-					}, 400);
+					setTimeout(() => { if (mainEl) mainEl.style.transition = ''; }, 400);
 				}
 			}
 		}
 
 		if (tiltExitBtn) tiltExitBtn.addEventListener('click', () => toggleTilt(false));
 
-		// -------------------------------------------------------------
-		// 3. GLOBAL HOOKS & KEYBOARD COMBINATIONS (Ctrl+Alt+G / Ctrl+Alt+H)
-		// -------------------------------------------------------------
+		// Keyboard Combinations (Ctrl+Alt+G / Ctrl+Alt+H / Esc)
 		(window as any).__toggleZeroG = () => (isZeroG ? resetZeroG() : startZeroG());
 		(window as any).__toggleTilt = (force?: boolean) => toggleTilt(force);
-		(window as any).__toggleLabExtras = () => {
-			extrasModal?.classList.toggle('hidden');
-		};
+		(window as any).__toggleLabExtras = () => { extrasModal?.classList.toggle('hidden'); };
 
-		// Helper to check if user is in or near the Keyboard Test lab
 		const kbLabEl = document.getElementById('keyboard-lab');
 		function isNearKeyboardLab(): boolean {
 			if (!kbLabEl) return false;
@@ -314,8 +919,12 @@
 		}
 
 		window.addEventListener('keydown', (e) => {
-			// If an easter egg or modal is currently active, allow Escape to exit safely
 			if (e.key === 'Escape') {
+				const waferModal = document.getElementById('wafer-modal');
+				if (waferModal && !waferModal.classList.contains('hidden')) {
+					waferModal.classList.add('hidden');
+					return;
+				}
 				if (isZeroG || isTilt || (extrasModal && !extrasModal.classList.contains('hidden'))) {
 					e.preventDefault();
 					if (isZeroG) resetZeroG();
@@ -325,20 +934,15 @@
 				return;
 			}
 
-			// 1. NEVER intercept single keypresses (e.g. typing G or H alone)
-			// Must require BOTH (Ctrl or Meta) AND Alt (e.g. Ctrl+Alt+G, Cmd+Option+G)
 			const hasModifiers = (e.ctrlKey || e.metaKey) && e.altKey;
 			if (!hasModifiers) return;
 
-			// 2. Ignore if typing in text fields
 			const activeTag = document.activeElement?.tagName;
 			if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return;
 
-			// 3. Ignore if terminal modal is open
 			const termModal = document.getElementById('terminal-modal');
 			if (termModal && termModal.classList.contains('open')) return;
 
-			// 4. SHIELD KEYBOARD TEST: Never trigger if user is anywhere near the keyboard test lab
 			if (isNearKeyboardLab()) return;
 			if (document.activeElement?.closest('#keyboard-lab')) return;
 
@@ -351,9 +955,7 @@
 			}
 		});
 
-		// -------------------------------------------------------------
-		// 4. LAB EXTRAS DRAWER
-		// -------------------------------------------------------------
+		// Lab Extras Drawer Wire-up
 		document.getElementById('trigger-zerog-btn')?.addEventListener('click', () => {
 			extrasModal?.classList.add('hidden');
 			(window as any).__toggleZeroG();
@@ -362,9 +964,50 @@
 			extrasModal?.classList.add('hidden');
 			(window as any).__toggleTilt();
 		});
+		document.getElementById('trigger-wafer-btn')?.addEventListener('click', () => {
+			extrasModal?.classList.add('hidden');
+			(window as any).__openWaferMap?.();
+		});
+		document.getElementById('trigger-boop-btn')?.addEventListener('click', () => {
+			extrasModal?.classList.add('hidden');
+			(window as any).__boopDog?.();
+		});
+
+		// Switch sound button in drawer
+		const drawerSoundBtn = document.getElementById('trigger-switch-sound-btn');
+		const drawerSoundBadge = document.getElementById('extras-sound-badge');
+		const drawerSoundDesc = document.getElementById('extras-sound-desc');
+
+		function updateDrawerSoundUI(p: string) {
+			if (!drawerSoundBadge) return;
+			const badges: Record<string, string> = {
+				off: 'Sound: Off',
+				blue: 'Blue (Clicky)',
+				red: 'Red (Linear)',
+				modelm: 'Model M (Spring)'
+			};
+			drawerSoundBadge.textContent = badges[p] || 'Sound: Off';
+			if (drawerSoundDesc) {
+				drawerSoundDesc.textContent = p === 'off' ? 'Procedural Web Audio switch synth' : `Acoustics active: ${badges[p]}`;
+			}
+		}
+
+		updateDrawerSoundUI(audioEngine.profile);
+		window.addEventListener('switch-sound-changed', ((e: CustomEvent) => {
+			if (e.detail?.profile) updateDrawerSoundUI(e.detail.profile);
+		}) as EventListener);
+
+		drawerSoundBtn?.addEventListener('click', () => {
+			const current = audioEngine.profile;
+			const order = ['off', 'blue', 'red', 'modelm'];
+			const next = order[(order.indexOf(current) + 1) % order.length] as any;
+			audioEngine.setProfile(next);
+			updateDrawerSoundUI(next);
+			if (next !== 'off') audioEngine.play('KeyA');
+		});
+
 		extrasCloseBtn?.addEventListener('click', () => extrasModal?.classList.add('hidden'));
 
-		// Close modal on click outside
 		document.addEventListener('click', (e) => {
 			const target = e.target as HTMLElement;
 			if (extrasModal && !extrasModal.classList.contains('hidden')) {
@@ -376,7 +1019,14 @@
 	}
 
 	initEasterEggs();
-	document.addEventListener('astro:page-load', initEasterEggs);
+	initWaferInspector();
+	initDogBoop();
+
+	document.addEventListener('astro:page-load', () => {
+		initEasterEggs();
+		initWaferInspector();
+		initDogBoop();
+	});
 </script>
 
 <style>
@@ -405,7 +1055,8 @@
 		white-space: nowrap;
 	}
 	.ee-hud.hidden,
-	.lab-extras-modal.hidden {
+	.lab-extras-modal.hidden,
+	.wafer-modal.hidden {
 		display: none !important;
 	}
 
@@ -445,7 +1096,7 @@
 		position: fixed;
 		bottom: 60px;
 		right: 24px;
-		width: 320px;
+		width: 340px;
 		background: var(--bg-card);
 		border: 1px solid var(--border-color);
 		box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
@@ -557,6 +1208,291 @@
 		padding-top: 0.45em;
 	}
 
+	/* 300MM WAFER SORT MODAL */
+	.wafer-modal {
+		position: fixed;
+		inset: 0;
+		z-index: 100001;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 1.5rem;
+	}
+	.wafer-backdrop {
+		position: absolute;
+		inset: 0;
+		background: rgba(8, 10, 15, 0.85);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+	}
+	.wafer-dialog {
+		position: relative;
+		width: 100%;
+		max-width: 820px;
+		background: #0f131a;
+		border: 1px solid rgba(56, 189, 248, 0.4);
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(56, 189, 248, 0.2);
+		border-radius: 12px;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		animation: extrasPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	}
+	.wafer-modal-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.9em 1.25em;
+		background: rgba(15, 23, 42, 0.8);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+	}
+	.wafer-title-wrap {
+		display: flex;
+		align-items: center;
+		gap: 0.75em;
+	}
+	.wafer-title-meta {
+		display: flex;
+		flex-direction: column;
+	}
+	.wafer-title {
+		font-size: 0.88em;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		color: #38bdf8;
+	}
+	.wafer-sub {
+		font-size: 0.72em;
+		color: #94a3b8;
+	}
+	.wafer-close-btn {
+		background: transparent;
+		border: none;
+		color: #94a3b8;
+		font-size: 1.5em;
+		cursor: pointer;
+		line-height: 1;
+		transition: color 0.15s ease;
+	}
+	.wafer-close-btn:hover {
+		color: #ffffff;
+	}
+	.wafer-modal-body {
+		display: grid;
+		grid-template-columns: 420px 1fr;
+		gap: 1.25em;
+		padding: 1.25em;
+		align-items: center;
+	}
+	.wafer-canvas-wrap {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		background: #080b10;
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		border-radius: 8px;
+		padding: 0.5em;
+	}
+	#wafer-canvas {
+		width: 100%;
+		max-width: 380px;
+		aspect-ratio: 1;
+		display: block;
+		cursor: crosshair;
+	}
+	.wafer-notch-indicator {
+		font-size: 0.7em;
+		color: #64748b;
+		margin-top: 0.4em;
+	}
+	.wafer-telemetry-panel {
+		display: flex;
+		flex-direction: column;
+		gap: 0.85em;
+	}
+	.wafer-telemetry-box {
+		background: rgba(255, 255, 255, 0.03);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		border-radius: 8px;
+		padding: 0.75em 0.9em;
+	}
+	.w-box-title {
+		display: block;
+		font-size: 0.72em;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: #94a3b8;
+		margin-bottom: 0.45em;
+	}
+	.w-yield-display {
+		display: flex;
+		align-items: baseline;
+		gap: 0.6em;
+		margin-bottom: 0.45em;
+	}
+	.w-yield-val {
+		font-size: 1.7em;
+		font-weight: 800;
+		color: #10b981;
+	}
+	.w-yield-badge {
+		font-size: 0.75em;
+		color: #94a3b8;
+	}
+	.w-yield-bar-wrap {
+		width: 100%;
+		height: 6px;
+		background: rgba(255, 255, 255, 0.1);
+		border-radius: 3px;
+		overflow: hidden;
+	}
+	.w-yield-bar {
+		height: 100%;
+		background: linear-gradient(90deg, #10b981, #38bdf8);
+		border-radius: 3px;
+		transition: width 0.3s ease;
+	}
+	.wafer-probe-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.35em 0.75em;
+		font-size: 0.74em;
+	}
+	.probe-row {
+		display: flex;
+		justify-content: space-between;
+		gap: 0.5em;
+	}
+	.p-k {
+		color: #64748b;
+	}
+	.p-v {
+		color: #f8fafc;
+		font-weight: 600;
+	}
+	.wafer-legend {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3em;
+		font-size: 0.72em;
+		color: #94a3b8;
+		background: rgba(0, 0, 0, 0.2);
+		padding: 0.6em 0.8em;
+		border-radius: 6px;
+	}
+	.legend-item {
+		display: flex;
+		align-items: center;
+		gap: 0.5em;
+	}
+	.leg-color {
+		width: 10px;
+		height: 10px;
+		border-radius: 2px;
+	}
+	.leg-color.bin1 { background: #10b981; }
+	.leg-color.bin2 { background: #f59e0b; }
+	.leg-color.binx { background: #ef4444; }
+	.wafer-actions {
+		display: flex;
+		gap: 0.5em;
+	}
+	.wafer-btn {
+		flex: 1;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4em;
+		padding: 0.5em 0.8em;
+		border-radius: 6px;
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		color: #f8fafc;
+		font-size: 0.76em;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+	.wafer-btn:hover {
+		background: rgba(255, 255, 255, 0.15);
+		border-color: #38bdf8;
+		color: #38bdf8;
+	}
+	.wafer-btn.primary {
+		background: #0284c7;
+		border-color: #38bdf8;
+		color: #ffffff;
+	}
+	.wafer-btn.primary:hover {
+		background: #0369a1;
+	}
+
+	/* CHIEF MORALE OFFICER: AVATAR BOOP & PARTICLES */
+	:global(.avatar-img.booped) {
+		animation: avatarBoop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+	}
+	@keyframes avatarBoop {
+		0% { transform: scale(1); }
+		28% { transform: scale(1.18, 0.84) rotate(-3deg); }
+		55% { transform: scale(0.92, 1.12) rotate(2deg); }
+		78% { transform: scale(1.04, 0.98); }
+		100% { transform: scale(1); }
+	}
+
+	:global(.morale-rf-pill) {
+		position: absolute;
+		top: -8px;
+		left: 50%;
+		transform: translate(-50%, 0);
+		background: rgba(15, 23, 42, 0.92);
+		border: 1px solid var(--accent);
+		color: #f8fafc;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 12px rgba(var(--accent-rgb), 0.4);
+		font-size: 0.78em;
+		font-weight: 700;
+		padding: 0.35em 0.85em;
+		border-radius: 20px;
+		pointer-events: none;
+		white-space: nowrap;
+		z-index: 1000;
+		animation: floatPill 1.05s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	}
+	@keyframes floatPill {
+		0% { opacity: 0; transform: translate(-50%, 8px) scale(0.85); }
+		15% { opacity: 1; transform: translate(-50%, -10px) scale(1.05); }
+		70% { opacity: 1; transform: translate(-50%, -36px) scale(1); }
+		100% { opacity: 0; transform: translate(-50%, -52px) scale(0.95); }
+	}
+
+	:global(.boop-particle) {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		font-size: 1.1em;
+		pointer-events: none;
+		z-index: 1000;
+		animation: particleBurst 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	}
+	@keyframes particleBurst {
+		0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+		60% { opacity: 1; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.2); }
+		100% { opacity: 0; transform: translate(calc(-50% + var(--dx) * 1.3), calc(-50% + var(--dy) * 1.3)) scale(0.6); }
+	}
+
+	@media (max-width: 820px) {
+		.wafer-modal-body {
+			grid-template-columns: 1fr;
+			justify-items: center;
+		}
+		.wafer-canvas-wrap {
+			max-width: 320px;
+		}
+		.wafer-modal {
+			padding: 0.75rem;
+		}
+	}
+
 	@media (max-width: 600px) {
 		.ee-hud {
 			font-size: 0.7em;
@@ -574,6 +1510,9 @@
 			left: 12px;
 			width: auto;
 			bottom: 50px;
+		}
+		.wafer-probe-grid {
+			grid-template-columns: 1fr;
 		}
 	}
 </style>

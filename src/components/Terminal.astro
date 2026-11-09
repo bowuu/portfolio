@@ -529,6 +529,8 @@
     Render interactive ASCII die sort map for 300mm silicon wafer and compute bin defect yield.
 
 <span class="term-head">OPTIONS</span>
+    <span class="term-cyan">-g, --gui, --map</span>
+        launch interactive 300mm silicon wafer sort GUI HUD inspector
     <span class="term-cyan">-s, --summary</span>
         display yield summary and bin breakdown without full wafer ASCII map`,
 
@@ -1225,6 +1227,16 @@ Hit any key to stop autoboot:  0
 					break;
 
 				case 'wafer':
+					const isWaferGui = args.some(a => a === '-g' || a === '--gui' || a === '--map');
+					if (isWaferGui) {
+						if (typeof (window as any).__openWaferMap === 'function') {
+							(window as any).__openWaferMap();
+							appendOutput(`\n<span class="term-cyan">ATE:</span> Launching 300mm silicon wafer interactive HUD inspector...`);
+						} else {
+							appendOutput(`\n<span class="term-err">Error:</span> Wafer GUI interface not available.`);
+						}
+						break;
+					}
 					const isWaferSummary = args.some(a => a === '-s' || a === '--summary' || a === '--yield');
 					if (isWaferSummary) {
 						appendOutput(`
@@ -1523,6 +1535,9 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 
 		// History & Tab completion
 		input?.addEventListener('keydown', (e: KeyboardEvent) => {
+			if (!e.repeat) {
+				(window as any).__playSwitchSound?.(e.code || e.key);
+			}
 			if (e.key === 'ArrowUp') {
 				e.preventDefault();
 				if (history.length > 0 && historyIndex > 0) {

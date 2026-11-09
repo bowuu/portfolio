@@ -22,12 +22,13 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		<main>
 			<!-- HERO / ABOUT -->
 			<section class="hero" id="about">
-				<div class="avatar-wrap">
+				<div class="avatar-wrap" id="hero-avatar-wrap">
 					<img 
 						src="/dog.jpg" 
 						alt="Dog mascot" 
 						title="Chief Morale Officer 🐾" 
 						class="avatar-img" 
+						id="hero-avatar-img"
 						width="144" 
 						height="144" 
 						loading="eager" 
@@ -175,6 +176,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		padding: clamp(1.5rem, 3.5vw, 2.5rem) 0 clamp(1.2rem, 3vw, 2rem) 0;
 	}
 	.avatar-wrap {
+		position: relative;
 		display: flex;
 		justify-content: center;
 		margin-bottom: 1.25em;
@@ -188,6 +190,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		transition: transform 0.25s ease, box-shadow 0.25s ease;
 		background: var(--bg-card);
 		user-select: none;
+		cursor: pointer;
 	}
 	.avatar-img:hover {
 		transform: scale(1.05);

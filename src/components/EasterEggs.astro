@@ -3,7 +3,7 @@
 // 1. 3D Viewport Parallax Hologram Tilt (perspective matrix tracking cursor/orientation)
 // 2. Chief Morale Officer "Boop the Dog" (+10 dBm RF Telemetry & Mascot Animation)
 // 3. Procedural Mechanical Switch Synthesizer (pure Web Audio API acoustics: Blue / Red / Model M)
-// 4. 300mm ATE Silicon Wafer Die Sort Map & Dynamic Yield Telemetry (interactive canvas)
+// 4. 300mm ATE Silicon Wafer Die Sort Map (Reticle-Limit Massive Enterprise Die Architecture)
 // 5. Zero-G Verlet Physics Element Collapse (pure vanilla physics, non-destructive GPU transforms)
 ---
 
@@ -21,7 +21,7 @@
 		<button id="tilt-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
 	</div>
 
-	<!-- 300MM SILICON WAFER DIE SORT MODAL -->
+	<!-- 300MM SILICON WAFER DIE SORT MODAL (RETICLE-LIMIT ENTERPRISE DIE) -->
 	<div id="wafer-modal" class="wafer-modal hidden" role="dialog" aria-modal="true" aria-label="300mm Silicon Wafer Sort Inspector">
 		<div class="wafer-backdrop" id="wafer-backdrop"></div>
 		<div class="wafer-dialog">
@@ -30,7 +30,7 @@
 					<span class="hud-pulse-dot"></span>
 					<div class="wafer-title-meta">
 						<span class="wafer-title">300mm ATE SILICON WAFER SORT</span>
-						<span class="wafer-sub mono" id="wafer-sub-meta">LOT #850C-W14 &bull; 3nm FinFET &bull; 684 Gross Dies</span>
+						<span class="wafer-sub mono" id="wafer-sub-meta">LOT #740C-W14 &bull; 7nm HPC Node &bull; Reticle Limit (~740 mm²) &bull; 83 Gross Dies</span>
 					</div>
 				</div>
 				<button id="wafer-close-btn" class="wafer-close-btn" type="button" aria-label="Close Wafer Inspector">&times;</button>
@@ -39,19 +39,19 @@
 			<div class="wafer-modal-body">
 				<div class="wafer-canvas-wrap">
 					<canvas id="wafer-canvas" width="400" height="400" aria-label="Wafer Die Sort Map"></canvas>
-					<div class="wafer-notch-indicator mono">▼ Wafer Notch (0° / Flat)</div>
+					<div class="wafer-notch-indicator mono">▼ Wafer Notch (0° / 6 o'clock) &bull; 300mm Substrate</div>
 				</div>
 
 				<div class="wafer-telemetry-panel">
 					<!-- YIELD SUMMARY -->
 					<div class="wafer-telemetry-box">
-						<span class="w-box-title">Functional Yield</span>
+						<span class="w-box-title">Functional Die Yield (Perfect + Defeatured)</span>
 						<div class="w-yield-display">
-							<span class="w-yield-val mono" id="wafer-yield-val">96.2%</span>
-							<span class="w-yield-badge mono" id="wafer-d0-val">D₀: 0.078/cm²</span>
+							<span class="w-yield-val mono" id="wafer-yield-val">88.0%</span>
+							<span class="w-yield-badge mono" id="wafer-d0-val">D₀: 0.082/cm²</span>
 						</div>
 						<div class="w-yield-bar-wrap">
-							<div class="w-yield-bar" id="wafer-yield-bar" style="width: 96.2%;"></div>
+							<div class="w-yield-bar" id="wafer-yield-bar" style="width: 88.0%;"></div>
 						</div>
 					</div>
 
@@ -59,20 +59,22 @@
 					<div class="wafer-telemetry-box">
 						<span class="w-box-title">Active Die Probe Telemetry</span>
 						<div class="wafer-probe-grid mono" id="wafer-probe-grid">
-							<div class="probe-row"><span class="p-k">Die ID:</span><span class="p-v" id="wp-id">0x850C6005</span></div>
-							<div class="probe-row"><span class="p-k">Position:</span><span class="p-v" id="wp-pos">X: 14, Y: 15</span></div>
-							<div class="probe-row"><span class="p-k">Bin Class:</span><span class="p-v" id="wp-bin">Bin 1 (Prime Core)</span></div>
-							<div class="probe-row"><span class="p-k">Fmax Target:</span><span class="p-v" id="wp-fmax">4.82 GHz</span></div>
-							<div class="probe-row"><span class="p-k">Vmin Voltage:</span><span class="p-v" id="wp-vmin">0.765 V</span></div>
-							<div class="probe-row"><span class="p-k">Iddq Leak:</span><span class="p-v" id="wp-leak">12.4 mA</span></div>
+							<div class="probe-row"><span class="p-k">Die ID:</span><span class="p-v" id="wp-id">0x7E106005</span></div>
+							<div class="probe-row"><span class="p-k">Position:</span><span class="p-v" id="wp-pos">Col: 5, Row: 6</span></div>
+							<div class="probe-row"><span class="p-k">Classification:</span><span class="p-v" id="wp-bin">Bin 1 (Perfect)</span></div>
+							<div class="probe-row"><span class="p-k">Configuration:</span><span class="p-v" id="wp-config">All Cores Active</span></div>
+							<div class="probe-row"><span class="p-k">Die Footprint:</span><span class="p-v" id="wp-area">~740 mm² (Near Reticle)</span></div>
+							<div class="probe-row"><span class="p-k">Fmax Target:</span><span class="p-v" id="wp-fmax">3.80 GHz</span></div>
+							<div class="probe-row"><span class="p-k">Vmin Voltage:</span><span class="p-v" id="wp-vmin">0.775 V</span></div>
+							<div class="probe-row"><span class="p-k">Iddq Leak:</span><span class="p-v" id="wp-leak">24.5 mA</span></div>
 						</div>
 					</div>
 
 					<!-- BIN DISTRIBUTION LEGEND -->
 					<div class="wafer-legend">
-						<div class="legend-item"><span class="leg-color bin1"></span><span id="leg-bin1-text">Bin 1 (Prime 3.8GHz+): 518 (75.7%)</span></div>
-						<div class="legend-item"><span class="leg-color bin2"></span><span id="leg-bin2-text">Bin 2 (Eco 3.2GHz): 140 (20.5%)</span></div>
-						<div class="legend-item"><span class="leg-color binx"></span><span id="leg-binx-text">Parametric Defect: 26 (3.8%)</span></div>
+						<div class="legend-item"><span class="leg-color bin1"></span><span id="leg-bin1-text">Bin 1 (Perfect): 46 dies (55.4%) &bull; All Cores Enabled</span></div>
+						<div class="legend-item"><span class="leg-color bin2"></span><span id="leg-bin2-text">Bin 2 (Defeatured): 27 dies (32.5%) &bull; Cores Disabled</span></div>
+						<div class="legend-item"><span class="leg-color binx"></span><span id="leg-binx-text">Parametric Defect: 10 dies (12.1%) &bull; Critical Fallout</span></div>
 					</div>
 
 					<!-- ACTIONS -->
@@ -133,11 +135,11 @@
 			</button>
 
 			<!-- 4. Wafer Sort Map (W) -->
-			<button id="trigger-wafer-btn" class="extra-item-btn" type="button" title="300mm Silicon Wafer Sort Map">
+			<button id="trigger-wafer-btn" class="extra-item-btn" type="button" title="300mm Silicon Wafer Sort Map (Near Reticle Limit)">
 				<span class="item-icon">🔬</span>
 				<div class="item-meta">
 					<strong class="item-name">Wafer Sort Map</strong>
-					<span class="item-desc">300mm ATE die sort &amp; bin yield inspector</span>
+					<span class="item-desc">300mm reticle-limit enterprise die sort</span>
 				</div>
 				<kbd class="item-kbd">wafer -g</kbd>
 			</button>
@@ -205,27 +207,19 @@
 			const pitchMod = isSpace ? 0.72 : isBig ? 0.84 : (0.96 + Math.random() * 0.08);
 
 			if (this.profile === 'blue') {
-				// CLICKY BLUE: Crisp tactile click-leaf snap + plastic bottom-out clack
-				// 1. High-frequency click-leaf snap (2.5ms sharp impulse)
+				// CLICKY BLUE: Crisp tactile snap + plastic bottom-out clack
 				this.playImpulse(t, 3800 * pitchMod, 0.005, 0.20);
-				// 2. Plastic stem bottom-out (downward pitch drop from 280Hz to 140Hz)
 				this.playThump(t + 0.002, 280 * pitchMod, 140 * pitchMod, 0.032, 0.18);
-				// 3. Keycap acoustic body resonance
 				this.playTone(t + 0.002, 1200 * pitchMod, 'triangle', 0.016, 0.07);
 			} else if (this.profile === 'red') {
-				// LINEAR RED: Pure smooth plastic "thock" (absolutely NO high click leaf)
-				// 1. Soft impact thump with downward pitch slide (190Hz -> 85Hz)
+				// LINEAR RED: Pure smooth plastic "thock" (no click leaf)
 				this.playThump(t, 190 * pitchMod, 85 * pitchMod, 0.036, 0.22);
-				// 2. Low-pass stem dampening friction
 				this.playImpulse(t, 420 * pitchMod, 0.014, 0.06);
 			} else if (this.profile === 'modelm') {
-				// BUCKLING SPRING: Sharp spring buckle snap + resonant steel spring twang + hollow barrel
-				// 1. Buckling contact snap
+				// BUCKLING SPRING: Sharp coil buckle snap + resonant steel spring twang + hollow barrel
 				this.playImpulse(t, 2600 * pitchMod, 0.006, 0.18);
-				// 2. Steel spring acoustic ringing (twin beating frequencies)
 				this.playTone(t + 0.002, 2880 * pitchMod, 'sine', 0.075, 0.12);
 				this.playTone(t + 0.002, 3020 * pitchMod, 'sine', 0.075, 0.10);
-				// 3. Hollow barrel plate bottom-out
 				this.playThump(t + 0.003, 180 * pitchMod, 95 * pitchMod, 0.042, 0.15);
 			}
 		}
@@ -330,7 +324,7 @@
 				if (!AudioCtx) return;
 				const ctx = new AudioCtx();
 				const t = ctx.currentTime;
-				const notes = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50]; // C5 to C6
+				const notes = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
 				const baseFreq = notes[Math.min(step, notes.length - 1)];
 
 				const osc = ctx.createOscillator();
@@ -396,7 +390,7 @@
 	}
 
 	// -------------------------------------------------------------
-	// 300MM SILICON WAFER DIE SORT INSPECTOR (DYNAMIC RANDOMIZATION)
+	// 300MM SILICON WAFER DIE SORT INSPECTOR (MASSIVE RETICLE-LIMIT DIE)
 	// -------------------------------------------------------------
 	function initWaferInspector() {
 		const modal = document.getElementById('wafer-modal');
@@ -413,10 +407,14 @@
 		const waferRadius = 175;
 		const cx = 200;
 		const cy = 200;
-		const dieW = 10.5;
-		const dieH = 10.5;
-		const step = 12.2;
-		const gridSize = 28;
+
+		// Near-reticle-limit massive die footprint (~740 mm², ~83 gross dies on 300mm substrate)
+		const dieW = 30;
+		const dieH = 24;
+		const stepX = 32.5;
+		const stepY = 26.5;
+		const cols = 12;
+		const rows = 14;
 
 		interface WaferDie {
 			col: number;
@@ -428,6 +426,7 @@
 			fmax: number;
 			vmin: number;
 			leakage: number;
+			disabledCores: number[];
 			tested: boolean;
 		}
 
@@ -437,24 +436,20 @@
 
 		function generateWaferDies(randomize: boolean = false) {
 			dies.length = 0;
-			const half = (gridSize * step) / 2;
+			const halfW = (cols * stepX) / 2;
+			const halfH = (rows * stepY) / 2;
 
 			// Random defect cluster centers & parameters
-			const clusterX = randomize ? Math.floor(Math.random() * 18 + 5) : 8;
-			const clusterY = randomize ? Math.floor(Math.random() * 18 + 5) : 18;
-			const edgeDefectThreshold = randomize ? (0.85 + Math.random() * 0.07) : 0.88;
-			const lotNum = randomize ? Math.floor(Math.random() * 800 + 100) : 850;
+			const clusterX = randomize ? Math.floor(Math.random() * 8 + 2) : 4;
+			const clusterY = randomize ? Math.floor(Math.random() * 8 + 3) : 8;
+			const edgeDefectThreshold = randomize ? (0.83 + Math.random() * 0.08) : 0.86;
+			const lotNum = randomize ? Math.floor(Math.random() * 800 + 100) : 740;
 			const waferNum = randomize ? Math.floor(Math.random() * 24 + 1) : 14;
 
-			const subEl = document.getElementById('wafer-sub-meta');
-			if (subEl) {
-				subEl.textContent = `LOT #${lotNum}C-W${waferNum < 10 ? '0' + waferNum : waferNum} • 3nm FinFET • 684 Gross Dies`;
-			}
-
-			for (let r = 0; r < gridSize; r++) {
-				for (let c = 0; c < gridSize; c++) {
-					const x = cx - half + c * step;
-					const y = cy - half + r * step;
+			for (let r = 0; r < rows; r++) {
+				for (let c = 0; c < cols; c++) {
+					const x = cx - halfW + c * stepX;
+					const y = cy - halfH + r * stepY;
 
 					const corners = [
 						[x, y],
@@ -463,36 +458,50 @@
 						[x + dieW, y + dieH]
 					];
 
+					// Check if all 4 corners are inside wafer exclusion boundary
 					const fits = corners.every(([px, py]) => {
 						const dx = px - cx;
 						const dy = py - cy;
 						const dist = Math.sqrt(dx * dx + dy * dy);
-						if (dist > waferRadius - 10) return false;
+						if (dist > waferRadius - 8) return false;
+						// Notch exclusion at 6 o'clock bottom center
 						if (Math.abs(dx) < 14 && py > cy + waferRadius - 16) return false;
 						return true;
 					});
 
 					if (!fits) continue;
 
-					const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-					const normR = dist / (waferRadius - 10);
+					const dist = Math.sqrt((x + dieW / 2 - cx) ** 2 + (y + dieH / 2 - cy) ** 2);
+					const normR = dist / (waferRadius - 8);
 					const rnd = Math.random();
 
+					// Binning for massive reticle-limit die:
+					// - Bin 1: Perfect (All cores enabled, zero defect) ~55%
+					// - Bin 2: Defeatured (Defects in redundant cores, cores disabled) ~33%
+					// - Bin X: Parametric fallout (Critical path / scribe / dielectric breakdown) ~12%
 					let bin: 1 | 2 | 'x' = 1;
-					if (normR > edgeDefectThreshold && rnd < 0.40) {
-						bin = 'x'; // Edge litho fallout
+					const disabledCores: number[] = [];
+
+					if (normR > edgeDefectThreshold && rnd < 0.45) {
+						bin = 'x'; // Edge lithography breakdown
 					} else if (Math.abs(c - clusterX) <= 1 && Math.abs(r - clusterY) <= 1 && rnd < 0.65) {
 						bin = 'x'; // Particle defect cluster
-					} else if (rnd < 0.21) {
-						bin = 2; // Eco low-power harvest bin
+					} else if (rnd < 0.35) {
+						bin = 2; // Defeatured SKU (cores disabled)
+						// Randomly disable 2-4 cores out of 12 internal tiles
+						const numDisabled = 2 + Math.floor(Math.random() * 3);
+						while (disabledCores.length < numDisabled) {
+							const coreIdx = Math.floor(Math.random() * 12);
+							if (!disabledCores.includes(coreIdx)) disabledCores.push(coreIdx);
+						}
 					} else {
-						bin = 1; // Prime high-frequency
+						bin = 1; // Perfect SKU
 					}
 
-					const hexId = `0x${lotNum.toString(16).toUpperCase()}` + ((r * gridSize + c) * 137).toString(16).toUpperCase().padStart(4, '0');
-					const fmax = bin === 1 ? +(4.7 + Math.random() * 0.28).toFixed(2) : bin === 2 ? +(3.2 + Math.random() * 0.18).toFixed(2) : +(1.8 + Math.random() * 0.5).toFixed(2);
-					const vmin = bin === 1 ? +(0.75 + Math.random() * 0.04).toFixed(3) : bin === 2 ? +(0.71 + Math.random() * 0.03).toFixed(3) : +(1.15 + Math.random() * 0.2).toFixed(3);
-					const leakage = bin === 1 ? +(11.5 + Math.random() * 3.5).toFixed(1) : bin === 2 ? +(7.2 + Math.random() * 1.8).toFixed(1) : +(48.0 + Math.random() * 20.0).toFixed(1);
+					const hexId = `0x7E${lotNum.toString(16).toUpperCase()}` + ((r * cols + c) * 137).toString(16).toUpperCase().padStart(4, '0');
+					const fmax = bin === 1 ? +(3.70 + Math.random() * 0.22).toFixed(2) : bin === 2 ? +(3.10 + Math.random() * 0.18).toFixed(2) : +(1.60 + Math.random() * 0.4).toFixed(2);
+					const vmin = bin === 1 ? +(0.760 + Math.random() * 0.035).toFixed(3) : bin === 2 ? +(0.830 + Math.random() * 0.035).toFixed(3) : +(1.180 + Math.random() * 0.2).toFixed(3);
+					const leakage = bin === 1 ? +(22.5 + Math.random() * 4.5).toFixed(1) : bin === 2 ? +(29.5 + Math.random() * 5.0).toFixed(1) : +(85.0 + Math.random() * 30.0).toFixed(1);
 
 					dies.push({
 						col: c,
@@ -504,9 +513,15 @@
 						fmax,
 						vmin,
 						leakage,
+						disabledCores,
 						tested: true
 					});
 				}
+			}
+
+			const subEl = document.getElementById('wafer-sub-meta');
+			if (subEl) {
+				subEl.textContent = `LOT #${lotNum}C-W${waferNum < 10 ? '0' + waferNum : waferNum} • 7nm HPC Node • Reticle Limit (~740 mm²) • ${dies.length} Gross Dies`;
 			}
 
 			// Update legend tallies
@@ -519,12 +534,11 @@
 			const legB2 = document.getElementById('leg-bin2-text');
 			const legBx = document.getElementById('leg-binx-text');
 
-			if (legB1) legB1.textContent = `Bin 1 (Prime 3.8GHz+): ${b1Count} (${((b1Count / total) * 100).toFixed(1)}%)`;
-			if (legB2) legB2.textContent = `Bin 2 (Eco 3.2GHz): ${b2Count} (${((b2Count / total) * 100).toFixed(1)}%)`;
-			if (legBx) legBx.textContent = `Parametric Defect: ${bxCount} (${((bxCount / total) * 100).toFixed(1)}%)`;
+			if (legB1) legB1.textContent = `Bin 1 (Perfect): ${b1Count} (${((b1Count / total) * 100).toFixed(1)}%) • All Cores Enabled`;
+			if (legB2) legB2.textContent = `Bin 2 (Defeatured): ${b2Count} (${((b2Count / total) * 100).toFixed(1)}%) • Cores Disabled`;
+			if (legBx) legBx.textContent = `Parametric Defect: ${bxCount} (${((bxCount / total) * 100).toFixed(1)}%) • Critical Fallout`;
 		}
 
-		// Initial generation
 		generateWaferDies(false);
 
 		function drawWafer() {
@@ -546,50 +560,101 @@
 			ctx.strokeStyle = '#38bdf8';
 			ctx.stroke();
 
-			// Wafer Notch at bottom (0° / 6 o'clock)
+			// Wafer Notch at 6 o'clock (0° / bottom)
 			ctx.beginPath();
-			ctx.arc(cx, cy + waferRadius, 8, Math.PI, 0, true);
+			ctx.arc(cx, cy + waferRadius, 9, Math.PI, 0, true);
 			ctx.fillStyle = '#0f172a';
 			ctx.fill();
 			ctx.stroke();
 			ctx.restore();
 
-			// 2. Silicon Dies
+			// 2. Render Massive Near-Reticle-Limit Silicon Dies
 			for (const die of dies) {
+				ctx.save();
 				if (!die.tested) {
 					ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+					ctx.fillRect(die.x, die.y, dieW, dieH);
 				} else if (die.bin === 1) {
+					// Perfect: Deep emerald with bright core tiles
 					ctx.fillStyle = '#10b981';
+					ctx.fillRect(die.x, die.y, dieW, dieH);
+
+					// Render 4x3 micro core compute tiles
+					ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+					ctx.lineWidth = 0.5;
+					const tileW = (dieW - 2) / 4;
+					const tileH = (dieH - 2) / 3;
+					for (let tr = 0; tr < 3; tr++) {
+						for (let tc = 0; tc < 4; tc++) {
+							ctx.strokeRect(die.x + 1 + tc * tileW, die.y + 1 + tr * tileH, tileW, tileH);
+						}
+					}
 				} else if (die.bin === 2) {
+					// Defeatured: Amber with visible disabled core tiles
 					ctx.fillStyle = '#f59e0b';
+					ctx.fillRect(die.x, die.y, dieW, dieH);
+
+					const tileW = (dieW - 2) / 4;
+					const tileH = (dieH - 2) / 3;
+					ctx.lineWidth = 0.5;
+
+					for (let tr = 0; tr < 3; tr++) {
+						for (let tc = 0; tc < 4; tc++) {
+							const cIdx = tr * 4 + tc;
+							const tx = die.x + 1 + tc * tileW;
+							const ty = die.y + 1 + tr * tileH;
+							if (die.disabledCores.includes(cIdx)) {
+								// Disabled core: Dark charcoal with red border
+								ctx.fillStyle = 'rgba(30, 10, 10, 0.85)';
+								ctx.fillRect(tx, ty, tileW, tileH);
+								ctx.strokeStyle = '#ef4444';
+								ctx.strokeRect(tx, ty, tileW, tileH);
+							} else {
+								ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+								ctx.strokeRect(tx, ty, tileW, tileH);
+							}
+						}
+					}
 				} else {
+					// Parametric fallout: Red with defect hatch
 					ctx.fillStyle = '#ef4444';
+					ctx.fillRect(die.x, die.y, dieW, dieH);
+
+					ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+					ctx.lineWidth = 1;
+					ctx.beginPath();
+					ctx.moveTo(die.x + 2, die.y + 2);
+					ctx.lineTo(die.x + dieW - 2, die.y + dieH - 2);
+					ctx.moveTo(die.x + dieW - 2, die.y + 2);
+					ctx.lineTo(die.x + 2, die.y + dieH - 2);
+					ctx.stroke();
 				}
 
-				ctx.fillRect(die.x, die.y, dieW, dieH);
-
-				ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
-				ctx.lineWidth = 0.5;
+				// Outer die boundary / scribe line
+				ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+				ctx.lineWidth = 1;
 				ctx.strokeRect(die.x, die.y, dieW, dieH);
+				ctx.restore();
 			}
 
 			// 3. Highlight Active / Inspected Die
 			if (activeDie) {
 				ctx.save();
 				ctx.strokeStyle = '#00f0ff';
-				ctx.lineWidth = 2;
+				ctx.lineWidth = 2.5;
 				ctx.shadowColor = '#00f0ff';
-				ctx.shadowBlur = 8;
+				ctx.shadowBlur = 10;
 				ctx.strokeRect(activeDie.x - 1, activeDie.y - 1, dieW + 2, dieH + 2);
 
-				ctx.strokeStyle = 'rgba(0, 240, 255, 0.45)';
+				// Reticle crosshairs
+				ctx.strokeStyle = 'rgba(0, 240, 255, 0.5)';
 				ctx.lineWidth = 1;
 				ctx.setLineDash([3, 3]);
 				ctx.beginPath();
-				ctx.moveTo(activeDie.x + dieW / 2, 20);
-				ctx.lineTo(activeDie.x + dieW / 2, 380);
-				ctx.moveTo(20, activeDie.y + dieH / 2);
-				ctx.lineTo(380, activeDie.y + dieH / 2);
+				ctx.moveTo(activeDie.x + dieW / 2, 16);
+				ctx.lineTo(activeDie.x + dieW / 2, 384);
+				ctx.moveTo(16, activeDie.y + dieH / 2);
+				ctx.lineTo(384, activeDie.y + dieH / 2);
 				ctx.stroke();
 				ctx.restore();
 			}
@@ -599,24 +664,39 @@
 			const idEl = document.getElementById('wp-id');
 			const posEl = document.getElementById('wp-pos');
 			const binEl = document.getElementById('wp-bin');
+			const configEl = document.getElementById('wp-config');
+			const areaEl = document.getElementById('wp-area');
 			const fmaxEl = document.getElementById('wp-fmax');
 			const vminEl = document.getElementById('wp-vmin');
 			const leakEl = document.getElementById('wp-leak');
 
 			if (idEl) idEl.textContent = die.id;
-			if (posEl) posEl.textContent = `X: ${die.col}, Y: ${die.row}`;
+			if (posEl) posEl.textContent = `Col: ${die.col}, Row: ${die.row}`;
 			if (binEl) {
 				if (die.bin === 1) {
-					binEl.textContent = 'Bin 1 (Prime Core)';
+					binEl.textContent = 'Bin 1 (Perfect)';
 					binEl.style.color = '#10b981';
 				} else if (die.bin === 2) {
-					binEl.textContent = 'Bin 2 (Eco Harvest)';
+					binEl.textContent = 'Bin 2 (Defeatured)';
 					binEl.style.color = '#f59e0b';
 				} else {
-					binEl.textContent = 'Parametric Defect';
+					binEl.textContent = 'Parametric Fallout';
 					binEl.style.color = '#ef4444';
 				}
 			}
+			if (configEl) {
+				if (die.bin === 1) {
+					configEl.textContent = 'All Cores Active';
+					configEl.style.color = '#10b981';
+				} else if (die.bin === 2) {
+					configEl.textContent = `Defeatured (-${die.disabledCores.length} Cores)`;
+					configEl.style.color = '#f59e0b';
+				} else {
+					configEl.textContent = 'Critical Path Scribe Fail';
+					configEl.style.color = '#ef4444';
+				}
+			}
+			if (areaEl) areaEl.textContent = '~740 mm² (Near Reticle)';
 			if (fmaxEl) fmaxEl.textContent = `${die.fmax} GHz`;
 			if (vminEl) vminEl.textContent = `${die.vmin} V`;
 			if (leakEl) leakEl.textContent = `${die.leakage} mA`;
@@ -671,7 +751,7 @@
 			const d0El = document.getElementById('wafer-d0-val');
 
 			let idx = 0;
-			const batchSize = 16;
+			const batchSize = 4; // Smaller batches since massive dies count ~83 total
 			const total = dies.length;
 
 			function stepScan() {
@@ -701,7 +781,7 @@
 					if (yieldValEl) yieldValEl.textContent = `${finalYield}%`;
 					if (yieldBarEl) yieldBarEl.style.width = `${finalYield}%`;
 					if (d0El) {
-						const d0 = (0.055 + Math.random() * 0.035).toFixed(3);
+						const d0 = (0.075 + Math.random() * 0.015).toFixed(3);
 						d0El.textContent = `D₀: ${d0}/cm²`;
 					}
 				}
@@ -1381,7 +1461,7 @@
 	}
 	.w-yield-bar {
 		height: 100%;
-		background: linear-gradient(90deg, #10b981, #38bdf8);
+		background: linear-gradient(90deg, #10b981, #f59e0b);
 		border-radius: 3px;
 		transition: width 0.3s ease;
 	}
@@ -1406,7 +1486,7 @@
 	.wafer-legend {
 		display: flex;
 		flex-direction: column;
-		gap: 0.3em;
+		gap: 0.35em;
 		font-size: 0.72em;
 		color: #94a3b8;
 		background: rgba(0, 0, 0, 0.2);
@@ -1422,6 +1502,7 @@
 		width: 10px;
 		height: 10px;
 		border-radius: 2px;
+		flex-shrink: 0;
 	}
 	.leg-color.bin1 { background: #10b981; }
 	.leg-color.bin2 { background: #f59e0b; }

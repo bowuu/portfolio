@@ -1,10 +1,10 @@
 ---
 // EasterEggs.astro - Hardware & Silicon Validation Interactive Easter Eggs
-// 1. Zero-G Verlet Physics Element Collapse (pure vanilla physics, non-destructive GPU transforms)
-// 2. 3D Viewport Parallax Hologram Tilt (perspective matrix tracking cursor/orientation)
-// 3. 300mm ATE Silicon Wafer Die Sort Map & Yield Telemetry (interactive canvas & Konami code)
-// 4. Procedural Mechanical Switch Synthesizer (pure Web Audio API acoustics: Blue / Red / Model M)
-// 5. Chief Morale Officer "Boop the Dog" (+10 dBm RF Telemetry & Mascot Animation)
+// 1. 3D Viewport Parallax Hologram Tilt (perspective matrix tracking cursor/orientation)
+// 2. Chief Morale Officer "Boop the Dog" (+10 dBm RF Telemetry & Mascot Animation)
+// 3. Procedural Mechanical Switch Synthesizer (pure Web Audio API acoustics: Blue / Red / Model M)
+// 4. 300mm ATE Silicon Wafer Die Sort Map & Dynamic Yield Telemetry (interactive canvas)
+// 5. Zero-G Verlet Physics Element Collapse (pure vanilla physics, non-destructive GPU transforms)
 ---
 
 <div id="easter-eggs-container">
@@ -30,7 +30,7 @@
 					<span class="hud-pulse-dot"></span>
 					<div class="wafer-title-meta">
 						<span class="wafer-title">300mm ATE SILICON WAFER SORT</span>
-						<span class="wafer-sub mono">LOT #850C-W14 &bull; 3nm FinFET &bull; 684 Gross Dies</span>
+						<span class="wafer-sub mono" id="wafer-sub-meta">LOT #850C-W14 &bull; 3nm FinFET &bull; 684 Gross Dies</span>
 					</div>
 				</div>
 				<button id="wafer-close-btn" class="wafer-close-btn" type="button" aria-label="Close Wafer Inspector">&times;</button>
@@ -48,7 +48,7 @@
 						<span class="w-box-title">Functional Yield</span>
 						<div class="w-yield-display">
 							<span class="w-yield-val mono" id="wafer-yield-val">96.2%</span>
-							<span class="w-yield-badge mono">D₀: 0.078/cm²</span>
+							<span class="w-yield-badge mono" id="wafer-d0-val">D₀: 0.078/cm²</span>
 						</div>
 						<div class="w-yield-bar-wrap">
 							<div class="w-yield-bar" id="wafer-yield-bar" style="width: 96.2%;"></div>
@@ -70,14 +70,14 @@
 
 					<!-- BIN DISTRIBUTION LEGEND -->
 					<div class="wafer-legend">
-						<div class="legend-item"><span class="leg-color bin1"></span><span>Bin 1 (Prime 3.8GHz+): 518 (75.7%)</span></div>
-						<div class="legend-item"><span class="leg-color bin2"></span><span>Bin 2 (Eco 3.2GHz): 140 (20.5%)</span></div>
-						<div class="legend-item"><span class="leg-color binx"></span><span>Parametric Defect: 26 (3.8%)</span></div>
+						<div class="legend-item"><span class="leg-color bin1"></span><span id="leg-bin1-text">Bin 1 (Prime 3.8GHz+): 518 (75.7%)</span></div>
+						<div class="legend-item"><span class="leg-color bin2"></span><span id="leg-bin2-text">Bin 2 (Eco 3.2GHz): 140 (20.5%)</span></div>
+						<div class="legend-item"><span class="leg-color binx"></span><span id="leg-binx-text">Parametric Defect: 26 (3.8%)</span></div>
 					</div>
 
 					<!-- ACTIONS -->
 					<div class="wafer-actions">
-						<button id="wafer-scan-btn" type="button" class="wafer-btn primary">
+						<button id="wafer-scan-btn" type="button" class="wafer-btn primary" title="Randomize wafer defects & run ATE probe sweep">
 							<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
 							<span>Run ATE Pogo Probe Scan</span>
 						</button>
@@ -90,7 +90,7 @@
 		</div>
 	</div>
 
-	<!-- LAB EXTRAS DRAWER / POPOVER -->
+	<!-- LAB EXTRAS DRAWER / POPOVER (SORTED ALPHABETICALLY A-Z) -->
 	<div id="lab-extras-modal" class="lab-extras-modal hidden" role="dialog" aria-modal="false" aria-label="Hardware Lab Easter Eggs">
 		<div class="extras-header">
 			<div class="extras-title">
@@ -102,15 +102,27 @@
 			<button id="extras-close-btn" type="button" class="extras-close-btn" aria-label="Close Extras Drawer">&times;</button>
 		</div>
 		<div class="extras-grid">
-			<button id="trigger-wafer-btn" class="extra-item-btn" type="button" title="300mm Silicon Wafer Sort Map">
-				<span class="item-icon">🔬</span>
+			<!-- 1. 3D Tilt (3) -->
+			<button id="trigger-tilt-btn" class="extra-item-btn" type="button" title="3D Viewport Parallax Hologram Tilt">
+				<span class="item-icon">📐</span>
 				<div class="item-meta">
-					<strong class="item-name">Wafer Sort Map</strong>
-					<span class="item-desc">300mm ATE die sort &amp; bin yield inspector</span>
+					<strong class="item-name">3D Tilt</strong>
+					<span class="item-desc">Parallax hologram perspective depth</span>
 				</div>
-				<kbd class="item-kbd">Konami / wafer</kbd>
+				<kbd class="item-kbd">Ctrl+Alt+H</kbd>
 			</button>
 
+			<!-- 2. Chief Morale Officer (C) -->
+			<button id="trigger-boop-btn" class="extra-item-btn" type="button" title="Boop Chief Morale Officer (She is a good girl!)">
+				<span class="item-icon">🐾</span>
+				<div class="item-meta">
+					<strong class="item-name">Chief Morale Officer</strong>
+					<span class="item-desc">Boop avatar for RF telemetry boost</span>
+				</div>
+				<kbd class="item-kbd">+10 dBm</kbd>
+			</button>
+
+			<!-- 3. Switch Acoustics (S) -->
 			<button id="trigger-switch-sound-btn" class="extra-item-btn" type="button" title="Cycle Mechanical Switch Acoustics">
 				<span class="item-icon">🔊</span>
 				<div class="item-meta">
@@ -120,15 +132,17 @@
 				<kbd class="item-kbd" id="extras-sound-badge">Sound: Off</kbd>
 			</button>
 
-			<button id="trigger-boop-btn" class="extra-item-btn" type="button" title="Boop Chief Morale Officer">
-				<span class="item-icon">🐾</span>
+			<!-- 4. Wafer Sort Map (W) -->
+			<button id="trigger-wafer-btn" class="extra-item-btn" type="button" title="300mm Silicon Wafer Sort Map">
+				<span class="item-icon">🔬</span>
 				<div class="item-meta">
-					<strong class="item-name">Chief Morale Officer</strong>
-					<span class="item-desc">Boop avatar for RF telemetry boost</span>
+					<strong class="item-name">Wafer Sort Map</strong>
+					<span class="item-desc">300mm ATE die sort &amp; bin yield inspector</span>
 				</div>
-				<kbd class="item-kbd">+10 dBm</kbd>
+				<kbd class="item-kbd">wafer -g</kbd>
 			</button>
 
+			<!-- 5. Zero-G Drop (Z) -->
 			<button id="trigger-zerog-btn" class="extra-item-btn" type="button" title="Zero-G Physics Collapse">
 				<span class="item-icon">🪐</span>
 				<div class="item-meta">
@@ -137,30 +151,20 @@
 				</div>
 				<kbd class="item-kbd">Ctrl+Alt+G</kbd>
 			</button>
-
-			<button id="trigger-tilt-btn" class="extra-item-btn" type="button" title="3D Viewport Parallax Hologram Tilt">
-				<span class="item-icon">📐</span>
-				<div class="item-meta">
-					<strong class="item-name">3D Tilt</strong>
-					<span class="item-desc">Parallax hologram perspective depth</span>
-				</div>
-				<kbd class="item-kbd">Ctrl+Alt+H</kbd>
-			</button>
 		</div>
 		<div class="extras-footer">
-			<span>Click cards above, use hotkeys, or enter terminal commands (<code>wafer</code>, <code>gravity</code>, <code>tilt</code>).</span>
+			<span>Click cards above, use hotkeys, or enter terminal commands (<code>wafer -g</code>, <code>gravity</code>, <code>tilt</code>).</span>
 		</div>
 	</div>
 </div>
 
 <script>
 	// -------------------------------------------------------------
-	// PROCEDURAL MECHANICAL SWITCH AUDIO SYNTHESIZER
+	// PROCEDURAL MECHANICAL SWITCH AUDIO SYNTHESIZER (ACOUSTIC PHYSICS MODEL)
 	// -------------------------------------------------------------
 	class SwitchAudioEngine {
 		private ctx: AudioContext | null = null;
 		public profile: 'off' | 'blue' | 'red' | 'modelm' = 'off';
-		private noiseBuffer: AudioBuffer | null = null;
 
 		constructor() {
 			try {
@@ -174,17 +178,7 @@
 		private init() {
 			if (!this.ctx) {
 				const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-				if (AudioCtx) {
-					this.ctx = new AudioCtx();
-					// Pre-generate a 100ms noise buffer once to avoid garbage collection
-					const sampleRate = this.ctx.sampleRate;
-					const len = Math.floor(sampleRate * 0.1);
-					this.noiseBuffer = this.ctx.createBuffer(1, len, sampleRate);
-					const data = this.noiseBuffer.getChannelData(0);
-					for (let i = 0; i < len; i++) {
-						data[i] = Math.random() * 2 - 1;
-					}
-				}
+				if (AudioCtx) this.ctx = new AudioCtx();
 			}
 			if (this.ctx && this.ctx.state === 'suspended') {
 				this.ctx.resume().catch(() => {});
@@ -203,28 +197,61 @@
 		public play(code?: string) {
 			if (this.profile === 'off') return;
 			this.init();
-			if (!this.ctx || !this.noiseBuffer) return;
+			if (!this.ctx) return;
 
 			const t = this.ctx.currentTime;
-			const isBigKey = code === 'Space' || code === 'Enter' || code === 'Backspace';
-			const pitchMod = isBigKey ? 0.8 : (0.95 + Math.random() * 0.1);
+			const isSpace = code === 'Space';
+			const isBig = isSpace || code === 'Enter' || code === 'Backspace';
+			const pitchMod = isSpace ? 0.72 : isBig ? 0.84 : (0.96 + Math.random() * 0.08);
 
 			if (this.profile === 'blue') {
-				// CLICKY BLUE: High-frequency sharp transient + resonant housing bottom-out
-				this.playNoise(t, 2800 * pitchMod, 0.012, 0.32);
-				this.playTone(t, 3200 * pitchMod, 'sine', 0.015, 0.2);
-				this.playTone(t + 0.003, 380 * pitchMod, 'triangle', 0.035, 0.24);
+				// CLICKY BLUE: Crisp tactile click-leaf snap + plastic bottom-out clack
+				// 1. High-frequency click-leaf snap (2.5ms sharp impulse)
+				this.playImpulse(t, 3800 * pitchMod, 0.005, 0.20);
+				// 2. Plastic stem bottom-out (downward pitch drop from 280Hz to 140Hz)
+				this.playThump(t + 0.002, 280 * pitchMod, 140 * pitchMod, 0.032, 0.18);
+				// 3. Keycap acoustic body resonance
+				this.playTone(t + 0.002, 1200 * pitchMod, 'triangle', 0.016, 0.07);
 			} else if (this.profile === 'red') {
-				// LINEAR RED: Soft, smooth bottom-out low-pass thump
-				this.playNoise(t, 550 * pitchMod, 0.02, 0.18);
-				this.playTone(t, 240 * pitchMod, 'sine', 0.035, 0.28);
+				// LINEAR RED: Pure smooth plastic "thock" (absolutely NO high click leaf)
+				// 1. Soft impact thump with downward pitch slide (190Hz -> 85Hz)
+				this.playThump(t, 190 * pitchMod, 85 * pitchMod, 0.036, 0.22);
+				// 2. Low-pass stem dampening friction
+				this.playImpulse(t, 420 * pitchMod, 0.014, 0.06);
 			} else if (this.profile === 'modelm') {
-				// BUCKLING SPRING: Sharp initial snap + dual-frequency metallic spring twang
-				this.playNoise(t, 2400 * pitchMod, 0.014, 0.28);
-				this.playTone(t + 0.002, 3120 * pitchMod, 'sine', 0.065, 0.18);
-				this.playTone(t + 0.002, 3210 * pitchMod, 'sine', 0.065, 0.16);
-				this.playTone(t + 0.005, 310 * pitchMod, 'triangle', 0.045, 0.22);
+				// BUCKLING SPRING: Sharp spring buckle snap + resonant steel spring twang + hollow barrel
+				// 1. Buckling contact snap
+				this.playImpulse(t, 2600 * pitchMod, 0.006, 0.18);
+				// 2. Steel spring acoustic ringing (twin beating frequencies)
+				this.playTone(t + 0.002, 2880 * pitchMod, 'sine', 0.075, 0.12);
+				this.playTone(t + 0.002, 3020 * pitchMod, 'sine', 0.075, 0.10);
+				// 3. Hollow barrel plate bottom-out
+				this.playThump(t + 0.003, 180 * pitchMod, 95 * pitchMod, 0.042, 0.15);
 			}
+		}
+
+		public playProbeTick() {
+			if (!this.ctx) return;
+			const t = this.ctx.currentTime;
+			this.playTone(t, 1800 + Math.random() * 400, 'square', 0.006, 0.03);
+		}
+
+		private playThump(time: number, startFreq: number, endFreq: number, dur: number, vol: number) {
+			if (!this.ctx) return;
+			const osc = this.ctx.createOscillator();
+			const gain = this.ctx.createGain();
+
+			osc.type = 'triangle';
+			osc.frequency.setValueAtTime(startFreq, time);
+			osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), time + dur);
+
+			gain.gain.setValueAtTime(vol, time);
+			gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+
+			osc.connect(gain);
+			gain.connect(this.ctx.destination);
+			osc.start(time);
+			osc.stop(time + dur);
 		}
 
 		private playTone(time: number, freq: number, type: OscillatorType, dur: number, vol: number) {
@@ -243,15 +270,22 @@
 			osc.stop(time + dur);
 		}
 
-		private playNoise(time: number, filterFreq: number, dur: number, vol: number) {
-			if (!this.ctx || !this.noiseBuffer) return;
+		private playImpulse(time: number, centerFreq: number, dur: number, vol: number) {
+			if (!this.ctx) return;
+			const bufferSize = Math.max(1, Math.floor(this.ctx.sampleRate * dur));
+			const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+			const data = buffer.getChannelData(0);
+			for (let i = 0; i < bufferSize; i++) {
+				data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.35));
+			}
+
 			const source = this.ctx.createBufferSource();
-			source.buffer = this.noiseBuffer;
+			source.buffer = buffer;
 
 			const filter = this.ctx.createBiquadFilter();
 			filter.type = 'bandpass';
-			filter.frequency.setValueAtTime(filterFreq, time);
-			filter.Q.setValueAtTime(3.5, time);
+			filter.frequency.setValueAtTime(centerFreq, time);
+			filter.Q.setValueAtTime(2.5, time);
 
 			const gain = this.ctx.createGain();
 			gain.gain.setValueAtTime(vol, time);
@@ -271,7 +305,7 @@
 	(window as any).__getSwitchSound = () => audioEngine.profile;
 
 	// -------------------------------------------------------------
-	// CHIEF MORALE OFFICER: BOOP THE DOG (+10 dBm)
+	// CHIEF MORALE OFFICER: BOOP THE DOG (+10 dBm) [FEMALE MASCOT 🐾]
 	// -------------------------------------------------------------
 	function initDogBoop() {
 		const avatarImg = document.getElementById('hero-avatar-img') || document.querySelector('.hero .avatar-img');
@@ -287,7 +321,7 @@
 			'🐾 Morale: +10 dBm (10x Nominal)',
 			'🐾 Morale: +14 dBm (25x High Efficiency)',
 			'🐾 Morale: +20 dBm (100x Max Gain!)',
-			'🐾 Saturated: 0 dBFS (Peak Good Boy! 🎉)'
+			'🐾 Saturated: 0 dBFS (Peak Good Girl! 🐾)'
 		];
 
 		function playDogChime(step: number) {
@@ -320,22 +354,18 @@
 			window.clearTimeout(streakTimer);
 			streakTimer = window.setTimeout(() => { streak = 0; }, 3500);
 
-			// 1. Play cute procedural chime
 			playDogChime(streak);
 
-			// 2. Avatar squash & bounce animation
 			avatarImg.classList.remove('booped');
-			void (avatarImg as HTMLElement).offsetWidth; // trigger reflow
+			void (avatarImg as HTMLElement).offsetWidth;
 			avatarImg.classList.add('booped');
 
-			// 3. Floating RF telemetry pill
 			const pill = document.createElement('div');
 			pill.className = 'morale-rf-pill mono';
 			const text = rfReadouts[Math.min(streak - 1, rfReadouts.length - 1)];
 			pill.textContent = text;
 			avatarWrap.appendChild(pill);
 
-			// Spawn confetti burst at 5+ streak
 			if (streak >= 5) {
 				const glyphs = ['🐾', '🦴', '⚡', '✨', '🐾', '🦴'];
 				glyphs.forEach((g, i) => {
@@ -366,7 +396,7 @@
 	}
 
 	// -------------------------------------------------------------
-	// 300MM SILICON WAFER DIE SORT INSPECTOR & KONAMI CODE
+	// 300MM SILICON WAFER DIE SORT INSPECTOR (DYNAMIC RANDOMIZATION)
 	// -------------------------------------------------------------
 	function initWaferInspector() {
 		const modal = document.getElementById('wafer-modal');
@@ -380,7 +410,6 @@
 		const ctx = canvas.getContext('2d');
 		if (!ctx) return;
 
-		// Wafer Grid Configuration (300mm wafer with ~684 gross dies)
 		const waferRadius = 175;
 		const cx = 200;
 		const cy = 200;
@@ -406,75 +435,97 @@
 		let activeDie: WaferDie | null = null;
 		let isScanning = false;
 
-		// Deterministic pseudo-random die generation
-		let seed = 42;
-		function prng() {
-			seed = (seed * 16807) % 2147483647;
-			return (seed - 1) / 2147483646;
-		}
+		function generateWaferDies(randomize: boolean = false) {
+			dies.length = 0;
+			const half = (gridSize * step) / 2;
 
-		const half = (gridSize * step) / 2;
-		for (let r = 0; r < gridSize; r++) {
-			for (let c = 0; c < gridSize; c++) {
-				const x = cx - half + c * step;
-				const y = cy - half + r * step;
+			// Random defect cluster centers & parameters
+			const clusterX = randomize ? Math.floor(Math.random() * 18 + 5) : 8;
+			const clusterY = randomize ? Math.floor(Math.random() * 18 + 5) : 18;
+			const edgeDefectThreshold = randomize ? (0.85 + Math.random() * 0.07) : 0.88;
+			const lotNum = randomize ? Math.floor(Math.random() * 800 + 100) : 850;
+			const waferNum = randomize ? Math.floor(Math.random() * 24 + 1) : 14;
 
-				// Die bounds relative to center
-				const corners = [
-					[x, y],
-					[x + dieW, y],
-					[x, y + dieH],
-					[x + dieW, y + dieH]
-				];
-
-				// Wafer exclusion zone & notch test
-				const fits = corners.every(([px, py]) => {
-					const dx = px - cx;
-					const dy = py - cy;
-					const dist = Math.sqrt(dx * dx + dy * dy);
-					if (dist > waferRadius - 10) return false;
-					// Notch exclusion at bottom center
-					if (Math.abs(dx) < 14 && py > cy + waferRadius - 16) return false;
-					return true;
-				});
-
-				if (!fits) continue;
-
-				const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-				const normR = dist / (waferRadius - 10);
-				const rnd = prng();
-
-				// Binning logic matching 96.2% yield
-				let bin: 1 | 2 | 'x' = 1;
-				if (normR > 0.88 && rnd < 0.38) {
-					bin = 'x'; // Edge litho fallout
-				} else if (Math.abs(c - 8) < 2 && Math.abs(r - 18) < 2 && rnd < 0.6) {
-					bin = 'x'; // Particle defect cluster
-				} else if (rnd < 0.22) {
-					bin = 2; // Eco low-power harvest bin
-				} else {
-					bin = 1; // Prime high-frequency
-				}
-
-				const hexId = '0x850C' + ((r * gridSize + c) * 137).toString(16).toUpperCase().padStart(4, '0');
-				const fmax = bin === 1 ? +(4.7 + prng() * 0.28).toFixed(2) : bin === 2 ? +(3.2 + prng() * 0.18).toFixed(2) : +(1.8 + prng() * 0.5).toFixed(2);
-				const vmin = bin === 1 ? +(0.75 + prng() * 0.04).toFixed(3) : bin === 2 ? +(0.71 + prng() * 0.03).toFixed(3) : +(1.15 + prng() * 0.2).toFixed(3);
-				const leakage = bin === 1 ? +(11.5 + prng() * 3.5).toFixed(1) : bin === 2 ? +(7.2 + prng() * 1.8).toFixed(1) : +(48.0 + prng() * 20.0).toFixed(1);
-
-				dies.push({
-					col: c,
-					row: r,
-					x,
-					y,
-					bin,
-					id: hexId,
-					fmax,
-					vmin,
-					leakage,
-					tested: true
-				});
+			const subEl = document.getElementById('wafer-sub-meta');
+			if (subEl) {
+				subEl.textContent = `LOT #${lotNum}C-W${waferNum < 10 ? '0' + waferNum : waferNum} • 3nm FinFET • 684 Gross Dies`;
 			}
+
+			for (let r = 0; r < gridSize; r++) {
+				for (let c = 0; c < gridSize; c++) {
+					const x = cx - half + c * step;
+					const y = cy - half + r * step;
+
+					const corners = [
+						[x, y],
+						[x + dieW, y],
+						[x, y + dieH],
+						[x + dieW, y + dieH]
+					];
+
+					const fits = corners.every(([px, py]) => {
+						const dx = px - cx;
+						const dy = py - cy;
+						const dist = Math.sqrt(dx * dx + dy * dy);
+						if (dist > waferRadius - 10) return false;
+						if (Math.abs(dx) < 14 && py > cy + waferRadius - 16) return false;
+						return true;
+					});
+
+					if (!fits) continue;
+
+					const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+					const normR = dist / (waferRadius - 10);
+					const rnd = Math.random();
+
+					let bin: 1 | 2 | 'x' = 1;
+					if (normR > edgeDefectThreshold && rnd < 0.40) {
+						bin = 'x'; // Edge litho fallout
+					} else if (Math.abs(c - clusterX) <= 1 && Math.abs(r - clusterY) <= 1 && rnd < 0.65) {
+						bin = 'x'; // Particle defect cluster
+					} else if (rnd < 0.21) {
+						bin = 2; // Eco low-power harvest bin
+					} else {
+						bin = 1; // Prime high-frequency
+					}
+
+					const hexId = `0x${lotNum.toString(16).toUpperCase()}` + ((r * gridSize + c) * 137).toString(16).toUpperCase().padStart(4, '0');
+					const fmax = bin === 1 ? +(4.7 + Math.random() * 0.28).toFixed(2) : bin === 2 ? +(3.2 + Math.random() * 0.18).toFixed(2) : +(1.8 + Math.random() * 0.5).toFixed(2);
+					const vmin = bin === 1 ? +(0.75 + Math.random() * 0.04).toFixed(3) : bin === 2 ? +(0.71 + Math.random() * 0.03).toFixed(3) : +(1.15 + Math.random() * 0.2).toFixed(3);
+					const leakage = bin === 1 ? +(11.5 + Math.random() * 3.5).toFixed(1) : bin === 2 ? +(7.2 + Math.random() * 1.8).toFixed(1) : +(48.0 + Math.random() * 20.0).toFixed(1);
+
+					dies.push({
+						col: c,
+						row: r,
+						x,
+						y,
+						bin,
+						id: hexId,
+						fmax,
+						vmin,
+						leakage,
+						tested: true
+					});
+				}
+			}
+
+			// Update legend tallies
+			const b1Count = dies.filter(d => d.bin === 1).length;
+			const b2Count = dies.filter(d => d.bin === 2).length;
+			const bxCount = dies.filter(d => d.bin === 'x').length;
+			const total = dies.length;
+
+			const legB1 = document.getElementById('leg-bin1-text');
+			const legB2 = document.getElementById('leg-bin2-text');
+			const legBx = document.getElementById('leg-binx-text');
+
+			if (legB1) legB1.textContent = `Bin 1 (Prime 3.8GHz+): ${b1Count} (${((b1Count / total) * 100).toFixed(1)}%)`;
+			if (legB2) legB2.textContent = `Bin 2 (Eco 3.2GHz): ${b2Count} (${((b2Count / total) * 100).toFixed(1)}%)`;
+			if (legBx) legBx.textContent = `Parametric Defect: ${bxCount} (${((bxCount / total) * 100).toFixed(1)}%)`;
 		}
+
+		// Initial generation
+		generateWaferDies(false);
 
 		function drawWafer() {
 			if (!ctx || !canvas) return;
@@ -491,7 +542,6 @@
 			ctx.fillStyle = grad;
 			ctx.fill();
 
-			// Wafer edge bevel
 			ctx.lineWidth = 3;
 			ctx.strokeStyle = '#38bdf8';
 			ctx.stroke();
@@ -509,16 +559,15 @@
 				if (!die.tested) {
 					ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
 				} else if (die.bin === 1) {
-					ctx.fillStyle = '#10b981'; // Prime emerald
+					ctx.fillStyle = '#10b981';
 				} else if (die.bin === 2) {
-					ctx.fillStyle = '#f59e0b'; // Amber eco
+					ctx.fillStyle = '#f59e0b';
 				} else {
-					ctx.fillStyle = '#ef4444'; // Red fallout
+					ctx.fillStyle = '#ef4444';
 				}
 
 				ctx.fillRect(die.x, die.y, dieW, dieH);
 
-				// Subtle die border
 				ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
 				ctx.lineWidth = 0.5;
 				ctx.strokeRect(die.x, die.y, dieW, dieH);
@@ -533,7 +582,6 @@
 				ctx.shadowBlur = 8;
 				ctx.strokeRect(activeDie.x - 1, activeDie.y - 1, dieW + 2, dieH + 2);
 
-				// Reticle crosshair lines
 				ctx.strokeStyle = 'rgba(0, 240, 255, 0.45)';
 				ctx.lineWidth = 1;
 				ctx.setLineDash([3, 3]);
@@ -607,16 +655,20 @@
 		closeBtn?.addEventListener('click', closeWaferModal);
 		backdrop?.addEventListener('click', closeWaferModal);
 
-		// Scan sweep animation
+		// DYNAMIC RANDOMIZATION & ATE POGO SCAN
 		scanBtn?.addEventListener('click', () => {
 			if (isScanning) return;
 			isScanning = true;
+
+			// Randomize dies and defects for this scan!
+			generateWaferDies(true);
 			dies.forEach(d => { d.tested = false; });
 			activeDie = null;
 			drawWafer();
 
 			const yieldValEl = document.getElementById('wafer-yield-val');
 			const yieldBarEl = document.getElementById('wafer-yield-bar');
+			const d0El = document.getElementById('wafer-d0-val');
 
 			let idx = 0;
 			const batchSize = 16;
@@ -638,14 +690,20 @@
 				if (yieldValEl) yieldValEl.textContent = `${curYield}%`;
 				if (yieldBarEl) yieldBarEl.style.width = `${curYield}%`;
 
+				audioEngine.playProbeTick();
 				drawWafer();
 
 				if (idx < total) {
 					requestAnimationFrame(stepScan);
 				} else {
 					isScanning = false;
-					if (yieldValEl) yieldValEl.textContent = '96.2%';
-					if (yieldBarEl) yieldBarEl.style.width = '96.2%';
+					const finalYield = ((goodCount / total) * 100).toFixed(1);
+					if (yieldValEl) yieldValEl.textContent = `${finalYield}%`;
+					if (yieldBarEl) yieldBarEl.style.width = `${finalYield}%`;
+					if (d0El) {
+						const d0 = (0.055 + Math.random() * 0.035).toFixed(3);
+						d0El.textContent = `D₀: ${d0}/cm²`;
+					}
 				}
 			}
 
@@ -661,38 +719,10 @@
 		});
 
 		(window as any).__openWaferMap = openWaferModal;
-
-		// -------------------------------------------------------------
-		// KONAMI CODE DETECTOR: ↑ ↑ ↓ ↓ ← → ← → B A
-		// -------------------------------------------------------------
-		const konamiPattern = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'KeyB', 'KeyA'];
-		let konamiIndex = 0;
-
-		window.addEventListener('keydown', (e) => {
-			// Shield when typing in inputs or near keyboard lab
-			const tag = document.activeElement?.tagName;
-			if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-			const kbLab = document.getElementById('keyboard-lab');
-			if (kbLab) {
-				const r = kbLab.getBoundingClientRect();
-				if (r.bottom > -80 && r.top < window.innerHeight + 80) return;
-			}
-
-			const code = e.code;
-			if (code === konamiPattern[konamiIndex]) {
-				konamiIndex++;
-				if (konamiIndex === konamiPattern.length) {
-					konamiIndex = 0;
-					openWaferModal();
-				}
-			} else {
-				konamiIndex = code === konamiPattern[0] ? 1 : 0;
-			}
-		});
 	}
 
 	// -------------------------------------------------------------
-	// ZERO-G & 3D TILT CORE (PRESERVED)
+	// ZERO-G & 3D TILT CORE
 	// -------------------------------------------------------------
 	function initEasterEggs() {
 		let isZeroG = false;
@@ -955,18 +985,10 @@
 			}
 		});
 
-		// Lab Extras Drawer Wire-up
-		document.getElementById('trigger-zerog-btn')?.addEventListener('click', () => {
-			extrasModal?.classList.add('hidden');
-			(window as any).__toggleZeroG();
-		});
+		// Lab Extras Drawer Wire-up (Alphabetical Order 3-C-S-W-Z)
 		document.getElementById('trigger-tilt-btn')?.addEventListener('click', () => {
 			extrasModal?.classList.add('hidden');
 			(window as any).__toggleTilt();
-		});
-		document.getElementById('trigger-wafer-btn')?.addEventListener('click', () => {
-			extrasModal?.classList.add('hidden');
-			(window as any).__openWaferMap?.();
 		});
 		document.getElementById('trigger-boop-btn')?.addEventListener('click', () => {
 			extrasModal?.classList.add('hidden');
@@ -1004,6 +1026,16 @@
 			audioEngine.setProfile(next);
 			updateDrawerSoundUI(next);
 			if (next !== 'off') audioEngine.play('KeyA');
+		});
+
+		document.getElementById('trigger-wafer-btn')?.addEventListener('click', () => {
+			extrasModal?.classList.add('hidden');
+			(window as any).__openWaferMap?.();
+		});
+
+		document.getElementById('trigger-zerog-btn')?.addEventListener('click', () => {
+			extrasModal?.classList.add('hidden');
+			(window as any).__toggleZeroG();
 		});
 
 		extrasCloseBtn?.addEventListener('click', () => extrasModal?.classList.add('hidden'));

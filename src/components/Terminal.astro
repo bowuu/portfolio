@@ -960,21 +960,17 @@ Verified Profiles:
 					const sub = args[0]?.toLowerCase();
 					if (sub === 'dark') {
 						document.documentElement.setAttribute('data-theme', 'dark');
-						localStorage.setItem('theme', 'dark');
 						appendOutput('Theme switched to: <span class="term-hl">Obsidian Dark</span>');
 					} else if (sub === 'light') {
 						document.documentElement.removeAttribute('data-theme');
-						localStorage.setItem('theme', 'light');
 						appendOutput('Theme switched to: <span class="term-hl">Clean Light</span>');
 					} else {
 						const current = document.documentElement.getAttribute('data-theme');
 						if (current === 'dark') {
 							document.documentElement.removeAttribute('data-theme');
-							localStorage.setItem('theme', 'light');
 							appendOutput('Theme toggled to: <span class="term-hl">Clean Light</span>');
 						} else {
 							document.documentElement.setAttribute('data-theme', 'dark');
-							localStorage.setItem('theme', 'dark');
 							appendOutput('Theme toggled to: <span class="term-hl">Obsidian Dark</span>');
 						}
 					}

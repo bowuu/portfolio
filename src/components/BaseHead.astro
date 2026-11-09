@@ -25,8 +25,7 @@ const { title, description, image = '/og-image.png' } = Astro.props;
 <!-- Theme Init (Prevents Flash of Unstyled Content) -->
 <script is:inline>
 	(function() {
-		const storedTheme = typeof localStorage !== 'undefined' ? localStorage.getItem('theme') : null;
-		if (storedTheme === 'dark' || (!storedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+		if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
 			document.documentElement.setAttribute('data-theme', 'dark');
 		} else {
 			document.documentElement.removeAttribute('data-theme');

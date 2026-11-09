@@ -69,31 +69,11 @@ const isoTimestamp = now.toISOString();
 			wrapEl!.classList.remove('hidden');
 		}
 
-		// 1. If already counted on this device today, fetch read-only count without sending an increment beacon
-		const todayKey = new Date().toISOString().slice(0, 10);
-		let localCounted = false;
-		try {
-			localCounted = localStorage.getItem('brob_visit_day') === todayKey;
-		} catch {}
-
-		if (localCounted) {
-			fetch('/api/visitor-counter')
-				.then((r) => (r.ok ? r.json() : null))
-				.then((data) => {
-					if (data && typeof data.count === 'number') updateDisplay(data.count);
-				})
-				.catch(() => {});
-			return;
-		}
-
-		// 2. Wait for verified human engagement (active dwell time or scroll) to filter automated crawlers
+		// Wait for verified human engagement (active dwell time or scroll) to filter automated crawlers
 		let triggered = false;
 		function triggerIncrement() {
 			if (triggered) return;
 			triggered = true;
-			try {
-				localStorage.setItem('brob_visit_day', todayKey);
-			} catch {}
 
 			window.removeEventListener('scroll', onScroll);
 			window.removeEventListener('click', triggerIncrement);

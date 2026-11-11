@@ -498,7 +498,6 @@
 		const lastBtnEl = document.getElementById('mouse-last-btn');
 		const btnCountEl = document.getElementById('mouse-btn-count');
 		const scrollDeltaEl = document.getElementById('mouse-scroll-delta');
-		const scrollPxEl = document.getElementById('mouse-scroll-px');
 		const scrollTotalEl = document.getElementById('mouse-scroll-total');
 		const mouseChatterEl = document.getElementById('mouse-chatter-status');
 		const mouseChatterSubEl = document.getElementById('mouse-chatter-sub');
@@ -695,7 +694,6 @@
 					mouseBadge.className = 'badge mono';
 				}
 				if (scrollDeltaEl) scrollDeltaEl.textContent = '--';
-				if (scrollPxEl) scrollPxEl.textContent = '';
 				if (scrollTotalEl) scrollTotalEl.textContent = '0 total ticks';
 				if (mouseChatterEl) {
 					mouseChatterEl.textContent = 'Clean';
@@ -1235,10 +1233,10 @@
 		stroke: #ffffff !important;
 		stroke-width: 3.5 !important;
 	}
-	.notch-up.notch-active {
+	#notch-up.notch-active {
 		transform: translateY(-2px) scale(1.15);
 	}
-	.notch-down.notch-active {
+	#notch-down.notch-active {
 		transform: translateY(2px) scale(1.15);
 	}
 

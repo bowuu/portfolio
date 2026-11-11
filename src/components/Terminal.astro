@@ -1669,9 +1669,10 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 		justify-content: center;
 		opacity: 0;
 		pointer-events: none;
-		transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+		transition: opacity 0.15s ease-out;
 		padding: 1.25rem;
 		box-sizing: border-box;
+		will-change: opacity;
 	}
 
 	.terminal-modal.open {
@@ -1682,9 +1683,7 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 	.terminal-backdrop {
 		position: absolute;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.58);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
+		background: rgba(0, 0, 0, 0.35);
 	}
 
 	/* AUTHENTIC UNIX / LINUX TERMINAL WINDOW FRAME */
@@ -1695,17 +1694,16 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 		height: 490px;
 		max-height: 82vh;
 		max-height: 82dvh;
-		background: rgba(10, 12, 16, 0.86);
-		backdrop-filter: blur(16px) saturate(140%);
-		-webkit-backdrop-filter: blur(16px) saturate(140%);
-		border: 1px solid rgba(255, 255, 255, 0.15);
+		background: rgba(10, 12, 16, 0.70);
+		backdrop-filter: blur(14px) saturate(160%);
+		-webkit-backdrop-filter: blur(14px) saturate(160%);
+		border: 1px solid rgba(255, 255, 255, 0.16);
 		border-radius: 10px;
-		box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(249, 115, 22, 0.18);
+		box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(249, 115, 22, 0.2);
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
-		transform: scale(0.96) translateY(-6px);
-		transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s ease, height 0.2s ease, max-width 0.2s ease;
+		transition: width 0.2s ease, height 0.2s ease, max-width 0.2s ease;
 	}
 
 	.terminal-window.maximized {
@@ -1717,10 +1715,6 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 		max-height: 88dvh;
 	}
 
-	.terminal-modal.open .terminal-window {
-		transform: scale(1) translateY(0);
-	}
-
 	/* LINUX / GTK-STYLE TITLEBAR */
 	.terminal-header {
 		display: flex;
@@ -1728,8 +1722,8 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 		justify-content: space-between;
 		padding: 0 0.75em 0 0.85em;
 		height: 32px;
-		background: rgba(26, 29, 38, 0.82);
-		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+		background: rgba(22, 26, 35, 0.78);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.10);
 		user-select: none;
 		flex-shrink: 0;
 		position: relative;

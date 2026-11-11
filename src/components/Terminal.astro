@@ -138,9 +138,8 @@
 			'dissolve',
 			'quantum',
 			'thermal',
-			'flir',
-			'cleave',
-			'dicing',
+			'cryo',
+			'ln2',
 			'cmo',
 			'boop',
 			'extras'
@@ -848,8 +847,7 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-hl">tilt</span>                     3D viewport parallax hologram perspective
   <span class="term-hl">cmo</span> / <span class="term-hl">boop</span>               Chief Morale Officer silicon lottery binning boost
   <span class="term-hl">degauss</span> / <span class="term-hl">crt</span>            CRT oscilloscope electromagnetic degauss coil warp
-  <span class="term-hl">thermal</span> / <span class="term-hl">flir</span>           FLIR infrared thermography &amp; LN2 cryo-spray
-  <span class="term-hl">cleave</span> / <span class="term-hl">dicing</span>          Stealth laser wafer dicing &amp; microarchitecture seam
+  <span class="term-hl">thermal</span>                   Infrared thermography &amp; LN2 cryo-spray
   <span class="term-hl">dissolve</span> / <span class="term-hl">quantum</span>       Quantum tunneling disintegration into silicon dust
   <span class="term-hl">gravity</span> / <span class="term-hl">zerog</span>          Zero-G Verlet physics element collapse &amp; throw
   <span class="term-hl">extras</span>                   Open the Hardware Lab Extras drawer
@@ -1400,32 +1398,20 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 				case 'snap':
 					if (typeof (window as any).__toggleQuantum === 'function') {
 						(window as any).__toggleQuantum();
-						appendOutput('<span class="term-hl">[Quantum Tunneling]</span> Portfolio cards disintegrated into 30,000 silicon particles. Move mouse to swirl vortex; click "Quantum Anneal" or press <span class="term-cyan">Esc</span> to reassemble.');
+						appendOutput('<span class="term-hl">[Quantum Tunneling]</span> Quantum disintegration mode active. Click any box to dissolve into silicon dust (CMO protected!); drag to swirl particles. Click "Quantum Anneal" or press <span class="term-cyan">Esc</span> to reassemble.');
 					} else {
 						appendOutput('<span class="term-err">Quantum Disintegration module not initialized.</span>');
 					}
 					break;
 
 				case 'thermal':
-				case 'flir':
 				case 'cryo':
 				case 'ln2':
 					if (typeof (window as any).__toggleThermal === 'function') {
 						(window as any).__toggleThermal();
-						appendOutput('<span class="term-hl">[FLIR SC660 Thermography]</span> Infrared thermal imaging mode active. Click/hold mouse to spray LN2 (-196°C) or Heat Gun (450°C). Press <span class="term-cyan">Esc</span> to exit.');
+						appendOutput('<span class="term-hl">[Thermal Camera]</span> Infrared thermal imaging mode active. Click/hold mouse to spray LN2 (-196°C) or Heat Gun (450°C). Press <span class="term-cyan">Esc</span> to exit.');
 					} else {
-						appendOutput('<span class="term-err">FLIR Thermal module not initialized.</span>');
-					}
-					break;
-
-				case 'cleave':
-				case 'dicing':
-				case 'laser':
-					if (typeof (window as any).__toggleDicing === 'function') {
-						(window as any).__toggleDicing();
-						appendOutput('<span class="term-hl">[Laser Wafer Dicing]</span> Stealth laser saw ready. Click "Auto Center Cleave" or drag to slice wafer. Press <span class="term-cyan">Esc</span> to exit.');
-					} else {
-						appendOutput('<span class="term-err">Laser Dicing module not initialized.</span>');
+						appendOutput('<span class="term-err">Thermal Camera module not initialized.</span>');
 					}
 					break;
 

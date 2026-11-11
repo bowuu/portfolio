@@ -131,6 +131,16 @@
 			'gravity',
 			'zerog',
 			'tilt',
+			'degauss',
+			'crt',
+			'cyclone',
+			'sphere',
+			'dissolve',
+			'quantum',
+			'thermal',
+			'flir',
+			'cleave',
+			'dicing',
 			'cmo',
 			'boop',
 			'extras'
@@ -834,9 +844,14 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
 
   <span class="term-col">Hardware Lab Extras</span>      <span class="term-col">Description</span>
   <span class="term-dim">------------------------ ------------------------------------------------------------</span>
-  <span class="term-hl">cmo</span> / <span class="term-hl">boop</span>               Chief Morale Officer silicon lottery binning boost
-  <span class="term-hl">gravity</span> / <span class="term-hl">zerog</span>          Zero-G Verlet physics element collapse &amp; throw
+  <span class="term-hl">cyclone</span> / <span class="term-hl">sphere</span>         3D silicon cyclone orbital spherical cage
   <span class="term-hl">tilt</span>                     3D viewport parallax hologram perspective
+  <span class="term-hl">cmo</span> / <span class="term-hl">boop</span>               Chief Morale Officer silicon lottery binning boost
+  <span class="term-hl">degauss</span> / <span class="term-hl">crt</span>            CRT oscilloscope electromagnetic degauss coil warp
+  <span class="term-hl">thermal</span> / <span class="term-hl">flir</span>           FLIR infrared thermography &amp; LN2 cryo-spray
+  <span class="term-hl">cleave</span> / <span class="term-hl">dicing</span>          Stealth laser wafer dicing &amp; microarchitecture seam
+  <span class="term-hl">dissolve</span> / <span class="term-hl">quantum</span>       Quantum tunneling disintegration into silicon dust
+  <span class="term-hl">gravity</span> / <span class="term-hl">zerog</span>          Zero-G Verlet physics element collapse &amp; throw
   <span class="term-hl">extras</span>                   Open the Hardware Lab Extras drawer
 
   <span class="term-col">Undocumented Opcodes</span>     <span class="term-col">Description</span>
@@ -1355,6 +1370,62 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 						appendOutput('<span class="term-hl">[3D Parallax Hologram]</span> Viewport tilt toggled. Move your mouse or tilt your device to view perspective depth. Press <span class="term-cyan">Ctrl+Alt+H</span> or <span class="term-cyan">Esc</span> to exit.');
 					} else {
 						appendOutput('<span class="term-err">3D Tilt module not initialized.</span>');
+					}
+					break;
+
+				case 'degauss':
+				case 'crt':
+					if (typeof (window as any).__toggleDegauss === 'function') {
+						(window as any).__toggleDegauss();
+						appendOutput('<span class="term-hl">[CRT Degauss]</span> Electromagnetic coil pulse fired. Color purity restored. Press <span class="term-cyan">Esc</span> to exit.');
+					} else {
+						appendOutput('<span class="term-err">CRT Degauss module not initialized.</span>');
+					}
+					break;
+
+				case 'sphere':
+				case 'cyclone':
+				case 'orbit':
+					if (typeof (window as any).__toggleSphere === 'function') {
+						(window as any).__toggleSphere();
+						appendOutput('<span class="term-hl">[3D Silicon Cyclone]</span> Portfolio cards launched into 3D orbital sphere. Drag with mouse to rotate; hover to inspect; press <span class="term-cyan">Esc</span> to collapse to 2D.');
+					} else {
+						appendOutput('<span class="term-err">3D Silicon Cyclone module not initialized.</span>');
+					}
+					break;
+
+				case 'dissolve':
+				case 'thanos':
+				case 'quantum':
+				case 'snap':
+					if (typeof (window as any).__toggleQuantum === 'function') {
+						(window as any).__toggleQuantum();
+						appendOutput('<span class="term-hl">[Quantum Tunneling]</span> Portfolio cards disintegrated into 30,000 silicon particles. Move mouse to swirl vortex; click "Quantum Anneal" or press <span class="term-cyan">Esc</span> to reassemble.');
+					} else {
+						appendOutput('<span class="term-err">Quantum Disintegration module not initialized.</span>');
+					}
+					break;
+
+				case 'thermal':
+				case 'flir':
+				case 'cryo':
+				case 'ln2':
+					if (typeof (window as any).__toggleThermal === 'function') {
+						(window as any).__toggleThermal();
+						appendOutput('<span class="term-hl">[FLIR SC660 Thermography]</span> Infrared thermal imaging mode active. Click/hold mouse to spray LN2 (-196°C) or Heat Gun (450°C). Press <span class="term-cyan">Esc</span> to exit.');
+					} else {
+						appendOutput('<span class="term-err">FLIR Thermal module not initialized.</span>');
+					}
+					break;
+
+				case 'cleave':
+				case 'dicing':
+				case 'laser':
+					if (typeof (window as any).__toggleDicing === 'function') {
+						(window as any).__toggleDicing();
+						appendOutput('<span class="term-hl">[Laser Wafer Dicing]</span> Stealth laser saw ready. Click "Auto Center Cleave" or drag to slice wafer. Press <span class="term-cyan">Esc</span> to exit.');
+					} else {
+						appendOutput('<span class="term-err">Laser Dicing module not initialized.</span>');
 					}
 					break;
 

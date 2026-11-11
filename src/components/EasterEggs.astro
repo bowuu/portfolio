@@ -21,6 +21,87 @@
 		<button id="tilt-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
 	</div>
 
+	<!-- CRT BENCH OSCILLOSCOPE DEGAUSS HUD -->
+	<div id="degauss-hud" class="ee-hud degauss-hud hidden">
+		<span class="hud-pulse-dot"></span>
+		<span class="hud-title">⚡ CRT BENCH DEGAUSS &bull; ELECTROMAGNETIC PULSE</span>
+		<button id="degauss-re-btn" type="button" class="ee-hud-btn">Pulse Coil</button>
+		<button id="degauss-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
+	</div>
+
+	<!-- 3D SILICON CYCLONE SPHERE HUD & 3D CORE -->
+	<div id="sphere-hud" class="ee-hud sphere-hud hidden">
+		<span class="hud-pulse-dot"></span>
+		<span class="hud-title">🪐 3D SILICON CYCLONE &bull; DRAG TO ROTATE &bull; HOVER TO INSPECT</span>
+		<button id="sphere-exit-btn" type="button" class="ee-hud-btn">Collapse to 2D (Esc)</button>
+	</div>
+	<div id="sphere-core" class="sphere-core hidden" aria-hidden="true">
+		<div class="die-cube">
+			<div class="die-face die-front mono">7nm HPC CORE</div>
+			<div class="die-face die-back mono">L3 64MB</div>
+			<div class="die-face die-left mono">PCIe Gen5</div>
+			<div class="die-face die-right mono">LPDDR5 PHY</div>
+			<div class="die-face die-top mono">ATE BIST</div>
+			<div class="die-face die-bottom mono">SUBSTRATE</div>
+			<div class="die-aura"></div>
+		</div>
+	</div>
+
+	<!-- QUANTUM TUNNELING DISINTEGRATION HUD & CANVAS -->
+	<div id="quantum-hud" class="ee-hud quantum-hud hidden">
+		<span class="hud-pulse-dot"></span>
+		<span class="hud-title">💨 QUANTUM TUNNELING DISINTEGRATION &bull; DRAG TO SWIRL SILICON DUST</span>
+		<button id="quantum-reassemble-btn" type="button" class="ee-hud-btn">Quantum Anneal (Reassemble)</button>
+		<button id="quantum-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
+	</div>
+	<canvas id="quantum-canvas" class="ee-canvas hidden" aria-hidden="true"></canvas>
+
+	<!-- FLIR INFRARED THERMAL CAMERA HUD, CANVAS & SCALE -->
+	<div id="thermal-hud" class="ee-hud thermal-hud hidden">
+		<div class="thermal-hud-inner">
+			<span class="hud-pulse-dot"></span>
+			<span class="hud-title">🌡️ FLIR SC660 THERMOGRAPHY &bull; <span id="thermal-tool-text">TOOL: LN2 CRYO-SPRAY (-196°C)</span></span>
+			<button id="thermal-tool-btn" type="button" class="ee-hud-btn">Switch to Heat Gun (450°C)</button>
+			<button id="thermal-reset-btn" type="button" class="ee-hud-btn">Normalize (24°C)</button>
+			<button id="thermal-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
+		</div>
+	</div>
+	<div id="thermal-scale-bar" class="thermal-scale-bar hidden" aria-hidden="true">
+		<div class="ts-val max mono">150°C</div>
+		<div class="ts-gradient"></div>
+		<div class="ts-val min mono" id="ts-min-val">-196°C</div>
+		<div class="ts-emissivity mono">ε: 0.95</div>
+	</div>
+	<div id="thermal-spots" class="thermal-spots hidden" aria-hidden="true">
+		<div class="thermal-spot" id="t-spot-cpu" style="top: 25%; left: 35%;">
+			<div class="spot-crosshair"></div>
+			<span class="spot-label mono">SP01 [CPU DIE] <strong id="t-cpu-val">98.4°C</strong></span>
+		</div>
+		<div class="thermal-spot" id="t-spot-vrm" style="top: 42%; left: 62%;">
+			<div class="spot-crosshair"></div>
+			<span class="spot-label mono">SP02 [PMIC VRM] <strong id="t-vrm-val">104.2°C</strong></span>
+		</div>
+		<div class="thermal-spot" id="t-spot-mem" style="top: 65%; left: 45%;">
+			<div class="spot-crosshair"></div>
+			<span class="spot-label mono">SP03 [LPDDR5] <strong id="t-mem-val">71.5°C</strong></span>
+		</div>
+		<div class="thermal-spot" id="t-spot-cursor">
+			<div class="spot-crosshair active"></div>
+			<span class="spot-label mono">PROBE <strong id="t-cursor-val">24.5°C</strong></span>
+		</div>
+	</div>
+	<canvas id="thermal-canvas" class="ee-canvas hidden" aria-hidden="true"></canvas>
+
+	<!-- LASER WAFER DICING & CLEAVE HUD & CANVASES -->
+	<div id="dicing-hud" class="ee-hud dicing-hud hidden">
+		<span class="hud-pulse-dot"></span>
+		<span class="hud-title">✂️ STEALTH LASER WAFER DICING &bull; <span id="dicing-status">DRAG TO DRAW CUT SEAM</span></span>
+		<button id="dicing-auto-btn" type="button" class="ee-hud-btn">Auto Center Cleave</button>
+		<button id="dicing-weld-btn" type="button" class="ee-hud-btn">Laser Sinter / Re-Bond</button>
+		<button id="dicing-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
+	</div>
+	<canvas id="dicing-canvas" class="ee-canvas hidden" aria-hidden="true"></canvas>
+
 
 
 	<!-- 300MM SILICON WAFER DIE SORT MODAL (RETICLE-LIMIT ENTERPRISE DIE) -->
@@ -106,7 +187,17 @@
 			<button id="extras-close-btn" type="button" class="extras-close-btn" aria-label="Close Extras Drawer">&times;</button>
 		</div>
 		<div class="extras-grid">
-			<!-- 1. 3D Tilt (3) -->
+			<!-- 1. 3D Cyclone (3) -->
+			<button id="trigger-sphere-btn" class="extra-item-btn" type="button" title="3D Silicon Cyclone (Google Sphere Tribute)">
+				<span class="item-icon">🌪️</span>
+				<div class="item-meta">
+					<strong class="item-name">3D Cyclone</strong>
+					<span class="item-desc">Orbital 3D spherical cage around silicon die</span>
+				</div>
+				<kbd class="item-kbd">cyclone</kbd>
+			</button>
+
+			<!-- 2. 3D Tilt (3) -->
 			<button id="trigger-tilt-btn" class="extra-item-btn" type="button" title="3D Viewport Parallax Hologram Tilt">
 				<span class="item-icon">📐</span>
 				<div class="item-meta">
@@ -116,7 +207,7 @@
 				<kbd class="item-kbd">Ctrl+Alt+H</kbd>
 			</button>
 
-			<!-- 2. Chief Morale Officer (C) -->
+			<!-- 3. Chief Morale Officer (C) -->
 			<button id="trigger-boop-btn" class="extra-item-btn" type="button" title="Boop Chief Morale Officer (She is a good girl!)">
 				<span class="item-icon">🐾</span>
 				<div class="item-meta">
@@ -126,7 +217,47 @@
 				<kbd class="item-kbd">6.0 GHz Bin 1</kbd>
 			</button>
 
-			<!-- 3. Switch Acoustics (S) -->
+			<!-- 4. CRT Degauss (C) -->
+			<button id="trigger-degauss-btn" class="extra-item-btn" type="button" title="CRT Oscilloscope Electromagnetic Degauss Pulse">
+				<span class="item-icon">⚡</span>
+				<div class="item-meta">
+					<strong class="item-name">CRT Degauss</strong>
+					<span class="item-desc">Electromagnetic coil warp &amp; phosphor pulse</span>
+				</div>
+				<kbd class="item-kbd">degauss</kbd>
+			</button>
+
+			<!-- 5. FLIR Thermal Cam (F) -->
+			<button id="trigger-thermal-btn" class="extra-item-btn" type="button" title="FLIR Infrared Thermal Camera &amp; LN2 Cryo-Blast">
+				<span class="item-icon">🌡️</span>
+				<div class="item-meta">
+					<strong class="item-name">FLIR Thermal Cam</strong>
+					<span class="item-desc">Infrared thermography, LN2 cryo &amp; heat gun</span>
+				</div>
+				<kbd class="item-kbd">thermal</kbd>
+			</button>
+
+			<!-- 6. Laser Dicing (L) -->
+			<button id="trigger-dicing-btn" class="extra-item-btn" type="button" title="Laser Wafer Stealth Dicing &amp; Cleave">
+				<span class="item-icon">✂️</span>
+				<div class="item-meta">
+					<strong class="item-name">Laser Dicing</strong>
+					<span class="item-desc">Slice wafer in half &amp; reveal microarchitecture</span>
+				</div>
+				<kbd class="item-kbd">cleave</kbd>
+			</button>
+
+			<!-- 7. Quantum Tunneling (Q) -->
+			<button id="trigger-quantum-btn" class="extra-item-btn" type="button" title="Quantum Tunneling Particle Disintegration">
+				<span class="item-icon">💨</span>
+				<div class="item-meta">
+					<strong class="item-name">Quantum Tunneling</strong>
+					<span class="item-desc">Disintegrate cards into 30,000 silicon particles</span>
+				</div>
+				<kbd class="item-kbd">dissolve</kbd>
+			</button>
+
+			<!-- 8. Switch Acoustics (S) -->
 			<button id="trigger-switch-sound-btn" class="extra-item-btn" type="button" title="Cycle Mechanical Switch Acoustics">
 				<span class="item-icon">🔊</span>
 				<div class="item-meta">
@@ -136,7 +267,7 @@
 				<kbd class="item-kbd" id="extras-sound-badge">Sound: Off</kbd>
 			</button>
 
-			<!-- 4. Wafer Sort Map (W) -->
+			<!-- 9. Wafer Sort Map (W) -->
 			<button id="trigger-wafer-btn" class="extra-item-btn" type="button" title="300mm Silicon Wafer Sort Map (Near Reticle Limit)">
 				<span class="item-icon">🔬</span>
 				<div class="item-meta">
@@ -146,7 +277,7 @@
 				<kbd class="item-kbd">wafer -g</kbd>
 			</button>
 
-			<!-- 5. Zero-G Drop (Z) -->
+			<!-- 10. Zero-G Drop (Z) -->
 			<button id="trigger-zerog-btn" class="extra-item-btn" type="button" title="Zero-G Physics Collapse">
 				<span class="item-icon">🪐</span>
 				<div class="item-meta">
@@ -157,7 +288,7 @@
 			</button>
 		</div>
 		<div class="extras-footer">
-			<span>Click cards above, use hotkeys, or enter terminal commands (<code>wafer -g</code>, <code>gravity</code>, <code>tilt</code>).</span>
+			<span>Click cards above, use hotkeys, or enter terminal commands (<code>cyclone</code>, <code>degauss</code>, <code>thermal</code>, <code>cleave</code>, <code>dissolve</code>, <code>wafer -g</code>, <code>gravity</code>).</span>
 		</div>
 	</div>
 </div>
@@ -285,6 +416,108 @@
 			gain.connect(this.ctx.destination);
 			source.start(time);
 			source.stop(time + dur);
+		}
+
+		// CRT Degauss electromagnetic coil sweep & relay click
+		public playDegauss() {
+			try {
+				this.init();
+				if (!this.ctx) return;
+				const t = this.ctx.currentTime;
+				const osc = this.ctx.createOscillator();
+				const gain = this.ctx.createGain();
+				const filter = this.ctx.createBiquadFilter();
+
+				osc.type = 'sawtooth';
+				osc.frequency.setValueAtTime(60, t);
+				osc.frequency.exponentialRampToValueAtTime(130, t + 0.3);
+				osc.frequency.exponentialRampToValueAtTime(45, t + 1.4);
+
+				filter.type = 'lowpass';
+				filter.frequency.setValueAtTime(360, t);
+				filter.frequency.exponentialRampToValueAtTime(90, t + 1.4);
+
+				gain.gain.setValueAtTime(0.01, t);
+				gain.gain.linearRampToValueAtTime(0.28, t + 0.25);
+				gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.45);
+
+				osc.connect(filter);
+				filter.connect(gain);
+				gain.connect(this.ctx.destination);
+				osc.start(t);
+				osc.stop(t + 1.45);
+
+				// Mechanical relay click-clack at 1.45s
+				setTimeout(() => {
+					if (!this.ctx) return;
+					this.playImpulse(this.ctx.currentTime, 1800, 0.008, 0.22);
+					this.playTone(this.ctx.currentTime + 0.003, 980, 'square', 0.012, 0.15);
+				}, 1450);
+			} catch {}
+		}
+
+		// Quantum Tunneling disintegrate chime sweep
+		public playQuantumDisintegrate() {
+			try {
+				this.init();
+				if (!this.ctx) return;
+				const t = this.ctx.currentTime;
+				this.playImpulse(t, 2400, 0.04, 0.18);
+				const freqs = [880, 1174, 1567, 2093, 2793];
+				freqs.forEach((f, idx) => {
+					this.playTone(t + idx * 0.06, f, 'sine', 0.25, 0.08);
+				});
+			} catch {}
+		}
+
+		// Laser Cutting Hum & Arc
+		public playLaserCut() {
+			try {
+				this.init();
+				if (!this.ctx) return;
+				const t = this.ctx.currentTime;
+				const osc = this.ctx.createOscillator();
+				const gain = this.ctx.createGain();
+				osc.type = 'sawtooth';
+				osc.frequency.setValueAtTime(2800, t);
+				osc.frequency.exponentialRampToValueAtTime(800, t + 0.35);
+				gain.gain.setValueAtTime(0.12, t);
+				gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+				osc.connect(gain);
+				gain.connect(this.ctx.destination);
+				osc.start(t);
+				osc.stop(t + 0.35);
+				this.playImpulse(t + 0.05, 3400, 0.03, 0.15);
+			} catch {}
+		}
+
+		// Laser Plasma Sinter Weld
+		public playLaserWeld() {
+			try {
+				this.init();
+				if (!this.ctx) return;
+				const t = this.ctx.currentTime;
+				this.playImpulse(t, 1400, 0.08, 0.25);
+				this.playTone(t + 0.02, 440, 'triangle', 0.18, 0.15);
+			} catch {}
+		}
+
+		// Cryo spray hiss burst
+		public playCryoHiss() {
+			try {
+				this.init();
+				if (!this.ctx) return;
+				this.playImpulse(this.ctx.currentTime, 3200, 0.06, 0.08);
+			} catch {}
+		}
+
+		// Heat gun roar burst
+		public playHeatRoar() {
+			try {
+				this.init();
+				if (!this.ctx) return;
+				this.playThump(this.ctx.currentTime, 160, 110, 0.08, 0.10);
+			} catch {}
 		}
 	}
 
@@ -800,14 +1033,56 @@
 	function initEasterEggs() {
 		let isZeroG = false;
 		let isTilt = false;
+		let isDegauss = false;
+		let isSphere = false;
+		let isQuantum = false;
+		let isThermal = false;
+		let isDicing = false;
 
 		const zerogHud = document.getElementById('zerog-hud');
 		const zerogResetBtn = document.getElementById('zerog-reset-btn');
 		const tiltHud = document.getElementById('tilt-hud');
 		const tiltExitBtn = document.getElementById('tilt-exit-btn');
 
+		const degaussHud = document.getElementById('degauss-hud');
+		const degaussReBtn = document.getElementById('degauss-re-btn');
+		const degaussExitBtn = document.getElementById('degauss-exit-btn');
+
+		const sphereHud = document.getElementById('sphere-hud');
+		const sphereExitBtn = document.getElementById('sphere-exit-btn');
+		const sphereCore = document.getElementById('sphere-core');
+
+		const quantumHud = document.getElementById('quantum-hud');
+		const quantumReBtn = document.getElementById('quantum-reassemble-btn');
+		const quantumExitBtn = document.getElementById('quantum-exit-btn');
+		const quantumCanvas = document.getElementById('quantum-canvas') as HTMLCanvasElement | null;
+
+		const thermalHud = document.getElementById('thermal-hud');
+		const thermalToolBtn = document.getElementById('thermal-tool-btn');
+		const thermalResetBtn = document.getElementById('thermal-reset-btn');
+		const thermalExitBtn = document.getElementById('thermal-exit-btn');
+		const thermalScaleBar = document.getElementById('thermal-scale-bar');
+		const thermalSpots = document.getElementById('thermal-spots');
+		const thermalCanvas = document.getElementById('thermal-canvas') as HTMLCanvasElement | null;
+
+		const dicingHud = document.getElementById('dicing-hud');
+		const dicingAutoBtn = document.getElementById('dicing-auto-btn');
+		const dicingWeldBtn = document.getElementById('dicing-weld-btn');
+		const dicingExitBtn = document.getElementById('dicing-exit-btn');
+		const dicingCanvas = document.getElementById('dicing-canvas') as HTMLCanvasElement | null;
+
 		const extrasModal = document.getElementById('lab-extras-modal');
 		const extrasCloseBtn = document.getElementById('extras-close-btn');
+
+		function closeAllActiveModes() {
+			if (isZeroG) resetZeroG();
+			if (isTilt) toggleTilt(false);
+			if (isDegauss) resetDegauss();
+			if (isSphere) resetSphere();
+			if (isQuantum) resetQuantum();
+			if (isThermal) resetThermal();
+			if (isDicing) resetDicing();
+		}
 
 		// 1. REFINED ZERO-G DROP (OVERFLOW LOCK & SLEEP)
 		interface PhysicsBody {
@@ -834,7 +1109,7 @@
 
 		function startZeroG() {
 			if (isZeroG) return;
-			if (isTilt) toggleTilt(false);
+			closeAllActiveModes();
 
 			isZeroG = true;
 			zerogHud?.classList.remove('hidden');
@@ -1033,7 +1308,7 @@
 			const next = typeof force === 'boolean' ? force : !isTilt;
 			if (next === isTilt) return;
 			if (next) {
-				if (isZeroG) resetZeroG();
+				closeAllActiveModes();
 			}
 			isTilt = next;
 
@@ -1064,9 +1339,739 @@
 
 		if (tiltExitBtn) tiltExitBtn.addEventListener('click', () => toggleTilt(false));
 
+		// 3. CRT BENCH OSCILLOSCOPE DEGAUSS
+		let degaussTimer = 0;
+		function pulseDegauss() {
+			audioEngine.playDegauss();
+			document.body.classList.remove('crt-degaussing');
+			void document.body.offsetWidth;
+			document.body.classList.add('crt-degaussing');
+			clearTimeout(degaussTimer);
+			degaussTimer = window.setTimeout(() => {
+				document.body.classList.remove('crt-degaussing');
+			}, 1600);
+		}
+
+		function startDegauss() {
+			if (isDegauss) return;
+			closeAllActiveModes();
+			isDegauss = true;
+			degaussHud?.classList.remove('hidden');
+			document.body.classList.add('crt-active');
+			pulseDegauss();
+		}
+
+		function resetDegauss() {
+			if (!isDegauss) return;
+			isDegauss = false;
+			clearTimeout(degaussTimer);
+			degaussHud?.classList.add('hidden');
+			document.body.classList.remove('crt-active', 'crt-degaussing');
+		}
+
+		degaussReBtn?.addEventListener('click', pulseDegauss);
+		degaussExitBtn?.addEventListener('click', resetDegauss);
+
+		// 4. 3D SILICON CYCLONE / ORBITAL SPHERE (GOOGLE SPHERE TRIBUTE)
+		let sphereAnimId = 0;
+		let sphereRotX = 0;
+		let sphereRotY = 0;
+		let sphereVelX = 0;
+		let sphereVelY = 0.005;
+		let isSphereDragging = false;
+		let lastSphereX = 0;
+		let lastSphereY = 0;
+		let hoveredSphereEl: HTMLElement | null = null;
+		interface SpherePoint {
+			el: HTMLElement;
+			origLeft: number;
+			origTop: number;
+			origW: number;
+			origH: number;
+			px: number;
+			py: number;
+			pz: number;
+		}
+		let spherePoints: SpherePoint[] = [];
+
+		function handleSpherePointerDown(e: PointerEvent) {
+			if (e.target && (e.target as HTMLElement).closest('.ee-hud, .wafer-modal, .lab-extras-modal')) return;
+			isSphereDragging = true;
+			lastSphereX = e.clientX;
+			lastSphereY = e.clientY;
+		}
+
+		function handleSpherePointerMove(e: PointerEvent) {
+			if (isSphereDragging) {
+				const dx = e.clientX - lastSphereX;
+				const dy = e.clientY - lastSphereY;
+				sphereVelY = dx * 0.0035;
+				sphereVelX = -dy * 0.0035;
+				lastSphereX = e.clientX;
+				lastSphereY = e.clientY;
+			}
+		}
+
+		function handleSpherePointerUp() {
+			isSphereDragging = false;
+		}
+
+		function startSphere() {
+			if (isSphere) return;
+			closeAllActiveModes();
+			isSphere = true;
+			sphereHud?.classList.remove('hidden');
+			sphereCore?.classList.remove('hidden');
+
+			document.documentElement.style.overflow = 'hidden';
+			document.body.style.overflow = 'hidden';
+			window.dispatchEvent(new CustomEvent('pause-cad-render'));
+
+			const cards = Array.from(document.querySelectorAll<HTMLElement>('.card, .benchmark-card, .debug-card, .cad-model-card, .hero .avatar-wrap'));
+			const R = Math.min(window.innerWidth, window.innerHeight) * 0.38;
+			const phi = Math.PI * (3 - Math.sqrt(5));
+
+			spherePoints = cards.map((el, i) => {
+				const rect = el.getBoundingClientRect();
+				const y = 1 - (i / Math.max(1, cards.length - 1)) * 2;
+				const rAtY = Math.sqrt(Math.max(0, 1 - y * y));
+				const theta = phi * i;
+				const x = Math.cos(theta) * rAtY;
+				const z = Math.sin(theta) * rAtY;
+
+				el.style.transition = 'none';
+				el.style.willChange = 'transform, opacity';
+
+				return {
+					el,
+					origLeft: rect.left,
+					origTop: rect.top,
+					origW: rect.width,
+					origH: rect.height,
+					px: x * R,
+					py: y * R,
+					pz: z * R
+				};
+			});
+
+			window.addEventListener('pointerdown', handleSpherePointerDown);
+			window.addEventListener('pointermove', handleSpherePointerMove);
+			window.addEventListener('pointerup', handleSpherePointerUp);
+
+			spherePoints.forEach((p) => {
+				p.el.addEventListener('pointerenter', () => { hoveredSphereEl = p.el; });
+				p.el.addEventListener('pointerleave', () => { if (hoveredSphereEl === p.el) hoveredSphereEl = null; });
+			});
+
+			function loopSphere() {
+				if (!isSphere) return;
+				if (!isSphereDragging) {
+					sphereVelX *= 0.95;
+					sphereVelY = sphereVelY * 0.95 + 0.003 * 0.05;
+				}
+				sphereRotX += sphereVelX;
+				sphereRotY += sphereVelY;
+
+				const cosY = Math.cos(sphereRotY), sinY = Math.sin(sphereRotY);
+				const cosX = Math.cos(sphereRotX), sinX = Math.sin(sphereRotX);
+				const cx = window.innerWidth / 2;
+				const cy = window.innerHeight / 2;
+
+				spherePoints.forEach((p) => {
+					const x1 = p.px * cosY - p.pz * sinY;
+					const z1 = p.px * sinY + p.pz * cosY;
+					const y1 = p.py * cosX - z1 * sinX;
+					const z2 = p.py * sinX + z1 * cosX;
+
+					const targetX = cx + x1 - p.origLeft - p.origW / 2;
+					const targetY = cy + y1 - p.origTop - p.origH / 2;
+
+					const depthNorm = Math.max(0, Math.min(1, (z2 + R) / (2 * R)));
+					const isHovered = hoveredSphereEl === p.el;
+					const scale = isHovered ? 1.15 : (0.55 + depthNorm * 0.50);
+					const opacity = isHovered ? 1 : (0.35 + depthNorm * 0.65);
+					const zIndex = isHovered ? 9999 : Math.round(depthNorm * 1000);
+
+					p.el.style.transform = `translate3d(${targetX.toFixed(1)}px, ${targetY.toFixed(1)}px, ${z2.toFixed(1)}px) scale(${scale.toFixed(2)})`;
+					p.el.style.opacity = opacity.toFixed(2);
+					p.el.style.zIndex = zIndex.toString();
+				});
+
+				const dieCube = sphereCore?.querySelector('.die-cube') as HTMLElement | null;
+				if (dieCube) {
+					dieCube.style.transform = `rotateX(${-sphereRotX * 57.3}deg) rotateY(${sphereRotY * 57.3}deg)`;
+				}
+
+				sphereAnimId = requestAnimationFrame(loopSphere);
+			}
+
+			sphereAnimId = requestAnimationFrame(loopSphere);
+		}
+
+		function resetSphere() {
+			if (!isSphere) return;
+			isSphere = false;
+			cancelAnimationFrame(sphereAnimId);
+			sphereHud?.classList.add('hidden');
+			sphereCore?.classList.add('hidden');
+
+			window.removeEventListener('pointerdown', handleSpherePointerDown);
+			window.removeEventListener('pointermove', handleSpherePointerMove);
+			window.removeEventListener('pointerup', handleSpherePointerUp);
+
+			spherePoints.forEach((p) => {
+				p.el.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease';
+				p.el.style.transform = '';
+				p.el.style.opacity = '';
+				p.el.style.zIndex = '';
+			});
+
+			setTimeout(() => {
+				spherePoints.forEach((p) => { p.el.style.transition = ''; });
+				spherePoints = [];
+				document.documentElement.style.overflow = '';
+				document.body.style.overflow = '';
+				window.dispatchEvent(new CustomEvent('resume-cad-render'));
+			}, 500);
+		}
+
+		sphereExitBtn?.addEventListener('click', resetSphere);
+
+		// 5. QUANTUM TUNNELING DISINTEGRATION
+		let quantumAnimId = 0;
+		let quantumState: 'disintegrating' | 'swirling' | 'reassembling' | 'idle' = 'idle';
+		let quantumWaveX = 0;
+		let quantumPointerX = -999;
+		let quantumPointerY = -999;
+		interface QParticle {
+			x: number;
+			y: number;
+			origX: number;
+			origY: number;
+			vx: number;
+			vy: number;
+			color: string;
+			size: number;
+			active: boolean;
+		}
+		let qParticles: QParticle[] = [];
+		let qCards: HTMLElement[] = [];
+
+		function handleQuantumPointer(e: MouseEvent) {
+			quantumPointerX = e.clientX;
+			quantumPointerY = e.clientY;
+		}
+
+		function startQuantum() {
+			if (isQuantum || !quantumCanvas) return;
+			closeAllActiveModes();
+			isQuantum = true;
+			quantumHud?.classList.remove('hidden');
+			quantumCanvas.classList.remove('hidden');
+
+			const dpr = Math.min(window.devicePixelRatio || 1, 2);
+			quantumCanvas.width = window.innerWidth * dpr;
+			quantumCanvas.height = window.innerHeight * dpr;
+			const ctx = quantumCanvas.getContext('2d');
+			if (!ctx) return;
+			ctx.scale(dpr, dpr);
+
+			qCards = Array.from(document.querySelectorAll<HTMLElement>('.card, .benchmark-card, .debug-card'));
+			const winH = window.innerHeight;
+			qCards = qCards.filter(c => {
+				const r = c.getBoundingClientRect();
+				return r.bottom > 0 && r.top < winH;
+			});
+
+			qParticles = [];
+			const colors = ['#f97316', '#38bdf8', '#10b981', '#fbbf24', '#ffffff', '#94a3b8'];
+
+			qCards.forEach(c => {
+				const rect = c.getBoundingClientRect();
+				const count = Math.min(1000, Math.floor((rect.width * rect.height) / 200));
+				for (let i = 0; i < count; i++) {
+					const px = rect.left + Math.random() * rect.width;
+					const py = rect.top + Math.random() * rect.height;
+					const isBorder = (i % 5 === 0);
+					const col = isBorder ? (Math.random() > 0.5 ? '#f97316' : '#38bdf8') : colors[Math.floor(Math.random() * colors.length)];
+					qParticles.push({
+						x: px,
+						y: py,
+						origX: px,
+						origY: py,
+						vx: 0,
+						vy: 0,
+						color: col,
+						size: Math.random() > 0.8 ? 2.5 : 1.5,
+						active: false
+					});
+				}
+			});
+
+			quantumWaveX = 0;
+			quantumState = 'disintegrating';
+			audioEngine.playQuantumDisintegrate();
+			window.addEventListener('mousemove', handleQuantumPointer, { passive: true });
+
+			function loopQuantum() {
+				if (!isQuantum || !ctx || !quantumCanvas) return;
+				ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+				if (quantumState === 'disintegrating') {
+					quantumWaveX += 28;
+					qCards.forEach(c => {
+						const r = c.getBoundingClientRect();
+						if (r.right <= quantumWaveX) {
+							c.style.opacity = '0';
+						} else if (r.left < quantumWaveX) {
+							const ratio = (quantumWaveX - r.left) / r.width;
+							c.style.opacity = (1 - ratio).toFixed(2);
+						}
+					});
+
+					ctx.save();
+					ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+					ctx.fillRect(quantumWaveX - 8, 0, 16, window.innerHeight);
+					ctx.fillStyle = 'rgba(249, 115, 22, 0.85)';
+					ctx.fillRect(quantumWaveX - 1.5, 0, 3, window.innerHeight);
+					ctx.restore();
+
+					if (quantumWaveX > window.innerWidth + 200) {
+						quantumState = 'swirling';
+						qCards.forEach(c => { c.style.opacity = '0'; });
+					}
+				}
+
+				for (const p of qParticles) {
+					if (!p.active && p.origX <= quantumWaveX) {
+						p.active = true;
+						p.vx = (Math.random() - 0.5) * 5 + (Math.random() > 0.5 ? 2 : -2);
+						p.vy = -Math.random() * 4 - 1.2;
+					}
+
+					if (p.active) {
+						if (quantumState === 'reassembling') {
+							const dx = p.origX - p.x;
+							const dy = p.origY - p.y;
+							p.vx = p.vx * 0.84 + dx * 0.16;
+							p.vy = p.vy * 0.84 + dy * 0.16;
+							p.x += p.vx;
+							p.y += p.vy;
+						} else {
+							p.vx *= 0.98;
+							p.vy *= 0.98;
+							p.vy -= 0.04;
+							p.x += p.vx;
+							p.y += p.vy;
+
+							const dist = Math.hypot(p.x - quantumPointerX, p.y - quantumPointerY);
+							if (dist < 150 && dist > 1) {
+								const force = (1 - dist / 150) * 3.5;
+								p.vx += (-(p.y - quantumPointerY) / dist) * force;
+								p.vy += ((p.x - quantumPointerX) / dist) * force;
+							}
+						}
+
+						ctx.fillStyle = p.color;
+						ctx.fillRect(p.x, p.y, p.size, p.size);
+					}
+				}
+
+				if (quantumState === 'reassembling') {
+					let allSnapped = true;
+					for (let i = 0; i < qParticles.length; i += 12) {
+						const p = qParticles[i];
+						if (Math.hypot(p.x - p.origX, p.y - p.origY) > 5) {
+							allSnapped = false;
+							break;
+						}
+					}
+					if (allSnapped) {
+						qCards.forEach(c => { c.style.opacity = ''; });
+						resetQuantum();
+						return;
+					}
+				}
+
+				quantumAnimId = requestAnimationFrame(loopQuantum);
+			}
+
+			quantumAnimId = requestAnimationFrame(loopQuantum);
+		}
+
+		function triggerQuantumReassemble() {
+			if (!isQuantum || quantumState === 'reassembling') return;
+			quantumState = 'reassembling';
+		}
+
+		function resetQuantum() {
+			if (!isQuantum) return;
+			isQuantum = false;
+			cancelAnimationFrame(quantumAnimId);
+			quantumHud?.classList.add('hidden');
+			quantumCanvas?.classList.add('hidden');
+			window.removeEventListener('mousemove', handleQuantumPointer);
+			qCards.forEach(c => { c.style.opacity = ''; });
+			qParticles = [];
+			const ctx = quantumCanvas?.getContext('2d');
+			if (ctx && quantumCanvas) ctx.clearRect(0, 0, quantumCanvas.width, quantumCanvas.height);
+		}
+
+		quantumReBtn?.addEventListener('click', triggerQuantumReassemble);
+		quantumExitBtn?.addEventListener('click', resetQuantum);
+
+		// 6. FLIR INFRARED THERMAL CAMERA & LN2 CRYO-SPRAY
+		let thermalAnimId = 0;
+		let thermalToolMode: 'cryo' | 'heatgun' = 'cryo';
+		let isThermalSpraying = false;
+		let thermalPointerX = 0;
+		let thermalPointerY = 0;
+		let probeTemp = 24.5;
+		let cpuTemp = 98.4;
+		let vrmTemp = 104.2;
+		let memTemp = 71.5;
+		interface ThermalVapor {
+			x: number;
+			y: number;
+			vx: number;
+			vy: number;
+			radius: number;
+			life: number;
+			maxLife: number;
+			color: string;
+		}
+		let thermalVapors: ThermalVapor[] = [];
+
+		const tToolText = document.getElementById('thermal-tool-text');
+		const tToolBtn = document.getElementById('thermal-tool-btn');
+		const tProbeVal = document.getElementById('t-cursor-val');
+		const tCpuVal = document.getElementById('t-cpu-val');
+		const tVrmVal = document.getElementById('t-vrm-val');
+		const tMemVal = document.getElementById('t-mem-val');
+		const tSpotCursor = document.getElementById('t-spot-cursor');
+
+		function handleThermalPointerMove(e: MouseEvent) {
+			thermalPointerX = e.clientX;
+			thermalPointerY = e.clientY;
+			if (tSpotCursor) {
+				tSpotCursor.style.transform = `translate3d(${e.clientX + 14}px, ${e.clientY + 14}px, 0)`;
+			}
+		}
+
+		function handleThermalPointerDown(e: MouseEvent) {
+			if (e.target && (e.target as HTMLElement).closest('.ee-hud, .wafer-modal, .lab-extras-modal')) return;
+			isThermalSpraying = true;
+			thermalPointerX = e.clientX;
+			thermalPointerY = e.clientY;
+		}
+
+		function handleThermalPointerUp() {
+			isThermalSpraying = false;
+		}
+
+		function startThermal() {
+			if (isThermal || !thermalCanvas) return;
+			closeAllActiveModes();
+			isThermal = true;
+			thermalHud?.classList.remove('hidden');
+			thermalScaleBar?.classList.remove('hidden');
+			thermalSpots?.classList.remove('hidden');
+			thermalCanvas.classList.remove('hidden');
+			document.body.classList.add('flir-active');
+
+			const dpr = Math.min(window.devicePixelRatio || 1, 2);
+			thermalCanvas.width = window.innerWidth * dpr;
+			thermalCanvas.height = window.innerHeight * dpr;
+			const ctx = thermalCanvas.getContext('2d');
+			if (!ctx) return;
+			ctx.scale(dpr, dpr);
+
+			window.addEventListener('mousemove', handleThermalPointerMove, { passive: true });
+			window.addEventListener('mousedown', handleThermalPointerDown);
+			window.addEventListener('mouseup', handleThermalPointerUp);
+
+			function loopThermal() {
+				if (!isThermal || !ctx || !thermalCanvas) return;
+				ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+				cpuTemp += (Math.random() - 0.49) * 0.3;
+				vrmTemp += (Math.random() - 0.49) * 0.4;
+				memTemp += (Math.random() - 0.49) * 0.2;
+				if (tCpuVal) tCpuVal.textContent = `${cpuTemp.toFixed(1)}°C`;
+				if (tVrmVal) tVrmVal.textContent = `${vrmTemp.toFixed(1)}°C`;
+				if (tMemVal) tMemVal.textContent = `${memTemp.toFixed(1)}°C`;
+
+				if (isThermalSpraying) {
+					if (thermalToolMode === 'cryo') {
+						probeTemp = Math.max(-196, probeTemp - 8.5);
+						audioEngine.playCryoHiss();
+						for (let i = 0; i < 6; i++) {
+							thermalVapors.push({
+								x: thermalPointerX + (Math.random() - 0.5) * 20,
+								y: thermalPointerY + (Math.random() - 0.5) * 20,
+								vx: (Math.random() - 0.5) * 6,
+								vy: (Math.random() - 0.5) * 6 - 1.5,
+								radius: 12 + Math.random() * 24,
+								life: 0,
+								maxLife: 24 + Math.random() * 16,
+								color: Math.random() > 0.5 ? 'rgba(56, 189, 248, ' : 'rgba(224, 242, 254, '
+							});
+						}
+					} else {
+						probeTemp = Math.min(450, probeTemp + 12.0);
+						audioEngine.playHeatRoar();
+						for (let i = 0; i < 6; i++) {
+							thermalVapors.push({
+								x: thermalPointerX + (Math.random() - 0.5) * 20,
+								y: thermalPointerY + (Math.random() - 0.5) * 20,
+								vx: (Math.random() - 0.5) * 6,
+								vy: (Math.random() - 0.5) * 6 - 2.5,
+								radius: 15 + Math.random() * 28,
+								life: 0,
+								maxLife: 20 + Math.random() * 12,
+								color: Math.random() > 0.5 ? 'rgba(249, 115, 22, ' : 'rgba(255, 255, 255, '
+							});
+						}
+					}
+				} else {
+					probeTemp += (24.5 - probeTemp) * 0.05;
+				}
+
+				if (tProbeVal) {
+					if (probeTemp <= -100) {
+						tProbeVal.textContent = `${probeTemp.toFixed(1)}°C [SUPERCOOLED 77K]`;
+						tProbeVal.style.color = '#38bdf8';
+					} else if (probeTemp >= 120) {
+						tProbeVal.textContent = `${probeTemp.toFixed(1)}°C [RUNAWAY SATURATION]`;
+						tProbeVal.style.color = '#ef4444';
+					} else {
+						tProbeVal.textContent = `${probeTemp.toFixed(1)}°C`;
+						tProbeVal.style.color = '#10b981';
+					}
+				}
+
+				for (let i = thermalVapors.length - 1; i >= 0; i--) {
+					const v = thermalVapors[i];
+					v.x += v.vx;
+					v.y += v.vy;
+					v.life++;
+					const progress = v.life / v.maxLife;
+					const alpha = (1 - progress) * 0.45;
+					ctx.fillStyle = `${v.color}${alpha.toFixed(2)})`;
+					ctx.beginPath();
+					ctx.arc(v.x, v.y, v.radius * (1 + progress * 0.5), 0, Math.PI * 2);
+					ctx.fill();
+
+					if (v.life >= v.maxLife) {
+						thermalVapors.splice(i, 1);
+					}
+				}
+
+				thermalAnimId = requestAnimationFrame(loopThermal);
+			}
+
+			thermalAnimId = requestAnimationFrame(loopThermal);
+		}
+
+		function toggleThermalTool() {
+			if (thermalToolMode === 'cryo') {
+				thermalToolMode = 'heatgun';
+				if (tToolText) tToolText.textContent = 'TOOL: HEAT GUN (450°C)';
+				if (tToolBtn) tToolBtn.textContent = 'Switch to LN2 Cryo (-196°C)';
+			} else {
+				thermalToolMode = 'cryo';
+				if (tToolText) tToolText.textContent = 'TOOL: LN2 CRYO-SPRAY (-196°C)';
+				if (tToolBtn) tToolBtn.textContent = 'Switch to Heat Gun (450°C)';
+			}
+		}
+
+		function normalizeThermal() {
+			probeTemp = 24.5;
+			cpuTemp = 98.4;
+			vrmTemp = 104.2;
+			memTemp = 71.5;
+			thermalVapors = [];
+		}
+
+		function resetThermal() {
+			if (!isThermal) return;
+			isThermal = false;
+			cancelAnimationFrame(thermalAnimId);
+			thermalHud?.classList.add('hidden');
+			thermalScaleBar?.classList.add('hidden');
+			thermalSpots?.classList.add('hidden');
+			thermalCanvas?.classList.add('hidden');
+			document.body.classList.remove('flir-active');
+			window.removeEventListener('mousemove', handleThermalPointerMove);
+			window.removeEventListener('mousedown', handleThermalPointerDown);
+			window.removeEventListener('mouseup', handleThermalPointerUp);
+			thermalVapors = [];
+			const ctx = thermalCanvas?.getContext('2d');
+			if (ctx && thermalCanvas) ctx.clearRect(0, 0, thermalCanvas.width, thermalCanvas.height);
+		}
+
+		tToolBtn?.addEventListener('click', toggleThermalTool);
+		thermalResetBtn?.addEventListener('click', normalizeThermal);
+		thermalExitBtn?.addEventListener('click', resetThermal);
+
+		// 7. STEALTH LASER WAFER DICING & CLEAVE
+		let dicingAnimId = 0;
+		let isDiced = false;
+		let dicingCutProgress = 0;
+		interface DicingSpark {
+			x: number;
+			y: number;
+			vx: number;
+			vy: number;
+			life: number;
+			maxLife: number;
+			color: string;
+		}
+		let dicingSparks: DicingSpark[] = [];
+
+		function runCenterCleave() {
+			if (isDiced || !dicingCanvas) return;
+			dicingCutProgress = 0;
+			audioEngine.playLaserCut();
+
+			const dpr = Math.min(window.devicePixelRatio || 1, 2);
+			dicingCanvas.width = window.innerWidth * dpr;
+			dicingCanvas.height = window.innerHeight * dpr;
+			const ctx = dicingCanvas.getContext('2d');
+			if (!ctx) return;
+			ctx.scale(dpr, dpr);
+
+			const cx = window.innerWidth / 2;
+			const startY = 0;
+			const endY = window.innerHeight;
+
+			function stepLaser() {
+				if (!isDicing) return;
+				ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+				dicingCutProgress += 24;
+
+				const curY = Math.min(endY, dicingCutProgress);
+
+				ctx.save();
+				ctx.strokeStyle = '#22c55e';
+				ctx.lineWidth = 3;
+				ctx.shadowColor = '#4ade80';
+				ctx.shadowBlur = 14;
+				ctx.beginPath();
+				ctx.moveTo(cx, startY);
+				ctx.lineTo(cx, curY);
+				ctx.stroke();
+
+				ctx.fillStyle = '#ffffff';
+				ctx.beginPath();
+				ctx.arc(cx, curY, 6, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.restore();
+
+				for (let i = 0; i < 8; i++) {
+					dicingSparks.push({
+						x: cx,
+						y: curY,
+						vx: (Math.random() - 0.5) * 12,
+						vy: (Math.random() - 0.5) * 8 - 2,
+						life: 0,
+						maxLife: 15 + Math.random() * 15,
+						color: Math.random() > 0.4 ? '#f97316' : '#fde047'
+					});
+				}
+
+				for (let i = dicingSparks.length - 1; i >= 0; i--) {
+					const s = dicingSparks[i];
+					s.x += s.vx;
+					s.y += s.vy;
+					s.vy += 0.3;
+					s.life++;
+					ctx.fillStyle = s.color;
+					ctx.fillRect(s.x, s.y, 2, 2);
+					if (s.life >= s.maxLife) dicingSparks.splice(i, 1);
+				}
+
+				if (dicingCutProgress < endY + 40) {
+					dicingAnimId = requestAnimationFrame(stepLaser);
+				} else {
+					isDiced = true;
+					document.body.classList.add('diced-split');
+					const statusEl = document.getElementById('dicing-status');
+					if (statusEl) statusEl.textContent = 'CLEAVE COMPLETE &bull; EXPOSED Cu INTERCONNECTS';
+
+					ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+					ctx.save();
+					ctx.fillStyle = 'rgba(249, 115, 22, 0.2)';
+					ctx.fillRect(cx - 18, 0, 36, window.innerHeight);
+					ctx.strokeStyle = '#f97316';
+					ctx.lineWidth = 1;
+					for (let y = 10; y < window.innerHeight; y += 18) {
+						ctx.beginPath();
+						ctx.moveTo(cx - 16, y);
+						ctx.lineTo(cx + 16, y);
+						ctx.stroke();
+					}
+					ctx.restore();
+				}
+			}
+
+			dicingAnimId = requestAnimationFrame(stepLaser);
+		}
+
+		function weldCleave() {
+			if (!isDiced || !dicingCanvas) return;
+			audioEngine.playLaserWeld();
+			const ctx = dicingCanvas.getContext('2d');
+			if (ctx) {
+				const cx = window.innerWidth / 2;
+				ctx.save();
+				ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+				ctx.fillRect(cx - 24, 0, 48, window.innerHeight);
+				ctx.restore();
+				setTimeout(() => {
+					ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+				}, 120);
+			}
+			document.body.classList.remove('diced-split');
+			isDiced = false;
+			const statusEl = document.getElementById('dicing-status');
+			if (statusEl) statusEl.textContent = 'SEAM SINTERED &bull; 100% LATTICE BOND';
+		}
+
+		function startDicing() {
+			if (isDicing || !dicingCanvas) return;
+			closeAllActiveModes();
+			isDicing = true;
+			dicingHud?.classList.remove('hidden');
+			dicingCanvas.classList.remove('hidden');
+		}
+
+		function resetDicing() {
+			if (!isDicing) return;
+			isDicing = false;
+			isDiced = false;
+			cancelAnimationFrame(dicingAnimId);
+			dicingHud?.classList.add('hidden');
+			dicingCanvas?.classList.add('hidden');
+			document.body.classList.remove('diced-split');
+			const ctx = dicingCanvas?.getContext('2d');
+			if (ctx && dicingCanvas) ctx.clearRect(0, 0, dicingCanvas.width, dicingCanvas.height);
+			const statusEl = document.getElementById('dicing-status');
+			if (statusEl) statusEl.textContent = 'DRAG TO DRAW CUT SEAM';
+		}
+
+		dicingAutoBtn?.addEventListener('click', runCenterCleave);
+		dicingWeldBtn?.addEventListener('click', weldCleave);
+		dicingExitBtn?.addEventListener('click', resetDicing);
+
 		// Global API Exports
 		(window as any).__toggleZeroG = () => (isZeroG ? resetZeroG() : startZeroG());
 		(window as any).__toggleTilt = (force?: boolean) => toggleTilt(force);
+		(window as any).__toggleDegauss = () => (isDegauss ? resetDegauss() : startDegauss());
+		(window as any).__toggleSphere = () => (isSphere ? resetSphere() : startSphere());
+		(window as any).__toggleQuantum = () => (isQuantum ? resetQuantum() : startQuantum());
+		(window as any).__toggleThermal = () => (isThermal ? resetThermal() : startThermal());
+		(window as any).__toggleDicing = () => (isDicing ? resetDicing() : startDicing());
 		(window as any).__toggleLabExtras = () => { extrasModal?.classList.toggle('hidden'); };
 
 		const kbLabEl = document.getElementById('keyboard-lab');
@@ -1083,10 +2088,9 @@
 					waferModal.classList.add('hidden');
 					return;
 				}
-				if (isZeroG || isTilt || (extrasModal && !extrasModal.classList.contains('hidden'))) {
+				if (isZeroG || isTilt || isDegauss || isSphere || isQuantum || isThermal || isDicing || (extrasModal && !extrasModal.classList.contains('hidden'))) {
 					e.preventDefault();
-					if (isZeroG) resetZeroG();
-					if (isTilt) toggleTilt(false);
+					closeAllActiveModes();
 					extrasModal?.classList.add('hidden');
 				}
 				return;
@@ -1113,14 +2117,34 @@
 			}
 		});
 
-		// Lab Extras Drawer Wire-up (Alphabetical Order 3-C-S-W-Z)
+		// Lab Extras Drawer Wire-up (Alphabetical Order 10 items)
+		document.getElementById('trigger-sphere-btn')?.addEventListener('click', () => {
+			extrasModal?.classList.add('hidden');
+			startSphere();
+		});
 		document.getElementById('trigger-tilt-btn')?.addEventListener('click', () => {
 			extrasModal?.classList.add('hidden');
-			(window as any).__toggleTilt();
+			toggleTilt();
 		});
 		document.getElementById('trigger-boop-btn')?.addEventListener('click', () => {
 			extrasModal?.classList.add('hidden');
 			(window as any).__boopDog?.();
+		});
+		document.getElementById('trigger-degauss-btn')?.addEventListener('click', () => {
+			extrasModal?.classList.add('hidden');
+			startDegauss();
+		});
+		document.getElementById('trigger-thermal-btn')?.addEventListener('click', () => {
+			extrasModal?.classList.add('hidden');
+			startThermal();
+		});
+		document.getElementById('trigger-dicing-btn')?.addEventListener('click', () => {
+			extrasModal?.classList.add('hidden');
+			startDicing();
+		});
+		document.getElementById('trigger-quantum-btn')?.addEventListener('click', () => {
+			extrasModal?.classList.add('hidden');
+			startQuantum();
 		});
 		document.getElementById('trigger-wafer-btn')?.addEventListener('click', () => {
 			extrasModal?.classList.add('hidden');
@@ -1682,6 +2706,197 @@
 		0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
 		60% { opacity: 1; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.2); }
 		100% { opacity: 0; transform: translate(calc(-50% + var(--dx) * 1.3), calc(-50% + var(--dy) * 1.3)) scale(0.6); }
+	}
+
+	/* HARDWARE LAB EASTER EGG FULL-VIEWPORT CANVASES */
+	.ee-canvas {
+		position: fixed;
+		inset: 0;
+		width: 100vw;
+		height: 100vh;
+		pointer-events: none;
+		z-index: 999990;
+	}
+
+	/* 1. CRT BENCH OSCILLOSCOPE DEGAUSS & SCANLINES */
+	:global(body.crt-active)::after {
+		content: '';
+		position: fixed;
+		inset: 0;
+		pointer-events: none;
+		z-index: 999980;
+		background: 
+			linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.28) 50%),
+			linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+		background-size: 100% 3px, 4px 100%;
+		box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.75);
+	}
+	:global(body.crt-degaussing main) {
+		animation: degaussWarp 1.45s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+	}
+	@keyframes degaussWarp {
+		0% { transform: scale(1) skew(0deg); filter: contrast(1); }
+		8% { transform: scale(1.08, 0.92) skew(4deg, -2.5deg); filter: contrast(2.4) brightness(1.6) drop-shadow(-8px 0 0 #ff0055) drop-shadow(8px 0 0 #00ffff); }
+		18% { transform: scale(0.94, 1.07) skew(-5deg, 3deg); filter: contrast(2.2) brightness(1.4) drop-shadow(10px 0 0 #ff0055) drop-shadow(-10px 0 0 #00ffff); }
+		32% { transform: scale(1.04, 0.96) skew(3deg, -1.5deg); filter: contrast(1.7) brightness(1.25) drop-shadow(-5px 0 0 #ff0055) drop-shadow(5px 0 0 #00ffff); }
+		50% { transform: scale(0.98, 1.02) skew(-2deg, 1deg); filter: contrast(1.3) brightness(1.15) drop-shadow(3px 0 0 #ff0055) drop-shadow(-3px 0 0 #00ffff); }
+		72% { transform: scale(1.01, 0.99) skew(1deg, -0.5deg); filter: contrast(1.1) brightness(1.05); }
+		100% { transform: scale(1) skew(0deg); filter: contrast(1); }
+	}
+
+	/* 2. 3D SILICON CYCLONE SPHERE CORE & CUBE */
+	.sphere-core {
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		perspective: 1000px;
+		pointer-events: none;
+		z-index: 500;
+	}
+	.die-cube {
+		width: 110px;
+		height: 110px;
+		position: relative;
+		transform-style: preserve-3d;
+		transition: transform 0.05s linear;
+	}
+	.die-face {
+		position: absolute;
+		width: 110px;
+		height: 110px;
+		background: rgba(15, 23, 42, 0.88);
+		border: 1px solid #f97316;
+		box-shadow: 0 0 20px rgba(249, 115, 22, 0.35), inset 0 0 16px rgba(249, 115, 22, 0.2);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.65em;
+		font-weight: 700;
+		color: #fbbf24;
+		letter-spacing: 0.06em;
+	}
+	.die-front  { transform: rotateY(0deg) translateZ(55px); }
+	.die-back   { transform: rotateY(180deg) translateZ(55px); }
+	.die-left   { transform: rotateY(-90deg) translateZ(55px); }
+	.die-right  { transform: rotateY(90deg) translateZ(55px); }
+	.die-top    { transform: rotateX(90deg) translateZ(55px); }
+	.die-face.die-bottom { transform: rotateX(-90deg) translateZ(55px); }
+	.die-aura {
+		position: absolute;
+		inset: -35px;
+		border-radius: 50%;
+		background: radial-gradient(circle, rgba(249, 115, 22, 0.3) 0%, transparent 70%);
+		animation: auraPulse 2s ease-in-out infinite alternate;
+	}
+	@keyframes auraPulse {
+		from { transform: scale(0.9); opacity: 0.6; }
+		to { transform: scale(1.15); opacity: 1; }
+	}
+
+	/* 3. FLIR INFRARED THERMAL CAMERA VIEWPORT */
+	:global(body.flir-active main) {
+		filter: invert(0.85) hue-rotate(185deg) saturate(3.2) contrast(1.35) !important;
+		transition: filter 0.35s ease;
+	}
+	.thermal-scale-bar {
+		position: fixed;
+		right: 18px;
+		top: 50%;
+		transform: translateY(-50%);
+		width: 36px;
+		height: 260px;
+		background: rgba(15, 23, 42, 0.92);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 6px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: space-between;
+		padding: 8px 4px;
+		z-index: 999995;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+		pointer-events: none;
+	}
+	.ts-gradient {
+		width: 10px;
+		flex: 1;
+		margin: 6px 0;
+		border-radius: 3px;
+		background: linear-gradient(to bottom, #ffffff 0%, #fde047 18%, #f97316 40%, #dc2626 62%, #7c3aed 82%, #0284c7 92%, #38bdf8 100%);
+	}
+	.ts-val {
+		font-size: 0.58em;
+		font-weight: 700;
+		color: #f8fafc;
+	}
+	.ts-emissivity {
+		font-size: 0.55em;
+		color: rgb(var(--gray));
+	}
+	.thermal-spots {
+		position: fixed;
+		inset: 0;
+		pointer-events: none;
+		z-index: 999994;
+	}
+	.thermal-spot {
+		position: absolute;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		pointer-events: none;
+	}
+	.spot-crosshair {
+		width: 14px;
+		height: 14px;
+		border: 1px solid #ef4444;
+		border-radius: 50%;
+		position: relative;
+	}
+	.spot-crosshair::before, .spot-crosshair::after {
+		content: '';
+		position: absolute;
+		background: #ef4444;
+	}
+	.spot-crosshair::before { top: 50%; left: -3px; right: -3px; height: 1px; transform: translateY(-50%); }
+	.spot-crosshair::after { left: 50%; top: -3px; bottom: -3px; width: 1px; transform: translateX(-50%); }
+	.spot-crosshair.active {
+		border-color: #38bdf8;
+	}
+	.spot-crosshair.active::before, .spot-crosshair.active::after {
+		background: #38bdf8;
+	}
+	.spot-label {
+		font-size: 0.65em;
+		font-weight: 700;
+		background: rgba(15, 23, 42, 0.88);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		padding: 2px 6px;
+		border-radius: 4px;
+		color: #f8fafc;
+		white-space: nowrap;
+	}
+	#t-spot-cursor {
+		top: 0;
+		left: 0;
+		transition: transform 0.04s linear;
+	}
+
+	/* 4. LASER WAFER DICING CLEAVE SPLIT */
+	:global(body.diced-split main) {
+		transition: clip-path 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+		clip-path: polygon(
+			0 0, 
+			calc(50% - 16px) 0, 
+			calc(50% - 16px) 100%, 
+			0 100%, 
+			0 0, 
+			calc(50% + 16px) 0, 
+			100% 0, 
+			100% 100%, 
+			calc(50% + 16px) 100%
+		);
 	}
 
 	@media (max-width: 820px) {

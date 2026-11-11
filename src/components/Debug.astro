@@ -191,11 +191,14 @@
 			const angleMatch = renderer.match(/ANGLE \([^,]+,\s*([^,]+)/);
 			const raw = angleMatch && angleMatch[1] ? angleMatch[1] : renderer;
 			let cleaned = raw
+				.replace(/^ANGLE Metal Renderer:\s*/i, '')
 				.replace(/\sDirect3D.*$/, '')
 				.replace(/\s*\((?:0x)?[0-9a-fA-F]{4,8}\)/g, '')
 				.replace(/\s*\((?:TM|tm|R|r)\)/gi, '')
 				.replace(/[™®]/g, '')
-				.replace(/\s+GPU$/i, '')
+				.replace(/(?<!^Apple)\s+GPU$/i, '')
+				.replace(/,?\s*or similar\b[\s.]*/gi, '')
+				.replace(/^Mesa (?:DRI )?/i, '')
 				.replace(/\s+/g, ' ')
 				.trim();
 
@@ -260,10 +263,14 @@
 		}
 
 		// 3. macOS
-		if (/Macintosh; Intel Mac OS X (\d+[._]\d+)/.test(ua)) {
+		if (/Macintosh; Intel Mac OS X (\d+[._]\d+)/.test(ua) || /Macintosh/i.test(ua) || platform === 'MacIntel') {
 			const match = ua.match(/Macintosh; Intel Mac OS X (\d+[._]\d+)/);
-			const ver = match ? match[1].replace(/_/g, '.') : '';
+			let ver = match ? match[1].replace(/_/g, '.') : '';
 			const isAppleSilicon = /Apple/i.test(gpu);
+			// Apple WebKit permanently freezes Safari UA to 10.15 (10.15.7). Omit the synthetic version for Apple Silicon or legacy freeze
+			if (isAppleSilicon || ver === '10.15') {
+				ver = '';
+			}
 			return {
 				display: buildOSDisplay('macOS', ver, isAppleSilicon ? 'ARM64' : 'x86_64'),
 				tooltip: isAppleSilicon ? 'Apple Silicon' : 'Intel Mac'
@@ -279,11 +286,21 @@
 			};
 		}
 
-		// 5. Genuine Desktop GNU/Linux (no mobile ARM GPU and no multitouch)
-		if (/Linux/i.test(ua) || /Linux/i.test(platform)) {
+		// 5. ChromeOS (Chromebooks)
+		if (/CrOS/i.test(ua)) {
+			const isArm = /arm|aarch64/i.test(ua);
 			return {
-				display: buildOSDisplay('GNU/Linux', '', 'x86_64'),
-				tooltip: 'Linux Workstation'
+				display: buildOSDisplay('ChromeOS', '', isArm ? 'ARM64' : 'x86_64'),
+				tooltip: 'Chromebook'
+			};
+		}
+
+		// 6. Genuine Desktop GNU/Linux (no mobile ARM GPU and no multitouch)
+		if (/Linux/i.test(ua) || /Linux/i.test(platform)) {
+			const isArmLinux = /aarch64|arm64|armv8/i.test(ua) || /aarch64|arm64|armv8/i.test(platform);
+			return {
+				display: buildOSDisplay('GNU/Linux', '', isArmLinux ? 'ARM64' : 'x86_64'),
+				tooltip: isArmLinux ? 'ARM Linux Workstation' : 'Linux Workstation'
 			};
 		}
 
@@ -423,12 +440,19 @@
 		// 4. System Memory
 		if (ramEl) {
 			const mem = (navigator as any).deviceMemory;
-			ramEl.textContent = mem ? `${mem} GB RAM` : '64-bit Architecture';
+			if (mem) {
+				ramEl.textContent = `${mem} GB RAM`;
+				ramEl.title = 'Approximate device memory capacity via Device Memory API.';
+			} else {
+				ramEl.textContent = '64-bit Architecture';
+				ramEl.title = 'Device memory capacity not exposed by browser (privacy protection).';
+			}
 		}
 
 		// 5. Display & Scaling
 		if (displayEl) {
-			const dpr = window.devicePixelRatio ? ` @ ${window.devicePixelRatio}x scaling` : '';
+			const dprVal = window.devicePixelRatio ? Number(window.devicePixelRatio.toFixed(2)) : null;
+			const dpr = dprVal ? ` @ ${dprVal}x scaling` : '';
 			const depth = window.screen.colorDepth ? ` (${window.screen.colorDepth}-bit color)` : '';
 			displayEl.textContent = `${window.screen.width} × ${window.screen.height}${dpr}${depth}`;
 		}
@@ -442,59 +466,104 @@
 		const hdrTag = (isHDR || isVideoHDR) ? 'HDR' : 'SDR';
 
 		if (refreshEl) {
-			let maxObservedHz = 60;
+			let baselineHz = 0;
+			let activeHz = 0;
+			let isAdaptiveVRR = false;
 			let isSampling = false;
 
-			function measureRefreshBurst(targetSamples: number = 35) {
+			const STANDARD_RATES = [60, 75, 90, 100, 120, 144, 165, 180, 200, 240, 280, 360, 480, 500, 540];
+
+			function updateDisplay() {
+				if (!refreshEl) return;
+				const displayHz = activeHz || baselineHz || 60;
+				const vrrTag = (displayHz > 60 || isAdaptiveVRR) ? ' (Adaptive VRR)' : '';
+				refreshEl.textContent = `${displayHz} Hz${vrrTag} • ${gamut} • ${hdrTag}`;
+			}
+
+			function measureRefreshBurst(targetSamples: number = 40, isInteraction: boolean = false) {
 				if (isSampling) return;
 				isSampling = true;
-				let frameTimes: number[] = [];
+				const frameTimes: number[] = [];
 				let lastFrame = performance.now();
 				let frames = 0;
 
 				function onFrame(now: number) {
 					const delta = now - lastFrame;
 					lastFrame = now;
-					if (delta > 2 && delta < 100) frameTimes.push(delta);
+					if (delta > 3 && delta < 100) frameTimes.push(delta);
 					frames++;
 
 					if (frames < targetSamples) {
 						requestAnimationFrame(onFrame);
 					} else {
 						isSampling = false;
-						if (frameTimes.length > 5) {
-							const clean = frameTimes.slice(3).sort((a, b) => a - b);
-							const p15 = clean[Math.floor(clean.length * 0.2)];
-							let rawHz = Math.round(1000 / p15);
+						// Discard first 4 frames for settling and sort deltas
+						if (frameTimes.length >= 15) {
+							const clean = frameTimes.slice(4).sort((a, b) => a - b);
+							const mid = Math.floor(clean.length / 2);
+							const medianDelta = clean.length % 2 === 0
+								? (clean[mid - 1] + clean[mid]) / 2
+								: clean[mid];
+							let measuredHz = Math.round(1000 / medianDelta);
 
-							for (const std of [60, 75, 90, 120, 144, 165, 240, 360]) {
-								if (Math.abs(rawHz - std) <= 4) {
-									rawHz = std;
+							for (const std of STANDARD_RATES) {
+								if (Math.abs(measuredHz - std) <= 3) {
+									measuredHz = std;
 									break;
 								}
 							}
 
-							if (rawHz > maxObservedHz) maxObservedHz = rawHz;
-							const vrrTag = maxObservedHz > 60 ? ' (Adaptive VRR)' : '';
-							if (refreshEl) {
-								refreshEl.textContent = `${maxObservedHz} Hz${vrrTag} • ${gamut} • ${hdrTag}`;
+							if (!baselineHz) {
+								baselineHz = measuredHz;
+								activeHz = measuredHz;
+								if (measuredHz > 60) {
+									isAdaptiveVRR = true;
+								}
+							} else if (isInteraction) {
+								// Flag Adaptive VRR if active interaction median exceeds baseline or runs high-refresh
+								if (measuredHz > baselineHz || measuredHz > 60) {
+									activeHz = measuredHz;
+									isAdaptiveVRR = true;
+								} else {
+									activeHz = measuredHz;
+								}
+							} else {
+								activeHz = measuredHz;
+								if (measuredHz > 60) {
+									isAdaptiveVRR = true;
+								}
 							}
+
+							updateDisplay();
 						}
 					}
 				}
 				requestAnimationFrame(onFrame);
 			}
 
-			measureRefreshBurst(30);
+			// Baseline measurement on load
+			measureRefreshBurst(40, false);
 
-			const wakeVRR = () => {
-				measureRefreshBurst(35);
+			// Check for adaptive high-refresh rate during user interaction (e.g. 120Hz LTPO / G-Sync)
+			let interactionTimer: ReturnType<typeof setTimeout> | null = null;
+			const onInteraction = () => {
+				if (interactionTimer) return;
+				interactionTimer = setTimeout(() => {
+					interactionTimer = null;
+					measureRefreshBurst(40, true);
+				}, 100);
 			};
-			window.addEventListener('scroll', wakeVRR, { passive: true, once: false });
-			window.addEventListener('pointerdown', wakeVRR, { passive: true, once: false });
+			window.addEventListener('scroll', onInteraction, { passive: true });
+			window.addEventListener('pointerdown', onInteraction, { passive: true });
+
 			refreshEl.style.cursor = 'pointer';
-			refreshEl.title = 'Click to re-test display refresh rate.';
-			refreshEl.addEventListener('click', () => measureRefreshBurst(50));
+			refreshEl.title = 'Click to re-test display refresh rate. Detects high-refresh G-Sync/FreeSync/ProMotion panels and dynamic VRR/LTPO scaling.';
+			refreshEl.addEventListener('click', () => {
+				baselineHz = 0;
+				activeHz = 0;
+				isAdaptiveVRR = false;
+				measureRefreshBurst(50, false);
+			});
 		}
 
 		// 9. Screen Orientation & Hardware Angle
@@ -503,37 +572,37 @@
 				if (screen.orientation) {
 					const angle = screen.orientation.angle || 0;
 					const rawType = screen.orientation.type || '';
-					let label = 'Standard Landscape';
-					let desc = 'Standard horizontal desktop display (0° rotation)';
+					const isPortraitCurrent = rawType.startsWith('portrait') || (window.innerHeight > window.innerWidth);
+					const currentMode = isPortraitCurrent ? 'Portrait' : 'Landscape';
 
-					if (rawType.startsWith('landscape')) {
-						if (angle === 180) {
-							label = 'Inverted Landscape (180°)';
-							desc = 'Horizontal display inverted upside-down (180° rotation)';
+					// Determine hardware panel's native orientation from type and rotation angle
+					let nativeMode = 'Landscape';
+					if (rawType.includes('primary')) {
+						nativeMode = rawType.startsWith('portrait') ? 'Portrait' : 'Landscape';
+					} else if (rawType.includes('secondary')) {
+						if (angle === 90 || angle === 270) {
+							nativeMode = rawType.startsWith('portrait') ? 'Landscape' : 'Portrait';
 						} else {
-							label = 'Standard Landscape (Horizontal)';
-							desc = 'Standard horizontal desktop display (0° rotation)';
+							nativeMode = rawType.startsWith('portrait') ? 'Portrait' : 'Landscape';
 						}
-					} else if (rawType.startsWith('portrait')) {
-						if (angle === 180) {
-							label = 'Inverted Portrait (180°)';
-							desc = 'Vertical display rotated upside-down (180° rotation)';
-						} else {
-							label = 'Standard Portrait (Vertical)';
-							desc = 'Vertical upright display orientation (90° or 270° rotation)';
-						}
+					}
+
+					let label = '';
+					if (angle === 0) {
+						label = `${currentMode} (0° Native)`;
+					} else if (angle === 180) {
+						label = `Inverted ${currentMode} (180°)`;
 					} else {
-						const isLand = window.innerWidth > window.innerHeight;
-						label = isLand ? 'Standard Landscape (Horizontal)' : 'Standard Portrait (Vertical)';
-						desc = isLand ? 'Standard horizontal display' : 'Standard vertical display';
+						label = `${currentMode} (${angle}° Rotated)`;
 					}
 
 					orientEl.textContent = label;
-					orientEl.title = `${desc}. Angle: ${angle}°.`;
+					orientEl.title = `Current: ${currentMode} • Default: ${nativeMode} (${angle}° rotation).`;
 				} else {
-					const isLand = window.innerWidth > window.innerHeight;
-					orientEl.textContent = isLand ? 'Standard Landscape (Horizontal)' : 'Standard Portrait (Vertical)';
-					orientEl.title = isLand ? 'Standard horizontal display.' : 'Standard vertical display.';
+					const isLand = window.innerWidth >= window.innerHeight;
+					const mode = isLand ? 'Landscape' : 'Portrait';
+					orientEl.textContent = `${mode} (Viewport)`;
+					orientEl.title = `Display orientation: ${mode}.`;
 				}
 			};
 			updateOrient();
@@ -542,7 +611,6 @@
 			} else {
 				window.addEventListener('resize', updateOrient, { passive: true });
 			}
-			orientEl.title = 'Display orientation and rotation angle.';
 		}
 
 		// 10. Hardware Touch Digitizer
@@ -552,7 +620,7 @@
 				touchEl.textContent = `${points}-Point Multitouch`;
 				touchEl.title = `${points}-point hardware multitouch digitizer.`;
 			} else {
-				touchEl.textContent = 'Precision Mouse / No Touch';
+				touchEl.textContent = 'Precision Mouse (No Touch)';
 				touchEl.title = 'No touch digitizer detected (desktop mouse or trackpad pointer input).';
 			}
 		}
@@ -680,20 +748,63 @@
 			probeCodecs();
 		}
 
-		// 11. Hardware Video Encoder (WebCodecs API with strict prefer-hardware)
+		// 11. Hardware Video Encoder (MediaCapabilities powerEfficient & WebCodecs prefer-hardware)
 		if (encoderEl) {
 			const probeEncoder = async () => {
-				if (typeof VideoEncoder !== 'undefined' && typeof VideoEncoder.isConfigSupported === 'function') {
-					const encCandidates = [
-						{ name: 'AV1', codecs: ['av01.0.08M.10', 'av01.0.05M.08'] },
-						{ name: 'HEVC', codecs: ['hvc1.1.6.L93.B0', 'hev1.1.6.L93.B0'] },
-						{ name: 'VP9', codecs: ['vp09.00.10.08'] },
-						{ name: 'H.264', codecs: ['avc1.42001f', 'avc1.4d002a', 'avc1.64002a', 'avc1.640028'] }
-					];
-					const supported: string[] = [];
+				const encCandidates = [
+					{
+						name: 'AV1',
+						codecs: ['av01.0.08M.10', 'av01.0.05M.08'],
+						mcConfigs: [
+							{ type: 'record', video: { contentType: 'video/mp4; codecs="av01.0.08M.10"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } },
+							{ type: 'record', video: { contentType: 'video/webm; codecs="av01.0.08M.10"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } }
+						]
+					},
+					{
+						name: 'HEVC',
+						codecs: ['hvc1.1.6.L93.B0', 'hev1.1.6.L93.B0'],
+						mcConfigs: [
+							{ type: 'record', video: { contentType: 'video/mp4; codecs="hvc1.1.6.L93.B0"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } },
+							{ type: 'record', video: { contentType: 'video/mp4; codecs="hev1.1.6.L93.B0"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } }
+						]
+					},
+					{
+						name: 'VP9',
+						codecs: ['vp09.00.10.08'],
+						mcConfigs: [
+							{ type: 'record', video: { contentType: 'video/webm; codecs="vp09.00.10.08"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } },
+							{ type: 'record', video: { contentType: 'video/mp4; codecs="vp09.00.10.08"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } }
+						]
+					},
+					{
+						name: 'H.264',
+						codecs: ['avc1.42001f', 'avc1.4d002a', 'avc1.64002a', 'avc1.640028'],
+						mcConfigs: [
+							{ type: 'record', video: { contentType: 'video/mp4; codecs="avc1.42001f"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } },
+							{ type: 'record', video: { contentType: 'video/mp4; codecs="avc1.640028"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } }
+						]
+					}
+				];
+				const supported: string[] = [];
 
-					for (const c of encCandidates) {
-						let isHw = false;
+				for (const c of encCandidates) {
+					let isHw = false;
+
+					// 1. Probe MediaCapabilities for powerEfficient (hardware-accelerated) encoding
+					if (navigator.mediaCapabilities && navigator.mediaCapabilities.encodingInfo) {
+						for (const cfg of c.mcConfigs) {
+							try {
+								const res = await navigator.mediaCapabilities.encodingInfo(cfg as any);
+								if (res && res.supported && res.powerEfficient) {
+									isHw = true;
+									break;
+								}
+							} catch (_) {}
+						}
+					}
+
+					// 2. Cross-verify or fallback to WebCodecs VideoEncoder with prefer-hardware
+					if (!isHw && typeof VideoEncoder !== 'undefined' && typeof VideoEncoder.isConfigSupported === 'function') {
 						for (const codec of c.codecs) {
 							try {
 								const res = await VideoEncoder.isConfigSupported({
@@ -710,19 +821,16 @@
 								}
 							} catch (_) {}
 						}
-
-						if (isHw) {
-							supported.push(c.name);
-						}
 					}
 
-					if (supported.length > 0) {
-						encoderEl.textContent = supported.join(' • ');
-						encoderEl.title = 'Hardware-accelerated video encoding support.';
-					} else {
-						encoderEl.textContent = 'Software / CPU Encoding';
-						encoderEl.title = 'Hardware video encoding not supported.';
+					if (isHw) {
+						supported.push(c.name);
 					}
+				}
+
+				if (supported.length > 0) {
+					encoderEl.textContent = supported.join(' • ');
+					encoderEl.title = 'Hardware-accelerated video encoding support.';
 				} else {
 					encoderEl.textContent = 'Software / CPU Encoding';
 					encoderEl.title = 'Hardware video encoding not supported.';
@@ -768,7 +876,15 @@
 							id: 'com.apple.fps',
 							name: 'FairPlay',
 							config: [{
-								initDataTypes: ['sinf'],
+								initDataTypes: ['cenc', 'sinf', 'skd'],
+								videoCapabilities: [{ contentType: 'video/mp4; codecs="avc1.42E01E"' }]
+							}]
+						},
+						{
+							id: 'com.apple.fps.1_0',
+							name: 'FairPlay',
+							config: [{
+								initDataTypes: ['cenc', 'sinf', 'skd'],
 								videoCapabilities: [{ contentType: 'video/mp4; codecs="avc1.42E01E"' }]
 							}]
 						}
@@ -777,6 +893,7 @@
 					const found: string[] = [];
 					for (const item of drmCandidates) {
 						if (item.id === 'com.microsoft.playready' && found.some(f => f.includes('PlayReady'))) continue;
+						if (item.id === 'com.apple.fps.1_0' && found.some(f => f.includes('FairPlay'))) continue;
 						try {
 							await navigator.requestMediaKeySystemAccess(item.id, item.config as any);
 							if (item.id === 'com.widevine.alpha' && item.hwConfig) {

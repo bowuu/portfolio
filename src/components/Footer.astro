@@ -1,6 +1,9 @@
 ---
-const now = new Date();
-const currentYear = now.getFullYear();
+const commitDateStr = (import.meta as any).env?.PUBLIC_GIT_COMMIT_DATE || new Date().toISOString();
+const commitHash = (import.meta as any).env?.PUBLIC_GIT_COMMIT_HASH || '';
+const commitShortHash = (import.meta as any).env?.PUBLIC_GIT_COMMIT_SHORT_HASH || (commitHash ? commitHash.slice(0, 7) : '');
+const commitDate = new Date(commitDateStr);
+const currentYear = commitDate.getFullYear();
 
 // Human-readable build timestamp pinned to America/New_York (e.g. "November 4, 2026 at 9:50 AM EST")
 const lastUpdated = new Intl.DateTimeFormat('en-US', {
@@ -11,14 +14,28 @@ const lastUpdated = new Intl.DateTimeFormat('en-US', {
 	minute: '2-digit',
 	timeZoneName: 'short',
 	timeZone: 'America/New_York',
-}).format(now);
-const isoTimestamp = now.toISOString();
+}).format(commitDate);
+const isoTimestamp = commitDate.toISOString();
+const commitUrl = commitHash ? `https://github.com/bowuu/portfolio/commit/${commitHash}` : 'https://github.com/bowuu/portfolio';
 ---
 
 <footer>
 	<!-- BUILD TIMESTAMP & ANONYMOUS VISITOR COUNT (Local Deployment Verified) -->
 	<div class="footer-meta">
-		<span class="last-updated">Last updated: <time id="footer-build-time" datetime={isoTimestamp}>{lastUpdated}</time></span>
+		<span class="last-updated">
+			Last updated: <time id="footer-build-time" datetime={isoTimestamp}>{lastUpdated}</time>
+			{commitShortHash && (
+				<a
+					href={commitUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="commit-link"
+					title={`View commit ${commitShortHash} on GitHub`}
+				>
+					({commitShortHash})
+				</a>
+			)}
+		</span>
 		<span id="footer-visitor-wrap" class="visitor-wrap hidden">
 			<span class="meta-dot" aria-hidden="true">&bull;</span>
 			<span class="visitor-counter">Visitor #<span id="visitor-count-val">...</span></span>
@@ -159,6 +176,20 @@ const isoTimestamp = now.toISOString();
 	.last-updated time,
 	.visitor-counter {
 		font-variant-numeric: tabular-nums;
+	}
+	.commit-link {
+		color: inherit;
+		text-decoration: none;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		font-size: 0.9em;
+		opacity: 0.7;
+		transition: color 0.15s ease, opacity 0.15s ease;
+		margin-left: 0.25em;
+	}
+	.commit-link:hover {
+		color: var(--accent);
+		opacity: 1;
+		text-decoration: underline;
 	}
 	.footer-extras-btn {
 		display: inline-flex;

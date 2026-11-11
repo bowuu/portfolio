@@ -131,9 +131,6 @@
 			'gravity',
 			'zerog',
 			'tilt',
-			'breakout',
-			'magnet',
-			'xray',
 			'cmo',
 			'boop',
 			'extras'
@@ -837,9 +834,6 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
 
   <span class="term-col">Hardware Lab Extras</span>      <span class="term-col">Description</span>
   <span class="term-dim">------------------------ ------------------------------------------------------------</span>
-  <span class="term-hl">breakout</span>                 Atari Breakout silicon die smasher arcade
-  <span class="term-hl">magnet</span>                   Electrostatic cursor force field repulsion
-  <span class="term-hl">xray</span>                     X-Ray silicon &amp; PCB copper trace inspection
   <span class="term-hl">cmo</span> / <span class="term-hl">boop</span>               Chief Morale Officer silicon lottery binning boost
   <span class="term-hl">gravity</span> / <span class="term-hl">zerog</span>          Zero-G Verlet physics element collapse &amp; throw
   <span class="term-hl">tilt</span>                     3D viewport parallax hologram perspective
@@ -1361,37 +1355,6 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 						appendOutput('<span class="term-hl">[3D Parallax Hologram]</span> Viewport tilt toggled. Move your mouse or tilt your device to view perspective depth. Press <span class="term-cyan">Ctrl+Alt+H</span> or <span class="term-cyan">Esc</span> to exit.');
 					} else {
 						appendOutput('<span class="term-err">3D Tilt module not initialized.</span>');
-					}
-					break;
-
-				case 'breakout':
-				case 'pong':
-					if (typeof (window as any).__toggleBreakout === 'function') {
-						(window as any).__toggleBreakout();
-						appendOutput('<span class="term-hl">[Breakout Smasher]</span> Silicon die arcade launched. Move your paddle with the mouse to bounce the die off cards. Press <span class="term-cyan">Esc</span> to exit.');
-					} else {
-						appendOutput('<span class="term-err">Breakout module not initialized.</span>');
-					}
-					break;
-
-				case 'magnet':
-				case 'repel':
-				case 'forcefield':
-					if (typeof (window as any).__toggleMagnet === 'function') {
-						(window as any).__toggleMagnet();
-						appendOutput('<span class="term-hl">[Electrostatic Force Field]</span> Magnetic repulsion active. Move your cursor to repel cards. Press <span class="term-cyan">Esc</span> to exit.');
-					} else {
-						appendOutput('<span class="term-err">Magnetic force field module not initialized.</span>');
-					}
-					break;
-
-				case 'xray':
-				case 'scan':
-					if (typeof (window as any).__toggleXRay === 'function') {
-						(window as any).__toggleXRay();
-						appendOutput('<span class="term-hl">[X-Ray Silicon Inspector]</span> Inspection reticle active. Hover over cards to scan internal copper routing &amp; silicon dies. Press <span class="term-cyan">Esc</span> to exit.');
-					} else {
-						appendOutput('<span class="term-err">X-Ray module not initialized.</span>');
 					}
 					break;
 

@@ -197,7 +197,7 @@
 						<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
 						<circle cx="12" cy="10" r="3"></circle>
 					</svg>
-					<div>
+					<div class="map-applet-heading-row">
 						<h3 id="map-applet-title" class="map-applet-title">Edge Geolocation Map</h3>
 						<span id="map-coords-badge" class="map-coords-badge mono">--</span>
 					</div>
@@ -227,7 +227,8 @@
 			<div class="map-applet-footer">
 				<div class="map-footer-info">
 					<span id="map-footer-loc" class="map-footer-loc">--</span>
-					<span class="map-footer-note">OpenStreetMap &bull; Approximate city-level Anycast edge geolocation</span>
+					<span class="map-footer-sep" aria-hidden="true">&bull;</span>
+					<span class="map-footer-note">Approximate OpenStreetMap geolocation</span>
 				</div>
 				<a id="map-external-link" href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="map-ext-link" title="Open full map on openstreetmap.org">
 					<span>Open in OSM</span>
@@ -443,7 +444,7 @@
 
 			if (ipv6El) {
 				if (currentIpv6 === 'none') {
-					ipv6El.innerHTML = '<span class="ip-disabled">No IPv6 enabled</span>';
+					ipv6El.innerHTML = '<span class="ip-disabled">No IPv6 detected</span>';
 					ipv6El.title = 'No active IPv6 route detected on client connection.';
 				} else if (!currentIpv6) {
 					ipv6El.textContent = 'Detecting...';
@@ -906,8 +907,16 @@
 			measureRefreshBurst(40);
 			probeWorkerRefresh();
 
+			document.addEventListener('fullscreenchange', () => {
+				retestRefresh();
+			});
+			window.addEventListener('resize', () => {
+				updateDisplayMetrics();
+				retestRefresh();
+			});
+
 			refreshEl.style.cursor = 'pointer';
-			refreshEl.title = 'Click or touch to re-test display refresh rate. Detects high-refresh G-Sync/FreeSync/ProMotion panels and dynamic VRR/LTPO scaling.';
+			refreshEl.title = 'Click or touch to re-test display refresh rate. Detects high-refresh G-Sync/FreeSync/ProMotion panels and dynamic VRR/LTPO scaling. If a 120Hz/VRR display reports 60 Hz: ensure Windows Display Settings > Advanced Display is set to 120 Hz (Windows defaults HDMI TVs to 60 Hz) and NVIDIA Control Panel enables G-SYNC for windowed mode.';
 			refreshEl.addEventListener('click', () => {
 				retestRefresh();
 			});
@@ -1764,7 +1773,7 @@
 	.map-applet-dialog {
 		position: relative;
 		width: 100%;
-		max-width: 680px;
+		max-width: 780px;
 		background: var(--bg-card);
 		border: 1px solid var(--border-color);
 		border-radius: 14px;
@@ -1782,7 +1791,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 0.85em 1.1em;
+		padding: 0.55em 0.95em;
 		border-bottom: 1px solid var(--border-color);
 		background: rgba(var(--accent-rgb), 0.04);
 	}
@@ -1790,6 +1799,13 @@
 		display: flex;
 		align-items: center;
 		gap: 0.65em;
+		min-width: 0;
+	}
+	.map-applet-heading-row {
+		display: flex;
+		align-items: baseline;
+		gap: 0.65em;
+		flex-wrap: wrap;
 	}
 	.map-pin-icon {
 		color: var(--accent);
@@ -1832,7 +1848,7 @@
 	.map-applet-frame-wrap {
 		position: relative;
 		width: 100%;
-		height: clamp(280px, 48vh, 380px);
+		height: clamp(340px, 58vh, 480px);
 		background: #0e0f12;
 	}
 	.map-applet-loader {
@@ -1866,14 +1882,18 @@
 		height: 100%;
 		border: none;
 		display: block;
+		transition: filter 0.25s ease;
+	}
+	:global(html[data-theme="dark"]) .map-applet-iframe {
+		filter: invert(90%) hue-rotate(180deg) brightness(88%) contrast(110%);
 	}
 	.map-applet-footer {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
 		flex-wrap: wrap;
-		gap: 0.7em;
-		padding: 0.75em 1.1em;
+		gap: 0.6em;
+		padding: 0.55em 0.95em;
 		border-top: 1px solid var(--border-color);
 		background: rgba(0, 0, 0, 0.05);
 	}
@@ -1882,20 +1902,26 @@
 	}
 	.map-footer-info {
 		display: flex;
-		flex-direction: column;
-		gap: 0.15em;
+		align-items: center;
+		gap: 0.45em;
+		flex-wrap: wrap;
 		min-width: 0;
 	}
 	.map-footer-loc {
-		font-size: 0.84em;
+		font-size: 0.82em;
 		font-weight: 700;
 		color: rgb(var(--black));
 	}
 	:global(html[data-theme="dark"]) .map-footer-loc {
 		color: #f1f5f9;
 	}
-	.map-footer-note {
+	.map-footer-sep {
 		font-size: 0.72em;
+		color: rgb(var(--gray));
+		opacity: 0.6;
+	}
+	.map-footer-note {
+		font-size: 0.76em;
 		color: rgb(var(--gray));
 		opacity: 0.85;
 	}

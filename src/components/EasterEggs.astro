@@ -21,13 +21,14 @@
 		<button id="tilt-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
 	</div>
 
-	<!-- CRT BENCH OSCILLOSCOPE DEGAUSS HUD -->
+	<!-- CRT BENCH OSCILLOSCOPE DEGAUSS HUD & CANVAS -->
 	<div id="degauss-hud" class="ee-hud degauss-hud hidden" style="display: none;">
 		<span class="hud-pulse-dot"></span>
 		<span class="hud-title">⚡ CRT BENCH DEGAUSS &bull; ELECTROMAGNETIC PULSE</span>
 		<button id="degauss-re-btn" type="button" class="ee-hud-btn">Pulse Coil</button>
 		<button id="degauss-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
 	</div>
+	<canvas id="degauss-canvas" class="ee-canvas hidden" aria-hidden="true" style="display: none;"></canvas>
 
 	<!-- 3D SILICON CYCLONE SPHERE HUD & 3D CORE -->
 	<div id="sphere-hud" class="ee-hud sphere-hud hidden" style="display: none;">
@@ -281,6 +282,10 @@
 	class SwitchAudioEngine {
 		private ctx: AudioContext | null = null;
 		public profile: 'off' | 'blue' | 'red' | 'modelm' = 'off';
+		private thermalSpraySource: AudioBufferSourceNode | null = null;
+		private thermalSprayFilter: BiquadFilterNode | null = null;
+		private thermalSprayGain: GainNode | null = null;
+		private thermalNoiseBuffer: AudioBuffer | null = null;
 
 		constructor() {
 			// Strictly OFF by default on load
@@ -310,31 +315,113 @@
 
 			const t = this.ctx.currentTime;
 			const isSpace = code === 'Space';
-			const isBig = isSpace || code === 'Enter' || code === 'Backspace';
-			const pitchMod = isSpace ? 0.72 : isBig ? 0.84 : (0.96 + Math.random() * 0.08);
+			const isEnter = code === 'Enter';
+			const isBack = code === 'Backspace';
+			const isShift = code === 'ShiftLeft' || code === 'ShiftRight';
+			const isBig = isEnter || isBack || isShift;
+
+			// Per-key physical acoustic modeling & humanized micro-variance (±2.5% pitch, ±4% gain)
+			const jitter = 0.975 + Math.random() * 0.05;
+			const gainJitter = 0.96 + Math.random() * 0.08;
+			const pitchMod = (isSpace ? 0.62 : isBig ? 0.82 : 1.0) * jitter;
 
 			if (this.profile === 'blue') {
-				// CLICKY BLUE: Crisp tactile snap + plastic bottom-out clack
-				this.playImpulse(t, 3800 * pitchMod, 0.005, 0.20);
-				this.playThump(t + 0.002, 280 * pitchMod, 140 * pitchMod, 0.032, 0.18);
-				this.playTone(t + 0.002, 1200 * pitchMod, 'triangle', 0.016, 0.07);
+				// CLICKY BLUE (Cherry MX Blue / Kailh Box White):
+				// 1. Sharp click jacket snap: crisp tactile high-frequency dual snap
+				this.playResonantImpulse(t, 3950 * pitchMod, 5.2, 0.004, 0.20 * gainJitter);
+				this.playResonantImpulse(t, 6200 * pitchMod, 3.8, 0.003, 0.12 * gainJitter);
+				// 2. Plastic housing bottom-out clack: solid mid-frequency body resonance
+				const bodyFreq = isSpace ? 165 : isBig ? 240 : 360;
+				this.playResonantImpulse(t + 0.0015, bodyFreq * pitchMod, 3.2, 0.022, 0.18 * gainJitter);
+				this.playResonantImpulse(t + 0.0015, 1100 * pitchMod, 2.2, 0.012, 0.08 * gainJitter);
+				if (isSpace) {
+					// Spacebar wire stabilizer tick
+					this.playResonantImpulse(t + 0.001, 3200, 4.0, 0.003, 0.08 * gainJitter);
+				}
 			} else if (this.profile === 'red') {
-				// LINEAR RED: Pure smooth plastic "thock" (no click leaf)
-				this.playThump(t, 190 * pitchMod, 85 * pitchMod, 0.036, 0.22);
-				this.playImpulse(t, 420 * pitchMod, 0.014, 0.06);
+				// LINEAR RED (Cherry MX Red / Smooth POM Stem Bottom-Out / Deep "Thock"):
+				// No click leaf! Pure solid plastic impact on switch floor + keycap cavity resonance
+				const cavityFreq = isSpace ? 135 : isBig ? 180 : 235;
+				const cavityDur = isSpace ? 0.038 : isBig ? 0.028 : 0.022;
+				// Primary keycap Helmholtz cavity resonance (solid deep thock)
+				this.playResonantImpulse(t, cavityFreq * pitchMod, 3.4, cavityDur, 0.26 * gainJitter);
+				// Secondary switch housing plate impact
+				this.playResonantImpulse(t, 490 * pitchMod, 2.5, 0.016, 0.14 * gainJitter);
+				// Subtle stem collision transient
+				this.playResonantImpulse(t, 2400 * pitchMod, 1.8, 0.003, 0.06 * gainJitter);
+				if (isSpace) {
+					// Spacebar hollow air resonance & wire stabilizer
+					this.playResonantImpulse(t + 0.002, 105, 2.8, 0.042, 0.12 * gainJitter);
+				}
 			} else if (this.profile === 'modelm') {
-				// BUCKLING SPRING: Sharp spring buckle snap + resonant steel spring twang + hollow barrel
-				this.playImpulse(t, 2600 * pitchMod, 0.006, 0.18);
-				this.playTone(t + 0.002, 2880 * pitchMod, 'sine', 0.075, 0.12);
-				this.playTone(t + 0.002, 3020 * pitchMod, 'sine', 0.075, 0.10);
-				this.playThump(t + 0.003, 180 * pitchMod, 95 * pitchMod, 0.042, 0.15);
+				// BUCKLING SPRING (IBM Model M / Unicomp):
+				// 1. Music wire coil buckle: sharp mechanical snap
+				this.playResonantImpulse(t, 2850 * pitchMod, 4.2, 0.005, 0.20 * gainJitter);
+				// 2. Plastic flipper hitting curved 1.5mm steel backplate: heavy solid thud
+				const steelFreq = isSpace ? 130 : isBig ? 165 : 210;
+				const steelDur = isSpace ? 0.048 : 0.034;
+				this.playResonantImpulse(t + 0.001, steelFreq * pitchMod, 2.8, steelDur, 0.22 * gainJitter);
+				// 3. Steel spring acoustic ringing (the iconic Model M spring ping / twang)
+				// Twin high-Q resonant modes creating natural metallic acoustic beating
+				this.playSpringRing(t + 0.001, 2640 * pitchMod, 2850 * pitchMod, 0.085, 0.12 * gainJitter);
 			}
 		}
 
 		public playProbeTick() {
 			if (!this.ctx) return;
 			const t = this.ctx.currentTime;
-			this.playTone(t, 1800 + Math.random() * 400, 'square', 0.006, 0.03);
+			this.playResonantImpulse(t, 2200 + Math.random() * 300, 3.5, 0.008, 0.04);
+		}
+
+		// Modal physical acoustic synthesis: excite tuned resonant bandpass filter with shaped micro-impulse
+		private playResonantImpulse(time: number, freq: number, Q: number, dur: number, vol: number) {
+			if (!this.ctx) return;
+			const bufferSize = Math.max(16, Math.floor(this.ctx.sampleRate * Math.min(dur, 0.012)));
+			const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+			const data = buffer.getChannelData(0);
+			for (let i = 0; i < bufferSize; i++) {
+				data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.28));
+			}
+
+			const source = this.ctx.createBufferSource();
+			source.buffer = buffer;
+
+			const filter = this.ctx.createBiquadFilter();
+			filter.type = 'bandpass';
+			filter.frequency.setValueAtTime(Math.max(20, Math.min(20000, freq)), time);
+			filter.Q.setValueAtTime(Q, time);
+
+			const gain = this.ctx.createGain();
+			gain.gain.setValueAtTime(vol, time);
+			gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+
+			source.connect(filter);
+			filter.connect(gain);
+			gain.connect(this.ctx.destination);
+
+			source.start(time);
+			source.stop(time + dur);
+		}
+
+		// Model M steel spring ping: two high-Q damped resonant sine modes with natural metallic acoustic beating
+		private playSpringRing(time: number, freq1: number, freq2: number, dur: number, vol: number) {
+			if (!this.ctx) return;
+			[freq1, freq2].forEach((f, idx) => {
+				const osc = this.ctx!.createOscillator();
+				const gain = this.ctx!.createGain();
+				osc.type = 'sine';
+				osc.frequency.setValueAtTime(f, time);
+
+				const modeVol = vol * (idx === 0 ? 0.7 : 0.5);
+				gain.gain.setValueAtTime(modeVol, time);
+				gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+
+				osc.connect(gain);
+				gain.connect(this.ctx!.destination);
+
+				osc.start(time);
+				osc.stop(time + dur);
+			});
 		}
 
 		private playThump(time: number, startFreq: number, endFreq: number, dur: number, vol: number) {
@@ -405,35 +492,140 @@
 				this.init();
 				if (!this.ctx) return;
 				const t = this.ctx.currentTime;
-				const osc = this.ctx.createOscillator();
-				const gain = this.ctx.createGain();
-				const filter = this.ctx.createBiquadFilter();
 
-				osc.type = 'sawtooth';
-				osc.frequency.setValueAtTime(60, t);
-				osc.frequency.exponentialRampToValueAtTime(130, t + 0.3);
-				osc.frequency.exponentialRampToValueAtTime(45, t + 1.4);
+				// 1. Initial High-Energy Inductive Thump / Coil Charging Kick
+				const kickOsc = this.ctx.createOscillator();
+				const kickGain = this.ctx.createGain();
+				kickOsc.type = 'sine';
+				kickOsc.frequency.setValueAtTime(54, t);
+				kickOsc.frequency.exponentialRampToValueAtTime(28, t + 0.12);
+				kickGain.gain.setValueAtTime(0.35, t);
+				kickGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+				kickOsc.connect(kickGain);
+				kickGain.connect(this.ctx.destination);
+				kickOsc.start(t);
+				kickOsc.stop(t + 0.15);
 
-				filter.type = 'lowpass';
-				filter.frequency.setValueAtTime(360, t);
-				filter.frequency.exponentialRampToValueAtTime(90, t + 1.4);
+				// 2. Heavy 60Hz Magnetic Coil Transformer Hum & Power Harmonics
+				const coilOsc1 = this.ctx.createOscillator();
+				const coilOsc2 = this.ctx.createOscillator();
+				const coilGain = this.ctx.createGain();
+				const coilFilter = this.ctx.createBiquadFilter();
 
-				gain.gain.setValueAtTime(0.01, t);
-				gain.gain.linearRampToValueAtTime(0.28, t + 0.25);
-				gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.45);
+				// Fundamental 60Hz + slight thermal frequency sag (62Hz -> 58Hz)
+				coilOsc1.type = 'sawtooth';
+				coilOsc1.frequency.setValueAtTime(62, t);
+				coilOsc1.frequency.linearRampToValueAtTime(58, t + 1.4);
 
-				osc.connect(filter);
-				filter.connect(gain);
-				gain.connect(this.ctx.destination);
-				osc.start(t);
-				osc.stop(t + 1.45);
+				// 120Hz 2nd harmonic for rich transformer buzz
+				coilOsc2.type = 'sawtooth';
+				coilOsc2.frequency.setValueAtTime(124, t);
+				coilOsc2.frequency.linearRampToValueAtTime(116, t + 1.4);
 
-				// Mechanical relay click-clack at 1.45s
+				// Resonant lowpass filter simulating chassis enclosure
+				coilFilter.type = 'lowpass';
+				coilFilter.frequency.setValueAtTime(450, t);
+				coilFilter.frequency.exponentialRampToValueAtTime(85, t + 1.4);
+				coilFilter.Q.setValueAtTime(2.2, t);
+
+				// PTC Thermistor Envelope: violent onset, short hold, exponential thermal decay
+				coilGain.gain.setValueAtTime(0.02, t);
+				coilGain.gain.linearRampToValueAtTime(0.32, t + 0.04);
+				coilGain.gain.setValueAtTime(0.30, t + 0.18);
+				coilGain.gain.exponentialRampToValueAtTime(0.0001, t + 1.42);
+
+				coilOsc1.connect(coilFilter);
+				coilOsc2.connect(coilFilter);
+				coilFilter.connect(coilGain);
+				coilGain.connect(this.ctx.destination);
+
+				coilOsc1.start(t);
+				coilOsc2.start(t);
+				coilOsc1.stop(t + 1.44);
+				coilOsc2.stop(t + 1.44);
+
+				// 3. Dual-Contact Mechanical Relay Opening Click-Clack at ~1.42s
 				setTimeout(() => {
 					if (!this.ctx) return;
-					this.playImpulse(this.ctx.currentTime, 1800, 0.008, 0.22);
-					this.playTone(this.ctx.currentTime + 0.003, 980, 'square', 0.012, 0.15);
-				}, 1450);
+					const rt = this.ctx.currentTime;
+					// Contact 1: high-voltage spark & leaf snap
+					this.playImpulse(rt, 3200, 0.004, 0.22);
+					this.playTone(rt, 1450, 'triangle', 0.010, 0.12);
+					// Contact 2: mechanical armature bounce (14ms later)
+					setTimeout(() => {
+						if (!this.ctx) return;
+						const rt2 = this.ctx.currentTime;
+						this.playImpulse(rt2, 2100, 0.005, 0.16);
+						this.playTone(rt2, 820, 'square', 0.014, 0.10);
+					}, 14);
+				}, 1420);
+			} catch {}
+		}
+
+		// Zero-allocation continuous thermal spray audio engine (no GC thrashing)
+		private getThermalNoiseBuffer(): AudioBuffer | null {
+			if (this.thermalNoiseBuffer) return this.thermalNoiseBuffer;
+			if (!this.ctx) return null;
+			// 1.5 seconds of looping pink-weighted noise
+			const size = Math.floor(this.ctx.sampleRate * 1.5);
+			const buf = this.ctx.createBuffer(1, size, this.ctx.sampleRate);
+			const data = buf.getChannelData(0);
+			let b0 = 0, b1 = 0, b2 = 0;
+			for (let i = 0; i < size; i++) {
+				const white = Math.random() * 2 - 1;
+				b0 = 0.99886 * b0 + white * 0.0555179;
+				b1 = 0.99332 * b1 + white * 0.0750759;
+				b2 = 0.96900 * b2 + white * 0.1538520;
+				data[i] = (b0 + b1 + b2 + white * 0.5362) * 0.18;
+			}
+			this.thermalNoiseBuffer = buf;
+			return buf;
+		}
+
+		public startThermalSpray(mode: 'cryo' | 'heatgun') {
+			try {
+				this.init();
+				if (!this.ctx) return;
+				const t = this.ctx.currentTime;
+				const buf = this.getThermalNoiseBuffer();
+				if (!buf) return;
+
+				if (!this.thermalSpraySource) {
+					this.thermalSpraySource = this.ctx.createBufferSource();
+					this.thermalSpraySource.buffer = buf;
+					this.thermalSpraySource.loop = true;
+
+					this.thermalSprayFilter = this.ctx.createBiquadFilter();
+					this.thermalSprayGain = this.ctx.createGain();
+					this.thermalSprayGain.gain.setValueAtTime(0.0001, t);
+
+					this.thermalSpraySource.connect(this.thermalSprayFilter);
+					this.thermalSprayFilter.connect(this.thermalSprayGain);
+					this.thermalSprayGain.connect(this.ctx.destination);
+					this.thermalSpraySource.start(t);
+				}
+
+				if (this.thermalSprayFilter && this.thermalSprayGain) {
+					if (mode === 'cryo') {
+						this.thermalSprayFilter.type = 'bandpass';
+						this.thermalSprayFilter.frequency.setTargetAtTime(3400, t, 0.02);
+						this.thermalSprayFilter.Q.setTargetAtTime(1.6, t, 0.02);
+						this.thermalSprayGain.gain.setTargetAtTime(0.08, t, 0.03);
+					} else {
+						this.thermalSprayFilter.type = 'lowpass';
+						this.thermalSprayFilter.frequency.setTargetAtTime(320, t, 0.02);
+						this.thermalSprayFilter.Q.setTargetAtTime(2.4, t, 0.02);
+						this.thermalSprayGain.gain.setTargetAtTime(0.12, t, 0.03);
+					}
+				}
+			} catch {}
+		}
+
+		public stopThermalSpray() {
+			try {
+				if (!this.ctx || !this.thermalSprayGain) return;
+				const t = this.ctx.currentTime;
+				this.thermalSprayGain.gain.setTargetAtTime(0.0001, t, 0.04);
 			} catch {}
 		}
 
@@ -1039,6 +1231,7 @@
 		const degaussHud = document.getElementById('degauss-hud');
 		const degaussReBtn = document.getElementById('degauss-re-btn');
 		const degaussExitBtn = document.getElementById('degauss-exit-btn');
+		const degaussCanvas = document.getElementById('degauss-canvas') as HTMLCanvasElement | null;
 
 		const sphereHud = document.getElementById('sphere-hud');
 		const sphereExitBtn = document.getElementById('sphere-exit-btn');
@@ -1076,6 +1269,7 @@
 		if (zerogHud) { zerogHud.style.display = 'none'; zerogHud.classList.add('hidden'); }
 		if (tiltHud) { tiltHud.style.display = 'none'; tiltHud.classList.add('hidden'); }
 		if (degaussHud) { degaussHud.style.display = 'none'; degaussHud.classList.add('hidden'); }
+		if (degaussCanvas) { degaussCanvas.style.display = 'none'; degaussCanvas.classList.add('hidden'); }
 		if (sphereHud) { sphereHud.style.display = 'none'; sphereHud.classList.add('hidden'); }
 		if (sphereCore) { sphereCore.style.display = 'none'; sphereCore.classList.add('hidden'); }
 		if (quantumHud) { quantumHud.style.display = 'none'; quantumHud.classList.add('hidden'); }
@@ -1354,16 +1548,169 @@
 		if (tiltExitBtn) tiltExitBtn.addEventListener('click', () => toggleTilt(false));
 
 		// 3. CRT BENCH OSCILLOSCOPE DEGAUSS
-		let degaussTimer = 0;
+		let degaussAnimId = 0;
+		let degaussStartTime = 0;
+
 		function pulseDegauss() {
 			audioEngine.playDegauss();
-			document.body.classList.remove('crt-degaussing');
-			void document.body.offsetWidth;
-			document.body.classList.add('crt-degaussing');
-			clearTimeout(degaussTimer);
-			degaussTimer = window.setTimeout(() => {
-				document.body.classList.remove('crt-degaussing');
-			}, 1600);
+			if (!degaussCanvas || !mainEl) return;
+
+			cancelAnimationFrame(degaussAnimId);
+			degaussCanvas.style.display = 'block';
+			degaussCanvas.classList.remove('hidden');
+
+			const dpr = Math.min(window.devicePixelRatio || 1, 2);
+			degaussCanvas.width = window.innerWidth * dpr;
+			degaussCanvas.height = window.innerHeight * dpr;
+			const ctx = degaussCanvas.getContext('2d');
+			if (!ctx) return;
+			ctx.scale(dpr, dpr);
+
+			document.body.classList.add('crt-active', 'crt-degaussing');
+			degaussStartTime = performance.now();
+			const duration = 1600; // 1.6s authentic thermistor cooling cycle
+
+			function loopDegauss(now: number) {
+				const elapsed = now - degaussStartTime;
+				const t = elapsed / 1000; // elapsed time in seconds
+
+				if (elapsed >= duration || !isDegauss) {
+					// Degauss complete: restore razor-sharp screen convergence
+					ctx?.clearRect(0, 0, window.innerWidth, window.innerHeight);
+					if (mainEl) {
+						mainEl.style.transform = '';
+						mainEl.style.filter = '';
+					}
+					document.body.classList.remove('crt-degaussing');
+					if (degaussCanvas) {
+						degaussCanvas.classList.add('hidden');
+						degaussCanvas.style.display = 'none';
+					}
+					return;
+				}
+
+				// 1. Exponential magnetic decay curve: e^(-3.2 * t)
+				const decay = Math.exp(-3.2 * t);
+
+				// 2. Multi-frequency electromagnetic coil oscillations
+				const omega60 = 2 * Math.PI * 60 * t; // 60 Hz AC coil fundamental
+				const omega30 = 2 * Math.PI * 30 * t; // 30 Hz subharmonic barrel oscillation
+				const omega15 = 2 * Math.PI * 15 * t; // 15 Hz low-frequency wobble
+
+				const sin60 = Math.sin(omega60);
+				const cos60 = Math.cos(omega60);
+				const sin30 = Math.sin(omega30);
+				const cos30 = Math.cos(omega30 + 0.4);
+				const sin15 = Math.sin(omega15);
+
+				// Physical raster geometry deflection on <main>
+				const tx = sin60 * 16 * decay;
+				const ty = cos60 * 10 * decay;
+				const sx = 1.0 + sin60 * 0.055 * decay;
+				const sy = 1.0 - sin60 * 0.055 * decay;
+				const skewX = sin30 * 4.8 * decay;
+				const skewY = cos30 * 2.8 * decay;
+				const rot = sin15 * 1.6 * decay;
+
+				if (mainEl) {
+					mainEl.style.transform = `translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0) scale(${sx.toFixed(3)}, ${sy.toFixed(3)}) skew(${skewX.toFixed(2)}deg, ${skewY.toFixed(2)}deg) rotate(${rot.toFixed(2)}deg)`;
+
+					// Dynamic magnetic phosphor filter:
+					// Intense flash during first 160ms, followed by contrast & chromatic shift
+					const flash = t < 0.16 ? (1 - t / 0.16) * 0.85 : 0;
+					const bright = 1.0 + flash + 0.15 * decay;
+					const contrast = 1.0 + 0.75 * decay;
+					const sat = 1.0 + 1.2 * decay;
+					const redShift = (-15 * sin60 * decay).toFixed(1);
+					const cyanShift = (15 * sin60 * decay).toFixed(1);
+
+					mainEl.style.filter = `brightness(${bright.toFixed(2)}) contrast(${contrast.toFixed(2)}) saturate(${sat.toFixed(2)}) drop-shadow(${redShift}px 0 0 rgba(255, 0, 85, ${(0.8 * decay).toFixed(2)})) drop-shadow(${cyanShift}px 0 0 rgba(0, 245, 255, ${(0.8 * decay).toFixed(2)}))`;
+				}
+
+				// 3. Canvas Chromatic Purity Distortion & Magnetic Flux Rings
+				if (ctx) {
+					ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+					const w = window.innerWidth;
+					const h = window.innerHeight;
+					const cx = w / 2;
+					const cy = h / 2;
+
+					// A. Initial Phosphor Induction Flash Bloom (t < 0.22s)
+					if (t < 0.22) {
+						const bloomProgress = t / 0.22;
+						const bloomAlpha = (1 - bloomProgress) * 0.45;
+						const bGrad = ctx.createRadialGradient(cx, cy, 20, cx, cy, Math.max(w, h) * 0.7);
+						bGrad.addColorStop(0, `rgba(230, 255, 245, ${bloomAlpha.toFixed(2)})`);
+						bGrad.addColorStop(0.5, `rgba(160, 255, 220, ${(bloomAlpha * 0.6).toFixed(2)})`);
+						bGrad.addColorStop(1, 'rgba(160, 255, 220, 0)');
+						ctx.fillStyle = bGrad;
+						ctx.fillRect(0, 0, w, h);
+					}
+
+					// B. Swirling Electromagnetic Rainbow Purity Aberration
+					// Simulates electron beam deflection away from phosphor triads
+					const ringCount = 3;
+					for (let r = 0; r < ringCount; r++) {
+						const ringRadius = (Math.max(w, h) * (0.35 + r * 0.25)) * (1 + sin60 * 0.08 * decay);
+						const ringAlpha = (0.28 - r * 0.06) * decay;
+
+						// Top-Left / Bottom-Right: Emerald Green & Cyan Flux
+						const gGrad = ctx.createRadialGradient(0, 0, 50, 0, 0, ringRadius);
+						gGrad.addColorStop(0, `rgba(16, 185, 129, ${(ringAlpha * 0.9).toFixed(2)})`);
+						gGrad.addColorStop(0.4, `rgba(6, 182, 212, ${(ringAlpha * 0.6).toFixed(2)})`);
+						gGrad.addColorStop(0.8, `rgba(14, 165, 233, ${(ringAlpha * 0.2).toFixed(2)})`);
+						gGrad.addColorStop(1, 'rgba(14, 165, 233, 0)');
+						ctx.fillStyle = gGrad;
+						ctx.fillRect(0, 0, w, h);
+
+						// Top-Right / Bottom-Left: Hot Magenta & Vivid Violet Flux
+						const mGrad = ctx.createRadialGradient(w, 0, 50, w, 0, ringRadius * 1.1);
+						mGrad.addColorStop(0, `rgba(236, 72, 153, ${(ringAlpha * 0.95).toFixed(2)})`);
+						mGrad.addColorStop(0.4, `rgba(168, 85, 247, ${(ringAlpha * 0.65).toFixed(2)})`);
+						mGrad.addColorStop(0.8, `rgba(139, 92, 246, ${(ringAlpha * 0.2).toFixed(2)})`);
+						mGrad.addColorStop(1, 'rgba(139, 92, 246, 0)');
+						ctx.fillStyle = mGrad;
+						ctx.fillRect(0, 0, w, h);
+
+						// Bottom-Right Corner Amber Flux
+						const aGrad = ctx.createRadialGradient(w, h, 60, w, h, ringRadius * 0.95);
+						aGrad.addColorStop(0, `rgba(245, 158, 11, ${(ringAlpha * 0.85).toFixed(2)})`);
+						aGrad.addColorStop(0.5, `rgba(239, 68, 68, ${(ringAlpha * 0.45).toFixed(2)})`);
+						aGrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
+						ctx.fillStyle = aGrad;
+						ctx.fillRect(0, 0, w, h);
+					}
+
+					// C. Cathode Ray Scanline Ripple
+					if (t < 0.65) {
+						const rippleAlpha = (1 - t / 0.65) * 0.12 * decay;
+						ctx.strokeStyle = `rgba(255, 255, 255, ${rippleAlpha.toFixed(2)})`;
+						ctx.lineWidth = 1;
+						const step = 8;
+						const phase = t * 120;
+						ctx.beginPath();
+						for (let y = (phase % step); y < h; y += step * 3) {
+							const waveOffset = Math.sin(y * 0.05 + omega60) * 12 * decay;
+							ctx.moveTo(0, y + waveOffset);
+							ctx.lineTo(w, y + waveOffset);
+						}
+						ctx.stroke();
+					}
+
+					// D. CRT Curved Screen Perimeter Bezel Shadow
+					const bezelGrad = ctx.createRadialGradient(cx, cy, Math.min(w, h) * 0.45, cx, cy, Math.max(w, h) * 0.72);
+					bezelGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+					bezelGrad.addColorStop(0.7, `rgba(0, 0, 0, ${(0.45 * decay).toFixed(2)})`);
+					bezelGrad.addColorStop(1, `rgba(0, 0, 0, ${(0.85 * decay).toFixed(2)})`);
+					ctx.fillStyle = bezelGrad;
+					ctx.fillRect(0, 0, w, h);
+				}
+
+				degaussAnimId = requestAnimationFrame(loopDegauss);
+			}
+
+			degaussAnimId = requestAnimationFrame(loopDegauss);
 		}
 
 		function startDegauss() {
@@ -1381,10 +1728,20 @@
 		function resetDegauss() {
 			if (!isDegauss) return;
 			isDegauss = false;
-			clearTimeout(degaussTimer);
+			cancelAnimationFrame(degaussAnimId);
 			if (degaussHud) {
 				degaussHud.classList.add('hidden');
 				degaussHud.style.display = 'none';
+			}
+			if (degaussCanvas) {
+				degaussCanvas.classList.add('hidden');
+				degaussCanvas.style.display = 'none';
+				const ctx = degaussCanvas.getContext('2d');
+				if (ctx) ctx.clearRect(0, 0, degaussCanvas.width, degaussCanvas.height);
+			}
+			if (mainEl) {
+				mainEl.style.transform = '';
+				mainEl.style.filter = '';
 			}
 			document.body.classList.remove('crt-active', 'crt-degaussing');
 		}
@@ -1878,6 +2235,62 @@
 		const tMemVal = document.getElementById('t-mem-val');
 		const tSpotCursor = document.getElementById('t-spot-cursor');
 
+		// Cached offscreen sprites for 60/120/144 FPS zero-lag hardware-accelerated particle blitting
+		let cachedCryoSprite: HTMLCanvasElement | null = null;
+		let cachedHeatSprite: HTMLCanvasElement | null = null;
+		let cachedHeatSpotSprite: HTMLCanvasElement | null = null;
+
+		function initThermalSprites() {
+			if (cachedCryoSprite) return;
+
+			// 1. Cryo LN2 vapor sprite (128x128)
+			cachedCryoSprite = document.createElement('canvas');
+			cachedCryoSprite.width = 128;
+			cachedCryoSprite.height = 128;
+			const cCtx = cachedCryoSprite.getContext('2d');
+			if (cCtx) {
+				const grad = cCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
+				grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+				grad.addColorStop(0.25, 'rgba(224, 242, 254, 0.75)');
+				grad.addColorStop(0.55, 'rgba(56, 189, 248, 0.40)');
+				grad.addColorStop(0.85, 'rgba(14, 165, 233, 0.15)');
+				grad.addColorStop(1, 'rgba(14, 165, 233, 0)');
+				cCtx.fillStyle = grad;
+				cCtx.fillRect(0, 0, 128, 128);
+			}
+
+			// 2. Heat Gun incandescent vapor sprite (128x128)
+			cachedHeatSprite = document.createElement('canvas');
+			cachedHeatSprite.width = 128;
+			cachedHeatSprite.height = 128;
+			const hCtx = cachedHeatSprite.getContext('2d');
+			if (hCtx) {
+				const grad = hCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
+				grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+				grad.addColorStop(0.28, 'rgba(254, 240, 138, 0.80)');
+				grad.addColorStop(0.58, 'rgba(249, 115, 22, 0.45)');
+				grad.addColorStop(0.85, 'rgba(225, 29, 72, 0.18)');
+				grad.addColorStop(1, 'rgba(147, 51, 234, 0)');
+				hCtx.fillStyle = grad;
+				hCtx.fillRect(0, 0, 128, 128);
+			}
+
+			// 3. Surface heat glow spot (96x96)
+			cachedHeatSpotSprite = document.createElement('canvas');
+			cachedHeatSpotSprite.width = 96;
+			cachedHeatSpotSprite.height = 96;
+			const sCtx = cachedHeatSpotSprite.getContext('2d');
+			if (sCtx) {
+				const grad = sCtx.createRadialGradient(48, 48, 0, 48, 48, 48);
+				grad.addColorStop(0, 'rgba(255, 255, 255, 0.80)');
+				grad.addColorStop(0.3, 'rgba(249, 115, 22, 0.60)');
+				grad.addColorStop(0.7, 'rgba(225, 29, 72, 0.30)');
+				grad.addColorStop(1, 'rgba(225, 29, 72, 0)');
+				sCtx.fillStyle = grad;
+				sCtx.fillRect(0, 0, 96, 96);
+			}
+		}
+
 		function handleThermalPointerMove(e: MouseEvent) {
 			thermalPointerX = e.clientX;
 			thermalPointerY = e.clientY;
@@ -1891,16 +2304,20 @@
 			isThermalSpraying = true;
 			thermalPointerX = e.clientX;
 			thermalPointerY = e.clientY;
+			audioEngine.startThermalSpray(thermalToolMode);
 		}
 
 		function handleThermalPointerUp() {
 			isThermalSpraying = false;
+			audioEngine.stopThermalSpray();
 		}
 
 		function startThermal() {
 			if (isThermal || !thermalCanvas) return;
 			closeAllActiveModes();
 			isThermal = true;
+			initThermalSprites();
+
 			if (thermalHud) {
 				thermalHud.style.display = 'flex';
 				thermalHud.classList.remove('hidden');
@@ -1928,86 +2345,83 @@
 			window.addEventListener('mousedown', handleThermalPointerDown);
 			window.addEventListener('mouseup', handleThermalPointerUp);
 
+			let lastDomUpdate = 0;
+
 			function loopThermal() {
 				if (!isThermal || !ctx || !thermalCanvas) return;
 				ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
-				cpuTemp += (Math.random() - 0.49) * 0.3;
-				vrmTemp += (Math.random() - 0.49) * 0.4;
-				memTemp += (Math.random() - 0.49) * 0.2;
-				if (tCpuVal) tCpuVal.textContent = `${cpuTemp.toFixed(1)}°C`;
-				if (tVrmVal) tVrmVal.textContent = `${vrmTemp.toFixed(1)}°C`;
-				if (tMemVal) tMemVal.textContent = `${memTemp.toFixed(1)}°C`;
-
 				if (isThermalSpraying) {
 					if (thermalToolMode === 'cryo') {
 						probeTemp = Math.max(-196, probeTemp - 8.5);
-						audioEngine.playCryoHiss();
 
-						// Cryo billowing vapor plumes
-						for (let i = 0; i < 5; i++) {
-							const ang = Math.random() * Math.PI * 2;
-							const spd = 1.5 + Math.random() * 4.5;
-							thermalVapors.push({
-								x: thermalPointerX + (Math.random() - 0.5) * 16,
-								y: thermalPointerY + (Math.random() - 0.5) * 16,
-								vx: Math.cos(ang) * spd,
-								vy: Math.sin(ang) * spd + 1.2, // Cold gas drifts down
-								radius: 18 + Math.random() * 22,
-								life: 0,
-								maxLife: 32 + Math.random() * 20,
-								isCryo: true
-							});
+						// Spawn cryogenic billowing vapor plumes (capped pool for zero lag)
+						if (thermalVapors.length < 45) {
+							for (let i = 0; i < 2; i++) {
+								const ang = Math.random() * Math.PI * 2;
+								const spd = 1.5 + Math.random() * 4.0;
+								thermalVapors.push({
+									x: thermalPointerX + (Math.random() - 0.5) * 16,
+									y: thermalPointerY + (Math.random() - 0.5) * 16,
+									vx: Math.cos(ang) * spd,
+									vy: Math.sin(ang) * spd + 1.2, // Cold gas drifts down
+									radius: 18 + Math.random() * 22,
+									life: 0,
+									maxLife: 26 + Math.random() * 16,
+									isCryo: true
+								});
+							}
 						}
 
 						// Spawn dendritic frost crystals blooming on contact surface
-						if (Math.random() > 0.45 && frostCrystals.length < 40) {
+						if (Math.random() > 0.65 && frostCrystals.length < 25) {
 							const branches = [];
-							const branchCount = 3 + Math.floor(Math.random() * 3);
+							const branchCount = 3 + Math.floor(Math.random() * 2);
 							for (let b = 0; b < branchCount; b++) {
 								branches.push({
 									offset: 0.3 + Math.random() * 0.5,
 									angle: (Math.random() > 0.5 ? 1 : -1) * (0.55 + Math.random() * 0.3),
-									length: 6 + Math.random() * 10
+									length: 6 + Math.random() * 8
 								});
 							}
 							frostCrystals.push({
 								x: thermalPointerX + (Math.random() - 0.5) * 36,
 								y: thermalPointerY + (Math.random() - 0.5) * 36,
 								angle: Math.random() * Math.PI * 2,
-								length: 16 + Math.random() * 22,
+								length: 15 + Math.random() * 18,
 								branches,
 								life: 0,
-								maxLife: 90 + Math.random() * 60
+								maxLife: 80 + Math.random() * 40
 							});
 						}
 					} else {
 						probeTemp = Math.min(450, probeTemp + 12.0);
-						audioEngine.playHeatRoar();
 
 						// Heat gun buoyant rising thermal plumes
-						for (let i = 0; i < 5; i++) {
-							const ang = Math.random() * Math.PI * 2;
-							const spd = 1.8 + Math.random() * 4.5;
-							thermalVapors.push({
-								x: thermalPointerX + (Math.random() - 0.5) * 16,
-								y: thermalPointerY + (Math.random() - 0.5) * 16,
-								vx: Math.cos(ang) * spd,
-								vy: Math.sin(ang) * spd - 2.8, // Hot gas rises
-								radius: 16 + Math.random() * 24,
-								life: 0,
-								maxLife: 28 + Math.random() * 16,
-								isCryo: false
-							});
+						if (thermalVapors.length < 45) {
+							for (let i = 0; i < 2; i++) {
+								const ang = Math.random() * Math.PI * 2;
+								const spd = 1.8 + Math.random() * 4.0;
+								thermalVapors.push({
+									x: thermalPointerX + (Math.random() - 0.5) * 16,
+									y: thermalPointerY + (Math.random() - 0.5) * 16,
+									vx: Math.cos(ang) * spd,
+									vy: Math.sin(ang) * spd - 2.5, // Hot gas rises
+									radius: 16 + Math.random() * 22,
+									life: 0,
+									maxLife: 24 + Math.random() * 14,
+									isCryo: false
+								});
+							}
 						}
 
-						if (Math.random() > 0.5 && heatSpots.length < 25) {
+						if (Math.random() > 0.65 && heatSpots.length < 20) {
 							heatSpots.push({
 								x: thermalPointerX + (Math.random() - 0.5) * 20,
 								y: thermalPointerY + (Math.random() - 0.5) * 20,
-								radius: 18 + Math.random() * 26,
+								radius: 16 + Math.random() * 22,
 								life: 0,
-								maxLife: 70 + Math.random() * 40
+								maxLife: 55 + Math.random() * 25
 							});
 						}
 					}
@@ -2015,51 +2429,56 @@
 					probeTemp += (24.5 - probeTemp) * 0.05;
 				}
 
-				if (tProbeVal) {
-					if (probeTemp <= -100) {
-						tProbeVal.textContent = `${probeTemp.toFixed(1)}°C [SUPERCOOLED 77K]`;
-						tProbeVal.style.color = '#38bdf8';
-					} else if (probeTemp >= 120) {
-						tProbeVal.textContent = `${probeTemp.toFixed(1)}°C [RUNAWAY SATURATION]`;
-						tProbeVal.style.color = '#ef4444';
-					} else {
-						tProbeVal.textContent = `${probeTemp.toFixed(1)}°C`;
-						tProbeVal.style.color = '#10b981';
+				// Throttled DOM telemetry updates (~16 updates/sec) to eliminate forced layout thrashing
+				const now = performance.now();
+				if (now - lastDomUpdate > 60) {
+					lastDomUpdate = now;
+					cpuTemp += (Math.random() - 0.49) * 0.3;
+					vrmTemp += (Math.random() - 0.49) * 0.4;
+					memTemp += (Math.random() - 0.49) * 0.2;
+					if (tCpuVal) tCpuVal.textContent = `${cpuTemp.toFixed(1)}°C`;
+					if (tVrmVal) tVrmVal.textContent = `${vrmTemp.toFixed(1)}°C`;
+					if (tMemVal) tMemVal.textContent = `${memTemp.toFixed(1)}°C`;
+
+					if (tProbeVal) {
+						if (probeTemp <= -100) {
+							tProbeVal.textContent = `${probeTemp.toFixed(1)}°C [SUPERCOOLED 77K]`;
+							tProbeVal.style.color = '#38bdf8';
+						} else if (probeTemp >= 120) {
+							tProbeVal.textContent = `${probeTemp.toFixed(1)}°C [RUNAWAY SATURATION]`;
+							tProbeVal.style.color = '#ef4444';
+						} else {
+							tProbeVal.textContent = `${probeTemp.toFixed(1)}°C`;
+							tProbeVal.style.color = '#10b981';
+						}
 					}
 				}
 
-				// 1. Draw glowing surface heat spots (Heat Gun mode)
-				for (let i = heatSpots.length - 1; i >= 0; i--) {
-					const hs = heatSpots[i];
-					hs.life++;
-					const progress = hs.life / hs.maxLife;
-					const alpha = (1 - progress) * 0.35;
-					const grad = ctx.createRadialGradient(hs.x, hs.y, 0, hs.x, hs.y, hs.radius);
-					grad.addColorStop(0, `rgba(255, 255, 255, ${(alpha * 0.8).toFixed(2)})`);
-					grad.addColorStop(0.3, `rgba(249, 115, 22, ${(alpha * 0.6).toFixed(2)})`);
-					grad.addColorStop(0.7, `rgba(225, 29, 72, ${(alpha * 0.3).toFixed(2)})`);
-					grad.addColorStop(1, 'rgba(225, 29, 72, 0)');
-					ctx.fillStyle = grad;
-					ctx.beginPath();
-					ctx.arc(hs.x, hs.y, hs.radius, 0, Math.PI * 2);
-					ctx.fill();
-					if (hs.life >= hs.maxLife) heatSpots.splice(i, 1);
+				// 1. Draw glowing surface heat spots via pre-rendered hardware sprite
+				if (cachedHeatSpotSprite) {
+					for (let i = heatSpots.length - 1; i >= 0; i--) {
+						const hs = heatSpots[i];
+						hs.life++;
+						const progress = hs.life / hs.maxLife;
+						const alpha = (1 - progress) * 0.45;
+						ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+						const d = hs.radius * 2;
+						ctx.drawImage(cachedHeatSpotSprite, hs.x - hs.radius, hs.y - hs.radius, d, d);
+						if (hs.life >= hs.maxLife) heatSpots.splice(i, 1);
+					}
 				}
 
-				// 2. Draw dendritic frost crystals (Cryo mode)
+				// 2. Draw dendritic frost crystals (batched single path, zero shadowBlur for 60fps)
 				for (let i = frostCrystals.length - 1; i >= 0; i--) {
 					const fc = frostCrystals[i];
 					fc.life++;
 					const progress = fc.life / fc.maxLife;
 					const alpha = (1 - progress) * 0.85;
 
-					ctx.save();
 					ctx.strokeStyle = `rgba(224, 242, 254, ${alpha.toFixed(2)})`;
-					ctx.lineWidth = 1.5;
-					ctx.shadowBlur = 5;
-					ctx.shadowColor = '#38bdf8';
+					ctx.lineWidth = 1.4;
+					ctx.beginPath();
 
-					// 6-fold radial dendritic frost symmetry
 					for (let sym = 0; sym < 6; sym++) {
 						const rootAngle = fc.angle + (sym * Math.PI) / 3;
 						const cosR = Math.cos(rootAngle);
@@ -2067,31 +2486,26 @@
 						const endX = fc.x + cosR * fc.length;
 						const endY = fc.y + sinR * fc.length;
 
-						ctx.beginPath();
 						ctx.moveTo(fc.x, fc.y);
 						ctx.lineTo(endX, endY);
-						ctx.stroke();
 
-						// Sub-branches
 						for (const br of fc.branches) {
 							const bx = fc.x + cosR * (fc.length * br.offset);
 							const by = fc.y + sinR * (fc.length * br.offset);
 							const bAngle1 = rootAngle + br.angle;
 							const bAngle2 = rootAngle - br.angle;
-							ctx.beginPath();
 							ctx.moveTo(bx, by);
 							ctx.lineTo(bx + Math.cos(bAngle1) * br.length, by + Math.sin(bAngle1) * br.length);
 							ctx.moveTo(bx, by);
 							ctx.lineTo(bx + Math.cos(bAngle2) * br.length, by + Math.sin(bAngle2) * br.length);
-							ctx.stroke();
 						}
 					}
-					ctx.restore();
+					ctx.stroke();
 
 					if (fc.life >= fc.maxLife) frostCrystals.splice(i, 1);
 				}
 
-				// 3. Draw billowing soft-edge thermal vapor clouds (zero hard orbs!)
+				// 3. Draw billowing soft-edge thermal vapor clouds via pre-rendered hardware sprites
 				for (let i = thermalVapors.length - 1; i >= 0; i--) {
 					const v = thermalVapors[i];
 					v.x += v.vx;
@@ -2104,32 +2518,18 @@
 					const currentRadius = v.radius * (1 + progress * 1.5);
 					const alpha = (1 - progress) * 0.40;
 
-					const grad = ctx.createRadialGradient(v.x, v.y, 0, v.x, v.y, currentRadius);
-					if (v.isCryo) {
-						// Authentic cryogenic liquid nitrogen vapor plume
-						grad.addColorStop(0, `rgba(255, 255, 255, ${(alpha * 0.95).toFixed(2)})`);
-						grad.addColorStop(0.25, `rgba(224, 242, 254, ${(alpha * 0.75).toFixed(2)})`);
-						grad.addColorStop(0.55, `rgba(56, 189, 248, ${(alpha * 0.40).toFixed(2)})`);
-						grad.addColorStop(0.85, `rgba(14, 165, 233, ${(alpha * 0.15).toFixed(2)})`);
-						grad.addColorStop(1, 'rgba(14, 165, 233, 0)');
-					} else {
-						// Heat gun incandescent radiant plume
-						grad.addColorStop(0, `rgba(255, 255, 255, ${(alpha * 0.95).toFixed(2)})`);
-						grad.addColorStop(0.28, `rgba(254, 240, 138, ${(alpha * 0.80).toFixed(2)})`);
-						grad.addColorStop(0.58, `rgba(249, 115, 22, ${(alpha * 0.45).toFixed(2)})`);
-						grad.addColorStop(0.85, `rgba(225, 29, 72, ${(alpha * 0.18).toFixed(2)})`);
-						grad.addColorStop(1, 'rgba(147, 51, 234, 0)');
+					const sprite = v.isCryo ? cachedCryoSprite : cachedHeatSprite;
+					if (sprite) {
+						ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+						const d = currentRadius * 2;
+						ctx.drawImage(sprite, v.x - currentRadius, v.y - currentRadius, d, d);
 					}
-
-					ctx.fillStyle = grad;
-					ctx.beginPath();
-					ctx.arc(v.x, v.y, currentRadius, 0, Math.PI * 2);
-					ctx.fill();
 
 					if (v.life >= v.maxLife) {
 						thermalVapors.splice(i, 1);
 					}
 				}
+				ctx.globalAlpha = 1.0;
 
 				thermalAnimId = requestAnimationFrame(loopThermal);
 			}
@@ -2147,6 +2547,9 @@
 				if (tToolText) tToolText.textContent = 'TOOL: LN2 CRYO-SPRAY (-196°C)';
 				if (tToolBtn) tToolBtn.textContent = 'Switch to Heat Gun (450°C)';
 			}
+			if (isThermalSpraying) {
+				audioEngine.startThermalSpray(thermalToolMode);
+			}
 		}
 
 		function normalizeThermal() {
@@ -2162,6 +2565,8 @@
 		function resetThermal() {
 			if (!isThermal) return;
 			isThermal = false;
+			isThermalSpraying = false;
+			audioEngine.stopThermalSpray();
 			cancelAnimationFrame(thermalAnimId);
 			if (thermalHud) {
 				thermalHud.classList.add('hidden');
@@ -2957,6 +3362,10 @@
 	}
 
 	/* 1. CRT BENCH OSCILLOSCOPE DEGAUSS & SCANLINES */
+	#degauss-canvas {
+		mix-blend-mode: screen;
+		pointer-events: none;
+	}
 	:global(body.crt-active)::after {
 		content: '';
 		position: fixed;
@@ -2967,19 +3376,10 @@
 			linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.28) 50%),
 			linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
 		background-size: 100% 3px, 4px 100%;
-		box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.75);
+		box-shadow: inset 0 0 140px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(0, 0, 0, 0.9);
 	}
 	:global(body.crt-degaussing main) {
-		animation: degaussWarp 1.45s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-	}
-	@keyframes degaussWarp {
-		0% { transform: scale(1) skew(0deg); filter: contrast(1); }
-		8% { transform: scale(1.08, 0.92) skew(4deg, -2.5deg); filter: contrast(2.4) brightness(1.6) drop-shadow(-8px 0 0 #ff0055) drop-shadow(8px 0 0 #00ffff); }
-		18% { transform: scale(0.94, 1.07) skew(-5deg, 3deg); filter: contrast(2.2) brightness(1.4) drop-shadow(10px 0 0 #ff0055) drop-shadow(-10px 0 0 #00ffff); }
-		32% { transform: scale(1.04, 0.96) skew(3deg, -1.5deg); filter: contrast(1.7) brightness(1.25) drop-shadow(-5px 0 0 #ff0055) drop-shadow(5px 0 0 #00ffff); }
-		50% { transform: scale(0.98, 1.02) skew(-2deg, 1deg); filter: contrast(1.3) brightness(1.15) drop-shadow(3px 0 0 #ff0055) drop-shadow(-3px 0 0 #00ffff); }
-		72% { transform: scale(1.01, 0.99) skew(1deg, -0.5deg); filter: contrast(1.1) brightness(1.05); }
-		100% { transform: scale(1) skew(0deg); filter: contrast(1); }
+		will-change: transform, filter;
 	}
 
 	/* 2. 3D SILICON CYCLONE SPHERE CORE & CUBE */

@@ -435,24 +435,21 @@
 
 		function renderIpDisplay() {
 			if (ipv4El) {
-				if (!currentIpv4) {
-					ipv4El.textContent = 'Detecting...';
-				} else if (currentIpv4.includes('127.0.0.1') || currentIpv4.includes('Localhost') || currentIpv4 === 'Unavailable') {
-					ipv4El.textContent = currentIpv4;
-				} else {
-					ipv4El.innerHTML = `<a href="https://ipinfo.io/${encodeURIComponent(currentIpv4)}" target="_blank" rel="noopener noreferrer" class="ip-link" title="Lookup ${currentIpv4} on ipinfo.io">${currentIpv4}<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" class="ip-ext-icon"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>`;
+				ipv4El.textContent = currentIpv4 || 'Detecting...';
+				if (currentIpv4 && currentIpv4 !== 'Unavailable') {
+					ipv4El.title = 'Client public IPv4 address detected at Cloudflare edge.';
 				}
 			}
 
 			if (ipv6El) {
 				if (currentIpv6 === 'none') {
 					ipv6El.innerHTML = '<span class="ip-disabled">No IPv6 enabled</span>';
+					ipv6El.title = 'No active IPv6 route detected on client connection.';
 				} else if (!currentIpv6) {
 					ipv6El.textContent = 'Detecting...';
-				} else if (currentIpv6.includes('::1') || currentIpv6.includes('Localhost') || currentIpv6 === 'Unavailable') {
-					ipv6El.textContent = currentIpv6;
 				} else {
-					ipv6El.innerHTML = `<a href="https://ipinfo.io/${encodeURIComponent(currentIpv6)}" target="_blank" rel="noopener noreferrer" class="ip-link" title="Lookup ${currentIpv6} on ipinfo.io">${currentIpv6}<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" class="ip-ext-icon"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>`;
+					ipv6El.textContent = currentIpv6;
+					ipv6El.title = 'Client public IPv6 address detected at Cloudflare edge.';
 				}
 			}
 
@@ -1671,28 +1668,6 @@
 		flex-shrink: 0;
 		user-select: none;
 		min-width: 34px;
-	}
-	.ip-link {
-		color: var(--accent);
-		text-decoration: none;
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25em;
-		word-break: break-all;
-		transition: color 0.15s ease;
-	}
-	.ip-link:hover {
-		color: #fb923c;
-		text-decoration: underline;
-	}
-	.ip-ext-icon {
-		opacity: 0.65;
-		flex-shrink: 0;
-		transition: opacity 0.15s ease, transform 0.15s ease;
-	}
-	.ip-link:hover .ip-ext-icon {
-		opacity: 1;
-		transform: translate(1px, -1px);
 	}
 	.ip-disabled {
 		color: rgb(var(--gray));

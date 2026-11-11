@@ -485,13 +485,21 @@
 
 			if (extLink) extLink.href = fullUrl;
 
-			if (loader) loader.style.display = 'flex';
-			iframe.onload = () => {
-				if (loader) loader.style.display = 'none';
-			};
-
 			if (iframe.src !== embedUrl) {
+				if (loader) loader.style.display = 'flex';
+				let hasLoaded = false;
+				iframe.onload = () => {
+					hasLoaded = true;
+					if (loader) loader.style.display = 'none';
+				};
+				// Safety fallback: dismiss spinner after 5s if onload is delayed
+				setTimeout(() => {
+					if (!hasLoaded && loader) loader.style.display = 'none';
+				}, 5000);
 				iframe.src = embedUrl;
+			} else {
+				// Already loaded with current coordinates, display immediately
+				if (loader) loader.style.display = 'none';
 			}
 
 			modal.classList.remove('hidden');
@@ -1655,25 +1663,25 @@
 		display: flex;
 		align-items: baseline;
 		gap: 0.45em;
-		font-size: 0.88em;
-		line-height: 1.4;
+		line-height: 1.45;
 		word-break: break-all;
 	}
 	.ip-tag {
-		font-size: 0.74em;
+		font-size: 0.76em;
 		font-weight: 700;
 		text-transform: uppercase;
-		letter-spacing: 0.04em;
+		letter-spacing: 0.05em;
 		color: rgb(var(--gray));
 		flex-shrink: 0;
 		user-select: none;
-		min-width: 34px;
+		min-width: 36px;
 	}
-	.ip-disabled {
-		color: rgb(var(--gray));
+	:global(.ip-disabled) {
+		color: rgb(var(--gray)) !important;
 		font-style: normal;
-		font-weight: 500;
-		opacity: 0.75;
+		font-weight: 500 !important;
+		font-family: inherit;
+		opacity: 0.8;
 	}
 	.sr-only {
 		position: absolute;

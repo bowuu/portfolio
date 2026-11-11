@@ -21,8 +21,25 @@
 				<span>guest@brob:&thinsp;~</span>
 			</div>
 
-			<!-- Right: flat GTK-style window controls -->
+			<!-- Right: flat GTK-style window controls & visual effect toggles -->
 			<div class="terminal-wm-btns" aria-label="Window controls">
+				<button class="wm-btn wm-fx active" id="term-blur-btn" type="button" title="Toggle background blur ('blur')" aria-label="Toggle background blur">
+					<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<circle cx="12" cy="12" r="3"></circle>
+						<circle cx="6" cy="6" r="2"></circle>
+						<circle cx="18" cy="6" r="2"></circle>
+						<circle cx="6" cy="18" r="2"></circle>
+						<circle cx="18" cy="18" r="2"></circle>
+					</svg>
+				</button>
+				<button class="wm-btn wm-fx active" id="term-trans-btn" type="button" title="Toggle terminal transparency ('transparency')" aria-label="Toggle terminal transparency">
+					<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+						<line x1="3" y1="9" x2="21" y2="9"></line>
+						<line x1="9" y1="21" x2="9" y2="9"></line>
+					</svg>
+				</button>
+				<span class="wm-sep" aria-hidden="true"></span>
 				<button class="wm-btn wm-min" id="term-min-btn" type="button" title="Close (Esc)" aria-label="Minimize">
 					<svg viewBox="0 0 10 10" width="10" height="10"><line x1="1" y1="5" x2="9" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
 				</button>
@@ -97,6 +114,11 @@
 			'cad',
 			'debug',
 			'theme',
+			'transparency',
+			'transparent',
+			'opacity',
+			'blur',
+			'backdrop',
 			'visitor',
 			'whoami',
 			'man',
@@ -174,6 +196,69 @@
 				if (screen) screen.scrollTop = screen.scrollHeight;
 			}, 50);
 		}
+
+		// Visual effect state & toggles
+		const blurBtn = document.getElementById('term-blur-btn');
+		const transBtn = document.getElementById('term-trans-btn');
+
+		let isTransparent = true;
+		let isBlurEnabled = true;
+
+		function updateVisualButtons() {
+			if (blurBtn) {
+				blurBtn.classList.toggle('active', isBlurEnabled);
+				blurBtn.title = isBlurEnabled ? "Background blur: ON (click or type 'blur off')" : "Background blur: OFF (click or type 'blur on')";
+			}
+			if (transBtn) {
+				transBtn.classList.toggle('active', isTransparent);
+				transBtn.title = isTransparent ? "Terminal transparency: ON (click or type 'transparency off')" : "Terminal transparency: OFF (click or type 'transparency on')";
+			}
+		}
+
+		function toggleTransparency(targetState?: boolean): boolean {
+			if (typeof targetState === 'boolean') {
+				isTransparent = targetState;
+			} else {
+				isTransparent = !isTransparent;
+			}
+
+			if (isTransparent) {
+				win.classList.remove('opaque');
+			} else {
+				win.classList.add('opaque');
+			}
+			updateVisualButtons();
+			return isTransparent;
+		}
+
+		function toggleBlur(targetState?: boolean): boolean {
+			if (typeof targetState === 'boolean') {
+				isBlurEnabled = targetState;
+			} else {
+				isBlurEnabled = !isBlurEnabled;
+			}
+
+			if (isBlurEnabled) {
+				modal.classList.remove('no-blur');
+			} else {
+				modal.classList.add('no-blur');
+			}
+			updateVisualButtons();
+			return isBlurEnabled;
+		}
+
+		blurBtn?.addEventListener('click', () => {
+			const next = toggleBlur();
+			appendOutput(`Background blur filter is now ${next ? '<span class="term-green">ENABLED</span>' : '<span class="term-yellow">DISABLED</span>'}.`);
+		});
+
+		transBtn?.addEventListener('click', () => {
+			const next = toggleTransparency();
+			appendOutput(`Terminal window transparency is now ${next ? '<span class="term-green">ENABLED</span>' : '<span class="term-yellow">DISABLED</span>'}.`);
+		});
+
+		(window as any).__toggleTerminalTransparency = toggleTransparency;
+		(window as any).__toggleTerminalBlur = toggleBlur;
 
 		// Window control listeners
 		headerToggle?.addEventListener('click', toggleTerminal);
@@ -747,7 +832,32 @@
     <span class="term-hl">sudo</span> COMMAND...
 
 <span class="term-head">DESCRIPTION</span>
-    Simulate administrative privilege escalation request.`
+    Simulate administrative privilege escalation request.`,
+
+			transparency: `
+<span class="term-head">NAME</span>
+    transparency - toggle terminal window acrylic glass transparency
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">transparency</span> [on | off | toggle | status]
+
+<span class="term-head">DESCRIPTION</span>
+    Toggle or query the frosted acrylic glass transparency of the main terminal window.
+    When enabled, the terminal window background is rendered semi-transparent (65% opacity),
+    revealing the blurred underlying page content. When disabled, the window uses a solid
+    opaque background (#0a0c10). Aliases: transparent, opacity.`,
+
+			blur: `
+<span class="term-head">NAME</span>
+    blur - toggle underlying background blur effect
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">blur</span> [on | off | toggle | status]
+
+<span class="term-head">DESCRIPTION</span>
+    Toggle or query hardware-accelerated GPU backdrop blur filters. When enabled,
+    the website background behind the modal and terminal window is softly diffused with
+    a 12px Gaussian blur. When disabled, the background remains sharp. Aliases: backdrop, glass.`
 		};
 
 		function showManPage(page: string) {
@@ -815,6 +925,8 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-hl">cad</span> [spin|grid|slice]    3D CAD viewer controls &amp; slicer (#cad-viewer)
   <span class="term-hl">debug</span>                    Navigate to client hardware &amp; telemetry (#debug)
   <span class="term-hl">theme</span> [mode]             Obsidian Dark / Clean Light toggle
+  <span class="term-hl">transparency</span> [on|off]    Toggle terminal acrylic glass transparency
+  <span class="term-hl">blur</span> [on|off]            Toggle background blur filter
   <span class="term-hl">visitor</span>                  Query anonymous Cloudflare D1 visitor counter
   <span class="term-hl">whoami</span>                   Display client session &amp; Anycast edge telemetry
   <span class="term-hl">man</span> [cmd]                Reference manual page for shell commands
@@ -991,6 +1103,48 @@ Verified Profiles:
 						}
 					}
 					break;
+
+				case 'transparency':
+				case 'transparent':
+				case 'opacity': {
+					const sub = args[0]?.toLowerCase();
+					let stateMsg = '';
+					if (sub === 'on' || sub === 'enable' || sub === 'true' || sub === '1') {
+						toggleTransparency(true);
+						stateMsg = '<span class="term-green">ENABLED</span> (65% acrylic glass)';
+					} else if (sub === 'off' || sub === 'disable' || sub === 'false' || sub === '0' || sub === 'opaque') {
+						toggleTransparency(false);
+						stateMsg = '<span class="term-yellow">DISABLED</span> (100% solid opaque)';
+					} else if (sub === 'status') {
+						stateMsg = isTransparent ? '<span class="term-green">ENABLED</span> (65% acrylic glass)' : '<span class="term-yellow">DISABLED</span> (100% solid opaque)';
+					} else {
+						const next = toggleTransparency();
+						stateMsg = next ? '<span class="term-green">ENABLED</span> (65% acrylic glass)' : '<span class="term-yellow">DISABLED</span> (100% solid opaque)';
+					}
+					appendOutput(`Terminal window transparency is now ${stateMsg}. (Usage: <span class="term-hl">transparency [on|off|toggle|status]</span>)`);
+					break;
+				}
+
+				case 'blur':
+				case 'backdrop':
+				case 'glass': {
+					const sub = args[0]?.toLowerCase();
+					let stateMsg = '';
+					if (sub === 'on' || sub === 'enable' || sub === 'true' || sub === '1') {
+						toggleBlur(true);
+						stateMsg = '<span class="term-green">ENABLED</span> (12px backdrop filter)';
+					} else if (sub === 'off' || sub === 'disable' || sub === 'false' || sub === '0') {
+						toggleBlur(false);
+						stateMsg = '<span class="term-yellow">DISABLED</span> (sharp background)';
+					} else if (sub === 'status') {
+						stateMsg = isBlurEnabled ? '<span class="term-green">ENABLED</span> (12px backdrop filter)' : '<span class="term-yellow">DISABLED</span> (sharp background)';
+					} else {
+						const next = toggleBlur();
+						stateMsg = next ? '<span class="term-green">ENABLED</span> (12px backdrop filter)' : '<span class="term-yellow">DISABLED</span> (sharp background)';
+					}
+					appendOutput(`Background blur filter is now ${stateMsg}. (Usage: <span class="term-hl">blur [on|off|toggle|status]</span>)`);
+					break;
+				}
 
 				case 'visitor':
 				case 'counter':
@@ -1703,6 +1857,17 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 		transition: width 0.2s ease, height 0.2s ease, max-width 0.2s ease;
 	}
 
+	/* Toggle state: opaque window & no-blur mode */
+	.terminal-window.opaque {
+		background: #0a0c10 !important;
+	}
+
+	.terminal-modal.no-blur .terminal-backdrop,
+	.terminal-modal.no-blur .terminal-window {
+		backdrop-filter: none !important;
+		-webkit-backdrop-filter: none !important;
+	}
+
 	.terminal-window.maximized {
 		max-width: 95vw;
 		width: 95vw;
@@ -1803,6 +1968,32 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 	.wm-max:hover {
 		background: rgba(255, 255, 255, 0.1);
 		color: #fff;
+	}
+
+	.wm-sep {
+		width: 1px;
+		height: 12px;
+		background: rgba(255, 255, 255, 0.15);
+		margin: 0 4px;
+	}
+
+	.wm-fx {
+		color: #64748b;
+		transition: color 0.15s ease, background 0.15s ease;
+	}
+
+	.wm-fx.active {
+		color: #22c55e;
+	}
+
+	.wm-fx:hover {
+		background: rgba(255, 255, 255, 0.08);
+		color: #94a3b8;
+	}
+
+	.wm-fx.active:hover {
+		background: rgba(34, 197, 94, 0.15);
+		color: #4ade80;
 	}
 
 	/* UNIFIED TERMINAL SCREEN BUFFER */

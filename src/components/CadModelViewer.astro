@@ -92,7 +92,7 @@
 				<strong id="slicer-hud-layer">Layer 140 / 140</strong>
 				<span class="slicer-hud-sub" id="slicer-hud-mm">(28.0 mm)</span>
 				<span class="slicer-hud-sep">&bull;</span>
-				<span id="slicer-hud-filament">PETG-CF: ~48g</span>
+				<span id="slicer-hud-filament">PETG: ~50g</span>
 				<span class="slicer-hud-sep">&bull;</span>
 				<span id="slicer-hud-time">Est: 1h 42m</span>
 			</div>
@@ -308,13 +308,14 @@
 			const currentLayer = Math.max(1, Math.round(activeTotalLayers * pct));
 			const currentMm = (currentLayer * 0.20).toFixed(1);
 
-			const estFilamentG = Math.round((activeModelRadiusM * 500) * pct + 12);
+			// Standard PETG density (~1.27 g/cm³) vs composite CF filled (~1.22 g/cm³)
+			const estFilamentG = Math.round((activeModelRadiusM * 520) * pct + 12.5);
 			const estHours = Math.floor((activeTotalLayers * 0.45 * pct) / 60);
 			const estMins = Math.round((activeTotalLayers * 0.45 * pct) % 60);
 
 			if (slicerHudLayerEl) slicerHudLayerEl.textContent = `Layer ${currentLayer} / ${activeTotalLayers}`;
 			if (slicerHudMmEl) slicerHudMmEl.textContent = `(${currentMm} mm)`;
-			if (slicerHudFilamentEl) slicerHudFilamentEl.textContent = `PETG-CF: ~${estFilamentG}g`;
+			if (slicerHudFilamentEl) slicerHudFilamentEl.textContent = `PETG: ~${estFilamentG}g`;
 			if (slicerHudTimeEl) slicerHudTimeEl.textContent = `Est: ${estHours > 0 ? `${estHours}h ` : ''}${estMins}m`;
 		}
 

@@ -554,7 +554,7 @@
     <span class="term-hl">sensors</span> [OPTION]...
 
 <span class="term-head">DESCRIPTION</span>
-    Query on-die thermal diodes and Renesas VR14 PMIC power delivery telemetry.
+    Query on-die thermal diodes and digital multiphase PMIC power delivery telemetry.
 
 <span class="term-head">OPTIONS</span>
     <span class="term-cyan">-f, --fahrenheit</span>
@@ -797,7 +797,7 @@
     <span class="term-hl">gcode</span>
 
 <span class="term-head">DESCRIPTION</span>
-    Display simulated PETG-CF print metrics, hotend thermals, and bed variance.`,
+    Display simulated PETG print metrics, hotend thermals, and bed variance.`,
 
 			matrix: `
 <span class="term-head">NAME</span>
@@ -1403,7 +1403,7 @@ Hit any key to stop autoboot:  0
 						appendOutput(`
 <span class="term-head">=== 300mm ATE SILICON WAFER SORT SUMMARY (LOT #740C-W14) ===</span>
 <span class="term-col">Wafer Sort Summary</span>:
-  Diameter: 300 mm (12 in)  |  Process: 7nm FinFET (HPC)  |  Gross Die: 83
+  Diameter: 300 mm (12 in)  |  Process: 3nm FinFET (HPC)  |  Gross Die: 83
   Die Footprint: ~740 mm&sup2; (Near Reticle Limit, 26x33mm Stepper Field)
   Functional Die Yield:     <span class="term-hl">88.0%</span> (Defect Density D0: 0.082 / cm&sup2;)
   Bin 1 (Perfect / Full Config): <span class="term-cyan">46 dies [55.4%]</span> - All Cores Active (Zero Defect)
@@ -1427,7 +1427,7 @@ Hit any key to stop autoboot:  0
                     \_/ (Wafer Notch)</span>
 
 <span class="term-col">Wafer Sort Summary</span>:
-  Diameter: 300 mm (12 in)  |  Process: 7nm FinFET (HPC)  |  Gross Die: 83
+  Diameter: 300 mm (12 in)  |  Process: 3nm FinFET (HPC)  |  Gross Die: 83
   Die Footprint: ~740 mm&sup2; (Near Reticle Limit, 26x33mm Stepper Field)
   Functional Die Yield:     <span class="term-hl">88.0%</span> (Defect Density D0: 0.082 / cm&sup2;)
   Bin 1 (Perfect / Full Config): <span class="term-cyan">46 dies [55.4%]</span> - All Cores Active (Zero Defect)
@@ -1447,7 +1447,7 @@ Package id 0:  <span class="term-cyan">+99.3&deg;F</span>  (high = +185.0&deg;F,
 Core 0 (Die A): <span class="term-cyan">+96.4&deg;F</span>  (high = +185.0&deg;F, crit = +221.0&deg;F)
 Core 1 (Die B): <span class="term-cyan">+97.2&deg;F</span>  (high = +185.0&deg;F, crit = +221.0&deg;F)
 
-<span class="term-head">pmic-i2c-0-5a (Renesas VR14 Digital Multiphase)</span>
+<span class="term-head">pmic-i2c-0-5a (Digital Multiphase PMIC)</span>
 Adapter: I2C PMIC Bus 0
 VDD_CORE:      <span class="term-hl">0.852 V</span>  (min =  0.750 V, max =  0.950 V)
 VDD_SOC:       <span class="term-hl">1.050 V</span>  (min =  0.950 V, max =  1.150 V)
@@ -1462,7 +1462,7 @@ Package id 0:  <span class="term-cyan">+37.4&deg;C</span>  (high = +85.0&deg;C, 
 Core 0 (Die A): <span class="term-cyan">+35.8&deg;C</span>  (high = +85.0&deg;C, crit = +105.0&deg;C)
 Core 1 (Die B): <span class="term-cyan">+36.2&deg;C</span>  (high = +85.0&deg;C, crit = +105.0&deg;C)
 
-<span class="term-head">pmic-i2c-0-5a (Renesas VR14 Digital Multiphase)</span>
+<span class="term-head">pmic-i2c-0-5a (Digital Multiphase PMIC)</span>
 Adapter: I2C PMIC Bus 0
 VDD_CORE:      <span class="term-hl">0.852 V</span>  (min =  0.750 V, max =  0.950 V)
 VDD_SOC:       <span class="term-hl">1.050 V</span>  (min =  0.950 V, max =  1.150 V)
@@ -1479,7 +1479,7 @@ Current Draw:  <span class="term-cyan">17.8 A</span>   (Package Power: 15.2 W TD
 					appendOutput(`
 <span class="term-head">=== 3D PARAMETRIC MANUFACTURING TELEMETRY ===</span>
 Active Job: <span class="term-hl">ASUS RT-BE92U Wi-Fi 7 Router Mount</span>
-Material:   <span class="term-cyan">High-Performance PETG-CF (Carbon Fiber Reinforced)</span>
+Material:   <span class="term-cyan">High-Performance PETG</span>
 Nozzle:     0.4 mm Hardened Steel @ <span class="term-hl">250&deg;C</span> (Target: 250&deg;C)
 Bed Temp:   Engineering Plate @ <span class="term-hl">70&deg;C</span> (Target: 70&deg;C)
 Bed Mesh:   16-point inductive leveling (Variance: 0.016 mm &plusmn; 0.002 mm)

@@ -368,7 +368,7 @@
 			}
 			return {
 				display: buildOSDisplay('macOS', ver, isAppleSilicon ? 'ARM64' : 'x86_64'),
-				tooltip: isAppleSilicon ? 'Apple Silicon' : 'Intel Mac'
+				tooltip: isAppleSilicon ? 'Apple Silicon' : 'x86_64 Mac'
 			};
 		}
 
@@ -663,7 +663,7 @@
 						} else if (hints.platform === 'macOS') {
 							const isAppleSilicon = /Apple/i.test(gpuString) || hints.architecture === 'arm';
 							osEl.textContent = buildOSDisplay('macOS', '', isAppleSilicon ? 'ARM64' : 'x86_64');
-							osEl.title = isAppleSilicon ? 'Apple Silicon' : 'Intel Mac';
+							osEl.title = isAppleSilicon ? 'Apple Silicon' : 'x86_64 Mac';
 						}
 					})
 					.catch(() => {});

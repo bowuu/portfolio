@@ -38,7 +38,7 @@
 	</div>
 	<div id="sphere-core" class="sphere-core hidden" aria-hidden="true" style="display: none;">
 		<div class="die-cube">
-			<div class="die-face die-front mono">7nm HPC CORE</div>
+			<div class="die-face die-front mono">3nm HPC CORE</div>
 			<div class="die-face die-back mono">L3 64MB</div>
 			<div class="die-face die-left mono">PCIe Gen5</div>
 			<div class="die-face die-right mono">LPDDR5 PHY</div>
@@ -105,7 +105,7 @@
 					<span class="hud-pulse-dot"></span>
 					<div class="wafer-title-meta">
 						<span class="wafer-title">300mm ATE SILICON WAFER SORT</span>
-						<span class="wafer-sub mono" id="wafer-sub-meta">LOT #740C-W14 &bull; 7nm HPC Node &bull; Reticle Limit (740 mm²) &bull; 83 Dies</span>
+						<span class="wafer-sub mono" id="wafer-sub-meta">LOT #740C-W14 &bull; 3nm HPC Node &bull; Reticle Limit (740 mm²) &bull; 83 Dies</span>
 					</div>
 				</div>
 				<button id="wafer-close-btn" class="wafer-close-btn" type="button" aria-label="Close Wafer Inspector">&times;</button>
@@ -928,7 +928,7 @@
 
 			const subEl = document.getElementById('wafer-sub-meta');
 			if (subEl) {
-				subEl.textContent = `LOT #${lotNum}C-W${waferNum < 10 ? '0' + waferNum : waferNum} • 7nm HPC Node • Reticle Limit (740 mm²) • ${dies.length} Dies`;
+				subEl.textContent = `LOT #${lotNum}C-W${waferNum < 10 ? '0' + waferNum : waferNum} • 3nm HPC Node • Reticle Limit (740 mm²) • ${dies.length} Dies`;
 			}
 
 			// Update legend tallies (Concise strings, zero wrapping)

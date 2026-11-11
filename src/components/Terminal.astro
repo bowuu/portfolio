@@ -57,6 +57,7 @@
 			<div class="terminal-history" id="terminal-history">
 				<div class="term-banner mono">
 					<p class="banner-hint">Type <span class="term-hl">help</span> for available commands, <span class="term-hl">clear</span> to wipe screen, or <span class="term-hl">exit</span> to close. Tab autocompletes.</p>
+					<p class="banner-hint">Type <span class="term-hl">blur</span> to toggle background blur, or <span class="term-hl">transparency</span> to toggle window glass (or use titlebar icons).</p>
 				</div>
 			</div>
 
@@ -2029,9 +2030,14 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 	}
 
 	.banner-hint {
-		margin: 0 0 0.85em 0;
+		margin: 0 0 0.35em 0;
 		color: #64748b;
 		font-size: 0.86em;
+		line-height: 1.5;
+	}
+
+	.banner-hint:last-child {
+		margin-bottom: 0.85em;
 	}
 
 	/* INLINE TERMINAL PROMPT & STREAM */

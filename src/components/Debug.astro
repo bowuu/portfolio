@@ -449,21 +449,49 @@
 			}
 		}
 
-		// 5. Display & Scaling
-		if (displayEl) {
+		// 5. Display & Scaling (Dynamic Multi-Monitor & DPI Scaling Aware)
+		let lastScreenWidth = window.screen.width;
+		let lastScreenHeight = window.screen.height;
+		let lastDPR = window.devicePixelRatio;
+
+		const updateDisplayMetrics = () => {
+			if (!displayEl) return;
 			const dprVal = window.devicePixelRatio ? Number(window.devicePixelRatio.toFixed(2)) : null;
 			const dpr = dprVal ? ` @ ${dprVal}x scaling` : '';
 			const depth = window.screen.colorDepth ? ` (${window.screen.colorDepth}-bit color)` : '';
+			const isExtended = (window.screen as any).isExtended;
 			displayEl.textContent = `${window.screen.width} × ${window.screen.height}${dpr}${depth}`;
-		}
+			displayEl.title = isExtended
+				? 'Active screen resolution and scaling. Multi-monitor extended desktop detected.'
+				: 'Active screen resolution and scaling.';
+
+			// If screen geometry or scaling shifted (e.g. window dragged across displays)
+			if (
+				window.screen.width !== lastScreenWidth ||
+				window.screen.height !== lastScreenHeight ||
+				window.devicePixelRatio !== lastDPR
+			) {
+				lastScreenWidth = window.screen.width;
+				lastScreenHeight = window.screen.height;
+				lastDPR = window.devicePixelRatio;
+				if (typeof retestRefresh === 'function') {
+					retestRefresh();
+				}
+			}
+		};
 
 		// 8. Panel Refresh & Gamut (VRR, LTPO, HDR10 & Video-plane aware)
-		const isP3 = window.matchMedia('(color-gamut: p3)').matches;
-		const isRec2020 = window.matchMedia('(color-gamut: rec2020)').matches;
-		const isHDR = window.matchMedia('(dynamic-range: high)').matches;
-		const isVideoHDR = window.matchMedia('(video-dynamic-range: high)').matches;
-		const gamut = isRec2020 ? 'Rec.2020' : (isP3 ? 'Display P3' : 'sRGB');
-		const hdrTag = (isHDR || isVideoHDR) ? 'HDR' : 'SDR';
+		function getGamutAndHDR() {
+			const isP3 = window.matchMedia('(color-gamut: p3)').matches;
+			const isRec2020 = window.matchMedia('(color-gamut: rec2020)').matches;
+			const isHDR = window.matchMedia('(dynamic-range: high)').matches;
+			const isVideoHDR = window.matchMedia('(video-dynamic-range: high)').matches;
+			const gamut = isRec2020 ? 'Rec.2020' : (isP3 ? 'Display P3' : 'sRGB');
+			const hdrTag = (isHDR || isVideoHDR) ? 'HDR' : 'SDR';
+			return { gamut, hdrTag };
+		}
+
+		let retestRefresh: () => void = () => {};
 
 		if (refreshEl) {
 			let baselineHz = 0;
@@ -477,6 +505,7 @@
 				if (!refreshEl) return;
 				const displayHz = activeHz || baselineHz || 60;
 				const vrrTag = (displayHz > 60 || isAdaptiveVRR) ? ' (Adaptive VRR)' : '';
+				const { gamut, hdrTag } = getGamutAndHDR();
 				refreshEl.textContent = `${displayHz} Hz${vrrTag} • ${gamut} • ${hdrTag}`;
 			}
 
@@ -541,6 +570,13 @@
 				requestAnimationFrame(onFrame);
 			}
 
+			retestRefresh = () => {
+				baselineHz = 0;
+				activeHz = 0;
+				isAdaptiveVRR = false;
+				measureRefreshBurst(50, false);
+			};
+
 			// Baseline measurement on load
 			measureRefreshBurst(40, false);
 
@@ -559,12 +595,31 @@
 			refreshEl.style.cursor = 'pointer';
 			refreshEl.title = 'Click to re-test display refresh rate. Detects high-refresh G-Sync/FreeSync/ProMotion panels and dynamic VRR/LTPO scaling.';
 			refreshEl.addEventListener('click', () => {
-				baselineHz = 0;
-				activeHz = 0;
-				isAdaptiveVRR = false;
-				measureRefreshBurst(50, false);
+				retestRefresh();
 			});
 		}
+
+		// Initial display & scaling calculation
+		updateDisplayMetrics();
+
+		// Listen for DPI scaling changes via resolution media query
+		let dprMediaQuery: MediaQueryList | null = null;
+		const watchDprChange = () => {
+			if (dprMediaQuery) {
+				try { dprMediaQuery.removeEventListener('change', onDprChange); } catch (_) {}
+			}
+			if (typeof window.matchMedia === 'function') {
+				dprMediaQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+				if (dprMediaQuery && dprMediaQuery.addEventListener) {
+					dprMediaQuery.addEventListener('change', onDprChange, { once: true });
+				}
+			}
+		};
+		const onDprChange = () => {
+			updateDisplayMetrics();
+			watchDprChange();
+		};
+		watchDprChange();
 
 		// 9. Screen Orientation & Hardware Angle
 		if (orientEl) {
@@ -607,10 +662,15 @@
 			};
 			updateOrient();
 			if (screen.orientation && screen.orientation.addEventListener) {
-				screen.orientation.addEventListener('change', updateOrient);
-			} else {
-				window.addEventListener('resize', updateOrient, { passive: true });
+				screen.orientation.addEventListener('change', () => {
+					updateOrient();
+					updateDisplayMetrics();
+				});
 			}
+			window.addEventListener('resize', () => {
+				updateOrient();
+				updateDisplayMetrics();
+			}, { passive: true });
 		}
 
 		// 10. Hardware Touch Digitizer

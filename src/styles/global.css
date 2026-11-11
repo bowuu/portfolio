@@ -51,6 +51,11 @@ html[data-theme="dark"] {
   box-sizing: border-box;
 }
 
+/* Universal hidden utility */
+.hidden {
+  display: none !important;
+}
+
 html {
   overflow-x: clip;
   width: 100%;

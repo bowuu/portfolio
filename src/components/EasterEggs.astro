@@ -9,20 +9,20 @@
 
 <div id="easter-eggs-container">
 	<!-- FLOATING HUDS -->
-	<div id="zerog-hud" class="ee-hud zerog-hud hidden">
+	<div id="zerog-hud" class="ee-hud zerog-hud hidden" style="display: none;">
 		<span class="hud-pulse-dot"></span>
 		<span class="hud-title">⚡ ZERO-G COLLAPSE ACTIVE &bull; DRAG &amp; FLING CARDS</span>
 		<button id="zerog-reset-btn" type="button" class="ee-hud-btn">Resolder / Reassemble</button>
 	</div>
 
-	<div id="tilt-hud" class="ee-hud tilt-hud hidden">
+	<div id="tilt-hud" class="ee-hud tilt-hud hidden" style="display: none;">
 		<span class="hud-pulse-dot"></span>
 		<span class="hud-title">📐 3D HOLOGRAM VIEWPORT TILT ACTIVE</span>
 		<button id="tilt-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
 	</div>
 
 	<!-- CRT BENCH OSCILLOSCOPE DEGAUSS HUD -->
-	<div id="degauss-hud" class="ee-hud degauss-hud hidden">
+	<div id="degauss-hud" class="ee-hud degauss-hud hidden" style="display: none;">
 		<span class="hud-pulse-dot"></span>
 		<span class="hud-title">⚡ CRT BENCH DEGAUSS &bull; ELECTROMAGNETIC PULSE</span>
 		<button id="degauss-re-btn" type="button" class="ee-hud-btn">Pulse Coil</button>
@@ -30,12 +30,12 @@
 	</div>
 
 	<!-- 3D SILICON CYCLONE SPHERE HUD & 3D CORE -->
-	<div id="sphere-hud" class="ee-hud sphere-hud hidden">
+	<div id="sphere-hud" class="ee-hud sphere-hud hidden" style="display: none;">
 		<span class="hud-pulse-dot"></span>
 		<span class="hud-title">🪐 3D SILICON CYCLONE &bull; DRAG TO ROTATE &bull; HOVER TO INSPECT</span>
 		<button id="sphere-exit-btn" type="button" class="ee-hud-btn">Collapse to 2D (Esc)</button>
 	</div>
-	<div id="sphere-core" class="sphere-core hidden" aria-hidden="true">
+	<div id="sphere-core" class="sphere-core hidden" aria-hidden="true" style="display: none;">
 		<div class="die-cube">
 			<div class="die-face die-front mono">7nm HPC CORE</div>
 			<div class="die-face die-back mono">L3 64MB</div>
@@ -48,16 +48,16 @@
 	</div>
 
 	<!-- QUANTUM TUNNELING DISINTEGRATION HUD & CANVAS -->
-	<div id="quantum-hud" class="ee-hud quantum-hud hidden">
+	<div id="quantum-hud" class="ee-hud quantum-hud hidden" style="display: none;">
 		<span class="hud-pulse-dot"></span>
 		<span class="hud-title">💨 QUANTUM TUNNELING DISINTEGRATION &bull; DRAG TO SWIRL SILICON DUST</span>
 		<button id="quantum-reassemble-btn" type="button" class="ee-hud-btn">Quantum Anneal (Reassemble)</button>
 		<button id="quantum-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
 	</div>
-	<canvas id="quantum-canvas" class="ee-canvas hidden" aria-hidden="true"></canvas>
+	<canvas id="quantum-canvas" class="ee-canvas hidden" aria-hidden="true" style="display: none;"></canvas>
 
 	<!-- FLIR INFRARED THERMAL CAMERA HUD, CANVAS & SCALE -->
-	<div id="thermal-hud" class="ee-hud thermal-hud hidden">
+	<div id="thermal-hud" class="ee-hud thermal-hud hidden" style="display: none;">
 		<div class="thermal-hud-inner">
 			<span class="hud-pulse-dot"></span>
 			<span class="hud-title">🌡️ FLIR SC660 THERMOGRAPHY &bull; <span id="thermal-tool-text">TOOL: LN2 CRYO-SPRAY (-196°C)</span></span>
@@ -66,13 +66,13 @@
 			<button id="thermal-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
 		</div>
 	</div>
-	<div id="thermal-scale-bar" class="thermal-scale-bar hidden" aria-hidden="true">
+	<div id="thermal-scale-bar" class="thermal-scale-bar hidden" aria-hidden="true" style="display: none;">
 		<div class="ts-val max mono">150°C</div>
 		<div class="ts-gradient"></div>
 		<div class="ts-val min mono" id="ts-min-val">-196°C</div>
 		<div class="ts-emissivity mono">ε: 0.95</div>
 	</div>
-	<div id="thermal-spots" class="thermal-spots hidden" aria-hidden="true">
+	<div id="thermal-spots" class="thermal-spots hidden" aria-hidden="true" style="display: none;">
 		<div class="thermal-spot" id="t-spot-cpu" style="top: 25%; left: 35%;">
 			<div class="spot-crosshair"></div>
 			<span class="spot-label mono">SP01 [CPU DIE] <strong id="t-cpu-val">98.4°C</strong></span>
@@ -90,22 +90,22 @@
 			<span class="spot-label mono">PROBE <strong id="t-cursor-val">24.5°C</strong></span>
 		</div>
 	</div>
-	<canvas id="thermal-canvas" class="ee-canvas hidden" aria-hidden="true"></canvas>
+	<canvas id="thermal-canvas" class="ee-canvas hidden" aria-hidden="true" style="display: none;"></canvas>
 
 	<!-- LASER WAFER DICING & CLEAVE HUD & CANVASES -->
-	<div id="dicing-hud" class="ee-hud dicing-hud hidden">
+	<div id="dicing-hud" class="ee-hud dicing-hud hidden" style="display: none;">
 		<span class="hud-pulse-dot"></span>
 		<span class="hud-title">✂️ STEALTH LASER WAFER DICING &bull; <span id="dicing-status">DRAG TO DRAW CUT SEAM</span></span>
 		<button id="dicing-auto-btn" type="button" class="ee-hud-btn">Auto Center Cleave</button>
 		<button id="dicing-weld-btn" type="button" class="ee-hud-btn">Laser Sinter / Re-Bond</button>
 		<button id="dicing-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
 	</div>
-	<canvas id="dicing-canvas" class="ee-canvas hidden" aria-hidden="true"></canvas>
+	<canvas id="dicing-canvas" class="ee-canvas hidden" aria-hidden="true" style="display: none;"></canvas>
 
 
 
 	<!-- 300MM SILICON WAFER DIE SORT MODAL (RETICLE-LIMIT ENTERPRISE DIE) -->
-	<div id="wafer-modal" class="wafer-modal hidden" role="dialog" aria-modal="true" aria-label="300mm Silicon Wafer Sort Inspector">
+	<div id="wafer-modal" class="wafer-modal hidden" role="dialog" aria-modal="true" aria-label="300mm Silicon Wafer Sort Inspector" style="display: none;">
 		<div class="wafer-backdrop" id="wafer-backdrop"></div>
 		<div class="wafer-dialog">
 			<div class="wafer-modal-header">
@@ -176,7 +176,7 @@
 	</div>
 
 	<!-- LAB EXTRAS DRAWER / POPOVER (SORTED ALPHABETICALLY A-Z) -->
-	<div id="lab-extras-modal" class="lab-extras-modal hidden" role="dialog" aria-modal="false" aria-label="Hardware Lab Easter Eggs">
+	<div id="lab-extras-modal" class="lab-extras-modal hidden" role="dialog" aria-modal="false" aria-label="Hardware Lab Easter Eggs" style="display: none;">
 		<div class="extras-header">
 			<div class="extras-title">
 				<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -947,7 +947,9 @@
 		canvas.addEventListener('click', handleCanvasPointer);
 
 		function openWaferModal() {
+			(window as any).__closeAllEasterEggs?.();
 			modal.classList.remove('hidden');
+			modal.style.display = 'block';
 			if (!activeDie && dies.length) {
 				activeDie = dies[Math.floor(dies.length / 2)];
 				updateTelemetry(activeDie);
@@ -957,6 +959,7 @@
 
 		function closeWaferModal() {
 			modal.classList.add('hidden');
+			modal.style.display = 'none';
 		}
 
 		closeBtn?.addEventListener('click', closeWaferModal);
@@ -1025,6 +1028,8 @@
 		});
 
 		(window as any).__openWaferMap = openWaferModal;
+		(window as any).__closeWaferMap = closeWaferModal;
+		(window as any).__toggleWaferMap = () => (modal.classList.contains('hidden') ? openWaferModal() : closeWaferModal());
 	}
 
 	// -------------------------------------------------------------
@@ -1082,7 +1087,25 @@
 			if (isQuantum) resetQuantum();
 			if (isThermal) resetThermal();
 			if (isDicing) resetDicing();
+			(window as any).__closeWaferMap?.();
 		}
+		(window as any).__closeAllEasterEggs = closeAllActiveModes;
+
+		// Force initial hidden state on all easter egg elements
+		if (zerogHud) { zerogHud.style.display = 'none'; zerogHud.classList.add('hidden'); }
+		if (tiltHud) { tiltHud.style.display = 'none'; tiltHud.classList.add('hidden'); }
+		if (degaussHud) { degaussHud.style.display = 'none'; degaussHud.classList.add('hidden'); }
+		if (sphereHud) { sphereHud.style.display = 'none'; sphereHud.classList.add('hidden'); }
+		if (sphereCore) { sphereCore.style.display = 'none'; sphereCore.classList.add('hidden'); }
+		if (quantumHud) { quantumHud.style.display = 'none'; quantumHud.classList.add('hidden'); }
+		if (quantumCanvas) { quantumCanvas.style.display = 'none'; quantumCanvas.classList.add('hidden'); }
+		if (thermalHud) { thermalHud.style.display = 'none'; thermalHud.classList.add('hidden'); }
+		if (thermalScaleBar) { thermalScaleBar.style.display = 'none'; thermalScaleBar.classList.add('hidden'); }
+		if (thermalSpots) { thermalSpots.style.display = 'none'; thermalSpots.classList.add('hidden'); }
+		if (thermalCanvas) { thermalCanvas.style.display = 'none'; thermalCanvas.classList.add('hidden'); }
+		if (dicingHud) { dicingHud.style.display = 'none'; dicingHud.classList.add('hidden'); }
+		if (dicingCanvas) { dicingCanvas.style.display = 'none'; dicingCanvas.classList.add('hidden'); }
+		if (extrasModal) { extrasModal.style.display = 'none'; extrasModal.classList.add('hidden'); }
 
 		// 1. REFINED ZERO-G DROP (OVERFLOW LOCK & SLEEP)
 		interface PhysicsBody {
@@ -1112,7 +1135,10 @@
 			closeAllActiveModes();
 
 			isZeroG = true;
-			zerogHud?.classList.remove('hidden');
+			if (zerogHud) {
+				zerogHud.style.display = 'flex';
+				zerogHud.classList.remove('hidden');
+			}
 
 			// Prevent document scroll bounds from expanding below footer
 			document.documentElement.style.overflow = 'hidden';
@@ -1162,7 +1188,10 @@
 			isZeroG = false;
 			cancelAnimationFrame(animId);
 			animId = 0;
-			zerogHud?.classList.add('hidden');
+			if (zerogHud) {
+				zerogHud.classList.add('hidden');
+				zerogHud.style.display = 'none';
+			}
 
 			document.documentElement.style.overflow = '';
 			document.body.style.overflow = '';
@@ -1313,7 +1342,10 @@
 			isTilt = next;
 
 			if (isTilt) {
-				tiltHud?.classList.remove('hidden');
+				if (tiltHud) {
+					tiltHud.style.display = 'flex';
+					tiltHud.classList.remove('hidden');
+				}
 				window.addEventListener('mousemove', handleTiltMove);
 				if (typeof (DeviceOrientationEvent as any)?.requestPermission === 'function') {
 					(DeviceOrientationEvent as any).requestPermission().then((state: string) => {
@@ -1326,7 +1358,10 @@
 				}
 				if (mainEl) mainEl.style.transition = 'transform 0.12s ease-out';
 			} else {
-				tiltHud?.classList.add('hidden');
+				if (tiltHud) {
+					tiltHud.classList.add('hidden');
+					tiltHud.style.display = 'none';
+				}
 				window.removeEventListener('mousemove', handleTiltMove);
 				window.removeEventListener('deviceorientation', handleOrientation);
 				if (mainEl) {
@@ -1356,7 +1391,10 @@
 			if (isDegauss) return;
 			closeAllActiveModes();
 			isDegauss = true;
-			degaussHud?.classList.remove('hidden');
+			if (degaussHud) {
+				degaussHud.style.display = 'flex';
+				degaussHud.classList.remove('hidden');
+			}
 			document.body.classList.add('crt-active');
 			pulseDegauss();
 		}
@@ -1365,7 +1403,10 @@
 			if (!isDegauss) return;
 			isDegauss = false;
 			clearTimeout(degaussTimer);
-			degaussHud?.classList.add('hidden');
+			if (degaussHud) {
+				degaussHud.classList.add('hidden');
+				degaussHud.style.display = 'none';
+			}
 			document.body.classList.remove('crt-active', 'crt-degaussing');
 		}
 
@@ -1420,8 +1461,14 @@
 			if (isSphere) return;
 			closeAllActiveModes();
 			isSphere = true;
-			sphereHud?.classList.remove('hidden');
-			sphereCore?.classList.remove('hidden');
+			if (sphereHud) {
+				sphereHud.style.display = 'flex';
+				sphereHud.classList.remove('hidden');
+			}
+			if (sphereCore) {
+				sphereCore.style.display = 'flex';
+				sphereCore.classList.remove('hidden');
+			}
 
 			document.documentElement.style.overflow = 'hidden';
 			document.body.style.overflow = 'hidden';
@@ -1512,12 +1559,22 @@
 			if (!isSphere) return;
 			isSphere = false;
 			cancelAnimationFrame(sphereAnimId);
-			sphereHud?.classList.add('hidden');
-			sphereCore?.classList.add('hidden');
+			if (sphereHud) {
+				sphereHud.classList.add('hidden');
+				sphereHud.style.display = 'none';
+			}
+			if (sphereCore) {
+				sphereCore.classList.add('hidden');
+				sphereCore.style.display = 'none';
+			}
 
 			window.removeEventListener('pointerdown', handleSpherePointerDown);
 			window.removeEventListener('pointermove', handleSpherePointerMove);
 			window.removeEventListener('pointerup', handleSpherePointerUp);
+
+			document.documentElement.style.overflow = '';
+			document.body.style.overflow = '';
+			window.dispatchEvent(new CustomEvent('resume-cad-render'));
 
 			spherePoints.forEach((p) => {
 				p.el.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease';
@@ -1527,11 +1584,14 @@
 			});
 
 			setTimeout(() => {
-				spherePoints.forEach((p) => { p.el.style.transition = ''; });
+				spherePoints.forEach((p) => {
+					p.el.style.transition = '';
+					p.el.style.willChange = '';
+					p.el.style.transform = '';
+					p.el.style.opacity = '';
+					p.el.style.zIndex = '';
+				});
 				spherePoints = [];
-				document.documentElement.style.overflow = '';
-				document.body.style.overflow = '';
-				window.dispatchEvent(new CustomEvent('resume-cad-render'));
 			}, 500);
 		}
 
@@ -1566,7 +1626,11 @@
 			if (isQuantum || !quantumCanvas) return;
 			closeAllActiveModes();
 			isQuantum = true;
-			quantumHud?.classList.remove('hidden');
+			if (quantumHud) {
+				quantumHud.style.display = 'flex';
+				quantumHud.classList.remove('hidden');
+			}
+			quantumCanvas.style.display = 'block';
 			quantumCanvas.classList.remove('hidden');
 
 			const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -1708,10 +1772,18 @@
 			if (!isQuantum) return;
 			isQuantum = false;
 			cancelAnimationFrame(quantumAnimId);
-			quantumHud?.classList.add('hidden');
-			quantumCanvas?.classList.add('hidden');
+			if (quantumHud) {
+				quantumHud.classList.add('hidden');
+				quantumHud.style.display = 'none';
+			}
+			if (quantumCanvas) {
+				quantumCanvas.classList.add('hidden');
+				quantumCanvas.style.display = 'none';
+			}
 			window.removeEventListener('mousemove', handleQuantumPointer);
-			qCards.forEach(c => { c.style.opacity = ''; });
+			document.querySelectorAll<HTMLElement>('.card, .benchmark-card, .debug-card, .cad-model-card, .hero .avatar-wrap').forEach((c) => {
+				c.style.opacity = '';
+			});
 			qParticles = [];
 			const ctx = quantumCanvas?.getContext('2d');
 			if (ctx && quantumCanvas) ctx.clearRect(0, 0, quantumCanvas.width, quantumCanvas.height);
@@ -1773,9 +1845,19 @@
 			if (isThermal || !thermalCanvas) return;
 			closeAllActiveModes();
 			isThermal = true;
-			thermalHud?.classList.remove('hidden');
-			thermalScaleBar?.classList.remove('hidden');
-			thermalSpots?.classList.remove('hidden');
+			if (thermalHud) {
+				thermalHud.style.display = 'flex';
+				thermalHud.classList.remove('hidden');
+			}
+			if (thermalScaleBar) {
+				thermalScaleBar.style.display = 'flex';
+				thermalScaleBar.classList.remove('hidden');
+			}
+			if (thermalSpots) {
+				thermalSpots.style.display = 'block';
+				thermalSpots.classList.remove('hidden');
+			}
+			thermalCanvas.style.display = 'block';
 			thermalCanvas.classList.remove('hidden');
 			document.body.classList.add('flir-active');
 
@@ -1897,10 +1979,22 @@
 			if (!isThermal) return;
 			isThermal = false;
 			cancelAnimationFrame(thermalAnimId);
-			thermalHud?.classList.add('hidden');
-			thermalScaleBar?.classList.add('hidden');
-			thermalSpots?.classList.add('hidden');
-			thermalCanvas?.classList.add('hidden');
+			if (thermalHud) {
+				thermalHud.classList.add('hidden');
+				thermalHud.style.display = 'none';
+			}
+			if (thermalScaleBar) {
+				thermalScaleBar.classList.add('hidden');
+				thermalScaleBar.style.display = 'none';
+			}
+			if (thermalSpots) {
+				thermalSpots.classList.add('hidden');
+				thermalSpots.style.display = 'none';
+			}
+			if (thermalCanvas) {
+				thermalCanvas.classList.add('hidden');
+				thermalCanvas.style.display = 'none';
+			}
 			document.body.classList.remove('flir-active');
 			window.removeEventListener('mousemove', handleThermalPointerMove);
 			window.removeEventListener('mousedown', handleThermalPointerDown);
@@ -2042,7 +2136,11 @@
 			if (isDicing || !dicingCanvas) return;
 			closeAllActiveModes();
 			isDicing = true;
-			dicingHud?.classList.remove('hidden');
+			if (dicingHud) {
+				dicingHud.style.display = 'flex';
+				dicingHud.classList.remove('hidden');
+			}
+			dicingCanvas.style.display = 'block';
 			dicingCanvas.classList.remove('hidden');
 		}
 
@@ -2051,8 +2149,14 @@
 			isDicing = false;
 			isDiced = false;
 			cancelAnimationFrame(dicingAnimId);
-			dicingHud?.classList.add('hidden');
-			dicingCanvas?.classList.add('hidden');
+			if (dicingHud) {
+				dicingHud.classList.add('hidden');
+				dicingHud.style.display = 'none';
+			}
+			if (dicingCanvas) {
+				dicingCanvas.classList.add('hidden');
+				dicingCanvas.style.display = 'none';
+			}
 			document.body.classList.remove('diced-split');
 			const ctx = dicingCanvas?.getContext('2d');
 			if (ctx && dicingCanvas) ctx.clearRect(0, 0, dicingCanvas.width, dicingCanvas.height);
@@ -2072,7 +2176,39 @@
 		(window as any).__toggleQuantum = () => (isQuantum ? resetQuantum() : startQuantum());
 		(window as any).__toggleThermal = () => (isThermal ? resetThermal() : startThermal());
 		(window as any).__toggleDicing = () => (isDicing ? resetDicing() : startDicing());
-		(window as any).__toggleLabExtras = () => { extrasModal?.classList.toggle('hidden'); };
+		(window as any).__toggleLabExtras = () => {
+			if (!extrasModal) return;
+			const isHidden = extrasModal.classList.contains('hidden');
+			if (isHidden) {
+				updateDrawerActiveUI();
+				extrasModal.classList.remove('hidden');
+				extrasModal.style.display = 'block';
+			} else {
+				extrasModal.classList.add('hidden');
+				extrasModal.style.display = 'none';
+			}
+		};
+
+		function updateDrawerActiveUI() {
+			const sphereBtn = document.getElementById('trigger-sphere-btn');
+			const tiltBtn = document.getElementById('trigger-tilt-btn');
+			const degaussBtn = document.getElementById('trigger-degauss-btn');
+			const thermalBtn = document.getElementById('trigger-thermal-btn');
+			const dicingBtn = document.getElementById('trigger-dicing-btn');
+			const quantumBtn = document.getElementById('trigger-quantum-btn');
+			const zerogBtn = document.getElementById('trigger-zerog-btn');
+			const waferBtn = document.getElementById('trigger-wafer-btn');
+			const waferModal = document.getElementById('wafer-modal');
+
+			sphereBtn?.classList.toggle('active', isSphere);
+			tiltBtn?.classList.toggle('active', isTilt);
+			degaussBtn?.classList.toggle('active', isDegauss);
+			thermalBtn?.classList.toggle('active', isThermal);
+			dicingBtn?.classList.toggle('active', isDicing);
+			quantumBtn?.classList.toggle('active', isQuantum);
+			zerogBtn?.classList.toggle('active', isZeroG);
+			waferBtn?.classList.toggle('active', !!(waferModal && !waferModal.classList.contains('hidden')));
+		}
 
 		const kbLabEl = document.getElementById('keyboard-lab');
 		function isNearKeyboardLab(): boolean {
@@ -2085,13 +2221,21 @@
 			if (e.key === 'Escape') {
 				const waferModal = document.getElementById('wafer-modal');
 				if (waferModal && !waferModal.classList.contains('hidden')) {
-					waferModal.classList.add('hidden');
+					(window as any).__closeWaferMap?.();
+					updateDrawerActiveUI();
 					return;
 				}
-				if (isZeroG || isTilt || isDegauss || isSphere || isQuantum || isThermal || isDicing || (extrasModal && !extrasModal.classList.contains('hidden'))) {
+				if (extrasModal && !extrasModal.classList.contains('hidden')) {
+					extrasModal.classList.add('hidden');
+					extrasModal.style.display = 'none';
+					return;
+				}
+				if (isZeroG || isTilt || isDegauss || isSphere || isQuantum || isThermal || isDicing) {
 					e.preventDefault();
 					closeAllActiveModes();
 					extrasModal?.classList.add('hidden');
+					if (extrasModal) extrasModal.style.display = 'none';
+					updateDrawerActiveUI();
 				}
 				return;
 			}
@@ -2111,48 +2255,108 @@
 			if (e.code === 'KeyG') {
 				e.preventDefault();
 				(window as any).__toggleZeroG();
+				updateDrawerActiveUI();
 			} else if (e.code === 'KeyH') {
 				e.preventDefault();
 				(window as any).__toggleTilt();
+				updateDrawerActiveUI();
 			}
 		});
 
 		// Lab Extras Drawer Wire-up (Alphabetical Order 10 items)
 		document.getElementById('trigger-sphere-btn')?.addEventListener('click', () => {
 			extrasModal?.classList.add('hidden');
-			startSphere();
+			if (extrasModal) extrasModal.style.display = 'none';
+			if (isSphere) {
+				resetSphere();
+			} else {
+				startSphere();
+			}
+			updateDrawerActiveUI();
 		});
+
 		document.getElementById('trigger-tilt-btn')?.addEventListener('click', () => {
 			extrasModal?.classList.add('hidden');
-			toggleTilt();
+			if (extrasModal) extrasModal.style.display = 'none';
+			if (isTilt) {
+				toggleTilt(false);
+			} else {
+				toggleTilt(true);
+			}
+			updateDrawerActiveUI();
 		});
+
 		document.getElementById('trigger-boop-btn')?.addEventListener('click', () => {
 			extrasModal?.classList.add('hidden');
+			if (extrasModal) extrasModal.style.display = 'none';
 			(window as any).__boopDog?.();
 		});
+
 		document.getElementById('trigger-degauss-btn')?.addEventListener('click', () => {
 			extrasModal?.classList.add('hidden');
-			startDegauss();
+			if (extrasModal) extrasModal.style.display = 'none';
+			if (isDegauss) {
+				resetDegauss();
+			} else {
+				startDegauss();
+			}
+			updateDrawerActiveUI();
 		});
+
 		document.getElementById('trigger-thermal-btn')?.addEventListener('click', () => {
 			extrasModal?.classList.add('hidden');
-			startThermal();
+			if (extrasModal) extrasModal.style.display = 'none';
+			if (isThermal) {
+				resetThermal();
+			} else {
+				startThermal();
+			}
+			updateDrawerActiveUI();
 		});
+
 		document.getElementById('trigger-dicing-btn')?.addEventListener('click', () => {
 			extrasModal?.classList.add('hidden');
-			startDicing();
+			if (extrasModal) extrasModal.style.display = 'none';
+			if (isDicing) {
+				resetDicing();
+			} else {
+				startDicing();
+			}
+			updateDrawerActiveUI();
 		});
+
 		document.getElementById('trigger-quantum-btn')?.addEventListener('click', () => {
 			extrasModal?.classList.add('hidden');
-			startQuantum();
+			if (extrasModal) extrasModal.style.display = 'none';
+			if (isQuantum) {
+				resetQuantum();
+			} else {
+				startQuantum();
+			}
+			updateDrawerActiveUI();
 		});
+
 		document.getElementById('trigger-wafer-btn')?.addEventListener('click', () => {
 			extrasModal?.classList.add('hidden');
-			(window as any).__openWaferMap?.();
+			if (extrasModal) extrasModal.style.display = 'none';
+			const waferModal = document.getElementById('wafer-modal');
+			if (waferModal && !waferModal.classList.contains('hidden')) {
+				(window as any).__closeWaferMap?.();
+			} else {
+				(window as any).__openWaferMap?.();
+			}
+			updateDrawerActiveUI();
 		});
+
 		document.getElementById('trigger-zerog-btn')?.addEventListener('click', () => {
 			extrasModal?.classList.add('hidden');
-			(window as any).__toggleZeroG();
+			if (extrasModal) extrasModal.style.display = 'none';
+			if (isZeroG) {
+				resetZeroG();
+			} else {
+				startZeroG();
+			}
+			updateDrawerActiveUI();
 		});
 
 		// Switch sound button in drawer
@@ -2172,6 +2376,7 @@
 			if (drawerSoundDesc) {
 				drawerSoundDesc.textContent = p === 'off' ? 'Procedural Web Audio switch synth' : `Acoustics active: ${badges[p]}`;
 			}
+			drawerSoundBtn?.classList.toggle('active', p !== 'off');
 		}
 
 		updateDrawerSoundUI(audioEngine.profile);
@@ -2186,39 +2391,36 @@
 			audioEngine.setProfile(next);
 			updateDrawerSoundUI(next);
 			if (next !== 'off') audioEngine.play('KeyA');
+			updateDrawerActiveUI();
 		});
 
-		document.getElementById('trigger-wafer-btn')?.addEventListener('click', () => {
+		extrasCloseBtn?.addEventListener('click', () => {
 			extrasModal?.classList.add('hidden');
-			(window as any).__openWaferMap?.();
+			if (extrasModal) extrasModal.style.display = 'none';
 		});
-
-		document.getElementById('trigger-zerog-btn')?.addEventListener('click', () => {
-			extrasModal?.classList.add('hidden');
-			(window as any).__toggleZeroG();
-		});
-
-		extrasCloseBtn?.addEventListener('click', () => extrasModal?.classList.add('hidden'));
 
 		document.addEventListener('click', (e) => {
 			const target = e.target as HTMLElement;
 			if (extrasModal && !extrasModal.classList.contains('hidden')) {
 				if (!extrasModal.contains(target) && !target.closest('#footer-extras-btn')) {
 					extrasModal.classList.add('hidden');
+					extrasModal.style.display = 'none';
 				}
 			}
 		});
 	}
 
-	initEasterEggs();
-	initWaferInspector();
-	initDogBoop();
-
-	document.addEventListener('astro:page-load', () => {
+	let isEasterEggsInitialized = false;
+	function safeInit() {
+		if (isEasterEggsInitialized) return;
+		isEasterEggsInitialized = true;
 		initEasterEggs();
 		initWaferInspector();
 		initDogBoop();
-	});
+	}
+
+	safeInit();
+	document.addEventListener('astro:page-load', safeInit);
 </script>
 
 <style>
@@ -2246,9 +2448,14 @@
 		transition: all 0.2s ease;
 		white-space: nowrap;
 	}
+	.hidden,
 	.ee-hud.hidden,
 	.lab-extras-modal.hidden,
-	.wafer-modal.hidden {
+	.wafer-modal.hidden,
+	.sphere-core.hidden,
+	.thermal-scale-bar.hidden,
+	.thermal-spots.hidden,
+	.ee-canvas.hidden {
 		display: none !important;
 	}
 
@@ -2356,6 +2563,20 @@
 	.extra-item-btn:hover {
 		border-color: var(--accent);
 		background: rgba(var(--accent-rgb), 0.1);
+	}
+	.extra-item-btn.active {
+		border-color: var(--accent);
+		background: rgba(var(--accent-rgb), 0.16);
+		box-shadow: inset 0 0 0 1px var(--accent);
+	}
+	.extra-item-btn.active .item-name {
+		color: var(--accent);
+		font-weight: 700;
+	}
+	.extra-item-btn.active .item-desc::after {
+		content: ' • Active (Click to Reset)';
+		color: var(--accent);
+		font-weight: 600;
 	}
 	.item-icon {
 		font-size: 1.25em;

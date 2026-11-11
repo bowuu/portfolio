@@ -56,12 +56,28 @@
 			<span>Network</span>
 		</div>
 		<div class="telemetry-grid">
-			<div class="telemetry-item">
+			<div class="telemetry-item telemetry-ip-item">
 				<span class="t-label">Public IP</span>
-				<span id="t-ip" class="t-val mono ip-val">Detecting...</span>
+				<span id="t-ip" class="sr-only" aria-hidden="true">Detecting...</span>
+				<div class="ip-dual-stack">
+					<div class="ip-line">
+						<span class="ip-tag">IPv4:</span>
+						<span id="t-ipv4" class="t-val mono ip-val">Detecting...</span>
+					</div>
+					<div class="ip-line">
+						<span class="ip-tag">IPv6:</span>
+						<span id="t-ipv6" class="t-val mono ip-val">Detecting...</span>
+					</div>
+				</div>
 			</div>
 			<div class="telemetry-item">
-				<span class="t-label">Location</span>
+				<div class="loc-label-bar">
+					<span class="t-label">Location</span>
+					<button id="open-map-btn" class="loc-map-btn hidden" type="button" title="Open interactive OpenStreetMap applet">
+						<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+						<span>Map</span>
+					</button>
+				</div>
 				<span id="t-location" class="t-val">Detecting...</span>
 			</div>
 			<div class="telemetry-item">
@@ -167,6 +183,60 @@
 			<div class="telemetry-item">
 				<span class="t-label">Video DRM System</span>
 				<span id="t-drm" class="t-val">Probing CDM modules...</span>
+			</div>
+		</div>
+	</div>
+
+	<!-- INTERACTIVE MAP APPLET (OpenStreetMap) -->
+	<div id="map-applet-modal" class="map-applet-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="map-applet-title">
+		<div class="map-applet-backdrop" id="map-applet-backdrop"></div>
+		<div class="map-applet-dialog">
+			<div class="map-applet-header">
+				<div class="map-applet-title-wrap">
+					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="map-pin-icon">
+						<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+						<circle cx="12" cy="10" r="3"></circle>
+					</svg>
+					<div>
+						<h3 id="map-applet-title" class="map-applet-title">Edge Geolocation Map</h3>
+						<span id="map-coords-badge" class="map-coords-badge mono">--</span>
+					</div>
+				</div>
+				<button id="map-applet-close-btn" class="map-close-btn" type="button" aria-label="Close Map Applet" title="Close (Esc)">
+					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+						<line x1="18" y1="6" x2="6" y2="18"></line>
+						<line x1="6" y1="6" x2="18" y2="18"></line>
+					</svg>
+				</button>
+			</div>
+
+			<div class="map-applet-frame-wrap">
+				<div id="map-applet-loader" class="map-applet-loader">
+					<div class="map-spinner"></div>
+					<span>Loading OpenStreetMap...</span>
+				</div>
+				<iframe
+					id="map-applet-iframe"
+					class="map-applet-iframe"
+					title="OpenStreetMap Location Applet"
+					loading="lazy"
+					src="about:blank"
+				></iframe>
+			</div>
+
+			<div class="map-applet-footer">
+				<div class="map-footer-info">
+					<span id="map-footer-loc" class="map-footer-loc">--</span>
+					<span class="map-footer-note">OpenStreetMap &bull; Approximate city-level Anycast edge geolocation</span>
+				</div>
+				<a id="map-external-link" href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="map-ext-link" title="Open full map on openstreetmap.org">
+					<span>Open in OSM</span>
+					<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+						<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+						<polyline points="15 3 21 3 21 9"></polyline>
+						<line x1="10" y1="14" x2="21" y2="3"></line>
+					</svg>
+				</a>
 			</div>
 		</div>
 	</div>
@@ -352,10 +422,98 @@
 
 	async function initTelemetry() {
 		// Network & Edge elements
-		const ipEl = document.getElementById('t-ip');
+		const ipv4El = document.getElementById('t-ipv4');
+		const ipv6El = document.getElementById('t-ipv6');
+		const legacyIpEl = document.getElementById('t-ip');
 		const locEl = document.getElementById('t-location');
 		const edgeEl = document.getElementById('t-edge');
 		const ispEl = document.getElementById('t-isp');
+		const openMapBtn = document.getElementById('open-map-btn');
+
+		let currentIpv4 = '';
+		let currentIpv6 = '';
+
+		function renderIpDisplay() {
+			if (ipv4El) {
+				if (!currentIpv4) {
+					ipv4El.textContent = 'Detecting...';
+				} else if (currentIpv4.includes('127.0.0.1') || currentIpv4.includes('Localhost') || currentIpv4 === 'Unavailable') {
+					ipv4El.textContent = currentIpv4;
+				} else {
+					ipv4El.innerHTML = `<a href="https://ipinfo.io/${encodeURIComponent(currentIpv4)}" target="_blank" rel="noopener noreferrer" class="ip-link" title="Lookup ${currentIpv4} on ipinfo.io">${currentIpv4}<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" class="ip-ext-icon"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>`;
+				}
+			}
+
+			if (ipv6El) {
+				if (currentIpv6 === 'none') {
+					ipv6El.innerHTML = '<span class="ip-disabled">No IPv6 enabled</span>';
+				} else if (!currentIpv6) {
+					ipv6El.textContent = 'Detecting...';
+				} else if (currentIpv6.includes('::1') || currentIpv6.includes('Localhost') || currentIpv6 === 'Unavailable') {
+					ipv6El.textContent = currentIpv6;
+				} else {
+					ipv6El.innerHTML = `<a href="https://ipinfo.io/${encodeURIComponent(currentIpv6)}" target="_blank" rel="noopener noreferrer" class="ip-link" title="Lookup ${currentIpv6} on ipinfo.io">${currentIpv6}<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" class="ip-ext-icon"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>`;
+				}
+			}
+
+			if (legacyIpEl) {
+				legacyIpEl.textContent = currentIpv4 || currentIpv6 || 'Detected at edge';
+			}
+		}
+
+		function openMapApplet(lat: number, lon: number, locName: string) {
+			const modal = document.getElementById('map-applet-modal');
+			const iframe = document.getElementById('map-applet-iframe') as HTMLIFrameElement | null;
+			const loader = document.getElementById('map-applet-loader');
+			const coordsEl = document.getElementById('map-coords-badge');
+			const footerLocEl = document.getElementById('map-footer-loc');
+			const extLink = document.getElementById('map-external-link') as HTMLAnchorElement | null;
+
+			if (!modal || !iframe) return;
+
+			const latDir = lat >= 0 ? 'N' : 'S';
+			const lonDir = lon >= 0 ? 'E' : 'W';
+			const formattedCoords = `${Math.abs(lat).toFixed(4)}° ${latDir}, ${Math.abs(lon).toFixed(4)}° ${lonDir}`;
+
+			if (coordsEl) coordsEl.textContent = formattedCoords;
+			if (footerLocEl) footerLocEl.textContent = locName;
+
+			const delta = 0.045; // ~5km radius bounding box
+			const minLon = (lon - delta).toFixed(5);
+			const minLat = (lat - delta).toFixed(5);
+			const maxLon = (lon + delta).toFixed(5);
+			const maxLat = (lat + delta).toFixed(5);
+			const embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${minLon}%2C${minLat}%2C${maxLon}%2C${maxLat}&layer=mapnik&marker=${lat.toFixed(5)}%2C${lon.toFixed(5)}`;
+			const fullUrl = `https://www.openstreetmap.org/?mlat=${lat.toFixed(5)}&mlon=${lon.toFixed(5)}#map=13/${lat.toFixed(5)}/${lon.toFixed(5)}`;
+
+			if (extLink) extLink.href = fullUrl;
+
+			if (loader) loader.style.display = 'flex';
+			iframe.onload = () => {
+				if (loader) loader.style.display = 'none';
+			};
+
+			if (iframe.src !== embedUrl) {
+				iframe.src = embedUrl;
+			}
+
+			modal.classList.remove('hidden');
+			modal.setAttribute('aria-hidden', 'false');
+			document.body.style.overflow = 'hidden';
+		}
+
+		function closeMapApplet() {
+			const modal = document.getElementById('map-applet-modal');
+			if (!modal || modal.classList.contains('hidden')) return;
+			modal.classList.add('hidden');
+			modal.setAttribute('aria-hidden', 'true');
+			document.body.style.overflow = '';
+		}
+
+		const mapCloseBtn = document.getElementById('map-applet-close-btn');
+		const mapBackdrop = document.getElementById('map-applet-backdrop');
+		if (mapCloseBtn) mapCloseBtn.onclick = closeMapApplet;
+		if (mapBackdrop) mapBackdrop.onclick = closeMapApplet;
 
 		// Hardware & System elements
 		const osEl = document.getElementById('t-os');
@@ -1134,17 +1292,81 @@
 			probeDRM();
 		}
 
-		// 15. Cloudflare Edge Ephemeral Detection
+		// 15. Cloudflare Edge Ephemeral Detection & Dual-Stack IP
 		try {
 			const res = await fetch('/api/visitor-info', { cache: 'no-store' });
 			if (res.ok) {
 				const data = await res.json();
-				if (ipEl) ipEl.textContent = data.ip || 'Unavailable';
-				
+				const edgeIp = (data.ip || '').trim();
+				if (edgeIp.includes(':')) {
+					currentIpv6 = edgeIp;
+				} else if (edgeIp) {
+					currentIpv4 = edgeIp;
+				}
+				renderIpDisplay();
+
+				// Probe dual-stack complement via Cloudflare icanhazip (CORS enabled)
+				if (!currentIpv4 || currentIpv4.includes('Localhost')) {
+					fetch('https://ipv4.icanhazip.com', { signal: AbortSignal.timeout(3000) })
+						.then((r) => r.text())
+						.then((t) => {
+							const ip = t.trim();
+							if (ip && !ip.includes(':')) {
+								currentIpv4 = ip;
+								renderIpDisplay();
+							}
+						})
+						.catch(() => {
+							if (!currentIpv4) {
+								currentIpv4 = 'Unavailable';
+								renderIpDisplay();
+							}
+						});
+				}
+
+				if (!currentIpv6) {
+					fetch('https://ipv6.icanhazip.com', { signal: AbortSignal.timeout(3000) })
+						.then((r) => r.text())
+						.then((t) => {
+							const ip = t.trim();
+							if (ip && ip.includes(':')) {
+								currentIpv6 = ip;
+							} else {
+								currentIpv6 = 'none';
+							}
+							renderIpDisplay();
+						})
+						.catch(() => {
+							currentIpv6 = 'none';
+							renderIpDisplay();
+						});
+				}
+
 				const locParts = [data.city, data.region, data.country].filter(Boolean);
+				const locString = locParts.length > 0 ? locParts.join(', ') : 'Location unavailable';
 				if (locEl) {
-					locEl.textContent = locParts.length > 0 ? locParts.join(', ') : 'Location unavailable';
+					locEl.textContent = locString;
 					locEl.title = 'Approximate geolocation based on client IP.';
+				}
+
+				const lat = parseFloat(data.latitude);
+				const lon = parseFloat(data.longitude);
+				if (!isNaN(lat) && !isNaN(lon) && (lat !== 0 || lon !== 0)) {
+					if (openMapBtn) {
+						openMapBtn.classList.remove('hidden');
+						openMapBtn.title = `View ${locString} on interactive OpenStreetMap`;
+						openMapBtn.onclick = (e) => {
+							e.stopPropagation();
+							openMapApplet(lat, lon, locString);
+						};
+					}
+					if (locEl) {
+						locEl.classList.add('loc-clickable');
+						locEl.title = 'Approximate geolocation. Click to view on OpenStreetMap.';
+						locEl.onclick = () => openMapApplet(lat, lon, locString);
+					}
+				} else {
+					if (openMapBtn) openMapBtn.classList.add('hidden');
 				}
 
 				if (edgeEl) {
@@ -1169,12 +1391,24 @@
 				throw new Error('Edge endpoint responded with non-200');
 			}
 		} catch (err) {
-			if (ipEl) ipEl.textContent = '127.0.0.1 (Local Edge)';
+			currentIpv4 = '127.0.0.1 (Local Edge)';
+			currentIpv6 = 'none';
+			renderIpDisplay();
 			if (locEl) locEl.textContent = 'Direct Connection';
 			if (edgeEl) edgeEl.textContent = 'Localhost (Dev Edge)';
 			if (ispEl) ispEl.textContent = 'Cloudflare Protected';
 		}
 	}
+
+	window.addEventListener('keydown', (e) => {
+		const modal = document.getElementById('map-applet-modal');
+		if (modal && !modal.classList.contains('hidden') && (e.key === 'Escape' || e.key === 'Esc')) {
+			e.stopPropagation();
+			modal.classList.add('hidden');
+			modal.setAttribute('aria-hidden', 'true');
+			document.body.style.overflow = '';
+		}
+	});
 
 	initTelemetry();
 	document.addEventListener('astro:page-load', initTelemetry);
@@ -1411,6 +1645,296 @@
 	.t-val.ip-val {
 		color: var(--accent);
 		font-weight: 700;
+	}
+
+	/* PUBLIC IP DUAL-STACK & MAP APPLET */
+	.ip-dual-stack {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3em;
+		margin-top: 0.1em;
+	}
+	.ip-line {
+		display: flex;
+		align-items: baseline;
+		gap: 0.45em;
+		font-size: 0.88em;
+		line-height: 1.4;
+		word-break: break-all;
+	}
+	.ip-tag {
+		font-size: 0.74em;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: rgb(var(--gray));
+		flex-shrink: 0;
+		user-select: none;
+		min-width: 34px;
+	}
+	.ip-link {
+		color: var(--accent);
+		text-decoration: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25em;
+		word-break: break-all;
+		transition: color 0.15s ease;
+	}
+	.ip-link:hover {
+		color: #fb923c;
+		text-decoration: underline;
+	}
+	.ip-ext-icon {
+		opacity: 0.65;
+		flex-shrink: 0;
+		transition: opacity 0.15s ease, transform 0.15s ease;
+	}
+	.ip-link:hover .ip-ext-icon {
+		opacity: 1;
+		transform: translate(1px, -1px);
+	}
+	.ip-disabled {
+		color: rgb(var(--gray));
+		font-style: normal;
+		font-weight: 500;
+		opacity: 0.75;
+	}
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border-width: 0;
+	}
+
+	/* LOCATION & MAP BUTTON */
+	.loc-label-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5em;
+		margin-bottom: 0.1em;
+	}
+	.loc-map-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3em;
+		background: rgba(var(--accent-rgb), 0.1);
+		border: 1px solid rgba(var(--accent-rgb), 0.35);
+		color: var(--accent);
+		border-radius: 999px;
+		padding: 0.08em 0.55em;
+		font-size: 0.7em;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		line-height: 1.35;
+	}
+	.loc-map-btn:hover {
+		background: var(--accent);
+		color: #ffffff;
+		border-color: var(--accent);
+		transform: translateY(-1px);
+	}
+	.loc-map-btn.hidden {
+		display: none !important;
+	}
+	.loc-clickable {
+		cursor: pointer;
+		transition: color 0.15s ease;
+	}
+	.loc-clickable:hover {
+		color: var(--accent);
+	}
+
+	/* MAP APPLET MODAL */
+	.map-applet-modal {
+		position: fixed;
+		inset: 0;
+		z-index: 10000;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: clamp(0.75rem, 3vw, 1.5rem);
+		transition: opacity 0.2s ease, visibility 0.2s ease;
+	}
+	.map-applet-modal.hidden {
+		display: none;
+		opacity: 0;
+		visibility: hidden;
+		pointer-events: none;
+	}
+	.map-applet-backdrop {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.72);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+	}
+	.map-applet-dialog {
+		position: relative;
+		width: 100%;
+		max-width: 680px;
+		background: var(--bg-card);
+		border: 1px solid var(--border-color);
+		border-radius: 14px;
+		box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		animation: mapZoomIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+	@keyframes mapZoomIn {
+		from { opacity: 0; transform: scale(0.96) translateY(8px); }
+		to { opacity: 1; transform: scale(1) translateY(0); }
+	}
+	.map-applet-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.85em 1.1em;
+		border-bottom: 1px solid var(--border-color);
+		background: rgba(var(--accent-rgb), 0.04);
+	}
+	.map-applet-title-wrap {
+		display: flex;
+		align-items: center;
+		gap: 0.65em;
+	}
+	.map-pin-icon {
+		color: var(--accent);
+		flex-shrink: 0;
+	}
+	.map-applet-title {
+		margin: 0;
+		font-size: 0.92em;
+		font-weight: 700;
+		color: rgb(var(--black));
+		line-height: 1.25;
+	}
+	:global(html[data-theme="dark"]) .map-applet-title {
+		color: #f1f5f9;
+	}
+	.map-coords-badge {
+		font-size: 0.76em;
+		color: rgb(var(--gray));
+		font-weight: 500;
+	}
+	.map-close-btn {
+		background: transparent;
+		border: none;
+		color: rgb(var(--gray));
+		cursor: pointer;
+		padding: 0.3em;
+		border-radius: 6px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: background-color 0.15s ease, color 0.15s ease;
+	}
+	.map-close-btn:hover {
+		background: rgba(255, 255, 255, 0.1);
+		color: rgb(var(--black));
+	}
+	:global(html[data-theme="dark"]) .map-close-btn:hover {
+		color: #ffffff;
+	}
+	.map-applet-frame-wrap {
+		position: relative;
+		width: 100%;
+		height: clamp(280px, 48vh, 380px);
+		background: #0e0f12;
+	}
+	.map-applet-loader {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.7em;
+		background: rgba(14, 15, 18, 0.85);
+		color: rgb(var(--gray));
+		font-size: 0.82em;
+		font-weight: 500;
+		z-index: 2;
+		transition: opacity 0.2s ease;
+	}
+	.map-spinner {
+		width: 26px;
+		height: 26px;
+		border: 2.5px solid rgba(var(--accent-rgb), 0.2);
+		border-top-color: var(--accent);
+		border-radius: 50%;
+		animation: mapSpin 0.75s linear infinite;
+	}
+	@keyframes mapSpin {
+		to { transform: rotate(360deg); }
+	}
+	.map-applet-iframe {
+		width: 100%;
+		height: 100%;
+		border: none;
+		display: block;
+	}
+	.map-applet-footer {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.7em;
+		padding: 0.75em 1.1em;
+		border-top: 1px solid var(--border-color);
+		background: rgba(0, 0, 0, 0.05);
+	}
+	:global(html[data-theme="dark"]) .map-applet-footer {
+		background: rgba(255, 255, 255, 0.02);
+	}
+	.map-footer-info {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15em;
+		min-width: 0;
+	}
+	.map-footer-loc {
+		font-size: 0.84em;
+		font-weight: 700;
+		color: rgb(var(--black));
+	}
+	:global(html[data-theme="dark"]) .map-footer-loc {
+		color: #f1f5f9;
+	}
+	.map-footer-note {
+		font-size: 0.72em;
+		color: rgb(var(--gray));
+		opacity: 0.85;
+	}
+	.map-ext-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35em;
+		background: transparent;
+		border: 1px solid var(--border-color);
+		color: rgb(var(--gray-dark));
+		border-radius: 8px;
+		padding: 0.3em 0.65em;
+		font-size: 0.76em;
+		font-weight: 600;
+		text-decoration: none;
+		transition: all 0.15s ease;
+		flex-shrink: 0;
+	}
+	.map-ext-link:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+		background: rgba(var(--accent-rgb), 0.08);
 	}
 
 	@media (max-width: 600px) {

@@ -1004,9 +1004,9 @@ Verified Profiles:
 					break;
 
 				case 'whoami':
-					const ipEl = document.getElementById('t-ip');
-					const locEl = document.getElementById('t-loc');
-					const coloEl = document.getElementById('t-colo');
+					const ipEl = document.getElementById('t-ipv4') || document.getElementById('t-ip');
+					const locEl = document.getElementById('t-location') || document.getElementById('t-loc');
+					const coloEl = document.getElementById('t-edge') || document.getElementById('t-colo');
 					const ip = ipEl ? ipEl.textContent : 'Detected at edge';
 					const loc = locEl ? locEl.textContent : 'Global';
 					const colo = coloEl ? coloEl.textContent : 'Cloudflare Anycast';

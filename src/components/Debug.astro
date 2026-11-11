@@ -190,7 +190,7 @@
 	<!-- INTERACTIVE MAP APPLET (OpenStreetMap) -->
 	<div id="map-applet-modal" class="map-applet-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="map-applet-title">
 		<div class="map-applet-backdrop" id="map-applet-backdrop"></div>
-		<div class="map-applet-dialog">
+		<div class="map-applet-dialog" id="map-applet-dialog" data-map-theme="dark">
 			<div class="map-applet-header">
 				<div class="map-applet-title-wrap">
 					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="map-pin-icon">
@@ -202,12 +202,36 @@
 						<span id="map-coords-badge" class="map-coords-badge mono">--</span>
 					</div>
 				</div>
-				<button id="map-applet-close-btn" class="map-close-btn" type="button" aria-label="Close Map Applet" title="Close (Esc)">
-					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-						<line x1="18" y1="6" x2="6" y2="18"></line>
-						<line x1="6" y1="6" x2="18" y2="18"></line>
-					</svg>
-				</button>
+				<div class="map-applet-header-actions">
+					<div class="map-theme-segmented" role="group" aria-label="Map theme">
+						<button id="map-theme-dark-btn" class="map-theme-seg-btn active" type="button" data-theme-val="dark" title="Dark theme map" aria-label="Dark theme map" aria-pressed="true">
+							<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" stroke="none">
+								<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+							</svg>
+							<span class="seg-label">Dark</span>
+						</button>
+						<button id="map-theme-light-btn" class="map-theme-seg-btn" type="button" data-theme-val="light" title="Light theme map" aria-label="Light theme map" aria-pressed="false">
+							<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<circle cx="12" cy="12" r="4" fill="currentColor"></circle>
+								<line x1="12" y1="1" x2="12" y2="3"></line>
+								<line x1="12" y1="21" x2="12" y2="23"></line>
+								<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+								<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+								<line x1="1" y1="12" x2="3" y2="12"></line>
+								<line x1="21" y1="12" x2="23" y2="12"></line>
+								<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+								<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+							</svg>
+							<span class="seg-label">Light</span>
+						</button>
+					</div>
+					<button id="map-applet-close-btn" class="map-close-btn" type="button" aria-label="Close Map Applet" title="Close (Esc)">
+						<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+							<line x1="18" y1="6" x2="6" y2="18"></line>
+							<line x1="6" y1="6" x2="18" y2="18"></line>
+						</svg>
+					</button>
+				</div>
 			</div>
 
 			<div class="map-applet-frame-wrap">
@@ -459,6 +483,50 @@
 			}
 		}
 
+		let currentMapTheme: 'dark' | 'light' = 'dark';
+		let userOverrodeMapTheme = false;
+
+		function setMapTheme(theme: 'dark' | 'light', isUserAction = false) {
+			currentMapTheme = theme;
+			if (isUserAction) userOverrodeMapTheme = true;
+
+			const dialog = document.getElementById('map-applet-dialog');
+			const darkBtn = document.getElementById('map-theme-dark-btn');
+			const lightBtn = document.getElementById('map-theme-light-btn');
+
+			if (dialog) {
+				dialog.setAttribute('data-map-theme', theme);
+			}
+
+			if (darkBtn && lightBtn) {
+				if (theme === 'dark') {
+					darkBtn.classList.add('active');
+					darkBtn.setAttribute('aria-pressed', 'true');
+					lightBtn.classList.remove('active');
+					lightBtn.setAttribute('aria-pressed', 'false');
+				} else {
+					lightBtn.classList.add('active');
+					lightBtn.setAttribute('aria-pressed', 'true');
+					darkBtn.classList.remove('active');
+					darkBtn.setAttribute('aria-pressed', 'false');
+				}
+			}
+		}
+
+		const mapThemeDarkBtn = document.getElementById('map-theme-dark-btn');
+		const mapThemeLightBtn = document.getElementById('map-theme-light-btn');
+		if (mapThemeDarkBtn) mapThemeDarkBtn.onclick = () => setMapTheme('dark', true);
+		if (mapThemeLightBtn) mapThemeLightBtn.onclick = () => setMapTheme('light', true);
+
+		// Synchronize map theme when site theme toggles unless user chose an explicit preference
+		const mapThemeObserver = new MutationObserver(() => {
+			if (!userOverrodeMapTheme) {
+				const isSiteDark = document.documentElement.getAttribute('data-theme') === 'dark';
+				setMapTheme(isSiteDark ? 'dark' : 'light', false);
+			}
+		});
+		mapThemeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
 		function openMapApplet(lat: number, lon: number, locName: string) {
 			const modal = document.getElementById('map-applet-modal');
 			const iframe = document.getElementById('map-applet-iframe') as HTMLIFrameElement | null;
@@ -468,6 +536,14 @@
 			const extLink = document.getElementById('map-external-link') as HTMLAnchorElement | null;
 
 			if (!modal || !iframe) return;
+
+			// Synchronize map theme on open unless user manually chose a preference
+			if (!userOverrodeMapTheme) {
+				const isSiteDark = document.documentElement.getAttribute('data-theme') === 'dark';
+				setMapTheme(isSiteDark ? 'dark' : 'light', false);
+			} else {
+				setMapTheme(currentMapTheme, false);
+			}
 
 			const latDir = lat >= 0 ? 'N' : 'S';
 			const lonDir = lon >= 0 ? 'E' : 'W';
@@ -1826,6 +1902,66 @@
 		color: rgb(var(--gray));
 		font-weight: 500;
 	}
+	.map-applet-header-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.55em;
+		flex-shrink: 0;
+	}
+	.map-theme-segmented {
+		display: inline-flex;
+		align-items: center;
+		background: rgba(0, 0, 0, 0.08);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		padding: 2px;
+		gap: 2px;
+	}
+	:global(html[data-theme="dark"]) .map-theme-segmented {
+		background: rgba(0, 0, 0, 0.45);
+	}
+	.map-theme-seg-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.35em;
+		padding: 0.22em 0.55em;
+		border-radius: 6px;
+		border: 1px solid transparent;
+		background: transparent;
+		color: rgb(var(--gray));
+		font-size: 0.72em;
+		font-weight: 600;
+		cursor: pointer;
+		line-height: 1;
+		transition: all 0.15s ease;
+	}
+	.map-theme-seg-btn:hover {
+		color: rgb(var(--black));
+	}
+	:global(html[data-theme="dark"]) .map-theme-seg-btn:hover {
+		color: #ffffff;
+	}
+	.map-theme-seg-btn.active {
+		background: #ffffff;
+		border-color: rgba(0, 0, 0, 0.08);
+		color: var(--accent);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+	}
+	:global(html[data-theme="dark"]) .map-theme-seg-btn.active {
+		background: rgba(var(--accent-rgb), 0.22);
+		border-color: rgba(var(--accent-rgb), 0.4);
+		color: #f97316;
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+	}
+	@media (max-width: 540px) {
+		.seg-label {
+			display: none;
+		}
+		.map-theme-seg-btn {
+			padding: 0.28em 0.4em;
+		}
+	}
 	.map-close-btn {
 		background: transparent;
 		border: none;
@@ -1850,6 +1986,10 @@
 		width: 100%;
 		height: clamp(340px, 58vh, 480px);
 		background: #0e0f12;
+		transition: background-color 0.25s ease;
+	}
+	.map-applet-dialog[data-map-theme="light"] .map-applet-frame-wrap {
+		background: #e2e8f0;
 	}
 	.map-applet-loader {
 		position: absolute;
@@ -1864,7 +2004,11 @@
 		font-size: 0.82em;
 		font-weight: 500;
 		z-index: 2;
-		transition: opacity 0.2s ease;
+		transition: opacity 0.2s ease, background-color 0.25s ease, color 0.25s ease;
+	}
+	.map-applet-dialog[data-map-theme="light"] .map-applet-loader {
+		background: rgba(241, 245, 249, 0.92);
+		color: #475569;
 	}
 	.map-spinner {
 		width: 26px;
@@ -1884,8 +2028,11 @@
 		display: block;
 		transition: filter 0.25s ease;
 	}
-	:global(html[data-theme="dark"]) .map-applet-iframe {
+	.map-applet-dialog[data-map-theme="dark"] .map-applet-iframe {
 		filter: invert(90%) hue-rotate(180deg) brightness(88%) contrast(110%);
+	}
+	.map-applet-dialog[data-map-theme="light"] .map-applet-iframe {
+		filter: none;
 	}
 	.map-applet-footer {
 		display: flex;

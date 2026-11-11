@@ -550,8 +550,20 @@
 			});
 		});
 
-		// Render animation loop
+		// Render animation loop with external physics sleep support
+		let isPausedByEasterEgg = false;
+		window.addEventListener('pause-cad-render', () => {
+			isPausedByEasterEgg = true;
+		});
+		window.addEventListener('resume-cad-render', () => {
+			if (isPausedByEasterEgg) {
+				isPausedByEasterEgg = false;
+				animationFrameId = requestAnimationFrame(animate);
+			}
+		});
+
 		function animate() {
+			if (isPausedByEasterEgg) return;
 			animationFrameId = requestAnimationFrame(animate);
 			controls.update();
 

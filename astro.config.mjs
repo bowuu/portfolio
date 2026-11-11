@@ -6,13 +6,15 @@ import { execSync } from "node:child_process";
 
 // Automatically extract latest git commit information at build time
 let gitCommitDate = "";
-let gitCommitHash = "";
-let gitCommitShortHash = "";
+let gitCommitHash = process.env.PUBLIC_GIT_COMMIT_HASH || process.env.CF_PAGES_COMMIT_SHA || process.env.GITHUB_SHA || "";
+let gitCommitShortHash = process.env.PUBLIC_GIT_COMMIT_SHORT_HASH || (gitCommitHash ? gitCommitHash.slice(0, 7) : "");
 
 try {
+  if (!gitCommitHash) {
+    gitCommitHash = execSync("git log -1 --format=%H", { encoding: "utf-8" }).trim();
+    gitCommitShortHash = execSync("git log -1 --format=%h", { encoding: "utf-8" }).trim();
+  }
   gitCommitDate = execSync("git log -1 --format=%cI", { encoding: "utf-8" }).trim();
-  gitCommitHash = execSync("git log -1 --format=%H", { encoding: "utf-8" }).trim();
-  gitCommitShortHash = execSync("git log -1 --format=%h", { encoding: "utf-8" }).trim();
 } catch {
   gitCommitDate = new Date().toISOString();
 }

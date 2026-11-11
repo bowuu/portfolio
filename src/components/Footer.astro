@@ -1,11 +1,11 @@
 ---
-const commitDateStr = (import.meta as any).env?.PUBLIC_GIT_COMMIT_DATE || new Date().toISOString();
-const commitHash = (import.meta as any).env?.PUBLIC_GIT_COMMIT_HASH || '';
-const commitShortHash = (import.meta as any).env?.PUBLIC_GIT_COMMIT_SHORT_HASH || (commitHash ? commitHash.slice(0, 7) : '');
+const commitDateStr = import.meta.env.PUBLIC_GIT_COMMIT_DATE || new Date().toISOString();
+const commitHash = import.meta.env.PUBLIC_GIT_COMMIT_HASH || '';
+const commitShortHash = import.meta.env.PUBLIC_GIT_COMMIT_SHORT_HASH || (commitHash ? commitHash.slice(0, 7) : '');
 const commitDate = new Date(commitDateStr);
-const currentYear = commitDate.getFullYear();
+const currentYear = new Date().getFullYear();
 
-// Human-readable build timestamp pinned to America/New_York (e.g. "November 4, 2026 at 9:50 AM EST")
+// Human-readable build timestamp pinned to America/New_York (e.g. "November 11, 2026 at 1:45 PM EST")
 const lastUpdated = new Intl.DateTimeFormat('en-US', {
 	month: 'long',
 	day: 'numeric',
@@ -26,6 +26,7 @@ const commitUrl = commitHash ? `https://github.com/bowuu/portfolio/commit/${comm
 			Last updated: <time id="footer-build-time" datetime={isoTimestamp}>{lastUpdated}</time>
 			{commitShortHash && (
 				<a
+					id="footer-commit-link"
 					href={commitUrl}
 					target="_blank"
 					rel="noopener noreferrer"

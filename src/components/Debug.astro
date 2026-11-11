@@ -495,105 +495,256 @@
 
 		if (refreshEl) {
 			let baselineHz = 0;
-			let activeHz = 0;
+			let peakHz = 0;
 			let isAdaptiveVRR = false;
-			let isSampling = false;
+			let isProbing = false;
 
 			const STANDARD_RATES = [60, 75, 90, 100, 120, 144, 165, 180, 200, 240, 280, 360, 480, 500, 540];
 
 			function updateDisplay() {
 				if (!refreshEl) return;
-				const displayHz = activeHz || baselineHz || 60;
+				const displayHz = peakHz || baselineHz || 60;
 				const vrrTag = (displayHz > 60 || isAdaptiveVRR) ? ' (Adaptive VRR)' : '';
 				const { gamut, hdrTag } = getGamutAndHDR();
 				refreshEl.textContent = `${displayHz} Hz${vrrTag} • ${gamut} • ${hdrTag}`;
 			}
 
-			function measureRefreshBurst(targetSamples: number = 40, isInteraction: boolean = false) {
-				if (isSampling) return;
-				isSampling = true;
+			// Multi-rate clustering classifier: detects standard frequency buckets and identifies VRR
+			function processDeltas(deltas: number[]) {
+				const valid = deltas.filter(d => d >= 1.6 && d <= 45);
+				if (valid.length < 4) return;
+
+				const bucketCounts: Record<number, number> = {};
+				for (const std of STANDARD_RATES) bucketCounts[std] = 0;
+
+				for (const d of valid) {
+					const instHz = 1000 / d;
+					for (const std of STANDARD_RATES) {
+						const nominal = 1000 / std;
+						const tol = nominal * 0.12; // 12% VSYNC jitter tolerance window
+						if (Math.abs(d - nominal) <= tol || Math.abs(instHz - std) <= 5) {
+							bucketCounts[std]++;
+							break;
+						}
+					}
+				}
+
+				// Find detected frequencies with at least 3 valid frames
+				const detectedRates: number[] = [];
+				for (const std of STANDARD_RATES) {
+					if (bucketCounts[std] >= 3) {
+						detectedRates.push(std);
+					}
+				}
+
+				if (detectedRates.length === 0) {
+					// Fallback to median
+					const sorted = [...valid].sort((a, b) => a - b);
+					const median = sorted[Math.floor(sorted.length / 2)];
+					let measured = Math.round(1000 / median);
+					for (const std of STANDARD_RATES) {
+						if (Math.abs(measured - std) <= 4) {
+							measured = std;
+							break;
+						}
+					}
+					detectedRates.push(measured);
+				}
+
+				const maxRate = Math.max(...detectedRates);
+
+				if (!baselineHz) {
+					baselineHz = detectedRates[0] || 60;
+				}
+
+				if (maxRate > peakHz) {
+					peakHz = maxRate;
+				}
+
+				// Variable Refresh Rate (VRR / LTPO) Detection:
+				// If multiple distinct rates observed (e.g. 60Hz and 120Hz),
+				// or if peak rate exceeds baseline, or if peak rate > 60Hz:
+				if (
+					(detectedRates.length > 1 && detectedRates.some(r => r > 60) && detectedRates.some(r => r <= 60)) ||
+					(peakHz > baselineHz && baselineHz <= 60) ||
+					peakHz > 60
+				) {
+					isAdaptiveVRR = true;
+				}
+
+				updateDisplay();
+			}
+
+			// 1. Active Compositor Stimulus Burst
+			// Draws micro-subpixel frames to a detached canvas to guarantee the browser compositor
+			// submits damaged frame buffers down to Android SurfaceFlinger/Choreographer.
+			function measureRefreshBurst(targetSamples: number = 40) {
+				if (isProbing) return;
+				isProbing = true;
 				const frameTimes: number[] = [];
 				let lastFrame = performance.now();
 				let frames = 0;
 
+				let probeCanvas: HTMLCanvasElement | null = null;
+				let probeCtx: CanvasRenderingContext2D | null = null;
+				try {
+					probeCanvas = document.createElement('canvas');
+					probeCanvas.width = 2;
+					probeCanvas.height = 2;
+					probeCanvas.style.cssText = 'position:fixed;top:-999px;left:-999px;opacity:0.001;pointer-events:none;';
+					document.body.appendChild(probeCanvas);
+					probeCtx = probeCanvas.getContext('2d');
+				} catch (_) {}
+
 				function onFrame(now: number) {
 					const delta = now - lastFrame;
 					lastFrame = now;
-					if (delta > 3 && delta < 100) frameTimes.push(delta);
+					if (delta >= 1.6 && delta <= 50) frameTimes.push(delta);
 					frames++;
+
+					if (probeCtx) {
+						probeCtx.fillStyle = frames % 2 === 0 ? '#fff' : '#000';
+						probeCtx.fillRect(0, 0, 2, 2);
+					}
 
 					if (frames < targetSamples) {
 						requestAnimationFrame(onFrame);
 					} else {
-						isSampling = false;
-						// Discard first 4 frames for settling and sort deltas
-						if (frameTimes.length >= 15) {
-							const clean = frameTimes.slice(4).sort((a, b) => a - b);
-							const mid = Math.floor(clean.length / 2);
-							const medianDelta = clean.length % 2 === 0
-								? (clean[mid - 1] + clean[mid]) / 2
-								: clean[mid];
-							let measuredHz = Math.round(1000 / medianDelta);
-
-							for (const std of STANDARD_RATES) {
-								if (Math.abs(measuredHz - std) <= 3) {
-									measuredHz = std;
-									break;
-								}
-							}
-
-							if (!baselineHz) {
-								baselineHz = measuredHz;
-								activeHz = measuredHz;
-								if (measuredHz > 60) {
-									isAdaptiveVRR = true;
-								}
-							} else if (isInteraction) {
-								// Flag Adaptive VRR if active interaction median exceeds baseline or runs high-refresh
-								if (measuredHz > baselineHz || measuredHz > 60) {
-									activeHz = measuredHz;
-									isAdaptiveVRR = true;
-								} else {
-									activeHz = measuredHz;
-								}
-							} else {
-								activeHz = measuredHz;
-								if (measuredHz > 60) {
-									isAdaptiveVRR = true;
-								}
-							}
-
-							updateDisplay();
+						isProbing = false;
+						if (probeCanvas) {
+							try { probeCanvas.remove(); } catch (_) {}
 						}
+						// Discard first 3 frames for warm-up
+						const clean = frameTimes.length > 6 ? frameTimes.slice(3) : frameTimes;
+						processDeltas(clean);
 					}
 				}
 				requestAnimationFrame(onFrame);
 			}
 
+			// 2. Dedicated Worker Probe via OffscreenCanvas
+			// Runs on an independent compositor frame clock (DedicatedWorkerGlobalScope)
+			// which is unthrottled by mobile main-thread power gating.
+			function probeWorkerRefresh() {
+				if (
+					typeof Worker === 'undefined' ||
+					typeof HTMLCanvasElement === 'undefined' ||
+					!HTMLCanvasElement.prototype.transferControlToOffscreen
+				) {
+					return;
+				}
+
+				try {
+					const workerCanvas = document.createElement('canvas');
+					workerCanvas.width = 2;
+					workerCanvas.height = 2;
+					workerCanvas.style.cssText = 'position:fixed;top:-999px;left:-999px;opacity:0.001;pointer-events:none;';
+					document.body.appendChild(workerCanvas);
+					const offscreen = workerCanvas.transferControlToOffscreen();
+
+					const workerBlob = new Blob([`
+						self.onmessage = function(e) {
+							const canvas = e.data.canvas;
+							const ctx = canvas.getContext('2d');
+							let frames = 0;
+							let last = performance.now();
+							const deltas = [];
+							function step(now) {
+								const delta = now - last;
+								last = now;
+								if (delta >= 1.6 && delta <= 50) deltas.push(delta);
+								if (ctx) {
+									ctx.fillStyle = frames % 2 === 0 ? '#fff' : '#000';
+									ctx.fillRect(0, 0, 2, 2);
+								}
+								if (++frames < 30) {
+									requestAnimationFrame(step);
+								} else {
+									self.postMessage(deltas);
+								}
+							}
+							requestAnimationFrame(step);
+						};
+					`], { type: 'application/javascript' });
+
+					const workerUrl = URL.createObjectURL(workerBlob);
+					const worker = new Worker(workerUrl);
+
+					const cleanup = () => {
+						try { worker.terminate(); } catch (_) {}
+						try { URL.revokeObjectURL(workerUrl); } catch (_) {}
+						try { workerCanvas.remove(); } catch (_) {}
+					};
+
+					worker.onmessage = function(e) {
+						if (Array.isArray(e.data) && e.data.length >= 8) {
+							processDeltas(e.data.slice(2));
+						}
+						cleanup();
+					};
+
+					worker.onerror = cleanup;
+					worker.postMessage({ canvas: offscreen }, [offscreen]);
+				} catch (_) {}
+			}
+
+			// 3. Real-Time Low-Latency Interaction Observer
+			// Catches Android Choreographer Touch Boost the instant touch/gesture occurs
+			let activeSamplingUntil = 0;
+			let interactionRafId: number | null = null;
+			let lastInteractionTime = performance.now();
+			const rollingInteractionDeltas: number[] = [];
+
+			function onInteractionDetected() {
+				activeSamplingUntil = performance.now() + 1500; // Sample for 1.5s following touch/gesture
+				if (interactionRafId !== null) return;
+				lastInteractionTime = performance.now();
+
+				function interactionLoop(now: number) {
+					const delta = now - lastInteractionTime;
+					lastInteractionTime = now;
+
+					if (delta >= 1.6 && delta <= 50) {
+						rollingInteractionDeltas.push(delta);
+						if (rollingInteractionDeltas.length > 50) {
+							rollingInteractionDeltas.shift();
+						}
+						// Process rolling window every 6 frames
+						if (rollingInteractionDeltas.length >= 6 && rollingInteractionDeltas.length % 6 === 0) {
+							processDeltas(rollingInteractionDeltas);
+						}
+					}
+
+					if (performance.now() < activeSamplingUntil) {
+						interactionRafId = requestAnimationFrame(interactionLoop);
+					} else {
+						if (rollingInteractionDeltas.length >= 4) {
+							processDeltas(rollingInteractionDeltas);
+						}
+						interactionRafId = null;
+					}
+				}
+				interactionRafId = requestAnimationFrame(interactionLoop);
+			}
+
+			const INTERACTION_EVENTS = ['touchstart', 'touchmove', 'pointerdown', 'pointermove', 'scroll', 'wheel'];
+			INTERACTION_EVENTS.forEach((evt) => {
+				window.addEventListener(evt, onInteractionDetected, { passive: true });
+			});
+
 			retestRefresh = () => {
-				baselineHz = 0;
-				activeHz = 0;
-				isAdaptiveVRR = false;
-				measureRefreshBurst(50, false);
+				// Re-probe without artificially destroying verified peak hardware capability
+				measureRefreshBurst(45);
+				probeWorkerRefresh();
+				onInteractionDetected();
 			};
 
-			// Baseline measurement on load
-			measureRefreshBurst(40, false);
-
-			// Check for adaptive high-refresh rate during user interaction (e.g. 120Hz LTPO / G-Sync)
-			let interactionTimer: ReturnType<typeof setTimeout> | null = null;
-			const onInteraction = () => {
-				if (interactionTimer) return;
-				interactionTimer = setTimeout(() => {
-					interactionTimer = null;
-					measureRefreshBurst(40, true);
-				}, 100);
-			};
-			window.addEventListener('scroll', onInteraction, { passive: true });
-			window.addEventListener('pointerdown', onInteraction, { passive: true });
+			// Initial dual probe on page load
+			measureRefreshBurst(40);
+			probeWorkerRefresh();
 
 			refreshEl.style.cursor = 'pointer';
-			refreshEl.title = 'Click to re-test display refresh rate. Detects high-refresh G-Sync/FreeSync/ProMotion panels and dynamic VRR/LTPO scaling.';
+			refreshEl.title = 'Click or touch to re-test display refresh rate. Detects high-refresh G-Sync/FreeSync/ProMotion panels and dynamic VRR/LTPO scaling.';
 			refreshEl.addEventListener('click', () => {
 				retestRefresh();
 			});

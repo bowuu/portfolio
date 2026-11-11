@@ -218,6 +218,218 @@
 		return arch ? `${main} (${arch})` : main;
 	}
 
+	function isKnownHighRefreshVRRDevice(model: string, ua: string, gpu: string): { is120Hz: boolean; isVRR: boolean } {
+		const m = model || '';
+		const u = ua || '';
+		const g = gpu || '';
+
+		// 1. Samsung Galaxy Tab S-series with 120Hz Adaptive AMOLED:
+		// Tab S9/S9+/S9 Ultra: SM-X710, SM-X716, SM-X810, SM-X816, SM-X910, SM-X916
+		// Tab S8/S8+/S8 Ultra: SM-X700, SM-X706, SM-X800, SM-X806, SM-X900, SM-X906
+		// Tab S10+/S10 Ultra: SM-X820, SM-X826, SM-X920, SM-X926
+		// Tab S7/S7+: SM-T870, SM-T875, SM-T970, SM-T976
+		const isSamsungTab120 = /SM-(X[789]\d\d|T87\d|T97\d)/i.test(m) ||
+			/SM-(X[789]\d\d|T87\d|T97\d)/i.test(u) ||
+			/Galaxy Tab S(?:[789]|10)/i.test(u) ||
+			/Galaxy Tab S(?:[789]|10)/i.test(m);
+
+		// 2. Samsung Galaxy S-series with 120Hz Dynamic AMOLED 2X / LTPO:
+		// S26: SM-S94...
+		// S25: SM-S93...
+		// S24: SM-S92...
+		// S23: SM-S91...
+		// S22: SM-S90...
+		// S21: SM-G99...
+		// S20: SM-G98...
+		const isSamsungS120 = /SM-(S9\d\d|G98\d|G99\d)/i.test(m) ||
+			/SM-(S9\d\d|G98\d|G99\d)/i.test(u) ||
+			/Galaxy S2[0-9]/i.test(u) ||
+			/Galaxy S2[0-9]/i.test(m);
+
+		// 3. Samsung Galaxy Z Fold & Flip (120Hz Adaptive AMOLED):
+		const isSamsungFoldFlip = /SM-(F9\d\d|F7[1-9]\d)/i.test(m) ||
+			/SM-(F9\d\d|F7[1-9]\d)/i.test(u) ||
+			/Galaxy Z (?:Fold|Flip)/i.test(u) ||
+			/Galaxy Z (?:Fold|Flip)/i.test(m);
+
+		// 4. Google Pixel 120Hz Pro/LTPO models:
+		const isPixel120 = /Pixel (?:[67] Pro|[89]|Fold|\d+ Pro)/i.test(m) ||
+			/Pixel (?:[67] Pro|[89]|Fold|\d+ Pro)/i.test(u);
+
+		// 5. Flagship mobile SOCs / GPUs paired exclusively with 120Hz+ VRR displays:
+		// Qualcomm Snapdragon 8 Gen 2 (Adreno 740 - Tab S9, S23)
+		// Qualcomm Snapdragon 8 Gen 3 (Adreno 750 - S24)
+		// Qualcomm Snapdragon 8 Elite / Gen 4 (Adreno 830 - S25, S26)
+		// Samsung Exynos 2400 (Xclipse 940 - S24)
+		// Samsung Exynos 2200 (Xclipse 920 - S22)
+		const isFlagshipVRRGpu = /Adreno\s*(?:740|750|830)\b/i.test(g) ||
+			/Xclipse\s*(?:920|940)\b/i.test(g) ||
+			/Immortalis-G7(?:15|20|25)|Immortalis-G925/i.test(g);
+
+		if (isSamsungTab120 || isSamsungS120 || isSamsungFoldFlip || isPixel120 || isFlagshipVRRGpu) {
+			return { is120Hz: true, isVRR: true };
+		}
+
+		return { is120Hz: false, isVRR: false };
+	}
+
+	function analyzeFrameDeltas(deltas: number[]): { hz: number; hasVaryingRates: boolean } {
+		if (deltas.length < 4) return { hz: 60, hasVaryingRates: false };
+
+		// Filter out anomalies and pauses (must be between 2.5ms and 100ms)
+		const valid = deltas.filter((d) => d >= 2.5 && d <= 100);
+		if (valid.length < 4) return { hz: 60, hasVaryingRates: false };
+
+		// Standard Hz frequency bins and their expected delta ranges
+		const bins: Array<{ hz: number; min: number; max: number; count: number }> = [
+			{ hz: 360, min: 2.3, max: 3.2, count: 0 },
+			{ hz: 240, min: 3.5, max: 4.8, count: 0 },
+			{ hz: 165, min: 5.5, max: 6.5, count: 0 },
+			{ hz: 144, min: 6.5, max: 7.5, count: 0 },
+			{ hz: 120, min: 7.6, max: 9.6, count: 0 },
+			{ hz: 90, min: 10.0, max: 12.2, count: 0 },
+			{ hz: 75, min: 12.5, max: 14.5, count: 0 },
+			{ hz: 60, min: 15.0, max: 18.5, count: 0 },
+			{ hz: 48, min: 19.0, max: 23.0, count: 0 },
+			{ hz: 30, min: 30.0, max: 36.0, count: 0 }
+		];
+
+		for (const d of valid) {
+			for (const b of bins) {
+				if (d >= b.min && d <= b.max) {
+					b.count++;
+					break;
+				}
+			}
+		}
+
+		let detectedHz = 60;
+		let hasHigh = false;
+		let hasLow = false;
+
+		for (const b of bins) {
+			if (b.hz >= 90 && b.count >= 2) {
+				if (b.hz > detectedHz) {
+					detectedHz = b.hz;
+					hasHigh = true;
+				}
+			}
+			if (b.hz <= 60 && b.count >= 2) {
+				hasLow = true;
+			}
+		}
+
+		if (!hasHigh) {
+			const sorted = [...valid].sort((a, b) => a - b);
+			const p20 = sorted[Math.floor(sorted.length * 0.2)];
+			let calc = Math.round(1000 / p20);
+			for (const std of [60, 75, 90, 100, 120, 144, 165, 180, 200, 240, 280, 360, 480, 500, 540]) {
+				if (Math.abs(calc - std) <= 4) {
+					calc = std;
+					break;
+				}
+			}
+			detectedHz = calc;
+		}
+
+		const hasVaryingRates = (hasHigh && hasLow) || (detectedHz > 60 && valid.some((d) => d >= 14.5 && d <= 18.5));
+		return { hz: detectedHz, hasVaryingRates };
+	}
+
+	function probeWorkerRefresh(): Promise<{ hz: number; isVRR: boolean }> {
+		return new Promise((resolve) => {
+			if (
+				typeof Worker === 'undefined' ||
+				typeof HTMLCanvasElement === 'undefined' ||
+				!HTMLCanvasElement.prototype.transferControlToOffscreen
+			) {
+				return resolve({ hz: 0, isVRR: false });
+			}
+
+			try {
+				const canvas = document.createElement('canvas');
+				canvas.width = 1;
+				canvas.height = 1;
+				canvas.style.position = 'fixed';
+				canvas.style.top = '-9999px';
+				canvas.style.left = '-9999px';
+				canvas.style.opacity = '0.001';
+				canvas.style.pointerEvents = 'none';
+				document.body.appendChild(canvas);
+
+				const offscreen = canvas.transferControlToOffscreen();
+				const workerCode = `
+					let frames = [];
+					let last = performance.now();
+					let count = 0;
+					let ctx;
+
+					self.onmessage = function(e) {
+						if (e.data && e.data.canvas) {
+							try {
+								ctx = e.data.canvas.getContext('2d');
+							} catch (_) {}
+							requestAnimationFrame(tick);
+						}
+					};
+
+					function tick(now) {
+						const delta = now - last;
+						last = now;
+						if (delta > 2 && delta < 100) frames.push(delta);
+						count++;
+
+						if (ctx) {
+							try {
+								ctx.fillStyle = (count % 2 === 0) ? '#ff0000' : '#0000ff';
+								ctx.fillRect(0, 0, 1, 1);
+							} catch (_) {}
+						}
+
+						if (count < 40) {
+							requestAnimationFrame(tick);
+						} else {
+							self.postMessage({ frames: frames });
+						}
+					}
+				`;
+
+				const blob = new Blob([workerCode], { type: 'application/javascript' });
+				const workerUrl = URL.createObjectURL(blob);
+				const worker = new Worker(workerUrl);
+
+				const cleanup = () => {
+					try { worker.terminate(); } catch (_) {}
+					try { URL.revokeObjectURL(workerUrl); } catch (_) {}
+					try { canvas.remove(); } catch (_) {}
+				};
+
+				const timer = setTimeout(() => {
+					cleanup();
+					resolve({ hz: 0, isVRR: false });
+				}, 1200);
+
+				worker.onmessage = (e) => {
+					clearTimeout(timer);
+					cleanup();
+					const frames: number[] = e.data?.frames || [];
+					const res = analyzeFrameDeltas(frames);
+					resolve({ hz: res.hz, isVRR: res.hasVaryingRates });
+				};
+
+				worker.onerror = () => {
+					clearTimeout(timer);
+					cleanup();
+					resolve({ hz: 0, isVRR: false });
+				};
+
+				worker.postMessage({ canvas: offscreen }, [offscreen]);
+			} catch {
+				resolve({ hz: 0, isVRR: false });
+			}
+		});
+	}
+
 	function detectOS(gpu: string): { display: string; tooltip: string } {
 		const ua = navigator.userAgent;
 		const navData = (navigator as any).userAgentData;
@@ -380,6 +592,7 @@
 		if (gpuEl) gpuEl.textContent = gpuString;
 
 		// 2. Instant Client Detection: OS
+		let onDeviceModelResolved: ((model: string) => void) | null = null;
 		if (osEl) {
 			const initialOS = detectOS(gpuString);
 			osEl.textContent = initialOS.display;
@@ -416,6 +629,10 @@
 							osEl.title = model 
 								? (model.startsWith('SM-') ? `Samsung Device: ${model}` : `Device: ${model}`)
 								: (isTablet ? 'Android Tablet' : 'Android Mobile');
+
+							if (onDeviceModelResolved && model) {
+								onDeviceModelResolved(model);
+							}
 						} else if (hints.platform === 'Linux' && !isMobileARM && !hasTouch) {
 							const arch = hints.architecture?.includes('64') || hints.bitness === '64' ? 'x86_64' : (hints.architecture || 'x86_64');
 							osEl.textContent = buildOSDisplay('GNU/Linux', '', arch);
@@ -494,24 +711,64 @@
 		let retestRefresh: () => void = () => {};
 
 		if (refreshEl) {
+			const isMobile = isMobileARM || hasTouch;
 			let baselineHz = 0;
 			let activeHz = 0;
 			let isAdaptiveVRR = false;
 			let isSampling = false;
 
-			const STANDARD_RATES = [60, 75, 90, 100, 120, 144, 165, 180, 200, 240, 280, 360, 480, 500, 540];
+			// 1. Synchronous identification from UA / GPU model extract
+			const uaModelMatch = ua.match(/\((?:Linux; Android[^;]+;\s*)([a-zA-Z0-9\-_ ]+)\s+Build/i);
+			const initialModel = uaModelMatch ? uaModelMatch[1].trim() : '';
+			const initialProfile = isKnownHighRefreshVRRDevice(initialModel, ua, gpuString);
+			if (initialProfile.is120Hz) {
+				baselineHz = 120;
+				activeHz = 120;
+				if (initialProfile.isVRR) isAdaptiveVRR = true;
+			}
 
 			function updateDisplay() {
 				if (!refreshEl) return;
 				const displayHz = activeHz || baselineHz || 60;
-				const vrrTag = (displayHz > 60 || isAdaptiveVRR) ? ' (Adaptive VRR)' : '';
+				const vrrTag = (isAdaptiveVRR || (displayHz > 60 && isMobile)) ? ' (Adaptive VRR)' : '';
 				const { gamut, hdrTag } = getGamutAndHDR();
 				refreshEl.textContent = `${displayHz} Hz${vrrTag} • ${gamut} • ${hdrTag}`;
+				refreshEl.title = (isAdaptiveVRR || (displayHz > 60 && isMobile))
+					? `${displayHz} Hz Variable Refresh Rate (VRR/LTPO) panel. Tap to re-test.`
+					: `${displayHz} Hz display panel (${gamut}, ${hdrTag}). Tap to re-test.`;
+			}
+
+			// Hook into high-entropy model resolution
+			onDeviceModelResolved = (model: string) => {
+				const prof = isKnownHighRefreshVRRDevice(model, ua, gpuString);
+				if (prof.is120Hz) {
+					if (activeHz < 120) activeHz = 120;
+					if (baselineHz < 120) baselineHz = 120;
+					if (prof.isVRR) isAdaptiveVRR = true;
+					updateDisplay();
+				}
+			};
+
+			// Active canvas dirtying to demand vsync from Android SurfaceFlinger
+			let probeCanvas: HTMLCanvasElement | null = null;
+			let probeCtx: CanvasRenderingContext2D | null = null;
+
+			function ensureProbeCanvas() {
+				if (!probeCanvas) {
+					probeCanvas = document.createElement('canvas');
+					probeCanvas.width = 2;
+					probeCanvas.height = 2;
+					probeCanvas.style.cssText = 'position:fixed;top:-999px;left:-999px;width:2px;height:2px;opacity:0.001;pointer-events:none;z-index:-9999;';
+					document.body.appendChild(probeCanvas);
+					probeCtx = probeCanvas.getContext('2d');
+				}
 			}
 
 			function measureRefreshBurst(targetSamples: number = 40, isInteraction: boolean = false) {
-				if (isSampling) return;
+				if (isSampling && !isInteraction) return;
 				isSampling = true;
+				ensureProbeCanvas();
+
 				const frameTimes: number[] = [];
 				let lastFrame = performance.now();
 				let frames = 0;
@@ -519,46 +776,37 @@
 				function onFrame(now: number) {
 					const delta = now - lastFrame;
 					lastFrame = now;
-					if (delta > 3 && delta < 100) frameTimes.push(delta);
+					if (delta > 2 && delta < 100) frameTimes.push(delta);
 					frames++;
+
+					// Dirty probe canvas to force compositor draw & frame delivery to SurfaceFlinger
+					if (probeCtx) {
+						probeCtx.fillStyle = (frames % 2 === 0) ? '#ff0000' : '#0000ff';
+						probeCtx.fillRect(0, 0, 2, 2);
+					}
 
 					if (frames < targetSamples) {
 						requestAnimationFrame(onFrame);
 					} else {
 						isSampling = false;
-						// Discard first 4 frames for settling and sort deltas
-						if (frameTimes.length >= 15) {
-							const clean = frameTimes.slice(4).sort((a, b) => a - b);
-							const mid = Math.floor(clean.length / 2);
-							const medianDelta = clean.length % 2 === 0
-								? (clean[mid - 1] + clean[mid]) / 2
-								: clean[mid];
-							let measuredHz = Math.round(1000 / medianDelta);
-
-							for (const std of STANDARD_RATES) {
-								if (Math.abs(measuredHz - std) <= 3) {
-									measuredHz = std;
-									break;
-								}
-							}
+						if (frameTimes.length >= 8) {
+							const res = analyzeFrameDeltas(frameTimes);
+							const measuredHz = res.hz;
 
 							if (!baselineHz) {
 								baselineHz = measuredHz;
 								activeHz = measuredHz;
-								if (measuredHz > 60) {
+								if (measuredHz > 60 || res.hasVaryingRates) {
 									isAdaptiveVRR = true;
 								}
 							} else if (isInteraction) {
-								// Flag Adaptive VRR if active interaction median exceeds baseline or runs high-refresh
-								if (measuredHz > baselineHz || measuredHz > 60) {
-									activeHz = measuredHz;
+								if (measuredHz > activeHz || measuredHz > 60) {
+									activeHz = Math.max(activeHz, measuredHz);
 									isAdaptiveVRR = true;
-								} else {
-									activeHz = measuredHz;
 								}
 							} else {
-								activeHz = measuredHz;
-								if (measuredHz > 60) {
+								activeHz = Math.max(activeHz, measuredHz);
+								if (measuredHz > 60 || res.hasVaryingRates) {
 									isAdaptiveVRR = true;
 								}
 							}
@@ -571,30 +819,45 @@
 			}
 
 			retestRefresh = () => {
-				baselineHz = 0;
-				activeHz = 0;
-				isAdaptiveVRR = false;
-				measureRefreshBurst(50, false);
+				measureRefreshBurst(50, true);
+				probeWorkerRefresh().then((res) => {
+					if (res.hz > activeHz) activeHz = res.hz;
+					if (res.isVRR || (activeHz > 60 && isMobile)) isAdaptiveVRR = true;
+					updateDisplay();
+				});
 			};
 
-			// Baseline measurement on load
-			measureRefreshBurst(40, false);
+			// Initial render with sync knowledge
+			updateDisplay();
 
-			// Check for adaptive high-refresh rate during user interaction (e.g. 120Hz LTPO / G-Sync)
-			let interactionTimer: ReturnType<typeof setTimeout> | null = null;
+			// Run active probe on load
+			measureRefreshBurst(35, false);
+
+			// Run worker probe for vsync without main-thread 60Hz cap
+			probeWorkerRefresh().then((res) => {
+				if (res.hz > activeHz) activeHz = res.hz;
+				if (res.isVRR || (activeHz > 60 && isMobile)) isAdaptiveVRR = true;
+				updateDisplay();
+			});
+
+			// Interactive listener: immediately trigger on touch/scroll without 100ms lag
+			let lastInteractionBurst = 0;
 			const onInteraction = () => {
-				if (interactionTimer) return;
-				interactionTimer = setTimeout(() => {
-					interactionTimer = null;
-					measureRefreshBurst(40, true);
-				}, 100);
+				const now = performance.now();
+				if (now - lastInteractionBurst < 250) return;
+				lastInteractionBurst = now;
+				measureRefreshBurst(35, true);
 			};
+
 			window.addEventListener('scroll', onInteraction, { passive: true });
+			window.addEventListener('touchstart', onInteraction, { passive: true });
+			window.addEventListener('touchmove', onInteraction, { passive: true });
 			window.addEventListener('pointerdown', onInteraction, { passive: true });
 
 			refreshEl.style.cursor = 'pointer';
 			refreshEl.title = 'Click to re-test display refresh rate. Detects high-refresh G-Sync/FreeSync/ProMotion panels and dynamic VRR/LTPO scaling.';
-			refreshEl.addEventListener('click', () => {
+			refreshEl.addEventListener('click', (e) => {
+				e.stopPropagation();
 				retestRefresh();
 			});
 		}

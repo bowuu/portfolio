@@ -1,6 +1,15 @@
 ---
-const now = new Date();
-const currentYear = now.getFullYear();
+import { execSync } from 'node:child_process';
+
+let commitDate: Date;
+try {
+	const gitTime = execSync('git log -1 --format=%cI', { encoding: 'utf-8' }).trim();
+	commitDate = gitTime ? new Date(gitTime) : new Date();
+} catch {
+	commitDate = new Date();
+}
+
+const currentYear = commitDate.getFullYear();
 
 // Human-readable build timestamp pinned to America/New_York (e.g. "November 4, 2026 at 9:50 AM EST")
 const lastUpdated = new Intl.DateTimeFormat('en-US', {
@@ -11,8 +20,8 @@ const lastUpdated = new Intl.DateTimeFormat('en-US', {
 	minute: '2-digit',
 	timeZoneName: 'short',
 	timeZone: 'America/New_York',
-}).format(now);
-const isoTimestamp = now.toISOString();
+}).format(commitDate);
+const isoTimestamp = commitDate.toISOString();
 ---
 
 <footer>

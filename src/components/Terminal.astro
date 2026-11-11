@@ -199,7 +199,7 @@
 			if ((e.key === '`' || e.key === '~') && !isTyping) {
 				e.preventDefault();
 				toggleTerminal();
-			} else if (e.key === 'Escape' && modal.classList.contains('open')) {
+			} else if ((e.key === 'Escape' || e.key === 'Esc') && modal.classList.contains('open')) {
 				closeTerminal();
 			}
 		});

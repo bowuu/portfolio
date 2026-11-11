@@ -930,7 +930,7 @@
 		function openWaferModal() {
 			(window as any).__closeAllEasterEggs?.();
 			modal.classList.remove('hidden');
-			modal.style.display = 'block';
+			modal.style.display = 'flex';
 			if (!activeDie && dies.length) {
 				activeDie = dies[Math.floor(dies.length / 2)];
 				updateTelemetry(activeDie);
@@ -941,10 +941,17 @@
 		function closeWaferModal() {
 			modal.classList.add('hidden');
 			modal.style.display = 'none';
+			(window as any).__updateDrawerActiveUI?.();
 		}
 
 		closeBtn?.addEventListener('click', closeWaferModal);
 		backdrop?.addEventListener('click', closeWaferModal);
+
+		window.addEventListener('keydown', (e) => {
+			if ((e.key === 'Escape' || e.key === 'Esc') && !modal.classList.contains('hidden') && modal.style.display !== 'none') {
+				closeWaferModal();
+			}
+		});
 
 		// DYNAMIC RANDOMIZATION & ATE POGO SCAN
 		scanBtn?.addEventListener('click', () => {
@@ -2226,6 +2233,8 @@
 			waferBtn?.classList.toggle('active', !!(waferModal && !waferModal.classList.contains('hidden')));
 		}
 
+		(window as any).__updateDrawerActiveUI = updateDrawerActiveUI;
+
 		const kbLabEl = document.getElementById('keyboard-lab');
 		function isNearKeyboardLab(): boolean {
 			if (!kbLabEl) return false;
@@ -2234,23 +2243,24 @@
 		}
 
 		window.addEventListener('keydown', (e) => {
-			if (e.key === 'Escape') {
+			if (e.key === 'Escape' || e.key === 'Esc') {
+				let handled = false;
 				const waferModal = document.getElementById('wafer-modal');
-				if (waferModal && !waferModal.classList.contains('hidden')) {
+				if (waferModal && (!waferModal.classList.contains('hidden') || waferModal.style.display !== 'none')) {
 					(window as any).__closeWaferMap?.();
-					updateDrawerActiveUI();
-					return;
-				}
-				if (extrasModal && !extrasModal.classList.contains('hidden')) {
-					extrasModal.classList.add('hidden');
-					extrasModal.style.display = 'none';
-					return;
+					handled = true;
 				}
 				if (isZeroG || isTilt || isDegauss || isSphere || isQuantum || isThermal) {
-					e.preventDefault();
 					closeAllActiveModes();
-					extrasModal?.classList.add('hidden');
-					if (extrasModal) extrasModal.style.display = 'none';
+					handled = true;
+				}
+				if (extrasModal && (!extrasModal.classList.contains('hidden') || extrasModal.style.display !== 'none')) {
+					extrasModal.classList.add('hidden');
+					extrasModal.style.display = 'none';
+					handled = true;
+				}
+				if (handled) {
+					e.preventDefault();
 					updateDrawerActiveUI();
 				}
 				return;
@@ -2635,9 +2645,10 @@
 		align-items: center;
 		justify-content: center;
 		padding: 1.5rem;
+		overflow-y: auto;
 	}
 	.wafer-backdrop {
-		position: absolute;
+		position: fixed;
 		inset: 0;
 		background: rgba(8, 10, 15, 0.85);
 		backdrop-filter: blur(8px);
@@ -2647,6 +2658,7 @@
 		position: relative;
 		width: 100%;
 		max-width: 820px;
+		margin: auto;
 		background: #0f131a;
 		border: 1px solid rgba(56, 189, 248, 0.4);
 		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(56, 189, 248, 0.2);

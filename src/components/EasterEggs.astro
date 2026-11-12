@@ -191,46 +191,64 @@
 			<div class="mult-body">
 				<!-- INPUT REGISTERS & PRESETS -->
 				<div class="mult-inputs-card">
-					<div class="mult-reg-row">
-						<div class="mult-reg-label mono">
-							<strong>MULTIPLICAND X [7:0]</strong>
-							<span class="reg-meta" id="mult-x-meta">Hex: 0xAA &bull; Dec: 170</span>
+					<div class="mult-registers-grid">
+						<!-- MULTIPLICAND X [7:0] -->
+						<div class="mult-reg-box">
+							<div class="mult-reg-header mono">
+								<span class="reg-title">MULTIPLICAND X [7:0]</span>
+								<span class="reg-meta" id="mult-x-meta">0xAA &bull; 170 &bull; 1010 1010₂</span>
+							</div>
+							<div class="mult-bit-table mono">
+								<div class="bit-names-row">
+									<span>X7</span><span>X6</span><span>X5</span><span>X4</span>
+									<span class="nibble-gap"></span>
+									<span>X3</span><span>X2</span><span>X1</span><span>X0</span>
+								</div>
+								<div class="bit-values-row" id="mult-x-bits"></div>
+							</div>
 						</div>
-						<div class="mult-bits" id="mult-x-bits"></div>
-					</div>
 
-					<div class="mult-op-badge mono">&times; MULTIPLY</div>
+						<div class="mult-op-badge mono">&times;</div>
 
-					<div class="mult-reg-row">
-						<div class="mult-reg-label mono">
-							<strong>MULTIPLIER Y [7:0]</strong>
-							<span class="reg-meta" id="mult-y-meta">Hex: 0x55 &bull; Dec: 85</span>
+						<!-- MULTIPLIER Y [7:0] -->
+						<div class="mult-reg-box">
+							<div class="mult-reg-header mono">
+								<span class="reg-title">MULTIPLIER Y [7:0]</span>
+								<span class="reg-meta" id="mult-y-meta">0x55 &bull; 85 &bull; 0101 0101₂</span>
+							</div>
+							<div class="mult-bit-table mono">
+								<div class="bit-names-row">
+									<span>Y7</span><span>Y6</span><span>Y5</span><span>Y4</span>
+									<span class="nibble-gap"></span>
+									<span>Y3</span><span>Y2</span><span>Y1</span><span>Y0</span>
+								</div>
+								<div class="bit-values-row" id="mult-y-bits"></div>
+							</div>
 						</div>
-						<div class="mult-bits" id="mult-y-bits"></div>
 					</div>
 
 					<div class="mult-presets">
 						<span class="presets-title mono">PRESETS:</span>
 						<button type="button" class="mult-pre-btn mono" data-x="170" data-y="85">0xAA &times; 0x55 (14,450)</button>
-						<button type="button" class="mult-pre-btn mono" data-x="255" data-y="255">255 &times; 255 (Max: 65,025)</button>
+						<button type="button" class="mult-pre-btn mono" data-x="255" data-y="255">255 &times; 255 (65,025)</button>
 						<button type="button" class="mult-pre-btn mono" data-x="15" data-y="240">0x0F &times; 0xF0 (3,600)</button>
 						<button type="button" class="mult-pre-btn mono" data-x="128" data-y="64">128 &times; 64 (8,192)</button>
-						<button type="button" class="mult-pre-btn mono" id="mult-rand-btn">Random Vector</button>
-						<button type="button" class="mult-pre-btn mono" data-x="0" data-y="0">Clear (0 &times; 0)</button>
+						<button type="button" class="mult-pre-btn mono" id="mult-rand-btn">Random</button>
+						<button type="button" class="mult-pre-btn mono" data-x="0" data-y="0">Clear</button>
 					</div>
 				</div>
 
 				<!-- SCHEMATIC VIEWPORT -->
 				<div class="mult-schematic-card">
 					<div class="mult-schematic-header mono">
-						<span>AUTHENTIC CARRY-SAVE SCHEMATIC &bull; HOVER CELLS &amp; WIRES FOR LIVE LOGIC</span>
+						<span>AUTHENTIC BRAUN CARRY-SAVE SCHEMATIC &bull; HOVER CELLS &amp; WIRES FOR LIVE LOGIC</span>
 						<div class="mult-legend mono">
 							<span class="leg-item"><span class="leg-line active"></span> HIGH (1)</span>
 							<span class="leg-item"><span class="leg-line dim"></span> LOW (0)</span>
 						</div>
 					</div>
 					<div class="mult-svg-scroll-wrap" id="mult-svg-wrap">
-						<svg id="mult-schematic-svg" class="mult-schematic-svg" viewBox="0 0 1180 660" preserveAspectRatio="xMidYMid meet">
+						<svg id="mult-schematic-svg" class="mult-schematic-svg" viewBox="0 0 990 510" preserveAspectRatio="xMidYMid meet">
 							<!-- Rendered dynamically via JS for 100% reactive state updates -->
 						</svg>
 					</div>
@@ -241,15 +259,26 @@
 
 				<!-- 16-BIT PRODUCT OUTPUT REGISTER -->
 				<div class="mult-output-card">
-					<div class="mult-output-header">
-						<div class="mult-product-title mono">16-BIT PRODUCT OUTPUT REGISTER P [15:0]</div>
-						<div class="mult-product-vals mono">
+					<div class="mult-output-header mono">
+						<span class="mult-product-title">16-BIT PRODUCT OUTPUT REGISTER P [15:0]</span>
+						<div class="mult-product-vals">
 							<span class="p-dec mono" id="mult-p-dec">P = 14,450</span>
 							<span class="p-hex mono" id="mult-p-hex">0x3872</span>
 							<span class="p-bin mono" id="mult-p-bin">0011 1000 0111 0010₂</span>
 						</div>
 					</div>
-					<div class="mult-product-bits" id="mult-product-bits"></div>
+					<div class="mult-bit-table mult-p-table mono">
+						<div class="bit-names-row p-names-row">
+							<span>P15</span><span>P14</span><span>P13</span><span>P12</span>
+							<span class="nibble-gap"></span>
+							<span>P11</span><span>P10</span><span>P9</span><span>P8</span>
+							<span class="nibble-gap"></span>
+							<span>P7</span><span>P6</span><span>P5</span><span>P4</span>
+							<span class="nibble-gap"></span>
+							<span>P3</span><span>P2</span><span>P1</span><span>P0</span>
+						</div>
+						<div class="bit-values-row p-values-row" id="mult-product-bits"></div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -2747,13 +2776,13 @@
 		// -------------------------------------------------------------
 		// 8. 8x8-BIT CARRY-SAVE ARRAY MULTIPLIER (CADENCE VIRTUOSO VLSI)
 		// -------------------------------------------------------------
-		const multDx = 66;
-		const multDy = 58;
-		const multCellW = 34;
-		const multCellH = 34;
-		const multXBase = 580;
-		const multYBase = 54;
-		const multPBusY = 590;
+		const multDx = 56;
+		const multDy = 46;
+		const multCellW = 28;
+		const multCellH = 28;
+		const multXBase = 500;
+		const multYBase = 46;
+		const multPBusY = 470;
 
 		function getCellPos(r: number, c: number) {
 			if (r < 8) {
@@ -2829,14 +2858,14 @@
 
 			let svgHtml = `
 				<defs>
-					<marker id="arr-dim" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-						<polygon points="0 0, 6 3, 0 6" fill="rgba(148, 163, 184, 0.45)" />
+					<marker id="arr-dim" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+						<polygon points="0 0, 5 2.5, 0 5" fill="rgba(148, 163, 184, 0.45)" />
 					</marker>
-					<marker id="arr-act" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-						<polygon points="0 0, 6 3, 0 6" fill="#22c55e" />
+					<marker id="arr-act" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+						<polygon points="0 0, 5 2.5, 0 5" fill="#22c55e" />
 					</marker>
 					<filter id="mult-glow" x="-20%" y="-20%" width="140%" height="140%">
-						<feGaussianBlur stdDeviation="2.2" result="blur" />
+						<feGaussianBlur stdDeviation="2.0" result="blur" />
 						<feMerge>
 							<feMergeNode in="blur" />
 							<feMergeNode in="SourceGraphic" />
@@ -2850,37 +2879,37 @@
 			for (let c = 0; c < 8; c++) {
 				const pos = getCellPos(0, c);
 				svgHtml += `
-					<line class="mult-wire wire-dim" x1="${pos.cx}" y1="${pos.y - 20}" x2="${pos.cx}" y2="${pos.y}" marker-end="url(#arr-dim)" />
-					<text class="wire-label" x="${pos.cx}" y="${pos.y - 24}" text-anchor="middle">0</text>
+					<line class="mult-wire wire-dim" x1="${pos.cx}" y1="${pos.y - 18}" x2="${pos.cx}" y2="${pos.y}" marker-end="url(#arr-dim)" />
+					<text class="wire-label" x="${pos.cx}" y="${pos.y - 21}" text-anchor="middle">0</text>
 				`;
 			}
 			// Rows 1-7 Leftmost Cell (c = 7) Top Zero Inputs
 			for (let r = 1; r < 8; r++) {
 				const pos = getCellPos(r, 7);
 				svgHtml += `
-					<line class="mult-wire wire-dim" x1="${pos.cx}" y1="${pos.y - 18}" x2="${pos.cx}" y2="${pos.y}" marker-end="url(#arr-dim)" />
-					<text class="wire-label" x="${pos.cx}" y="${pos.y - 22}" text-anchor="middle">0</text>
+					<line class="mult-wire wire-dim" x1="${pos.cx}" y1="${pos.y - 16}" x2="${pos.cx}" y2="${pos.y}" marker-end="url(#arr-dim)" />
+					<text class="wire-label" x="${pos.cx}" y="${pos.y - 19}" text-anchor="middle">0</text>
 				`;
 			}
 			// Row 8 Leftmost Cell (k = 7) Top Zero Input
 			const r8TopPos = getCellPos(8, 7);
 			svgHtml += `
-				<line class="mult-wire wire-dim" x1="${r8TopPos.cx}" y1="${r8TopPos.y - 18}" x2="${r8TopPos.cx}" y2="${r8TopPos.y}" marker-end="url(#arr-dim)" />
-				<text class="wire-label" x="${r8TopPos.cx}" y="${r8TopPos.y - 22}" text-anchor="middle">0</text>
+				<line class="mult-wire wire-dim" x1="${r8TopPos.cx}" y1="${r8TopPos.y - 16}" x2="${r8TopPos.cx}" y2="${r8TopPos.y}" marker-end="url(#arr-dim)" />
+				<text class="wire-label" x="${r8TopPos.cx}" y="${r8TopPos.y - 19}" text-anchor="middle">0</text>
 			`;
 
 			// Row 8 Right Zero Carry Input
 			const r8Cell0 = getCellPos(8, 0);
 			svgHtml += `
-				<line class="mult-wire wire-dim" x1="${r8Cell0.x + multCellW + 20}" y1="${r8Cell0.cy}" x2="${r8Cell0.x + multCellW}" y2="${r8Cell0.cy}" marker-end="url(#arr-dim)" />
-				<text class="wire-label" x="${r8Cell0.x + multCellW + 26}" y="${r8Cell0.cy + 3}">0</text>
+				<line class="mult-wire wire-dim" x1="${r8Cell0.x + multCellW + 16}" y1="${r8Cell0.cy}" x2="${r8Cell0.x + multCellW}" y2="${r8Cell0.cy}" marker-end="url(#arr-dim)" />
+				<text class="wire-label" x="${r8Cell0.x + multCellW + 21}" y="${r8Cell0.cy + 3}">0</text>
 			`;
 
 			// Row 8 Left Carry Out Arrow (C16 = 0)
 			const r8Cell7 = getCellPos(8, 7);
 			svgHtml += `
-				<line class="mult-wire wire-dim" x1="${r8Cell7.x}" y1="${r8Cell7.cy}" x2="${r8Cell7.x - 22}" y2="${r8Cell7.cy}" marker-end="url(#arr-dim)" />
-				<text class="wire-label" x="${r8Cell7.x - 28}" y="${r8Cell7.cy + 3}" text-anchor="end">0</text>
+				<line class="mult-wire wire-dim" x1="${r8Cell7.x}" y1="${r8Cell7.cy}" x2="${r8Cell7.x - 18}" y2="${r8Cell7.cy}" marker-end="url(#arr-dim)" />
+				<text class="wire-label" x="${r8Cell7.x - 23}" y="${r8Cell7.cy + 3}" text-anchor="end">0</text>
 			`;
 
 			// 2. Sum Wires between rows
@@ -2910,7 +2939,7 @@
 					const top = getCellPos(r, c);
 					const bot = getCellPos(r + 1, c);
 					svgHtml += `
-						<line id="wire-carry-${r}-${c}" class="mult-wire wire-dim" x1="${top.x + 8}" y1="${top.y + multCellH}" x2="${bot.x + multCellW - 8}" y2="${bot.y}" marker-end="url(#arr-dim)" data-type="carry" data-r="${r}" data-c="${c}" />
+						<line id="wire-carry-${r}-${c}" class="mult-wire wire-dim" x1="${top.x + 6}" y1="${top.y + multCellH}" x2="${bot.x + multCellW - 6}" y2="${bot.y}" marker-end="url(#arr-dim)" data-type="carry" data-r="${r}" data-c="${c}" />
 					`;
 				}
 			}
@@ -2919,7 +2948,7 @@
 				const top = getCellPos(7, k);
 				const bot = getCellPos(8, k);
 				svgHtml += `
-					<line id="wire-carry-7-${k}" class="mult-wire wire-dim" x1="${top.x + 8}" y1="${top.y + multCellH}" x2="${bot.x + multCellW - 8}" y2="${bot.y}" marker-end="url(#arr-dim)" data-type="carry" data-r="7" data-c="${k}" />
+					<line id="wire-carry-7-${k}" class="mult-wire wire-dim" x1="${top.x + 6}" y1="${top.y + multCellH}" x2="${bot.x + multCellW - 6}" y2="${bot.y}" marker-end="url(#arr-dim)" data-type="carry" data-r="7" data-c="${k}" />
 				`;
 			}
 			// Row 8 Ripple-Carry (Horizontal Left)
@@ -2936,8 +2965,8 @@
 				for (let c = 0; c < 8; c++) {
 					const pos = getCellPos(r, c);
 					svgHtml += `
-						<line id="wire-pp-${r}-${c}" class="mult-wire wire-dim" x1="${pos.x + multCellW + 16}" y1="${pos.cy}" x2="${pos.x + multCellW}" y2="${pos.cy}" marker-end="url(#arr-dim)" data-type="pp" data-r="${r}" data-c="${c}" />
-						<text id="lbl-pp-${r}-${c}" class="wire-label" x="${pos.x + multCellW + 8}" y="${pos.cy - 4}" text-anchor="middle">X${r}Y${c}</text>
+						<line id="wire-pp-${r}-${c}" class="mult-wire wire-dim" x1="${pos.x + multCellW + 14}" y1="${pos.cy}" x2="${pos.x + multCellW}" y2="${pos.cy}" marker-end="url(#arr-dim)" data-type="pp" data-r="${r}" data-c="${c}" />
+						<text id="lbl-pp-${r}-${c}" class="wire-label" x="${pos.x + multCellW + 7}" y="${pos.cy - 3}" text-anchor="middle">X${r}Y${c}</text>
 					`;
 				}
 			}
@@ -2948,7 +2977,7 @@
 				const pos = getCellPos(r, 0);
 				svgHtml += `
 					<line id="wire-prod-${r}" class="mult-wire wire-dim" x1="${pos.cx}" y1="${pos.y + multCellH}" x2="${pos.cx}" y2="${multPBusY}" marker-end="url(#arr-dim)" data-type="prod" data-bit="${r}" />
-					<text id="lbl-prod-${r}" class="prod-label" x="${pos.cx}" y="${multPBusY + 22}">P${r}</text>
+					<text id="lbl-prod-${r}" class="prod-label" x="${pos.cx}" y="${multPBusY + 18}">P${r}</text>
 				`;
 			}
 			// P8 to P15: from cell (8, k) bottom center straight down
@@ -2956,7 +2985,7 @@
 				const pos = getCellPos(8, k);
 				svgHtml += `
 					<line id="wire-prod-${8 + k}" class="mult-wire wire-dim" x1="${pos.cx}" y1="${pos.y + multCellH}" x2="${pos.cx}" y2="${multPBusY}" marker-end="url(#arr-dim)" data-type="prod" data-bit="${8 + k}" />
-					<text id="lbl-prod-${8 + k}" class="prod-label" x="${pos.cx}" y="${multPBusY + 22}">P${8 + k}</text>
+					<text id="lbl-prod-${8 + k}" class="prod-label" x="${pos.cx}" y="${multPBusY + 18}">P${8 + k}</text>
 				`;
 			}
 
@@ -2968,7 +2997,7 @@
 					svgHtml += `
 						<g class="mult-cell" id="cell-f-${r}-${c}" data-r="${r}" data-c="${c}">
 							<rect class="cell-box" x="${pos.x}" y="${pos.y}" width="${multCellW}" height="${multCellH}" rx="3" />
-							<text class="cell-label" x="${pos.cx}" y="${pos.cy + 4}">F</text>
+							<text class="cell-label" x="${pos.cx}" y="${pos.cy + 3.5}">F</text>
 						</g>
 					`;
 				}
@@ -2979,7 +3008,7 @@
 				svgHtml += `
 					<g class="mult-cell" id="cell-f-8-${k}" data-r="8" data-c="${k}">
 						<rect class="cell-box" x="${pos.x}" y="${pos.y}" width="${multCellW}" height="${multCellH}" rx="3" />
-						<text class="cell-label" x="${pos.cx}" y="${pos.cy + 4}">F</text>
+						<text class="cell-label" x="${pos.cx}" y="${pos.cy + 3.5}">F</text>
 					</g>
 				`;
 			}
@@ -2990,16 +3019,21 @@
 		function updateMultiplier(playSound: boolean = false) {
 			const st = computeMultiplierState(multX, multY);
 
-			// Render X bits
+			// Render X bits: row of 0/1 toggle buttons with nibble gap
 			if (multXBits) {
 				multXBits.innerHTML = '';
 				for (let i = 7; i >= 0; i--) {
+					if (i === 3) {
+						const gap = document.createElement('span');
+						gap.className = 'nibble-gap';
+						multXBits.appendChild(gap);
+					}
 					const val = (multX >> i) & 1;
 					const btn = document.createElement('button');
 					btn.type = 'button';
-					btn.className = `mult-bit-btn mono ${val ? 'active' : ''}`;
+					btn.className = `bit-val-btn mono ${val ? 'active' : ''}`;
 					btn.title = `Toggle Multiplicand Bit X[${i}] (Weight 2^${i} = ${1 << i})`;
-					btn.innerHTML = `<span class="bit-idx">X${i}</span><span class="bit-val">${val}</span>`;
+					btn.textContent = String(val);
 					btn.addEventListener('click', () => {
 						multX ^= (1 << i);
 						audioEngine.playBitClick(((multX >> i) & 1) === 1);
@@ -3010,19 +3044,24 @@
 			}
 			if (multXMeta) {
 				const bin = multX.toString(2).padStart(8, '0');
-				multXMeta.textContent = `Hex: 0x${multX.toString(16).toUpperCase().padStart(2, '0')} • Dec: ${multX} • Bin: ${bin.slice(0, 4)} ${bin.slice(4)}₂`;
+				multXMeta.textContent = `0x${multX.toString(16).toUpperCase().padStart(2, '0')} • ${multX} • ${bin.slice(0, 4)} ${bin.slice(4)}₂`;
 			}
 
-			// Render Y bits
+			// Render Y bits: row of 0/1 toggle buttons with nibble gap
 			if (multYBits) {
 				multYBits.innerHTML = '';
 				for (let i = 7; i >= 0; i--) {
+					if (i === 3) {
+						const gap = document.createElement('span');
+						gap.className = 'nibble-gap';
+						multYBits.appendChild(gap);
+					}
 					const val = (multY >> i) & 1;
 					const btn = document.createElement('button');
 					btn.type = 'button';
-					btn.className = `mult-bit-btn mono ${val ? 'active' : ''}`;
+					btn.className = `bit-val-btn mono ${val ? 'active' : ''}`;
 					btn.title = `Toggle Multiplier Bit Y[${i}] (Weight 2^${i} = ${1 << i})`;
-					btn.innerHTML = `<span class="bit-idx">Y${i}</span><span class="bit-val">${val}</span>`;
+					btn.textContent = String(val);
 					btn.addEventListener('click', () => {
 						multY ^= (1 << i);
 						audioEngine.playBitClick(((multY >> i) & 1) === 1);
@@ -3033,7 +3072,7 @@
 			}
 			if (multYMeta) {
 				const bin = multY.toString(2).padStart(8, '0');
-				multYMeta.textContent = `Hex: 0x${multY.toString(16).toUpperCase().padStart(2, '0')} • Dec: ${multY} • Bin: ${bin.slice(0, 4)} ${bin.slice(4)}₂`;
+				multYMeta.textContent = `0x${multY.toString(16).toUpperCase().padStart(2, '0')} • ${multY} • ${bin.slice(0, 4)} ${bin.slice(4)}₂`;
 			}
 
 			// Render Product output
@@ -3046,12 +3085,17 @@
 			if (multPBits) {
 				multPBits.innerHTML = '';
 				for (let i = 15; i >= 0; i--) {
+					if (i === 11 || i === 7 || i === 3) {
+						const gap = document.createElement('span');
+						gap.className = 'nibble-gap';
+						multPBits.appendChild(gap);
+					}
 					const val = st.P[i];
-					const div = document.createElement('div');
-					div.className = `mult-p-led mono ${val ? 'active' : ''}`;
-					div.title = `Product Bit P[${i}] (Weight 2^${i} = ${1 << i})`;
-					div.innerHTML = `<span class="p-idx">P${i}</span><span class="p-val">${val}</span>`;
-					multPBits.appendChild(div);
+					const span = document.createElement('span');
+					span.className = `p-val-led mono ${val ? 'active' : ''}`;
+					span.title = `Product Bit P[${i}] (Weight 2^${i} = ${1 << i})`;
+					span.textContent = String(val);
+					multPBits.appendChild(span);
 				}
 			}
 
@@ -3961,17 +4005,21 @@
 
 	/* 8x8 BIT CARRY-SAVE ARRAY MULTIPLIER MODAL & SCHEMATIC */
 	.mult-dialog {
-		max-width: 1180px;
-		width: 96vw;
-		max-height: 94vh;
+		max-width: 1080px;
+		width: 95vw;
+		max-height: calc(100vh - 2rem);
 		background: #090c12;
-		border: 1px solid rgba(34, 197, 94, 0.45);
-		box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 32px rgba(34, 197, 94, 0.18);
+		border: 1px solid rgba(34, 197, 94, 0.4);
+		box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 32px rgba(34, 197, 94, 0.15);
 		border-radius: 12px;
 		overflow-y: auto;
+		overflow-x: hidden;
 		display: flex;
 		flex-direction: column;
 		animation: extrasPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	}
+	.mult-dialog .wafer-modal-header {
+		padding: 0.6em 1.1em;
 	}
 	.mult-dialog .wafer-title {
 		color: #22c55e;
@@ -3985,7 +4033,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.45em;
-		padding: 0.25em 0.65em;
+		padding: 0.22em 0.6em;
 		background: rgba(255, 255, 255, 0.06);
 		border: 1px solid rgba(255, 255, 255, 0.15);
 		border-radius: 6px;
@@ -4000,120 +4048,138 @@
 		color: #22c55e;
 	}
 	.mult-body {
-		padding: 1.1em 1.25em;
+		padding: 0.75em 1em;
 		display: flex;
 		flex-direction: column;
-		gap: 0.85em;
+		gap: 0.55em;
 	}
+
+	/* TWO-ROW REGISTER CONTROLS */
 	.mult-inputs-card {
 		background: rgba(255, 255, 255, 0.02);
 		border: 1px solid rgba(255, 255, 255, 0.08);
 		border-radius: 8px;
-		padding: 0.85em 1.1em;
+		padding: 0.55em 0.85em;
 		display: flex;
 		flex-direction: column;
-		gap: 0.65em;
+		gap: 0.45em;
 	}
-	.mult-reg-row {
+	.mult-registers-grid {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 1em;
+		gap: 0.85em;
 		flex-wrap: wrap;
 	}
-	.mult-reg-label {
+	.mult-reg-box {
 		display: flex;
 		flex-direction: column;
-		font-size: 0.76em;
-		color: #e2e8f0;
-		gap: 0.2em;
+		gap: 0.25em;
+		flex: 1;
+		min-width: 270px;
+		background: rgba(15, 23, 42, 0.5);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		border-radius: 6px;
+		padding: 0.4em 0.7em;
 	}
-	.mult-reg-label strong {
+	.mult-reg-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		font-size: 0.72em;
+	}
+	.reg-title {
+		font-weight: 700;
 		color: #38bdf8;
-		letter-spacing: 0.05em;
+		letter-spacing: 0.04em;
 	}
 	.reg-meta {
-		font-size: 0.9em;
 		color: #94a3b8;
+		font-size: 0.9em;
 	}
-	.mult-bits {
-		display: flex;
-		gap: 5px;
-		align-items: center;
-	}
-	.mult-bit-btn {
+	.mult-bit-table {
 		display: flex;
 		flex-direction: column;
+		gap: 2px;
+	}
+	.bit-names-row {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr) 8px repeat(4, 1fr);
+		gap: 3px;
+		text-align: center;
+	}
+	.bit-names-row span {
+		font-size: 0.68em;
+		font-weight: 700;
+		color: #64748b;
+	}
+	.bit-names-row span.nibble-gap {
+		visibility: hidden;
+	}
+	.bit-values-row {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr) 8px repeat(4, 1fr);
+		gap: 3px;
+	}
+	.bit-values-row span.nibble-gap {
+		visibility: hidden;
+	}
+	.bit-val-btn {
+		height: 28px;
+		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 42px;
-		height: 44px;
-		background: rgba(15, 23, 42, 0.75);
-		border: 1px solid rgba(255, 255, 255, 0.12);
-		border-radius: 6px;
-		cursor: pointer;
-		transition: all 0.12s ease;
-		padding: 2px;
-	}
-	.mult-bit-btn .bit-idx {
-		font-size: 0.62em;
-		color: #64748b;
-		margin-bottom: 1px;
-		pointer-events: none;
-	}
-	.mult-bit-btn .bit-val {
-		font-size: 1.05em;
+		font-size: 0.95em;
 		font-weight: 700;
-		color: #94a3b8;
-		pointer-events: none;
+		color: #64748b;
+		background: rgba(15, 23, 42, 0.7);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.1s ease;
+		user-select: none;
 	}
-	.mult-bit-btn:hover {
+	.bit-val-btn:hover {
 		border-color: #38bdf8;
-		background: rgba(56, 189, 248, 0.1);
+		color: #ffffff;
+		background: rgba(56, 189, 248, 0.12);
 	}
-	.mult-bit-btn.active {
+	.bit-val-btn.active {
 		border-color: #22c55e;
-		background: rgba(34, 197, 94, 0.16);
-		box-shadow: 0 0 10px rgba(34, 197, 94, 0.22);
-	}
-	.mult-bit-btn.active .bit-idx {
-		color: #4ade80;
-	}
-	.mult-bit-btn.active .bit-val {
+		background: rgba(34, 197, 94, 0.2);
 		color: #22c55e;
 		font-weight: 800;
+		box-shadow: 0 0 8px rgba(34, 197, 94, 0.25);
 	}
 	.mult-op-badge {
-		font-size: 0.72em;
-		font-weight: 700;
+		font-size: 1.35em;
+		font-weight: 800;
 		color: #f59e0b;
-		letter-spacing: 0.08em;
-		padding: 0.15em 0.55em;
-		background: rgba(245, 158, 11, 0.1);
-		border: 1px solid rgba(245, 158, 11, 0.3);
-		border-radius: 4px;
-		align-self: flex-start;
+		padding: 0 0.15em;
+		align-self: center;
+		line-height: 1;
+		user-select: none;
 	}
 	.mult-presets {
 		display: flex;
 		align-items: center;
-		gap: 0.45em;
+		gap: 0.4em;
 		flex-wrap: wrap;
-		padding-top: 0.45em;
+		padding-top: 0.35em;
 		border-top: 1px solid rgba(255, 255, 255, 0.06);
-		font-size: 0.74em;
+		font-size: 0.72em;
 	}
 	.presets-title {
 		color: #64748b;
 		font-weight: 700;
-		margin-right: 0.3em;
+		margin-right: 0.2em;
 	}
 	.mult-pre-btn {
 		background: rgba(255, 255, 255, 0.05);
 		border: 1px solid rgba(255, 255, 255, 0.12);
 		color: #cbd5e1;
 		border-radius: 4px;
-		padding: 0.3em 0.65em;
+		padding: 0.22em 0.55em;
 		cursor: pointer;
 		font-size: 0.95em;
 		transition: all 0.15s ease;
@@ -4124,20 +4190,21 @@
 		color: #22c55e;
 	}
 
+	/* SCHEMATIC CARD & CLEAN SVG VIEWPORT (ZERO SCROLLBARS) */
 	.mult-schematic-card {
 		background: #06080d;
 		border: 1px solid rgba(255, 255, 255, 0.08);
 		border-radius: 8px;
-		padding: 0.75em 0.9em;
+		padding: 0.55em 0.85em;
 		display: flex;
 		flex-direction: column;
-		gap: 0.55em;
+		gap: 0.4em;
 	}
 	.mult-schematic-header {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		font-size: 0.72em;
+		font-size: 0.7em;
 		color: #94a3b8;
 		font-weight: 600;
 		letter-spacing: 0.04em;
@@ -4169,63 +4236,66 @@
 	}
 	.mult-svg-scroll-wrap {
 		width: 100%;
-		overflow-x: auto;
-		-webkit-overflow-scrolling: touch;
+		overflow: hidden;
 		border-radius: 6px;
 		background: #040609;
 		border: 1px solid rgba(255, 255, 255, 0.04);
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 	.mult-schematic-svg {
 		width: 100%;
-		min-width: 980px;
+		max-height: 44vh;
 		height: auto;
 		display: block;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 		user-select: none;
 	}
 	.mult-cell-tooltip {
-		min-height: 2em;
-		font-size: 0.75em;
+		min-height: 1.6em;
+		font-size: 0.72em;
 		color: #94a3b8;
 		background: rgba(255, 255, 255, 0.02);
 		border: 1px dashed rgba(255, 255, 255, 0.1);
 		border-radius: 6px;
-		padding: 0.45em 0.8em;
+		padding: 0.25em 0.65em;
 		display: flex;
 		align-items: center;
-		line-height: 1.4;
+		line-height: 1.35;
 	}
 	.mult-cell-tooltip strong {
 		color: #f8fafc;
 	}
 
+	/* TWO-ROW PRODUCT OUTPUT CARD */
 	.mult-output-card {
 		background: rgba(34, 197, 94, 0.03);
 		border: 1px solid rgba(34, 197, 94, 0.25);
 		border-radius: 8px;
-		padding: 0.85em 1.1em;
+		padding: 0.55em 0.85em;
 		display: flex;
 		flex-direction: column;
-		gap: 0.6em;
+		gap: 0.4em;
 	}
 	.mult-output-header {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
 		flex-wrap: wrap;
-		gap: 0.5em;
+		gap: 0.4em;
 	}
 	.mult-product-title {
-		font-size: 0.76em;
+		font-size: 0.74em;
 		font-weight: 700;
 		color: #22c55e;
 		letter-spacing: 0.06em;
 	}
 	.mult-product-vals {
 		display: flex;
-		gap: 0.85em;
+		gap: 0.8em;
 		align-items: baseline;
-		font-size: 0.82em;
+		font-size: 0.8em;
 	}
 	.mult-product-vals .p-dec {
 		font-size: 1.15em;
@@ -4239,44 +4309,51 @@
 	.mult-product-vals .p-bin {
 		color: #94a3b8;
 	}
-	.mult-product-bits {
-		display: flex;
-		gap: 4px;
-		flex-wrap: wrap;
-		align-items: center;
-	}
-	.mult-p-led {
+	.mult-p-table {
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		flex: 1;
-		min-width: 32px;
-		height: 40px;
-		background: rgba(15, 23, 42, 0.65);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 4px;
+		gap: 2px;
 	}
-	.mult-p-led .p-idx {
-		font-size: 0.6em;
+	.p-names-row {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr) 8px repeat(4, 1fr) 8px repeat(4, 1fr) 8px repeat(4, 1fr);
+		gap: 3px;
+		text-align: center;
+	}
+	.p-names-row span {
+		font-size: 0.64em;
+		font-weight: 700;
 		color: #64748b;
 	}
-	.mult-p-led .p-val {
-		font-size: 0.98em;
+	.p-names-row span.nibble-gap {
+		visibility: hidden;
+	}
+	.p-values-row {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr) 8px repeat(4, 1fr) 8px repeat(4, 1fr) 8px repeat(4, 1fr);
+		gap: 3px;
+	}
+	.p-values-row span.nibble-gap {
+		visibility: hidden;
+	}
+	.p-val-led {
+		height: 26px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.9em;
 		font-weight: 700;
-		color: #94a3b8;
+		color: #475569;
+		background: rgba(15, 23, 42, 0.6);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		border-radius: 4px;
 	}
-	.mult-p-led.active {
+	.p-val-led.active {
 		border-color: #22c55e;
-		background: rgba(34, 197, 94, 0.18);
-		box-shadow: 0 0 8px rgba(34, 197, 94, 0.28);
-	}
-	.mult-p-led.active .p-idx {
-		color: #4ade80;
-	}
-	.mult-p-led.active .p-val {
+		background: rgba(34, 197, 94, 0.22);
 		color: #22c55e;
 		font-weight: 800;
+		box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
 	}
 
 	/* SVG CELL & WIRE STYLES */
@@ -4299,8 +4376,8 @@
 	}
 	:global(.mult-cell text.cell-label) {
 		fill: #94a3b8;
-		font-size: 13px;
-		font-weight: 700;
+		font-size: 11px;
+		font-weight: 800;
 		text-anchor: middle;
 		pointer-events: none;
 	}
@@ -4308,6 +4385,41 @@
 		fill: #38bdf8;
 	}
 	:global(.mult-cell.cell-active text.cell-label) {
+		fill: #22c55e;
+	}
+	:global(.mult-wire) {
+		stroke-width: 1.5;
+		fill: none;
+		transition: stroke 0.15s ease, filter 0.15s ease;
+	}
+	:global(.mult-wire.wire-dim) {
+		stroke: rgba(148, 163, 184, 0.24);
+	}
+	:global(.mult-wire.wire-active) {
+		stroke: #22c55e;
+		filter: url(#mult-glow);
+	}
+	:global(.wire-label) {
+		font-size: 8px;
+		fill: #475569;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		transition: fill 0.15s;
+		pointer-events: none;
+	}
+	:global(.wire-label.active) {
+		fill: #22c55e;
+		font-weight: 700;
+	}
+	:global(.prod-label) {
+		font-size: 10px;
+		fill: #64748b;
+		font-weight: 700;
+		text-anchor: middle;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		pointer-events: none;
+		transition: fill 0.15s;
+	}
+	:global(.prod-label.active) {
 		fill: #22c55e;
 		font-weight: 800;
 	}
@@ -4627,6 +4739,20 @@
 		}
 		.wafer-probe-grid {
 			grid-template-columns: 1fr;
+		}
+		.mult-dialog {
+			width: 98vw;
+		}
+		.mult-body {
+			padding: 0.5em 0.6em;
+			gap: 0.4em;
+		}
+		.p-val-led {
+			font-size: 0.76em;
+			height: 22px;
+		}
+		.p-names-row span {
+			font-size: 0.55em;
 		}
 	}
 </style>

@@ -198,14 +198,7 @@
 								<span class="reg-title">MULTIPLICAND X [7:0]</span>
 								<span class="reg-meta" id="mult-x-meta">0xAA &bull; 170 &bull; 1010 1010₂</span>
 							</div>
-							<div class="mult-bit-table mono">
-								<div class="bit-names-row">
-									<span>X7</span><span>X6</span><span>X5</span><span>X4</span>
-									<span class="nibble-gap"></span>
-									<span>X3</span><span>X2</span><span>X1</span><span>X0</span>
-								</div>
-								<div class="bit-values-row" id="mult-x-bits"></div>
-							</div>
+							<div class="mult-cols-row mono" id="mult-x-bits"></div>
 						</div>
 
 						<div class="mult-op-badge mono">&times;</div>
@@ -216,14 +209,7 @@
 								<span class="reg-title">MULTIPLIER Y [7:0]</span>
 								<span class="reg-meta" id="mult-y-meta">0x55 &bull; 85 &bull; 0101 0101₂</span>
 							</div>
-							<div class="mult-bit-table mono">
-								<div class="bit-names-row">
-									<span>Y7</span><span>Y6</span><span>Y5</span><span>Y4</span>
-									<span class="nibble-gap"></span>
-									<span>Y3</span><span>Y2</span><span>Y1</span><span>Y0</span>
-								</div>
-								<div class="bit-values-row" id="mult-y-bits"></div>
-							</div>
+							<div class="mult-cols-row mono" id="mult-y-bits"></div>
 						</div>
 					</div>
 
@@ -267,18 +253,7 @@
 							<span class="p-bin mono" id="mult-p-bin">0011 1000 0111 0010₂</span>
 						</div>
 					</div>
-					<div class="mult-bit-table mult-p-table mono">
-						<div class="bit-names-row p-names-row">
-							<span>P15</span><span>P14</span><span>P13</span><span>P12</span>
-							<span class="nibble-gap"></span>
-							<span>P11</span><span>P10</span><span>P9</span><span>P8</span>
-							<span class="nibble-gap"></span>
-							<span>P7</span><span>P6</span><span>P5</span><span>P4</span>
-							<span class="nibble-gap"></span>
-							<span>P3</span><span>P2</span><span>P1</span><span>P0</span>
-						</div>
-						<div class="bit-values-row p-values-row" id="mult-product-bits"></div>
-					</div>
+					<div class="mult-cols-row mono" id="mult-product-bits"></div>
 				</div>
 			</div>
 		</div>
@@ -3019,16 +2994,23 @@
 		function updateMultiplier(playSound: boolean = false) {
 			const st = computeMultiplierState(multX, multY);
 
-			// Render X bits: row of 0/1 toggle buttons with nibble gap
+			// Render X bits: columns of bit names above 0/1 toggle buttons with nibble gap
 			if (multXBits) {
 				multXBits.innerHTML = '';
 				for (let i = 7; i >= 0; i--) {
 					if (i === 3) {
-						const gap = document.createElement('span');
-						gap.className = 'nibble-gap';
+						const gap = document.createElement('div');
+						gap.className = 'mult-nibble-gap';
 						multXBits.appendChild(gap);
 					}
 					const val = (multX >> i) & 1;
+					const col = document.createElement('div');
+					col.className = 'mult-bit-col';
+
+					const nameSpan = document.createElement('span');
+					nameSpan.className = 'bit-col-name mono';
+					nameSpan.textContent = `X${i}`;
+
 					const btn = document.createElement('button');
 					btn.type = 'button';
 					btn.className = `bit-val-btn mono ${val ? 'active' : ''}`;
@@ -3039,7 +3021,10 @@
 						audioEngine.playBitClick(((multX >> i) & 1) === 1);
 						updateMultiplier();
 					});
-					multXBits.appendChild(btn);
+
+					col.appendChild(nameSpan);
+					col.appendChild(btn);
+					multXBits.appendChild(col);
 				}
 			}
 			if (multXMeta) {
@@ -3047,16 +3032,23 @@
 				multXMeta.textContent = `0x${multX.toString(16).toUpperCase().padStart(2, '0')} • ${multX} • ${bin.slice(0, 4)} ${bin.slice(4)}₂`;
 			}
 
-			// Render Y bits: row of 0/1 toggle buttons with nibble gap
+			// Render Y bits: columns of bit names above 0/1 toggle buttons with nibble gap
 			if (multYBits) {
 				multYBits.innerHTML = '';
 				for (let i = 7; i >= 0; i--) {
 					if (i === 3) {
-						const gap = document.createElement('span');
-						gap.className = 'nibble-gap';
+						const gap = document.createElement('div');
+						gap.className = 'mult-nibble-gap';
 						multYBits.appendChild(gap);
 					}
 					const val = (multY >> i) & 1;
+					const col = document.createElement('div');
+					col.className = 'mult-bit-col';
+
+					const nameSpan = document.createElement('span');
+					nameSpan.className = 'bit-col-name mono';
+					nameSpan.textContent = `Y${i}`;
+
 					const btn = document.createElement('button');
 					btn.type = 'button';
 					btn.className = `bit-val-btn mono ${val ? 'active' : ''}`;
@@ -3067,7 +3059,10 @@
 						audioEngine.playBitClick(((multY >> i) & 1) === 1);
 						updateMultiplier();
 					});
-					multYBits.appendChild(btn);
+
+					col.appendChild(nameSpan);
+					col.appendChild(btn);
+					multYBits.appendChild(col);
 				}
 			}
 			if (multYMeta) {
@@ -3075,7 +3070,7 @@
 				multYMeta.textContent = `0x${multY.toString(16).toUpperCase().padStart(2, '0')} • ${multY} • ${bin.slice(0, 4)} ${bin.slice(4)}₂`;
 			}
 
-			// Render Product output
+			// Render Product output: columns of bit names above reactive 0/1 LEDs
 			if (multPDec) multPDec.textContent = `P = ${st.pVal.toLocaleString()}`;
 			if (multPHex) multPHex.textContent = `0x${st.pVal.toString(16).toUpperCase().padStart(4, '0')}`;
 			if (multPBin) {
@@ -3086,16 +3081,26 @@
 				multPBits.innerHTML = '';
 				for (let i = 15; i >= 0; i--) {
 					if (i === 11 || i === 7 || i === 3) {
-						const gap = document.createElement('span');
-						gap.className = 'nibble-gap';
+						const gap = document.createElement('div');
+						gap.className = 'mult-nibble-gap';
 						multPBits.appendChild(gap);
 					}
 					const val = st.P[i];
+					const col = document.createElement('div');
+					col.className = 'mult-bit-col';
+
+					const nameSpan = document.createElement('span');
+					nameSpan.className = 'bit-col-name mono';
+					nameSpan.textContent = `P${i}`;
+
 					const span = document.createElement('span');
 					span.className = `p-val-led mono ${val ? 'active' : ''}`;
 					span.title = `Product Bit P[${i}] (Weight 2^${i} = ${1 << i})`;
 					span.textContent = String(val);
-					multPBits.appendChild(span);
+
+					col.appendChild(nameSpan);
+					col.appendChild(span);
+					multPBits.appendChild(col);
 				}
 			}
 
@@ -4097,34 +4102,46 @@
 		color: #94a3b8;
 		font-size: 0.9em;
 	}
-	.mult-bit-table {
+	.mult-op-badge {
+		font-size: 1.35em;
+		font-weight: 800;
+		color: #f59e0b;
+		padding: 0 0.15em;
+		align-self: center;
+		line-height: 1;
+		user-select: none;
+	}
+
+	/* UNIFIED COLUMN-BASED BIT REGISTER ARCHITECTURE */
+	:global(.mult-cols-row) {
+		display: flex;
+		align-items: center;
+		width: 100%;
+		gap: 3px;
+	}
+	:global(.mult-nibble-gap) {
+		width: 8px;
+		flex-shrink: 0;
+	}
+	:global(.mult-bit-col) {
+		flex: 1;
+		min-width: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
-	}
-	.bit-names-row {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr) 8px repeat(4, 1fr);
+		align-items: center;
 		gap: 3px;
-		text-align: center;
 	}
-	.bit-names-row span {
+	:global(.bit-col-name) {
 		font-size: 0.68em;
 		font-weight: 700;
 		color: #64748b;
+		text-align: center;
+		line-height: 1;
+		user-select: none;
+		letter-spacing: 0.02em;
 	}
-	.bit-names-row span.nibble-gap {
-		visibility: hidden;
-	}
-	.bit-values-row {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr) 8px repeat(4, 1fr);
-		gap: 3px;
-	}
-	.bit-values-row span.nibble-gap {
-		visibility: hidden;
-	}
-	.bit-val-btn {
+	:global(.bit-val-btn) {
+		width: 100%;
 		height: 28px;
 		display: flex;
 		align-items: center;
@@ -4138,27 +4155,42 @@
 		cursor: pointer;
 		transition: all 0.1s ease;
 		user-select: none;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 	}
-	.bit-val-btn:hover {
+	:global(.bit-val-btn:hover) {
 		border-color: #38bdf8;
 		color: #ffffff;
 		background: rgba(56, 189, 248, 0.12);
 	}
-	.bit-val-btn.active {
+	:global(.bit-val-btn.active) {
 		border-color: #22c55e;
 		background: rgba(34, 197, 94, 0.2);
 		color: #22c55e;
 		font-weight: 800;
 		box-shadow: 0 0 8px rgba(34, 197, 94, 0.25);
 	}
-	.mult-op-badge {
-		font-size: 1.35em;
-		font-weight: 800;
-		color: #f59e0b;
-		padding: 0 0.15em;
-		align-self: center;
-		line-height: 1;
+	:global(.p-val-led) {
+		width: 100%;
+		height: 26px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.9em;
+		font-weight: 700;
+		color: #475569;
+		background: rgba(15, 23, 42, 0.6);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		border-radius: 4px;
 		user-select: none;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		transition: all 0.15s ease;
+	}
+	:global(.p-val-led.active) {
+		border-color: #22c55e;
+		background: rgba(34, 197, 94, 0.22);
+		color: #22c55e;
+		font-weight: 800;
+		box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
 	}
 	.mult-presets {
 		display: flex;
@@ -4308,52 +4340,6 @@
 	}
 	.mult-product-vals .p-bin {
 		color: #94a3b8;
-	}
-	.mult-p-table {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-	.p-names-row {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr) 8px repeat(4, 1fr) 8px repeat(4, 1fr) 8px repeat(4, 1fr);
-		gap: 3px;
-		text-align: center;
-	}
-	.p-names-row span {
-		font-size: 0.64em;
-		font-weight: 700;
-		color: #64748b;
-	}
-	.p-names-row span.nibble-gap {
-		visibility: hidden;
-	}
-	.p-values-row {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr) 8px repeat(4, 1fr) 8px repeat(4, 1fr) 8px repeat(4, 1fr);
-		gap: 3px;
-	}
-	.p-values-row span.nibble-gap {
-		visibility: hidden;
-	}
-	.p-val-led {
-		height: 26px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 0.9em;
-		font-weight: 700;
-		color: #475569;
-		background: rgba(15, 23, 42, 0.6);
-		border: 1px solid rgba(255, 255, 255, 0.08);
-		border-radius: 4px;
-	}
-	.p-val-led.active {
-		border-color: #22c55e;
-		background: rgba(34, 197, 94, 0.22);
-		color: #22c55e;
-		font-weight: 800;
-		box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
 	}
 
 	/* SVG CELL & WIRE STYLES */
@@ -4747,12 +4733,22 @@
 			padding: 0.5em 0.6em;
 			gap: 0.4em;
 		}
-		.p-val-led {
-			font-size: 0.76em;
+		:global(.bit-col-name) {
+			font-size: 0.58em;
+		}
+		:global(.p-val-led) {
+			font-size: 0.78em;
 			height: 22px;
 		}
-		.p-names-row span {
-			font-size: 0.55em;
+		:global(.bit-val-btn) {
+			height: 24px;
+			font-size: 0.85em;
+		}
+		:global(.mult-nibble-gap) {
+			width: 5px;
+		}
+		:global(.mult-cols-row) {
+			gap: 2px;
 		}
 	}
 </style>

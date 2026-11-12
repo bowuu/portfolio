@@ -14,15 +14,24 @@
 					<line x1="12" y1="19" x2="20" y2="19"></line>
 				</svg>
 				<button class="wm-btn wm-fx active" id="term-blur-btn" type="button" title="Toggle background blur ('blur')" aria-label="Toggle background blur">
-					<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-						<path d="M8 2 C8 2 3.5 7.5 3.5 11 A4.5 4.5 0 0 0 12.5 11 C12.5 7.5 8 2 8 2 Z" fill="currentColor" fill-opacity="0.25"></path>
+					<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M8 1.75 C8 1.75 3.2 7.2 3.2 10.8 A4.8 4.8 0 0 0 12.8 10.8 C12.8 7.2 8 1.75 8 1.75 Z" fill="currentColor" fill-opacity="0.88"></path>
 					</svg>
 				</button>
 				<button class="wm-btn wm-fx active" id="term-trans-btn" type="button" title="Toggle terminal transparency ('transparency')" aria-label="Toggle terminal transparency">
-					<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5">
-						<rect x="2" y="2" width="12" height="12" rx="2"></rect>
-						<rect x="2" y="2" width="6" height="6" fill="currentColor" stroke="none"></rect>
-						<rect x="8" y="8" width="6" height="6" fill="currentColor" stroke="none"></rect>
+					<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor">
+						<defs>
+							<clipPath id="term-trans-clip">
+								<rect x="2" y="2" width="12" height="12" rx="2.5"></rect>
+							</clipPath>
+						</defs>
+						<rect x="2" y="2" width="12" height="12" rx="2.5" stroke-width="1.8"></rect>
+						<g clip-path="url(#term-trans-clip)">
+							<line x1="8" y1="2" x2="8" y2="14" stroke-width="1.2"></line>
+							<line x1="2" y1="8" x2="14" y2="8" stroke-width="1.2"></line>
+							<rect x="2" y="2" width="6" height="6" fill="currentColor" stroke="none"></rect>
+							<rect x="8" y="8" width="6" height="6" fill="currentColor" stroke="none"></rect>
+						</g>
 					</svg>
 				</button>
 			</div>
@@ -1966,9 +1975,18 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 		transition: all 0.15s ease;
 	}
 
+	.wm-fx svg {
+		filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.95));
+		transition: filter 0.15s ease, transform 0.15s ease;
+	}
+
 	.wm-fx.active {
 		color: #ffffff;
 		background: transparent;
+	}
+
+	.wm-fx.active svg {
+		filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 3px rgba(255, 255, 255, 0.45));
 	}
 
 	.wm-fx:hover {
@@ -1976,9 +1994,17 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 		color: #ffffff;
 	}
 
+	.wm-fx:hover svg {
+		transform: scale(1.06);
+	}
+
 	.wm-fx.active:hover {
 		background: rgba(255, 255, 255, 0.12);
 		color: #ffffff;
+	}
+
+	.wm-fx.active:hover svg {
+		filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 5px rgba(255, 255, 255, 0.65));
 	}
 
 	/* UNIFIED TERMINAL SCREEN BUFFER */

@@ -219,8 +219,8 @@
 						<button type="button" class="mult-pre-btn mono" data-x="255" data-y="255">255 &times; 255 (65,025)</button>
 						<button type="button" class="mult-pre-btn mono" data-x="15" data-y="240">0x0F &times; 0xF0 (3,600)</button>
 						<button type="button" class="mult-pre-btn mono" data-x="128" data-y="64">128 &times; 64 (8,192)</button>
+						<button type="button" class="mult-pre-btn mono" data-x="0" data-y="0">Clear 0x0=0</button>
 						<button type="button" class="mult-pre-btn mono" id="mult-rand-btn">Random</button>
-						<button type="button" class="mult-pre-btn mono" data-x="0" data-y="0">Clear</button>
 					</div>
 				</div>
 
@@ -228,9 +228,17 @@
 				<div class="mult-schematic-card">
 					<div class="mult-schematic-header mono">
 						<span>AUTHENTIC BRAUN CARRY-SAVE SCHEMATIC &bull; HOVER CELLS &amp; WIRES FOR LIVE LOGIC</span>
-						<div class="mult-legend mono">
-							<span class="leg-item"><span class="leg-line active"></span> HIGH (1)</span>
-							<span class="leg-item"><span class="leg-line dim"></span> LOW (0)</span>
+						<div class="mult-schematic-controls">
+							<button id="mult-speed-btn" class="mult-speed-toggle mono" type="button" title="Toggle between Instant Combinational Logic and Slow-Motion Wave Cascade">
+								<span id="mult-speed-icon">⚡</span> <span id="mult-speed-text">Instant</span>
+							</button>
+							<button id="mult-replay-btn" class="mult-speed-toggle mono" type="button" title="Replay Propagation Cascade" style="display: none;">
+								<span>▶ Replay</span>
+							</button>
+							<div class="mult-legend mono">
+								<span class="leg-item"><span class="leg-line active"></span> HIGH (1)</span>
+								<span class="leg-item"><span class="leg-line dim"></span> LOW (0)</span>
+							</div>
 						</div>
 					</div>
 					<div class="mult-svg-scroll-wrap" id="mult-svg-wrap">
@@ -819,6 +827,18 @@
 				});
 			} catch {}
 		}
+
+		// 8x8 Multiplier combinational stage cascade step
+		public playCascadeStep(step: number, total: number = 9) {
+			try {
+				this.init();
+				if (!this.ctx) return;
+				const t = this.ctx.currentTime;
+				const freq = 340 + (step / total) * 440;
+				this.playTone(t, freq, 'sine', 0.035, 0.045);
+				this.playImpulse(t, freq * 2, 0.003, 0.03);
+			} catch {}
+		}
 	}
 
 	const audioEngine = new SwitchAudioEngine();
@@ -1353,6 +1373,8 @@
 
 		let multX = 170; // 0xAA (1010 1010)
 		let multY = 85;  // 0x55 (0101 0101)
+		let multSlowMode = false;
+		let multCascadeTimeouts: number[] = [];
 
 		const multiplierModal = document.getElementById('multiplier-modal');
 		const multBackdrop = document.getElementById('multiplier-backdrop');
@@ -1368,6 +1390,10 @@
 		const multPBin = document.getElementById('mult-p-bin');
 		const multPBits = document.getElementById('mult-product-bits');
 		const multRandBtn = document.getElementById('mult-rand-btn');
+		const multSpeedBtn = document.getElementById('mult-speed-btn');
+		const multReplayBtn = document.getElementById('mult-replay-btn');
+		const multSpeedIcon = document.getElementById('mult-speed-icon');
+		const multSpeedText = document.getElementById('mult-speed-text');
 		const triggerMultiplierBtn = document.getElementById('trigger-multiplier-btn');
 
 		const zerogHud = document.getElementById('zerog-hud');
@@ -2991,10 +3017,13 @@
 			multSvg.innerHTML = svgHtml;
 		}
 
-		function updateMultiplier(playSound: boolean = false) {
-			const st = computeMultiplierState(multX, multY);
+		function clearCascadeTimeouts() {
+			multCascadeTimeouts.forEach(id => clearTimeout(id));
+			multCascadeTimeouts = [];
+			document.querySelectorAll('.mult-cell.cell-evaluating').forEach(el => el.classList.remove('cell-evaluating'));
+		}
 
-			// Render X bits: columns of bit names above 0/1 toggle buttons with nibble gap
+		function renderMultiplierInputs() {
 			if (multXBits) {
 				multXBits.innerHTML = '';
 				for (let i = 7; i >= 0; i--) {
@@ -3019,7 +3048,7 @@
 					btn.addEventListener('click', () => {
 						multX ^= (1 << i);
 						audioEngine.playBitClick(((multX >> i) & 1) === 1);
-						updateMultiplier();
+						updateMultiplier(true);
 					});
 
 					col.appendChild(nameSpan);
@@ -3032,7 +3061,6 @@
 				multXMeta.textContent = `0x${multX.toString(16).toUpperCase().padStart(2, '0')} • ${multX} • ${bin.slice(0, 4)} ${bin.slice(4)}₂`;
 			}
 
-			// Render Y bits: columns of bit names above 0/1 toggle buttons with nibble gap
 			if (multYBits) {
 				multYBits.innerHTML = '';
 				for (let i = 7; i >= 0; i--) {
@@ -3057,7 +3085,7 @@
 					btn.addEventListener('click', () => {
 						multY ^= (1 << i);
 						audioEngine.playBitClick(((multY >> i) & 1) === 1);
-						updateMultiplier();
+						updateMultiplier(true);
 					});
 
 					col.appendChild(nameSpan);
@@ -3069,114 +3097,267 @@
 				const bin = multY.toString(2).padStart(8, '0');
 				multYMeta.textContent = `0x${multY.toString(16).toUpperCase().padStart(2, '0')} • ${multY} • ${bin.slice(0, 4)} ${bin.slice(4)}₂`;
 			}
+		}
 
-			// Render Product output: columns of bit names above reactive 0/1 LEDs
+		function setWireState(wireId: string, val: number, lblId?: string) {
+			const wire = document.getElementById(wireId);
+			if (wire) {
+				wire.setAttribute('class', `mult-wire ${val ? 'wire-active' : 'wire-dim'}`);
+				wire.setAttribute('marker-end', val ? 'url(#arr-act)' : 'url(#arr-dim)');
+			}
+			if (lblId) {
+				const lbl = document.getElementById(lblId);
+				if (lbl) lbl.classList.toggle('active', !!val);
+			}
+		}
+
+		function setProductBitUI(bit: number, val: number) {
+			setWireState(`wire-prod-${bit}`, val, `lbl-prod-${bit}`);
+			const led = document.getElementById(`mult-p-led-${bit}`);
+			if (led) {
+				led.textContent = String(val);
+				led.className = `p-val-led mono ${val ? 'active' : ''}`;
+			}
+		}
+
+		function renderProductBitsSkeleton(st?: MultiplierState) {
+			if (!multPBits) return;
+			multPBits.innerHTML = '';
+			for (let i = 15; i >= 0; i--) {
+				if (i === 11 || i === 7 || i === 3) {
+					const gap = document.createElement('div');
+					gap.className = 'mult-nibble-gap';
+					multPBits.appendChild(gap);
+				}
+				const val = st ? st.P[i] : 0;
+				const col = document.createElement('div');
+				col.className = 'mult-bit-col';
+
+				const nameSpan = document.createElement('span');
+				nameSpan.className = 'bit-col-name mono';
+				nameSpan.textContent = `P${i}`;
+
+				const span = document.createElement('span');
+				span.id = `mult-p-led-${i}`;
+				span.className = `p-val-led mono ${val && st ? 'active' : ''}`;
+				span.title = `Product Bit P[${i}] (Weight 2^${i} = ${1 << i})`;
+				span.textContent = st ? String(val) : '0';
+
+				col.appendChild(nameSpan);
+				col.appendChild(span);
+				multPBits.appendChild(col);
+			}
+		}
+
+		function runMultiplierCascade(playSound: boolean) {
+			clearCascadeTimeouts();
+			const st = computeMultiplierState(multX, multY);
+
+			// Render inputs immediately
+			renderMultiplierInputs();
+
+			// Prepare Product register in calculating state
+			if (multPDec) multPDec.textContent = 'Calculating...';
+			if (multPHex) multPHex.textContent = '0x----';
+			if (multPBin) multPBin.textContent = '---- ---- ---- ----₂';
+			renderProductBitsSkeleton();
+
+			// Reset all internal wires & cells
+			for (let r = 0; r < 8; r++) {
+				for (let c = 0; c < 8; c++) {
+					const cell = document.getElementById(`cell-f-${r}-${c}`);
+					if (cell) cell.classList.remove('cell-active', 'cell-evaluating');
+					setWireState(`wire-pp-${r}-${c}`, 0, `lbl-pp-${r}-${c}`);
+					if (r < 7 && c < 7) setWireState(`wire-sum-${r}-${c+1}`, 0);
+					if (r < 7) setWireState(`wire-carry-${r}-${c}`, 0);
+				}
+			}
+			for (let k = 0; k < 8; k++) {
+				const cell = document.getElementById(`cell-f-8-${k}`);
+				if (cell) cell.classList.remove('cell-active', 'cell-evaluating');
+				if (k < 7) setWireState(`wire-sum-7-${k+1}`, 0);
+				setWireState(`wire-carry-7-${k}`, 0);
+				if (k < 7) setWireState(`wire-carry-8-${k}`, 0);
+				setWireState(`wire-prod-${8+k}`, 0, `lbl-prod-${8+k}`);
+			}
+			for (let i = 0; i < 8; i++) {
+				setWireState(`wire-prod-${i}`, 0, `lbl-prod-${i}`);
+			}
+
+			// Stage 0: t = 20ms - Partial Products (64 parallel AND gates)
+			multCascadeTimeouts.push(window.setTimeout(() => {
+				for (let r = 0; r < 8; r++) {
+					for (let c = 0; c < 8; c++) {
+						setWireState(`wire-pp-${r}-${c}`, st.PP[r][c], `lbl-pp-${r}-${c}`);
+					}
+				}
+				if (multCellInfo) {
+					multCellInfo.innerHTML = '<strong>Stage 1/9: Partial Product Generation (t = 0)</strong> &bull; 64 parallel AND gates computing X[r]&middot;Y[c]';
+				}
+				audioEngine.playCascadeStep(0, 9);
+			}, 20));
+
+			const rowDelay = 140; // ms per CSA stage
+
+			// Stages 1 to 7: CSA Rows 0 to 6
+			for (let r = 0; r < 7; r++) {
+				const stepTime = 160 + r * rowDelay;
+				multCascadeTimeouts.push(window.setTimeout(() => {
+					for (let c = 0; c < 8; c++) {
+						const cell = document.getElementById(`cell-f-${r}-${c}`);
+						if (cell) cell.classList.add('cell-evaluating');
+					}
+				}, stepTime - 40));
+
+				multCascadeTimeouts.push(window.setTimeout(() => {
+					for (let c = 0; c < 8; c++) {
+						const cell = document.getElementById(`cell-f-${r}-${c}`);
+						if (cell) {
+							cell.classList.remove('cell-evaluating');
+							const hasActivity = st.S[r][c] || st.C[r][c] || st.PP[r][c];
+							cell.classList.toggle('cell-active', !!hasActivity);
+						}
+						setWireState(`wire-carry-${r}-${c}`, st.C[r][c]);
+						if (c < 7) {
+							setWireState(`wire-sum-${r}-${c+1}`, st.S[r][c+1]);
+						}
+					}
+					setProductBitUI(r, st.P[r]);
+					if (multCellInfo) {
+						multCellInfo.innerHTML = `<strong>Stage ${r + 2}/9: CSA Row ${r} Evaluated</strong> &bull; Product Bit <strong>P[${r}] = ${st.P[r]}</strong> settled`;
+					}
+					audioEngine.playCascadeStep(r + 1, 9);
+				}, stepTime));
+			}
+
+			// Stage 8: CSA Row 7
+			const r7Time = 160 + 7 * rowDelay;
+			multCascadeTimeouts.push(window.setTimeout(() => {
+				for (let c = 0; c < 8; c++) {
+					const cell = document.getElementById(`cell-f-7-${c}`);
+					if (cell) cell.classList.add('cell-evaluating');
+				}
+			}, r7Time - 40));
+
+			multCascadeTimeouts.push(window.setTimeout(() => {
+				for (let c = 0; c < 8; c++) {
+					const cell = document.getElementById(`cell-f-7-${c}`);
+					if (cell) {
+						cell.classList.remove('cell-evaluating');
+						const hasActivity = st.S[7][c] || st.C[7][c] || st.PP[7][c];
+						cell.classList.toggle('cell-active', !!hasActivity);
+					}
+					setWireState(`wire-carry-7-${c}`, st.C[7][c]);
+					if (c < 7) {
+						setWireState(`wire-sum-7-${c+1}`, st.S[7][c+1]);
+					}
+				}
+				setProductBitUI(7, st.P[7]);
+				if (multCellInfo) {
+					multCellInfo.innerHTML = `<strong>Stage 9/9: CSA Row 7 Evaluated</strong> &bull; Product Bit <strong>P[7] = ${st.P[7]}</strong> settled &bull; Entering Vector Merge stage`;
+				}
+				audioEngine.playCascadeStep(8, 9);
+			}, r7Time));
+
+			// Stage 9: Row 8 Vector Merge Ripple Adder (k = 0 to 7)
+			const r8StartTime = r7Time + 150;
+			const r8BitDelay = 60; // ms per ripple carry bit
+
+			for (let k = 0; k < 8; k++) {
+				const bitTime = r8StartTime + k * r8BitDelay;
+				multCascadeTimeouts.push(window.setTimeout(() => {
+					const cell = document.getElementById(`cell-f-8-${k}`);
+					if (cell) cell.classList.add('cell-evaluating');
+				}, bitTime - 25));
+
+				multCascadeTimeouts.push(window.setTimeout(() => {
+					const cell = document.getElementById(`cell-f-8-${k}`);
+					if (cell) {
+						cell.classList.remove('cell-evaluating');
+						const hasActivity = st.S[8][k] || st.C[8][k];
+						cell.classList.toggle('cell-active', !!hasActivity);
+					}
+					if (k < 7) {
+						setWireState(`wire-carry-8-${k}`, st.C[8][k]);
+					}
+					setProductBitUI(8 + k, st.P[8 + k]);
+					if (multCellInfo) {
+						multCellInfo.innerHTML = `<strong>Vector Merge Ripple Adder:</strong> Cell [8,${k}] &bull; Carry propagating left &bull; Bit <strong>P[${8 + k}] = ${st.P[8 + k]}</strong> settled`;
+					}
+					audioEngine.playCascadeStep(8 + (k + 1) / 8, 9);
+				}, bitTime));
+			}
+
+			// Final Completion
+			const finishTime = r8StartTime + 8 * r8BitDelay + 70;
+			multCascadeTimeouts.push(window.setTimeout(() => {
+				if (multPDec) multPDec.textContent = `P = ${st.pVal.toLocaleString()}`;
+				if (multPHex) multPHex.textContent = `0x${st.pVal.toString(16).toUpperCase().padStart(4, '0')}`;
+				if (multPBin) {
+					const b = st.pVal.toString(2).padStart(16, '0');
+					multPBin.textContent = `${b.slice(0, 4)} ${b.slice(4, 8)} ${b.slice(8, 12)} ${b.slice(12)}₂`;
+				}
+				if (multCellInfo) {
+					multCellInfo.innerHTML = `<strong>✓ Wavefront Settled:</strong> All 9 combinational stages evaluated &bull; <strong>P = ${st.pVal.toLocaleString()}</strong> (0x${st.pVal.toString(16).toUpperCase().padStart(4, '0')})`;
+				}
+				if (playSound) audioEngine.playMultiplierChime();
+			}, finishTime));
+		}
+
+		function updateMultiplier(playSound: boolean = false, forceSlow: boolean = false) {
+			if (multSlowMode || forceSlow) {
+				runMultiplierCascade(playSound);
+				return;
+			}
+
+			clearCascadeTimeouts();
+			const st = computeMultiplierState(multX, multY);
+
+			renderMultiplierInputs();
+
+			// Render Product output
 			if (multPDec) multPDec.textContent = `P = ${st.pVal.toLocaleString()}`;
 			if (multPHex) multPHex.textContent = `0x${st.pVal.toString(16).toUpperCase().padStart(4, '0')}`;
 			if (multPBin) {
 				const b = st.pVal.toString(2).padStart(16, '0');
 				multPBin.textContent = `${b.slice(0, 4)} ${b.slice(4, 8)} ${b.slice(8, 12)} ${b.slice(12)}₂`;
 			}
-			if (multPBits) {
-				multPBits.innerHTML = '';
-				for (let i = 15; i >= 0; i--) {
-					if (i === 11 || i === 7 || i === 3) {
-						const gap = document.createElement('div');
-						gap.className = 'mult-nibble-gap';
-						multPBits.appendChild(gap);
-					}
-					const val = st.P[i];
-					const col = document.createElement('div');
-					col.className = 'mult-bit-col';
-
-					const nameSpan = document.createElement('span');
-					nameSpan.className = 'bit-col-name mono';
-					nameSpan.textContent = `P${i}`;
-
-					const span = document.createElement('span');
-					span.className = `p-val-led mono ${val ? 'active' : ''}`;
-					span.title = `Product Bit P[${i}] (Weight 2^${i} = ${1 << i})`;
-					span.textContent = String(val);
-
-					col.appendChild(nameSpan);
-					col.appendChild(span);
-					multPBits.appendChild(col);
-				}
-			}
+			renderProductBitsSkeleton(st);
 
 			// Update SVG Wires & Cells
 			// Partial Products
 			for (let r = 0; r < 8; r++) {
 				for (let c = 0; c < 8; c++) {
-					const val = st.PP[r][c];
-					const wire = document.getElementById(`wire-pp-${r}-${c}`);
-					const lbl = document.getElementById(`lbl-pp-${r}-${c}`);
-					if (wire) {
-						wire.setAttribute('class', `mult-wire ${val ? 'wire-active' : 'wire-dim'}`);
-						wire.setAttribute('marker-end', val ? 'url(#arr-act)' : 'url(#arr-dim)');
-					}
-					if (lbl) lbl.classList.toggle('active', !!val);
+					setWireState(`wire-pp-${r}-${c}`, st.PP[r][c], `lbl-pp-${r}-${c}`);
 				}
 			}
 
 			// Sum Wires
 			for (let r = 0; r < 7; r++) {
 				for (let c = 0; c < 7; c++) {
-					const val = st.S[r][c + 1];
-					const wire = document.getElementById(`wire-sum-${r}-${c + 1}`);
-					if (wire) {
-						wire.setAttribute('class', `mult-wire ${val ? 'wire-active' : 'wire-dim'}`);
-						wire.setAttribute('marker-end', val ? 'url(#arr-act)' : 'url(#arr-dim)');
-					}
+					setWireState(`wire-sum-${r}-${c+1}`, st.S[r][c+1]);
 				}
 			}
 			for (let k = 0; k < 7; k++) {
-				const val = st.S[7][k + 1];
-				const wire = document.getElementById(`wire-sum-7-${k + 1}`);
-				if (wire) {
-					wire.setAttribute('class', `mult-wire ${val ? 'wire-active' : 'wire-dim'}`);
-					wire.setAttribute('marker-end', val ? 'url(#arr-act)' : 'url(#arr-dim)');
-				}
+				setWireState(`wire-sum-7-${k+1}`, st.S[7][k+1]);
 			}
 
 			// Carry Wires
 			for (let r = 0; r < 7; r++) {
 				for (let c = 0; c < 8; c++) {
-					const val = st.C[r][c];
-					const wire = document.getElementById(`wire-carry-${r}-${c}`);
-					if (wire) {
-						wire.setAttribute('class', `mult-wire ${val ? 'wire-active' : 'wire-dim'}`);
-						wire.setAttribute('marker-end', val ? 'url(#arr-act)' : 'url(#arr-dim)');
-					}
+					setWireState(`wire-carry-${r}-${c}`, st.C[r][c]);
 				}
 			}
 			for (let k = 0; k < 8; k++) {
-				const val = st.C[7][k];
-				const wire = document.getElementById(`wire-carry-7-${k}`);
-				if (wire) {
-					wire.setAttribute('class', `mult-wire ${val ? 'wire-active' : 'wire-dim'}`);
-					wire.setAttribute('marker-end', val ? 'url(#arr-act)' : 'url(#arr-dim)');
-				}
+				setWireState(`wire-carry-7-${k}`, st.C[7][k]);
 			}
 			for (let k = 0; k < 7; k++) {
-				const val = st.C[8][k];
-				const wire = document.getElementById(`wire-carry-8-${k}`);
-				if (wire) {
-					wire.setAttribute('class', `mult-wire ${val ? 'wire-active' : 'wire-dim'}`);
-					wire.setAttribute('marker-end', val ? 'url(#arr-act)' : 'url(#arr-dim)');
-				}
+				setWireState(`wire-carry-8-${k}`, st.C[8][k]);
 			}
 
 			// Product Output Drop Lines
 			for (let i = 0; i < 16; i++) {
-				const val = st.P[i];
-				const wire = document.getElementById(`wire-prod-${i}`);
-				const lbl = document.getElementById(`lbl-prod-${i}`);
-				if (wire) {
-					wire.setAttribute('class', `mult-wire ${val ? 'wire-active' : 'wire-dim'}`);
-					wire.setAttribute('marker-end', val ? 'url(#arr-act)' : 'url(#arr-dim)');
-				}
-				if (lbl) lbl.classList.toggle('active', !!val);
+				setWireState(`wire-prod-${i}`, st.P[i], `lbl-prod-${i}`);
 			}
 
 			// Cell Active Highlights
@@ -3273,6 +3454,19 @@
 			updateMultiplier(true);
 		});
 
+		multSpeedBtn?.addEventListener('click', () => {
+			multSlowMode = !multSlowMode;
+			if (multSpeedBtn) multSpeedBtn.classList.toggle('active', multSlowMode);
+			if (multSpeedIcon) multSpeedIcon.textContent = multSlowMode ? '🐢' : '⚡';
+			if (multSpeedText) multSpeedText.textContent = multSlowMode ? 'Slow Cascade' : 'Instant';
+			if (multReplayBtn) multReplayBtn.style.display = multSlowMode ? 'inline-flex' : 'none';
+			updateMultiplier(true);
+		});
+
+		multReplayBtn?.addEventListener('click', () => {
+			updateMultiplier(true, true);
+		});
+
 		function openMultiplier() {
 			closeAllActiveModes();
 			isMultiplier = true;
@@ -3285,6 +3479,7 @@
 		}
 
 		function closeMultiplier() {
+			clearCascadeTimeouts();
 			isMultiplier = false;
 			if (multiplierModal) {
 				multiplierModal.classList.add('hidden');
@@ -4243,6 +4438,12 @@
 		flex-wrap: wrap;
 		gap: 0.5em;
 	}
+	.mult-schematic-controls {
+		display: flex;
+		align-items: center;
+		gap: 0.75em;
+		flex-wrap: wrap;
+	}
 	.mult-legend {
 		display: flex;
 		gap: 0.85em;
@@ -4265,6 +4466,32 @@
 	}
 	.mult-legend .leg-line.dim {
 		background: rgba(148, 163, 184, 0.45);
+	}
+	:global(.mult-speed-toggle) {
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.14);
+		color: #cbd5e1;
+		border-radius: 4px;
+		padding: 0.2em 0.6em;
+		cursor: pointer;
+		font-size: 0.92em;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35em;
+		transition: all 0.15s ease;
+		user-select: none;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	}
+	:global(.mult-speed-toggle:hover) {
+		background: rgba(34, 197, 94, 0.15);
+		border-color: #22c55e;
+		color: #22c55e;
+	}
+	:global(.mult-speed-toggle.active) {
+		background: rgba(245, 158, 11, 0.18);
+		border-color: #f59e0b;
+		color: #fbbf24;
+		box-shadow: 0 0 8px rgba(245, 158, 11, 0.25);
 	}
 	.mult-svg-scroll-wrap {
 		width: 100%;
@@ -4360,6 +4587,11 @@
 		stroke: #22c55e;
 		fill: rgba(34, 197, 94, 0.12);
 	}
+	:global(.mult-cell.cell-evaluating rect.cell-box) {
+		stroke: #fbbf24 !important;
+		fill: rgba(245, 158, 11, 0.28) !important;
+		filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6));
+	}
 	:global(.mult-cell text.cell-label) {
 		fill: #94a3b8;
 		font-size: 11px;
@@ -4372,6 +4604,10 @@
 	}
 	:global(.mult-cell.cell-active text.cell-label) {
 		fill: #22c55e;
+	}
+	:global(.mult-cell.cell-evaluating text.cell-label) {
+		fill: #fbbf24 !important;
+		font-weight: 900;
 	}
 	:global(.mult-wire) {
 		stroke-width: 1.5;

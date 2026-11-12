@@ -19,7 +19,7 @@
     "build": "astro build",
     "cf-typegen": "wrangler types",
     "check": "astro build && tsc && wrangler deploy --dry-run",
-    "deploy": "git push origin main && astro build && wrangler deploy",
+    "deploy": "node scripts/deploy.mjs",
     "dev": "astro dev",
     "preview": "astro build && wrangler dev"
   },

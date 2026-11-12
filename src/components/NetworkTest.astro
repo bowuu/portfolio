@@ -30,7 +30,7 @@
 			<div class="b-tile-value-wrap">
 				<span id="speed-ping" class="b-tile-num mono">--</span>
 				<span class="b-tile-unit">ms</span>
-				<span class="loss-badge mono" id="speed-loss-badge" title="Packet Loss: 0 / 16 packets lost">
+				<span class="loss-badge mono" id="speed-loss-badge" title="Drop rate across 16 sequential HTTP 204 Anycast edge ping requests.">
 					<span id="speed-loss">0</span>% loss
 				</span>
 			</div>
@@ -226,7 +226,7 @@
 		if (lossSubEl) lossSubEl.textContent = 'Probing...';
 		if (lossBadge) {
 			lossBadge.classList.remove('loss-optimal', 'loss-warn');
-			lossBadge.title = 'Packet Loss: Probing...';
+			lossBadge.title = 'Measuring drop rate across sequential HTTP 204 edge ping requests...';
 		}
 		if (bloatEl) {
 			bloatEl.textContent = '--';
@@ -279,7 +279,7 @@
 				if (lossEl) lossEl.textContent = currentLossRate;
 				if (lossSubEl) lossSubEl.textContent = `${currentLost}/${i + 1} lost`;
 				if (lossBadge) {
-					lossBadge.title = `Packet Loss: ${currentLost} / ${i + 1} pkts lost (${currentLossRate}%)`;
+					lossBadge.title = `Drop rate across ${i + 1} sequential HTTP 204 Anycast edge ping requests.`;
 					if (currentLost > 0) {
 						lossBadge.classList.add('loss-warn');
 						lossBadge.classList.remove('loss-optimal');
@@ -304,7 +304,7 @@
 			if (lossEl) lossEl.textContent = finalLossRate;
 			if (lossSubEl) lossSubEl.textContent = `${finalLost}/${totalProbes} lost`;
 			if (lossBadge) {
-				lossBadge.title = `Packet Loss: ${finalLost} / ${totalProbes} pkts lost (${finalLossRate}%)`;
+				lossBadge.title = `Drop rate across ${totalProbes} sequential HTTP 204 Anycast edge ping requests.`;
 				if (finalLost === 0) {
 					lossBadge.classList.add('loss-optimal');
 					lossBadge.classList.remove('loss-warn');

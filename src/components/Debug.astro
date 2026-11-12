@@ -329,7 +329,7 @@
 			const model = modelMatch ? modelMatch[1].trim() : (isTablet ? 'Tablet' : '');
 			return {
 				display: buildOSDisplay('Android', ver, 'ARM64'),
-				tooltip: model ? `Device: ${model}` : (isTablet ? 'Android Tablet' : 'Android Mobile')
+				tooltip: model ? `Device model: ${model} (via User-Agent)` : (isTablet ? 'Form factor: Android Tablet' : 'Form factor: Android Phone')
 			};
 		}
 
@@ -337,7 +337,7 @@
 		if ((/Linux/i.test(ua) || /Linux/i.test(platform)) && (isMobileARM || (hasTouch && !/Macintosh|Windows/i.test(ua)))) {
 			return {
 				display: buildOSDisplay('Android', '', 'ARM64'),
-				tooltip: 'Android Tablet'
+				tooltip: 'Form factor: Android Tablet'
 			};
 		}
 
@@ -347,13 +347,13 @@
 			const ver = match ? match[1].replace('_', '.') : '';
 			return {
 				display: buildOSDisplay('iOS', ver, 'ARM64'),
-				tooltip: 'Apple iPhone'
+				tooltip: 'Apple iPhone (iOS WebKit environment)'
 			};
 		}
 		if (/iPad/.test(ua) || (ua.includes('Macintosh') && hasTouch)) {
 			return {
 				display: buildOSDisplay('iPadOS', '', 'ARM64'),
-				tooltip: 'Apple iPad'
+				tooltip: 'Apple iPad (iPadOS WebKit environment)'
 			};
 		}
 
@@ -368,7 +368,7 @@
 			}
 			return {
 				display: buildOSDisplay('macOS', ver, isAppleSilicon ? 'ARM64' : 'x86_64'),
-				tooltip: isAppleSilicon ? 'Apple Silicon' : 'x86_64 Mac'
+				tooltip: isAppleSilicon ? 'Apple Silicon architecture detected via WebGL Metal GPU renderer.' : 'Intel x86_64 Mac architecture.'
 			};
 		}
 
@@ -377,7 +377,7 @@
 			const isLaptop = /Laptop|Mobile/i.test(gpu);
 			return {
 				display: buildOSDisplay('Windows', '10 / 11', 'x86_64'),
-				tooltip: isLaptop ? 'Laptop Chassis' : 'Desktop PC'
+				tooltip: isLaptop ? 'Laptop chassis inferred from mobile GPU. Detected via User-Agent.' : 'Desktop PC architecture detected via User-Agent.'
 			};
 		}
 
@@ -386,7 +386,7 @@
 			const isArm = /arm|aarch64/i.test(ua);
 			return {
 				display: buildOSDisplay('ChromeOS', '', isArm ? 'ARM64' : 'x86_64'),
-				tooltip: 'Chromebook'
+				tooltip: 'Chromebook (ChromeOS Linux kernel).'
 			};
 		}
 
@@ -395,13 +395,13 @@
 			const isArmLinux = /aarch64|arm64|armv8/i.test(ua) || /aarch64|arm64|armv8/i.test(platform);
 			return {
 				display: buildOSDisplay('GNU/Linux', '', isArmLinux ? 'ARM64' : 'x86_64'),
-				tooltip: isArmLinux ? 'ARM Linux Workstation' : 'Linux Workstation'
+				tooltip: isArmLinux ? 'ARM Linux workstation detected via User-Agent.' : 'Linux workstation detected via User-Agent.'
 			};
 		}
 
 		return {
 			display: platform || 'Unknown OS',
-			tooltip: 'Operating System'
+			tooltip: 'Platform detected via navigator.platform / navigator.userAgent.'
 		};
 	}
 
@@ -461,20 +461,15 @@
 		function renderIpDisplay() {
 			if (ipv4El) {
 				ipv4El.textContent = currentIpv4 || 'Detecting...';
-				if (currentIpv4 && currentIpv4 !== 'Unavailable') {
-					ipv4El.title = 'Client public IPv4 address detected at Cloudflare edge.';
-				}
 			}
 
 			if (ipv6El) {
 				if (currentIpv6 === 'none') {
 					ipv6El.innerHTML = '<span class="ip-disabled">No IPv6 detected</span>';
-					ipv6El.title = 'No active IPv6 route detected on client connection.';
 				} else if (!currentIpv6) {
 					ipv6El.textContent = 'Detecting...';
 				} else {
 					ipv6El.textContent = currentIpv6;
-					ipv6El.title = 'Client public IPv6 address detected at Cloudflare edge.';
 				}
 			}
 
@@ -617,7 +612,10 @@
 
 		// 1. Instant Client Detection: GPU
 		const gpuString = detectGPU();
-		if (gpuEl) gpuEl.textContent = gpuString;
+		if (gpuEl) {
+			gpuEl.textContent = gpuString;
+			gpuEl.title = 'Unmasked GPU renderer queried via WebGL WEBGL_debug_renderer_info extension.';
+		}
 
 		// 2. Instant Client Detection: OS
 		if (osEl) {
@@ -639,7 +637,7 @@
 							const arch = (hints.architecture === 'arm' || hints.architecture === 'arm64') ? 'ARM64' : 'x86_64';
 							const isLaptop = /Laptop|Mobile/i.test(gpuString);
 							osEl.textContent = buildOSDisplay('Windows', winVer, arch);
-							osEl.title = isLaptop ? 'Laptop Chassis' : 'Desktop PC';
+							osEl.title = isLaptop ? 'Laptop chassis inferred from mobile GPU. Detected via User-Agent Client Hints.' : 'Desktop PC architecture detected via User-Agent Client Hints.';
 						} else if (
 							hints.platform === 'Android' || 
 							isMobileARM || 
@@ -654,16 +652,16 @@
 							const model = hints.model || '';
 							osEl.textContent = buildOSDisplay('Android', ver, 'ARM64');
 							osEl.title = model 
-								? (model.startsWith('SM-') ? `Samsung Device: ${model}` : `Device: ${model}`)
-								: (isTablet ? 'Android Tablet' : 'Android Mobile');
+								? (model.startsWith('SM-') ? `Samsung Device: ${model} (via User-Agent Client Hints)` : `Device model: ${model} (via User-Agent Client Hints)`)
+								: (isTablet ? 'Form factor: Android Tablet' : 'Form factor: Android Phone');
 						} else if (hints.platform === 'Linux' && !isMobileARM && !hasTouch) {
 							const arch = hints.architecture?.includes('64') || hints.bitness === '64' ? 'x86_64' : (hints.architecture || 'x86_64');
 							osEl.textContent = buildOSDisplay('GNU/Linux', '', arch);
-							osEl.title = 'Linux Workstation';
+							osEl.title = 'Linux workstation environment detected via User-Agent Client Hints.';
 						} else if (hints.platform === 'macOS') {
 							const isAppleSilicon = /Apple/i.test(gpuString) || hints.architecture === 'arm';
 							osEl.textContent = buildOSDisplay('macOS', '', isAppleSilicon ? 'ARM64' : 'x86_64');
-							osEl.title = isAppleSilicon ? 'Apple Silicon' : 'x86_64 Mac';
+							osEl.title = isAppleSilicon ? 'Apple Silicon architecture detected via WebGL Metal GPU renderer.' : 'Intel x86_64 Mac detected via User-Agent Client Hints.';
 						}
 					})
 					.catch(() => {});
@@ -674,7 +672,7 @@
 		if (cpuEl) {
 			const cores = navigator.hardwareConcurrency;
 			cpuEl.textContent = cores ? `${cores} Logical CPU Cores` : 'Multi-core Processor';
-			cpuEl.title = 'Total logical CPU threads available.';
+			cpuEl.title = 'Logical execution threads reported by navigator.hardwareConcurrency.';
 		}
 
 		// 4. System Memory
@@ -682,10 +680,10 @@
 			const mem = (navigator as any).deviceMemory;
 			if (mem) {
 				ramEl.textContent = `${mem} GB RAM`;
-				ramEl.title = 'Approximate device memory capacity via Device Memory API.';
+				ramEl.title = 'Reported by navigator.deviceMemory (Chromium caps at 8 GB to mitigate browser fingerprinting).';
 			} else {
 				ramEl.textContent = '64-bit Architecture';
-				ramEl.title = 'Device memory capacity not exposed by browser (privacy protection).';
+				ramEl.title = 'navigator.deviceMemory not supported by browser (omitted for privacy).';
 			}
 		}
 
@@ -699,11 +697,7 @@
 			const dprVal = window.devicePixelRatio ? Number(window.devicePixelRatio.toFixed(2)) : null;
 			const dpr = dprVal ? ` @ ${dprVal}x scaling` : '';
 			const depth = window.screen.colorDepth ? ` (${window.screen.colorDepth}-bit color)` : '';
-			const isExtended = (window.screen as any).isExtended;
 			displayEl.textContent = `${window.screen.width} × ${window.screen.height}${dpr}${depth}`;
-			displayEl.title = isExtended
-				? 'Active screen resolution and scaling. Multi-monitor extended desktop detected.'
-				: 'Active screen resolution and scaling.';
 
 			// If screen geometry or scaling shifted (e.g. window dragged across displays)
 			if (
@@ -992,7 +986,7 @@
 			});
 
 			refreshEl.style.cursor = 'pointer';
-			refreshEl.title = 'Click or touch to re-test display refresh rate. Detects high-refresh G-Sync/FreeSync/ProMotion panels and dynamic VRR/LTPO scaling. If a 120Hz/VRR display reports 60 Hz: ensure Windows Display Settings > Advanced Display is set to 120 Hz (Windows defaults HDMI TVs to 60 Hz) and NVIDIA Control Panel enables G-SYNC for windowed mode.';
+			refreshEl.title = 'Refresh rate measured via requestAnimationFrame VSYNC timing. Gamut & HDR evaluated via CSS media queries. Click to re-probe.';
 			refreshEl.addEventListener('click', () => {
 				retestRefresh();
 			});
@@ -1051,12 +1045,12 @@
 					}
 
 					orientEl.textContent = label;
-					orientEl.title = `Current: ${currentMode} • Default: ${nativeMode} (${angle}° rotation).`;
+					orientEl.title = 'Reported by Screen Orientation API (screen.orientation.type & angle).';
 				} else {
 					const isLand = window.innerWidth >= window.innerHeight;
 					const mode = isLand ? 'Landscape' : 'Portrait';
 					orientEl.textContent = `${mode} (Viewport)`;
-					orientEl.title = `Display orientation: ${mode}.`;
+					orientEl.title = 'Orientation inferred from viewport aspect ratio (window.innerWidth vs innerHeight).';
 				}
 			};
 			updateOrient();
@@ -1077,10 +1071,10 @@
 			const points = navigator.maxTouchPoints || 0;
 			if (points > 0) {
 				touchEl.textContent = `${points}-Point Multitouch`;
-				touchEl.title = `${points}-point hardware multitouch digitizer.`;
+				touchEl.title = 'Maximum simultaneous touch contact points reported by navigator.maxTouchPoints.';
 			} else {
 				touchEl.textContent = 'Precision Mouse (No Touch)';
-				touchEl.title = 'No touch digitizer detected (desktop mouse or trackpad pointer input).';
+				touchEl.title = 'No touch contact points reported (navigator.maxTouchPoints = 0).';
 			}
 		}
 
@@ -1096,13 +1090,15 @@
 					
 					if (outLatMs) {
 						audioEl.textContent = `${baseLatMs} ms buffer (${outLatMs} ms sink) • ${rateKhz} kHz`;
+						audioEl.title = 'Hardware buffer latency (AudioContext.baseLatency) and audio device sink delay (outputLatency).';
 					} else {
 						audioEl.textContent = `${baseLatMs} ms buffer • ${rateKhz} kHz`;
+						audioEl.title = 'Hardware output buffer latency (AudioContext.baseLatency) between Web Audio graph and audio device sink.';
 					}
-					audioEl.title = `Audio pipeline latency: ${baseLatMs} ms buffer • Sample rate: ${rateKhz} kHz`;
 					actx.close();
 				} else {
 					audioEl.textContent = 'Hardware Audio Output';
+					audioEl.title = 'Web Audio API not supported by browser.';
 				}
 			} catch (_) {
 				audioEl.textContent = 'Hardware Audio Output';
@@ -1198,10 +1194,10 @@
 
 				if (supported.length > 0) {
 					codecsEl.textContent = supported.join(' • ');
-					codecsEl.title = 'Hardware-accelerated video decoding support.';
+					codecsEl.title = 'Probed via MediaCapabilities (powerEfficient: true) and WebCodecs hardware ASIC decoder profiles.';
 				} else {
 					codecsEl.textContent = 'Software / CPU Decoding';
-					codecsEl.title = 'Hardware video decoding not supported.';
+					codecsEl.title = 'No hardware ASIC decoders detected; media decoded via software/CPU.';
 				}
 			};
 			probeCodecs();
@@ -1289,10 +1285,10 @@
 
 				if (supported.length > 0) {
 					encoderEl.textContent = supported.join(' • ');
-					encoderEl.title = 'Hardware-accelerated video encoding support.';
+					encoderEl.title = 'Probed via MediaCapabilities (powerEfficient: true) and WebCodecs hardware ASIC encoder profiles.';
 				} else {
 					encoderEl.textContent = 'Software / CPU Encoding';
-					encoderEl.title = 'Hardware video encoding not supported.';
+					encoderEl.title = 'No hardware ASIC encoders detected; media encoded via software/CPU.';
 				}
 			};
 			probeEncoder();
@@ -1370,13 +1366,14 @@
 
 					if (found.length > 0) {
 						drmEl.textContent = found.join(' • ');
-						drmEl.title = `Active DRM: ${found.join(', ')}`;
+						drmEl.title = 'Probed via Encrypted Media Extensions (navigator.requestMediaKeySystemAccess) for hardware & software CDM support.';
 					} else {
 						drmEl.textContent = 'Standard / Open Media';
-						drmEl.title = 'No DRM key system detected.';
+						drmEl.title = 'No Content Decryption Modules (CDM) supported or allowed by browser.';
 					}
 				} else {
 					drmEl.textContent = 'Not Supported';
+					drmEl.title = 'Encrypted Media Extensions (EME) API not supported by browser.';
 				}
 			};
 			probeDRM();
@@ -1436,7 +1433,7 @@
 				const locString = locParts.length > 0 ? locParts.join(', ') : 'Location unavailable';
 				if (locEl) {
 					locEl.textContent = locString;
-					locEl.title = 'Approximate geolocation based on client IP.';
+					locEl.title = 'Approximate geolocation resolved from Cloudflare edge IP headers (no device GPS accessed).';
 				}
 
 				const lat = parseFloat(data.latitude);
@@ -1452,7 +1449,7 @@
 					}
 					if (locEl) {
 						locEl.classList.add('loc-clickable');
-						locEl.title = 'Approximate geolocation. Click to view on OpenStreetMap.';
+						locEl.title = 'Approximate geolocation resolved from Cloudflare edge IP headers (no device GPS accessed). Click to view on OpenStreetMap.';
 						locEl.onclick = () => openMapApplet(lat, lon, locString);
 					}
 				} else {
@@ -1469,13 +1466,14 @@
 					} else {
 						edgeEl.textContent = 'Cloudflare Anycast Edge';
 					}
-					edgeEl.title = 'Cloudflare Anycast edge datacenter.';
+					edgeEl.title = 'Nearest Cloudflare Anycast point of presence (PoP) terminating the TLS connection (IATA airport code).';
 				}
 
 				if (ispEl) {
 					const asn = data.asn ? `AS${data.asn}` : '';
 					const isp = data.isp ? `${data.isp}` : 'Broadband Provider';
 					ispEl.textContent = asn ? `${isp} (${asn})` : isp;
+					ispEl.title = 'Autonomous System Number (ASN) and network operator resolved from BGP routing metadata.';
 				}
 			} else {
 				throw new Error('Edge endpoint responded with non-200');

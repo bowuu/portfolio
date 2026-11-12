@@ -158,15 +158,7 @@
 			'dissolve',
 			'thermal',
 			'boop',
-			'extras',
-			'multiplier',
-			'virtuoso',
-			'analyzer',
-			'logic',
-			'reflow',
-			'solder',
-			'sequencer',
-			'breakout'
+			'extras'
 		];
 
 		function openTerminal() {
@@ -862,17 +854,12 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
 
   <span class="term-col">Hardware Lab Extras</span>      <span class="term-col">Description</span>
   <span class="term-dim">------------------------ ------------------------------------------------------------</span>
-  <span class="term-hl">analyzer</span>                 4-channel real-time logic analyzer &amp; bus sniffer
   <span class="term-hl">boop</span>                     Chief Morale Officer silicon lottery binning boost
-  <span class="term-hl">breakout</span>                 Wafer die sort breakout arcade mini-game
   <span class="term-hl">cyclone</span>                  3D silicon cyclone orbital spherical cage
   <span class="term-hl">degauss</span>                  CRT oscilloscope electromagnetic degauss coil warp
   <span class="term-hl">dissolve</span>                 Quantum tunneling disintegration into silicon dust
   <span class="term-hl">extras</span>                   Open the Hardware Lab Extras drawer
   <span class="term-hl">gravity</span>                  Zero-G Verlet physics element collapse &amp; throw
-  <span class="term-hl">multiplier</span>               8x8-bit CMOS multiplier (Cadence Virtuoso VLSI)
-  <span class="term-hl">reflow</span>                   Hot air solder reflow &amp; surface tension simulation
-  <span class="term-hl">sequencer</span>                8-bit bus diagnostic drum machine &amp; test acoustics
   <span class="term-hl">sudo</span> [cmd]               Privilege escalation request (try 'sudo rm -rf /')
   <span class="term-hl">thermal</span>                  Infrared thermography &amp; LN2 cryo-spray
   <span class="term-hl">tilt</span>                     3D viewport parallax hologram perspective
@@ -1468,54 +1455,6 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 						appendOutput('<span class="term-hl">[Hardware Lab Extras]</span> Drawer toggled.');
 					} else {
 						appendOutput('<span class="term-err">Lab Extras drawer not initialized.</span>');
-					}
-					break;
-
-				case 'multiplier':
-				case 'virtuoso':
-					if (typeof (window as any).__toggleMultiplier === 'function') {
-						(window as any).__toggleMultiplier();
-						appendOutput('<span class="term-hl">[8x8 Multiplier]</span> Cadence Virtuoso CMOS VLSI architecture inspector toggled. Press <span class="term-cyan">Esc</span> to exit.');
-					} else {
-						appendOutput('<span class="term-err">8x8 Multiplier module not initialized.</span>');
-					}
-					break;
-
-				case 'analyzer':
-				case 'logic':
-					if (typeof (window as any).__toggleAnalyzer === 'function') {
-						(window as any).__toggleAnalyzer();
-						appendOutput('<span class="term-hl">[Logic Analyzer]</span> 4-channel real-time hardware bus sniffer toggled. Press <span class="term-cyan">Esc</span> to exit.');
-					} else {
-						appendOutput('<span class="term-err">Logic Analyzer module not initialized.</span>');
-					}
-					break;
-
-				case 'reflow':
-				case 'solder':
-					if (typeof (window as any).__toggleReflow === 'function') {
-						(window as any).__toggleReflow();
-						appendOutput('<span class="term-hl">[Hot Air Solder Reflow]</span> Thermal rework mode active. Hover over elements to melt joints and view surface tension float. Press <span class="term-cyan">Esc</span> to exit.');
-					} else {
-						appendOutput('<span class="term-err">Hot Air Reflow module not initialized.</span>');
-					}
-					break;
-
-				case 'sequencer':
-					if (typeof (window as any).__toggleSequencer === 'function') {
-						(window as any).__toggleSequencer();
-						appendOutput('<span class="term-hl">[8-Bit Bus Sequencer]</span> Hardware diagnostic drum machine toggled. Press <span class="term-cyan">Esc</span> to exit.');
-					} else {
-						appendOutput('<span class="term-err">Sequencer module not initialized.</span>');
-					}
-					break;
-
-				case 'breakout':
-					if (typeof (window as any).__toggleBreakout === 'function') {
-						(window as any).__toggleBreakout();
-						appendOutput('<span class="term-hl">[Wafer Breakout]</span> ATE probe card wafer sort arcade game toggled. Press <span class="term-cyan">Esc</span> to exit.');
-					} else {
-						appendOutput('<span class="term-err">Wafer Breakout module not initialized.</span>');
 					}
 					break;
 

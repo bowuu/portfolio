@@ -143,9 +143,6 @@
 			'boot',
 			'gcode',
 			'slice',
-			'matrix',
-			'cmatrix',
-			'sl',
 			'ls',
 			'cat',
 			'sudo',
@@ -155,18 +152,11 @@
 			'sensors',
 			'temp',
 			'gravity',
-			'zerog',
 			'tilt',
 			'degauss',
-			'crt',
 			'cyclone',
-			'sphere',
 			'dissolve',
-			'quantum',
 			'thermal',
-			'cryo',
-			'ln2',
-			'cmo',
 			'boop',
 			'extras'
 		];
@@ -316,82 +306,6 @@
 			}
 		}
 
-		function runSteamLocomotive() {
-			appendOutput(`
-<div class="term-sl-block">
-  <pre class="term-sl-train">
-      ====        ________                ___________
-  _D _|  |_______/        \\__I_I_____===__|_________|
-   |(_)---  |   H\\________/ _____ \\   (|        |
-   /     |===========|   //     \\\\     |        |
-  |      |           |  //  (O)  \\\\    |        |
-  |________\\_chuu-chuu_//________\\\\___|________|
-   (O)(O)               (O)(O)        (O)(O)
-  </pre>
-  <div class="term-dim">🚂 Choo Choo! (Did you mean 'ls'?)</div>
-</div>`);
-		}
-
-		function runMatrixEffect() {
-			if (!screen) return;
-			const canvas = document.createElement('canvas');
-			canvas.className = 'term-matrix-overlay';
-			screen.appendChild(canvas);
-
-			const ctx = canvas.getContext('2d');
-			if (!ctx) return;
-
-			canvas.width = screen.clientWidth;
-			canvas.height = screen.clientHeight;
-
-			const chars = '0123456789ABCDEFｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ';
-			const fontSize = 13;
-			const cols = Math.floor(canvas.width / fontSize);
-			const drops: number[] = Array(cols).fill(1);
-
-			let animId: number;
-			let isTerminated = false;
-
-			function stopMatrix() {
-				if (isTerminated) return;
-				isTerminated = true;
-				cancelAnimationFrame(animId);
-				canvas.remove();
-				window.removeEventListener('keydown', handleKey);
-				appendOutput('<span class="term-cyan">Wake up, guest... Matrix diagnostic complete.</span>');
-			}
-
-			function handleKey() {
-				stopMatrix();
-			}
-			window.addEventListener('keydown', handleKey, { once: true });
-			canvas.addEventListener('click', stopMatrix);
-
-			function draw() {
-				ctx!.fillStyle = 'rgba(10, 12, 16, 0.12)';
-				ctx!.fillRect(0, 0, canvas.width, canvas.height);
-
-				ctx!.fillStyle = '#22c55e';
-				ctx!.font = `${fontSize}px monospace`;
-
-				for (let i = 0; i < drops.length; i++) {
-					const text = chars.charAt(Math.floor(Math.random() * chars.length));
-					ctx!.fillText(text, i * fontSize, drops[i] * fontSize);
-
-					if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-						drops[i] = 0;
-					}
-					drops[i]++;
-				}
-				animId = requestAnimationFrame(draw);
-			}
-			draw();
-
-			setTimeout(() => {
-				stopMatrix();
-			}, 3500);
-		}
-
 		const MAN_PAGES: Record<string, string> = {
 			man: `
 <span class="term-head">NAME</span>
@@ -523,7 +437,7 @@
         with -l, print sizes in human readable format (e.g. 1K, 4K)
 
 <span class="term-head">SEE ALSO</span>
-    cat(1), sl(1)`,
+    cat(1), tree(1)`,
 
 			cad: `
 <span class="term-head">NAME</span>
@@ -808,26 +722,6 @@
 <span class="term-head">DESCRIPTION</span>
     Display simulated PETG print metrics, hotend thermals, and bed variance.`,
 
-			matrix: `
-<span class="term-head">NAME</span>
-    matrix - cascading digital rain diagnostic
-
-<span class="term-head">SYNOPSIS</span>
-    <span class="term-hl">matrix</span>
-
-<span class="term-head">DESCRIPTION</span>
-    Stream simulated green phosphor digital rain (cmatrix).`,
-
-			sl: `
-<span class="term-head">NAME</span>
-    sl - cure your bad habit of mistyping
-
-<span class="term-head">SYNOPSIS</span>
-    <span class="term-hl">sl</span>
-
-<span class="term-head">DESCRIPTION</span>
-    Steam Locomotive travels across your terminal when you mistype 'ls'.`,
-
 			sudo: `
 <span class="term-head">NAME</span>
     sudo - execute a command as another user
@@ -955,24 +849,20 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-hl">wafer</span>                    300mm wafer die sort map &amp; bin yield report
   <span class="term-hl">sensors</span>                  Thermal junction probes, PMIC voltages &amp; power
   <span class="term-hl">gcode</span>                    3D printer telemetry &amp; bed mesh leveling report
-  <span class="term-hl">uptime</span> / <span class="term-hl">uname</span>           Kernel platform flags &amp; session runtime
+  <span class="term-hl">uname</span> [-a]               Kernel platform architecture &amp; release flags
+  <span class="term-hl">uptime</span>                   Current session runtime &amp; load average
 
   <span class="term-col">Hardware Lab Extras</span>      <span class="term-col">Description</span>
   <span class="term-dim">------------------------ ------------------------------------------------------------</span>
-  <span class="term-hl">cyclone</span> / <span class="term-hl">sphere</span>         3D silicon cyclone orbital spherical cage
-  <span class="term-hl">tilt</span>                     3D viewport parallax hologram perspective
-  <span class="term-hl">cmo</span> / <span class="term-hl">boop</span>               Chief Morale Officer silicon lottery binning boost
-  <span class="term-hl">degauss</span> / <span class="term-hl">crt</span>            CRT oscilloscope electromagnetic degauss coil warp
-  <span class="term-hl">thermal</span>                   Infrared thermography &amp; LN2 cryo-spray
-  <span class="term-hl">dissolve</span> / <span class="term-hl">quantum</span>       Quantum tunneling disintegration into silicon dust
-  <span class="term-hl">gravity</span> / <span class="term-hl">zerog</span>          Zero-G Verlet physics element collapse &amp; throw
+  <span class="term-hl">boop</span>                     Chief Morale Officer silicon lottery binning boost
+  <span class="term-hl">cyclone</span>                  3D silicon cyclone orbital spherical cage
+  <span class="term-hl">degauss</span>                  CRT oscilloscope electromagnetic degauss coil warp
+  <span class="term-hl">dissolve</span>                 Quantum tunneling disintegration into silicon dust
   <span class="term-hl">extras</span>                   Open the Hardware Lab Extras drawer
-
-  <span class="term-col">Undocumented Opcodes</span>     <span class="term-col">Description</span>
-  <span class="term-dim">------------------------ ------------------------------------------------------------</span>
-  <span class="term-hl">matrix</span>                   Cascading digital rain diagnostic (cmatrix)
-  <span class="term-hl">sl</span>                       Scenic steam locomotive journey (mistyped 'ls')
+  <span class="term-hl">gravity</span>                  Zero-G Verlet physics element collapse &amp; throw
   <span class="term-hl">sudo</span> [cmd]               Privilege escalation request (try 'sudo rm -rf /')
+  <span class="term-hl">thermal</span>                  Infrared thermography &amp; LN2 cryo-spray
+  <span class="term-hl">tilt</span>                     3D viewport parallax hologram perspective
 
 <span class="term-dim">Tip: Use Up/Down arrows for command history; press Tab for autocompletion.</span>`);
 					break;
@@ -1496,19 +1386,7 @@ Print Time: Layer 148 of 350 &bull; 42% complete &bull; Volumetric Flow: 18.5 mm
 Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 					break;
 
-				case 'matrix':
-				case 'cmatrix':
-					runMatrixEffect();
-					break;
-
-				case 'sl':
-					runSteamLocomotive();
-					break;
-
 				case 'gravity':
-				case 'zerog':
-				case 'physics':
-				case 'drop':
 					if (typeof (window as any).__toggleZeroG === 'function') {
 						(window as any).__toggleZeroG();
 						appendOutput('<span class="term-hl">[Zero-G Verlet Physics]</span> Gravity simulation toggled. Drag or fling cards across the screen. Press <span class="term-cyan">Ctrl+Alt+G</span> or click <span class="term-cyan">Resolder</span> to reassemble.');
@@ -1518,8 +1396,6 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 					break;
 
 				case 'tilt':
-				case 'hologram':
-				case 'parallax':
 					if (typeof (window as any).__toggleTilt === 'function') {
 						(window as any).__toggleTilt();
 						appendOutput('<span class="term-hl">[3D Parallax Hologram]</span> Viewport tilt toggled. Move your mouse or tilt your device to view perspective depth. Press <span class="term-cyan">Ctrl+Alt+H</span> or <span class="term-cyan">Esc</span> to exit.');
@@ -1529,7 +1405,6 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 					break;
 
 				case 'degauss':
-				case 'crt':
 					if (typeof (window as any).__toggleDegauss === 'function') {
 						(window as any).__toggleDegauss();
 						appendOutput('<span class="term-hl">[CRT Degauss]</span> Electromagnetic coil pulse fired. Color purity restored. Press <span class="term-cyan">Esc</span> to exit.');
@@ -1538,9 +1413,7 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 					}
 					break;
 
-				case 'sphere':
 				case 'cyclone':
-				case 'orbit':
 					if (typeof (window as any).__toggleSphere === 'function') {
 						(window as any).__toggleSphere();
 						appendOutput('<span class="term-hl">[3D Silicon Cyclone]</span> Portfolio cards launched into 3D orbital sphere. Drag with mouse to rotate; hover to inspect; press <span class="term-cyan">Esc</span> to collapse to 2D.');
@@ -1550,9 +1423,6 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 					break;
 
 				case 'dissolve':
-				case 'thanos':
-				case 'quantum':
-				case 'snap':
 					if (typeof (window as any).__toggleQuantum === 'function') {
 						(window as any).__toggleQuantum();
 						appendOutput('<span class="term-hl">[Quantum Tunneling]</span> Quantum disintegration mode active. Click any box to dissolve into silicon dust (CMO protected!); drag to swirl particles. Click "Quantum Anneal" or press <span class="term-cyan">Esc</span> to reassemble.');
@@ -1562,8 +1432,6 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 					break;
 
 				case 'thermal':
-				case 'cryo':
-				case 'ln2':
 					if (typeof (window as any).__toggleThermal === 'function') {
 						(window as any).__toggleThermal();
 						appendOutput('<span class="term-hl">[Thermal Camera]</span> Infrared thermal imaging mode active. Click/hold mouse to spray LN2 (-196°C) or Heat Gun (450°C). Press <span class="term-cyan">Esc</span> to exit.');
@@ -1573,8 +1441,6 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 					break;
 
 				case 'boop':
-				case 'cmo':
-				case 'dog':
 					if (typeof (window as any).__boopDog === 'function') {
 						(window as any).__boopDog();
 						appendOutput('<span class="term-hl">[Chief Morale Officer]</span> Silicon binning overdrive triggered! Good girl boosted.');
@@ -2161,39 +2027,6 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 		color: #f97316;
 	}
 
-	/* MATRIX CANVAS OVERLAY */
-	:global(.term-matrix-overlay) {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		z-index: 20;
-		cursor: pointer;
-		border-radius: inherit;
-	}
-
-	/* STEAM LOCOMOTIVE (sl) */
-	:global(.term-sl-block) {
-		overflow: hidden;
-		width: 100%;
-		margin: 0.5em 0;
-		padding: 0.35em 0;
-		border-top: 1px dashed rgba(249, 115, 22, 0.3);
-		border-bottom: 1px dashed rgba(249, 115, 22, 0.3);
-	}
-	:global(.term-sl-train) {
-		display: inline-block;
-		color: #f97316;
-		font-size: clamp(0.48em, 1.2vw, 0.7em);
-		line-height: 1.15;
-		white-space: pre;
-		animation: slChug 3.2s linear forwards;
-	}
-	@keyframes slChug {
-		0% { transform: translateX(85vw); }
-		100% { transform: translateX(-100%); }
-	}
 
 	/* NEOFETCH BADGE */
 	:global(.neofetch-wrap) {

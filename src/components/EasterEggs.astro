@@ -167,6 +167,94 @@
 		</div>
 	</div>
 
+	<!-- 8x8 BIT CARRY-SAVE ARRAY MULTIPLIER MODAL (CADENCE VIRTUOSO ARCHITECTURE) -->
+	<div id="multiplier-modal" class="wafer-modal hidden" role="dialog" aria-modal="true" aria-label="8x8 Bit Carry-Save Array Multiplier" style="display: none;">
+		<div class="wafer-backdrop" id="multiplier-backdrop"></div>
+		<div class="wafer-dialog mult-dialog">
+			<div class="wafer-modal-header">
+				<div class="wafer-title-wrap">
+					<span class="hud-pulse-dot"></span>
+					<div class="wafer-title-meta">
+						<span class="wafer-title">8×8-BIT CARRY-SAVE ARRAY MULTIPLIER &bull; CADENCE VIRTUOSO VLSI</span>
+						<span class="wafer-sub mono">Braun Architecture &bull; 72 Full Adders (F) &bull; 64 Partial Product AND Gates &bull; 16-Bit Product P[15:0]</span>
+					</div>
+				</div>
+				<div class="mult-header-actions">
+					<a href="https://github.com/bowuu/8x8-Multiplier" target="_blank" rel="noopener noreferrer" class="mult-gh-link mono" title="View 8x8 Multiplier on GitHub">
+						<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+						<span>bowuu/8x8-Multiplier</span>
+					</a>
+					<button id="multiplier-close-btn" class="wafer-close-btn" type="button" aria-label="Close Multiplier">&times;</button>
+				</div>
+			</div>
+
+			<div class="mult-body">
+				<!-- INPUT REGISTERS & PRESETS -->
+				<div class="mult-inputs-card">
+					<div class="mult-reg-row">
+						<div class="mult-reg-label mono">
+							<strong>MULTIPLICAND X [7:0]</strong>
+							<span class="reg-meta" id="mult-x-meta">Hex: 0xAA &bull; Dec: 170</span>
+						</div>
+						<div class="mult-bits" id="mult-x-bits"></div>
+					</div>
+
+					<div class="mult-op-badge mono">&times; MULTIPLY</div>
+
+					<div class="mult-reg-row">
+						<div class="mult-reg-label mono">
+							<strong>MULTIPLIER Y [7:0]</strong>
+							<span class="reg-meta" id="mult-y-meta">Hex: 0x55 &bull; Dec: 85</span>
+						</div>
+						<div class="mult-bits" id="mult-y-bits"></div>
+					</div>
+
+					<div class="mult-presets">
+						<span class="presets-title mono">PRESETS:</span>
+						<button type="button" class="mult-pre-btn mono" data-x="170" data-y="85">0xAA &times; 0x55 (14,450)</button>
+						<button type="button" class="mult-pre-btn mono" data-x="255" data-y="255">255 &times; 255 (Max: 65,025)</button>
+						<button type="button" class="mult-pre-btn mono" data-x="15" data-y="240">0x0F &times; 0xF0 (3,600)</button>
+						<button type="button" class="mult-pre-btn mono" data-x="128" data-y="64">128 &times; 64 (8,192)</button>
+						<button type="button" class="mult-pre-btn mono" id="mult-rand-btn">Random Vector</button>
+						<button type="button" class="mult-pre-btn mono" data-x="0" data-y="0">Clear (0 &times; 0)</button>
+					</div>
+				</div>
+
+				<!-- SCHEMATIC VIEWPORT -->
+				<div class="mult-schematic-card">
+					<div class="mult-schematic-header mono">
+						<span>AUTHENTIC CARRY-SAVE SCHEMATIC &bull; HOVER CELLS &amp; WIRES FOR LIVE LOGIC</span>
+						<div class="mult-legend mono">
+							<span class="leg-item"><span class="leg-line active"></span> HIGH (1)</span>
+							<span class="leg-item"><span class="leg-line dim"></span> LOW (0)</span>
+						</div>
+					</div>
+					<div class="mult-svg-scroll-wrap" id="mult-svg-wrap">
+						<svg id="mult-schematic-svg" class="mult-schematic-svg" viewBox="0 0 1180 660" preserveAspectRatio="xMidYMid meet">
+							<!-- Rendered dynamically via JS for 100% reactive state updates -->
+						</svg>
+					</div>
+					<div class="mult-cell-tooltip mono" id="mult-cell-info">
+						Hover any cell F or wire to inspect Boolean logic, partial products, sum, and carry propagation.
+					</div>
+				</div>
+
+				<!-- 16-BIT PRODUCT OUTPUT REGISTER -->
+				<div class="mult-output-card">
+					<div class="mult-output-header">
+						<div class="mult-product-title mono">16-BIT PRODUCT OUTPUT REGISTER P [15:0]</div>
+						<div class="mult-product-vals mono">
+							<span class="p-dec mono" id="mult-p-dec">P = 14,450</span>
+							<span class="p-hex mono" id="mult-p-hex">0x3872</span>
+							<span class="p-bin mono" id="mult-p-bin">0011 1000 0111 0010₂</span>
+						</div>
+					</div>
+					<div class="mult-product-bits" id="mult-product-bits"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<!-- LAB EXTRAS DRAWER / POPOVER (SORTED ALPHABETICALLY A-Z) -->
 	<div id="lab-extras-modal" class="lab-extras-modal hidden" role="dialog" aria-modal="false" aria-label="Hardware Lab Easter Eggs" style="display: none;">
 		<div class="extras-header">
@@ -199,7 +287,17 @@
 				<kbd class="item-kbd">Ctrl+Alt+H</kbd>
 			</button>
 
-			<!-- 3. Chief Morale Officer (C) -->
+			<!-- 3. 8x8 Multiplier (8) -->
+			<button id="trigger-multiplier-btn" class="extra-item-btn" type="button" title="8×8-Bit Carry-Save Array Multiplier (Cadence Virtuoso VLSI)">
+				<span class="item-icon">⚡</span>
+				<div class="item-meta">
+					<strong class="item-name">8x8 Multiplier</strong>
+					<span class="item-desc">Braun carry-save array &amp; vector merge</span>
+				</div>
+				<kbd class="item-kbd">multiplier</kbd>
+			</button>
+
+			<!-- 4. Chief Morale Officer (C) -->
 			<button id="trigger-boop-btn" class="extra-item-btn" type="button" title="Boop Chief Morale Officer (She is a good girl!)">
 				<span class="item-icon">🐾</span>
 				<div class="item-meta">
@@ -690,6 +788,31 @@
 				this.init();
 				if (!this.ctx) return;
 				this.playThump(this.ctx.currentTime, 160, 110, 0.08, 0.10);
+			} catch {}
+		}
+
+		// 8x8 Multiplier bit toggle click
+		public playBitClick(isHigh: boolean) {
+			try {
+				this.init();
+				if (!this.ctx) return;
+				const t = this.ctx.currentTime;
+				const freq = isHigh ? 2200 : 1400;
+				this.playTone(t, freq, 'sine', 0.022, 0.07);
+				this.playImpulse(t, 2800, 0.004, 0.05);
+			} catch {}
+		}
+
+		// 8x8 Multiplier vector compute chime (ascending arpeggio)
+		public playMultiplierChime() {
+			try {
+				this.init();
+				if (!this.ctx) return;
+				const t = this.ctx.currentTime;
+				const notes = [523.25, 659.25, 783.99, 1046.5];
+				notes.forEach((f, i) => {
+					this.playTone(t + i * 0.035, f, 'sine', 0.11, 0.06);
+				});
 			} catch {}
 		}
 	}
@@ -1222,6 +1345,26 @@
 		let isSphere = false;
 		let isQuantum = false;
 		let isThermal = false;
+		let isMultiplier = false;
+
+		let multX = 170; // 0xAA (1010 1010)
+		let multY = 85;  // 0x55 (0101 0101)
+
+		const multiplierModal = document.getElementById('multiplier-modal');
+		const multBackdrop = document.getElementById('multiplier-backdrop');
+		const multCloseBtn = document.getElementById('multiplier-close-btn');
+		const multSvg = document.getElementById('mult-schematic-svg') as SVGSVGElement | null;
+		const multCellInfo = document.getElementById('mult-cell-info');
+		const multXBits = document.getElementById('mult-x-bits');
+		const multYBits = document.getElementById('mult-y-bits');
+		const multXMeta = document.getElementById('mult-x-meta');
+		const multYMeta = document.getElementById('mult-y-meta');
+		const multPDec = document.getElementById('mult-p-dec');
+		const multPHex = document.getElementById('mult-p-hex');
+		const multPBin = document.getElementById('mult-p-bin');
+		const multPBits = document.getElementById('mult-product-bits');
+		const multRandBtn = document.getElementById('mult-rand-btn');
+		const triggerMultiplierBtn = document.getElementById('trigger-multiplier-btn');
 
 		const zerogHud = document.getElementById('zerog-hud');
 		const zerogResetBtn = document.getElementById('zerog-reset-btn');
@@ -1261,6 +1404,7 @@
 			if (isSphere) resetSphere();
 			if (isQuantum) resetQuantum();
 			if (isThermal) resetThermal();
+			if (isMultiplier) closeMultiplier();
 			(window as any).__closeWaferMap?.();
 		}
 		(window as any).__closeAllEasterEggs = closeAllActiveModes;
@@ -1278,6 +1422,7 @@
 		if (thermalScaleBar) { thermalScaleBar.style.display = 'none'; thermalScaleBar.classList.add('hidden'); }
 		if (thermalSpots) { thermalSpots.style.display = 'none'; thermalSpots.classList.add('hidden'); }
 		if (thermalCanvas) { thermalCanvas.style.display = 'none'; thermalCanvas.classList.add('hidden'); }
+		if (multiplierModal) { multiplierModal.style.display = 'none'; multiplierModal.classList.add('hidden'); }
 		if (extrasModal) { extrasModal.style.display = 'none'; extrasModal.classList.add('hidden'); }
 
 		// 1. REFINED ZERO-G DROP (OVERFLOW LOCK & SLEEP)
@@ -2599,6 +2744,525 @@
 		thermalResetBtn?.addEventListener('click', normalizeThermal);
 		thermalExitBtn?.addEventListener('click', resetThermal);
 
+		// -------------------------------------------------------------
+		// 8. 8x8-BIT CARRY-SAVE ARRAY MULTIPLIER (CADENCE VIRTUOSO VLSI)
+		// -------------------------------------------------------------
+		const multDx = 66;
+		const multDy = 58;
+		const multCellW = 34;
+		const multCellH = 34;
+		const multXBase = 580;
+		const multYBase = 54;
+		const multPBusY = 590;
+
+		function getCellPos(r: number, c: number) {
+			if (r < 8) {
+				const x = multXBase + (7 - r) * multDx - c * multDx;
+				const y = multYBase + r * multDy;
+				return { x, y, cx: x + multCellW / 2, cy: y + multCellH / 2 };
+			} else {
+				// r === 8: Vector merge ripple-carry adder row
+				const x = (c < 7) ? (multXBase - (c + 1) * multDx) : (multXBase - 8 * multDx);
+				const y = multYBase + 8 * multDy;
+				return { x, y, cx: x + multCellW / 2, cy: y + multCellH / 2 };
+			}
+		}
+
+		interface MultiplierState {
+			S: number[][];
+			C: number[][];
+			PP: number[][];
+			P: number[];
+			pVal: number;
+		}
+
+		function computeMultiplierState(X: number, Y: number): MultiplierState {
+			const S = Array(9).fill(0).map(() => Array(8).fill(0));
+			const C = Array(9).fill(0).map(() => Array(8).fill(0));
+			const PP = Array(8).fill(0).map(() => Array(8).fill(0));
+			const P = Array(16).fill(0);
+
+			for (let r = 0; r < 8; r++) {
+				const xr = (X >> r) & 1;
+				for (let c = 0; c < 8; c++) {
+					PP[r][c] = xr & ((Y >> c) & 1);
+				}
+			}
+
+			// Row 0: Full Adders with PP as input, top and carry-in tied to 0
+			for (let c = 0; c < 8; c++) {
+				S[0][c] = PP[0][c];
+				C[0][c] = 0;
+			}
+			P[0] = S[0][0];
+
+			// Rows 1 to 7 (CSA Stages)
+			for (let r = 1; r < 8; r++) {
+				for (let c = 0; c < 8; c++) {
+					const pp = PP[r][c];
+					const sin = (c < 7) ? S[r - 1][c + 1] : 0;
+					const cin = C[r - 1][c];
+					S[r][c] = sin ^ cin ^ pp;
+					C[r][c] = (sin & cin) | (sin & pp) | (cin & pp);
+				}
+				P[r] = S[r][0];
+			}
+
+			// Row 8 (Vector merge ripple carry stage)
+			let c_in_right = 0;
+			for (let k = 0; k < 8; k++) {
+				const sin = (k < 7) ? S[7][k + 1] : 0;
+				const cin_top = C[7][k];
+				S[8][k] = sin ^ cin_top ^ c_in_right;
+				C[8][k] = (sin & cin_top) | (sin & c_in_right) | (cin_top & c_in_right);
+				c_in_right = C[8][k];
+				P[8 + k] = S[8][k];
+			}
+
+			let pVal = 0;
+			for (let i = 0; i < 16; i++) pVal |= (P[i] << i);
+			return { S, C, PP, P, pVal };
+		}
+
+		function buildMultiplierSvg() {
+			if (!multSvg) return;
+
+			let svgHtml = `
+				<defs>
+					<marker id="arr-dim" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+						<polygon points="0 0, 6 3, 0 6" fill="rgba(148, 163, 184, 0.45)" />
+					</marker>
+					<marker id="arr-act" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+						<polygon points="0 0, 6 3, 0 6" fill="#22c55e" />
+					</marker>
+					<filter id="mult-glow" x="-20%" y="-20%" width="140%" height="140%">
+						<feGaussianBlur stdDeviation="2.2" result="blur" />
+						<feMerge>
+							<feMergeNode in="blur" />
+							<feMergeNode in="SourceGraphic" />
+						</feMerge>
+					</filter>
+				</defs>
+			`;
+
+			// 1. Top Zero Inputs
+			// Row 0 Top Inputs (into each cell)
+			for (let c = 0; c < 8; c++) {
+				const pos = getCellPos(0, c);
+				svgHtml += `
+					<line class="mult-wire wire-dim" x1="${pos.cx}" y1="${pos.y - 20}" x2="${pos.cx}" y2="${pos.y}" marker-end="url(#arr-dim)" />
+					<text class="wire-label" x="${pos.cx}" y="${pos.y - 24}" text-anchor="middle">0</text>
+				`;
+			}
+			// Rows 1-7 Leftmost Cell (c = 7) Top Zero Inputs
+			for (let r = 1; r < 8; r++) {
+				const pos = getCellPos(r, 7);
+				svgHtml += `
+					<line class="mult-wire wire-dim" x1="${pos.cx}" y1="${pos.y - 18}" x2="${pos.cx}" y2="${pos.y}" marker-end="url(#arr-dim)" />
+					<text class="wire-label" x="${pos.cx}" y="${pos.y - 22}" text-anchor="middle">0</text>
+				`;
+			}
+			// Row 8 Leftmost Cell (k = 7) Top Zero Input
+			const r8TopPos = getCellPos(8, 7);
+			svgHtml += `
+				<line class="mult-wire wire-dim" x1="${r8TopPos.cx}" y1="${r8TopPos.y - 18}" x2="${r8TopPos.cx}" y2="${r8TopPos.y}" marker-end="url(#arr-dim)" />
+				<text class="wire-label" x="${r8TopPos.cx}" y="${r8TopPos.y - 22}" text-anchor="middle">0</text>
+			`;
+
+			// Row 8 Right Zero Carry Input
+			const r8Cell0 = getCellPos(8, 0);
+			svgHtml += `
+				<line class="mult-wire wire-dim" x1="${r8Cell0.x + multCellW + 20}" y1="${r8Cell0.cy}" x2="${r8Cell0.x + multCellW}" y2="${r8Cell0.cy}" marker-end="url(#arr-dim)" />
+				<text class="wire-label" x="${r8Cell0.x + multCellW + 26}" y="${r8Cell0.cy + 3}">0</text>
+			`;
+
+			// Row 8 Left Carry Out Arrow (C16 = 0)
+			const r8Cell7 = getCellPos(8, 7);
+			svgHtml += `
+				<line class="mult-wire wire-dim" x1="${r8Cell7.x}" y1="${r8Cell7.cy}" x2="${r8Cell7.x - 22}" y2="${r8Cell7.cy}" marker-end="url(#arr-dim)" />
+				<text class="wire-label" x="${r8Cell7.x - 28}" y="${r8Cell7.cy + 3}" text-anchor="end">0</text>
+			`;
+
+			// 2. Sum Wires between rows
+			// Rows 0 to 6 -> Rows 1 to 7
+			for (let r = 0; r < 7; r++) {
+				for (let c = 0; c < 7; c++) {
+					const top = getCellPos(r, c + 1);
+					const bot = getCellPos(r + 1, c);
+					svgHtml += `
+						<line id="wire-sum-${r}-${c + 1}" class="mult-wire wire-dim" x1="${top.cx}" y1="${top.y + multCellH}" x2="${bot.cx}" y2="${bot.y}" marker-end="url(#arr-dim)" data-type="sum" data-r="${r}" data-c="${c + 1}" />
+					`;
+				}
+			}
+			// Row 7 -> Row 8 (Vector merge stage)
+			for (let k = 0; k < 7; k++) {
+				const top = getCellPos(7, k + 1);
+				const bot = getCellPos(8, k);
+				svgHtml += `
+					<line id="wire-sum-7-${k + 1}" class="mult-wire wire-dim" x1="${top.cx}" y1="${top.y + multCellH}" x2="${bot.cx}" y2="${bot.y}" marker-end="url(#arr-dim)" data-type="sum" data-r="7" data-c="${k + 1}" />
+				`;
+			}
+
+			// 3. Carry Wires (Diagonal down-left)
+			// Rows 0 to 6 -> Rows 1 to 7
+			for (let r = 0; r < 7; r++) {
+				for (let c = 0; c < 8; c++) {
+					const top = getCellPos(r, c);
+					const bot = getCellPos(r + 1, c);
+					svgHtml += `
+						<line id="wire-carry-${r}-${c}" class="mult-wire wire-dim" x1="${top.x + 8}" y1="${top.y + multCellH}" x2="${bot.x + multCellW - 8}" y2="${bot.y}" marker-end="url(#arr-dim)" data-type="carry" data-r="${r}" data-c="${c}" />
+					`;
+				}
+			}
+			// Row 7 -> Row 8
+			for (let k = 0; k < 8; k++) {
+				const top = getCellPos(7, k);
+				const bot = getCellPos(8, k);
+				svgHtml += `
+					<line id="wire-carry-7-${k}" class="mult-wire wire-dim" x1="${top.x + 8}" y1="${top.y + multCellH}" x2="${bot.x + multCellW - 8}" y2="${bot.y}" marker-end="url(#arr-dim)" data-type="carry" data-r="7" data-c="${k}" />
+				`;
+			}
+			// Row 8 Ripple-Carry (Horizontal Left)
+			for (let k = 0; k < 7; k++) {
+				const left = getCellPos(8, k);
+				const right = getCellPos(8, k + 1);
+				svgHtml += `
+					<line id="wire-carry-8-${k}" class="mult-wire wire-dim" x1="${left.x}" y1="${left.cy}" x2="${right.x + multCellW}" y2="${right.cy}" marker-end="url(#arr-dim)" data-type="carry" data-r="8" data-c="${k}" />
+				`;
+			}
+
+			// 4. Partial Product Input Arrows (from right into each cell)
+			for (let r = 0; r < 8; r++) {
+				for (let c = 0; c < 8; c++) {
+					const pos = getCellPos(r, c);
+					svgHtml += `
+						<line id="wire-pp-${r}-${c}" class="mult-wire wire-dim" x1="${pos.x + multCellW + 16}" y1="${pos.cy}" x2="${pos.x + multCellW}" y2="${pos.cy}" marker-end="url(#arr-dim)" data-type="pp" data-r="${r}" data-c="${c}" />
+						<text id="lbl-pp-${r}-${c}" class="wire-label" x="${pos.x + multCellW + 8}" y="${pos.cy - 4}" text-anchor="middle">X${r}Y${c}</text>
+					`;
+				}
+			}
+
+			// 5. Product Drop Lines (P0 to P15)
+			// P0 to P7: from cell (r, 0) bottom center straight down
+			for (let r = 0; r < 8; r++) {
+				const pos = getCellPos(r, 0);
+				svgHtml += `
+					<line id="wire-prod-${r}" class="mult-wire wire-dim" x1="${pos.cx}" y1="${pos.y + multCellH}" x2="${pos.cx}" y2="${multPBusY}" marker-end="url(#arr-dim)" data-type="prod" data-bit="${r}" />
+					<text id="lbl-prod-${r}" class="prod-label" x="${pos.cx}" y="${multPBusY + 22}">P${r}</text>
+				`;
+			}
+			// P8 to P15: from cell (8, k) bottom center straight down
+			for (let k = 0; k < 8; k++) {
+				const pos = getCellPos(8, k);
+				svgHtml += `
+					<line id="wire-prod-${8 + k}" class="mult-wire wire-dim" x1="${pos.cx}" y1="${pos.y + multCellH}" x2="${pos.cx}" y2="${multPBusY}" marker-end="url(#arr-dim)" data-type="prod" data-bit="${8 + k}" />
+					<text id="lbl-prod-${8 + k}" class="prod-label" x="${pos.cx}" y="${multPBusY + 22}">P${8 + k}</text>
+				`;
+			}
+
+			// 6. Full Adder Cells (F)
+			// Rows 0 to 7
+			for (let r = 0; r < 8; r++) {
+				for (let c = 0; c < 8; c++) {
+					const pos = getCellPos(r, c);
+					svgHtml += `
+						<g class="mult-cell" id="cell-f-${r}-${c}" data-r="${r}" data-c="${c}">
+							<rect class="cell-box" x="${pos.x}" y="${pos.y}" width="${multCellW}" height="${multCellH}" rx="3" />
+							<text class="cell-label" x="${pos.cx}" y="${pos.cy + 4}">F</text>
+						</g>
+					`;
+				}
+			}
+			// Row 8
+			for (let k = 0; k < 8; k++) {
+				const pos = getCellPos(8, k);
+				svgHtml += `
+					<g class="mult-cell" id="cell-f-8-${k}" data-r="8" data-c="${k}">
+						<rect class="cell-box" x="${pos.x}" y="${pos.y}" width="${multCellW}" height="${multCellH}" rx="3" />
+						<text class="cell-label" x="${pos.cx}" y="${pos.cy + 4}">F</text>
+					</g>
+				`;
+			}
+
+			multSvg.innerHTML = svgHtml;
+		}
+
+		function updateMultiplier(playSound: boolean = false) {
+			const st = computeMultiplierState(multX, multY);
+
+			// Render X bits
+			if (multXBits) {
+				multXBits.innerHTML = '';
+				for (let i = 7; i >= 0; i--) {
+					const val = (multX >> i) & 1;
+					const btn = document.createElement('button');
+					btn.type = 'button';
+					btn.className = `mult-bit-btn mono ${val ? 'active' : ''}`;
+					btn.title = `Toggle Multiplicand Bit X[${i}] (Weight 2^${i} = ${1 << i})`;
+					btn.innerHTML = `<span class="bit-idx">X${i}</span><span class="bit-val">${val}</span>`;
+					btn.addEventListener('click', () => {
+						multX ^= (1 << i);
+						audioEngine.playBitClick(((multX >> i) & 1) === 1);
+						updateMultiplier();
+					});
+					multXBits.appendChild(btn);
+				}
+			}
+			if (multXMeta) {
+				const bin = multX.toString(2).padStart(8, '0');
+				multXMeta.textContent = `Hex: 0x${multX.toString(16).toUpperCase().padStart(2, '0')} • Dec: ${multX} • Bin: ${bin.slice(0, 4)} ${bin.slice(4)}₂`;
+			}
+
+			// Render Y bits
+			if (multYBits) {
+				multYBits.innerHTML = '';
+				for (let i = 7; i >= 0; i--) {
+					const val = (multY >> i) & 1;
+					const btn = document.createElement('button');
+					btn.type = 'button';
+					btn.className = `mult-bit-btn mono ${val ? 'active' : ''}`;
+					btn.title = `Toggle Multiplier Bit Y[${i}] (Weight 2^${i} = ${1 << i})`;
+					btn.innerHTML = `<span class="bit-idx">Y${i}</span><span class="bit-val">${val}</span>`;
+					btn.addEventListener('click', () => {
+						multY ^= (1 << i);
+						audioEngine.playBitClick(((multY >> i) & 1) === 1);
+						updateMultiplier();
+					});
+					multYBits.appendChild(btn);
+				}
+			}
+			if (multYMeta) {
+				const bin = multY.toString(2).padStart(8, '0');
+				multYMeta.textContent = `Hex: 0x${multY.toString(16).toUpperCase().padStart(2, '0')} • Dec: ${multY} • Bin: ${bin.slice(0, 4)} ${bin.slice(4)}₂`;
+			}
+
+			// Render Product output
+			if (multPDec) multPDec.textContent = `P = ${st.pVal.toLocaleString()}`;
+			if (multPHex) multPHex.textContent = `0x${st.pVal.toString(16).toUpperCase().padStart(4, '0')}`;
+			if (multPBin) {
+				const b = st.pVal.toString(2).padStart(16, '0');
+				multPBin.textContent = `${b.slice(0, 4)} ${b.slice(4, 8)} ${b.slice(8, 12)} ${b.slice(12)}₂`;
+			}
+			if (multPBits) {
+				multPBits.innerHTML = '';
+				for (let i = 15; i >= 0; i--) {
+					const val = st.P[i];
+					const div = document.createElement('div');
+					div.className = `mult-p-led mono ${val ? 'active' : ''}`;
+					div.title = `Product Bit P[${i}] (Weight 2^${i} = ${1 << i})`;
+					div.innerHTML = `<span class="p-idx">P${i}</span><span class="p-val">${val}</span>`;
+					multPBits.appendChild(div);
+				}
+			}
+
+			// Update SVG Wires & Cells
+			// Partial Products
+			for (let r = 0; r < 8; r++) {
+				for (let c = 0; c < 8; c++) {
+					const val = st.PP[r][c];
+					const wire = document.getElementById(`wire-pp-${r}-${c}`);
+					const lbl = document.getElementById(`lbl-pp-${r}-${c}`);
+					if (wire) {
+						wire.setAttribute('class', `mult-wire ${val ? 'wire-active' : 'wire-dim'}`);
+						wire.setAttribute('marker-end', val ? 'url(#arr-act)' : 'url(#arr-dim)');
+					}
+					if (lbl) lbl.classList.toggle('active', !!val);
+				}
+			}
+
+			// Sum Wires
+			for (let r = 0; r < 7; r++) {
+				for (let c = 0; c < 7; c++) {
+					const val = st.S[r][c + 1];
+					const wire = document.getElementById(`wire-sum-${r}-${c + 1}`);
+					if (wire) {
+						wire.setAttribute('class', `mult-wire ${val ? 'wire-active' : 'wire-dim'}`);
+						wire.setAttribute('marker-end', val ? 'url(#arr-act)' : 'url(#arr-dim)');
+					}
+				}
+			}
+			for (let k = 0; k < 7; k++) {
+				const val = st.S[7][k + 1];
+				const wire = document.getElementById(`wire-sum-7-${k + 1}`);
+				if (wire) {
+					wire.setAttribute('class', `mult-wire ${val ? 'wire-active' : 'wire-dim'}`);
+					wire.setAttribute('marker-end', val ? 'url(#arr-act)' : 'url(#arr-dim)');
+				}
+			}
+
+			// Carry Wires
+			for (let r = 0; r < 7; r++) {
+				for (let c = 0; c < 8; c++) {
+					const val = st.C[r][c];
+					const wire = document.getElementById(`wire-carry-${r}-${c}`);
+					if (wire) {
+						wire.setAttribute('class', `mult-wire ${val ? 'wire-active' : 'wire-dim'}`);
+						wire.setAttribute('marker-end', val ? 'url(#arr-act)' : 'url(#arr-dim)');
+					}
+				}
+			}
+			for (let k = 0; k < 8; k++) {
+				const val = st.C[7][k];
+				const wire = document.getElementById(`wire-carry-7-${k}`);
+				if (wire) {
+					wire.setAttribute('class', `mult-wire ${val ? 'wire-active' : 'wire-dim'}`);
+					wire.setAttribute('marker-end', val ? 'url(#arr-act)' : 'url(#arr-dim)');
+				}
+			}
+			for (let k = 0; k < 7; k++) {
+				const val = st.C[8][k];
+				const wire = document.getElementById(`wire-carry-8-${k}`);
+				if (wire) {
+					wire.setAttribute('class', `mult-wire ${val ? 'wire-active' : 'wire-dim'}`);
+					wire.setAttribute('marker-end', val ? 'url(#arr-act)' : 'url(#arr-dim)');
+				}
+			}
+
+			// Product Output Drop Lines
+			for (let i = 0; i < 16; i++) {
+				const val = st.P[i];
+				const wire = document.getElementById(`wire-prod-${i}`);
+				const lbl = document.getElementById(`lbl-prod-${i}`);
+				if (wire) {
+					wire.setAttribute('class', `mult-wire ${val ? 'wire-active' : 'wire-dim'}`);
+					wire.setAttribute('marker-end', val ? 'url(#arr-act)' : 'url(#arr-dim)');
+				}
+				if (lbl) lbl.classList.toggle('active', !!val);
+			}
+
+			// Cell Active Highlights
+			for (let r = 0; r < 8; r++) {
+				for (let c = 0; c < 8; c++) {
+					const cell = document.getElementById(`cell-f-${r}-${c}`);
+					const hasActivity = st.S[r][c] || st.C[r][c] || st.PP[r][c];
+					if (cell) cell.classList.toggle('cell-active', !!hasActivity);
+				}
+			}
+			for (let k = 0; k < 8; k++) {
+				const cell = document.getElementById(`cell-f-8-${k}`);
+				const hasActivity = st.S[8][k] || st.C[8][k];
+				if (cell) cell.classList.toggle('cell-active', !!hasActivity);
+			}
+
+			if (playSound) audioEngine.playMultiplierChime();
+		}
+
+		// Tooltip inspector for cells & wires
+		multSvg?.addEventListener('mouseover', (e) => {
+			const target = e.target as SVGElement;
+			const cellEl = target.closest('.mult-cell') as SVGElement | null;
+			const wireEl = target.closest('.mult-wire') as SVGElement | null;
+
+			if (cellEl && multCellInfo) {
+				const r = parseInt(cellEl.getAttribute('data-r') || '0', 10);
+				const c = parseInt(cellEl.getAttribute('data-c') || '0', 10);
+				const st = computeMultiplierState(multX, multY);
+
+				if (r < 8) {
+					const pp = st.PP[r][c];
+					const sin = (c < 7 && r > 0) ? st.S[r - 1][c + 1] : 0;
+					const cin = (r > 0) ? st.C[r - 1][c] : 0;
+					const sout = st.S[r][c];
+					const cout = st.C[r][c];
+					const weight = 1 << (r + c);
+					multCellInfo.innerHTML = `<strong>Cell F[${r},${c}] (CSA Row ${r}):</strong> PP=X${r}&middot;Y${c}=<strong>${pp}</strong> &bull; Sin=<strong>${sin}</strong> &bull; Cin=<strong>${cin}</strong> &rarr; <strong>Sum=${sout}</strong>, <strong>Cout=${cout}</strong> &bull; Bit Weight: 2<sup>${r+c}</sup> (${weight})`;
+				} else {
+					const k = c;
+					const sin = (k < 7) ? st.S[7][k + 1] : 0;
+					const cin_top = st.C[7][k];
+					const c_in_right = (k > 0) ? st.C[8][k - 1] : 0;
+					const sout = st.S[8][k];
+					const cout = st.C[8][k];
+					multCellInfo.innerHTML = `<strong>Cell F[8,${k}] (Vector-Merge Ripple Adder):</strong> Sin(R7)=<strong>${sin}</strong> &bull; Ctop(R7)=<strong>${cin_top}</strong> &bull; Cright=<strong>${c_in_right}</strong> &rarr; <strong>P${8+k}=${sout}</strong>, Cout=<strong>${cout}</strong>`;
+				}
+			} else if (wireEl && multCellInfo) {
+				const type = wireEl.getAttribute('data-type');
+				const st = computeMultiplierState(multX, multY);
+				if (type === 'pp') {
+					const r = parseInt(wireEl.getAttribute('data-r') || '0', 10);
+					const c = parseInt(wireEl.getAttribute('data-c') || '0', 10);
+					const val = st.PP[r][c];
+					multCellInfo.innerHTML = `<strong>Partial Product Wire:</strong> X[${r}] &times; Y[${c}] = ${((multX >> r) & 1)} &times; ${((multY >> c) & 1)} = <strong>${val}</strong> (Weight 2<sup>${r+c}</sup> = ${1 << (r+c)})`;
+				} else if (type === 'sum') {
+					const r = parseInt(wireEl.getAttribute('data-r') || '0', 10);
+					const c = parseInt(wireEl.getAttribute('data-c') || '0', 10);
+					const val = st.S[r][c];
+					multCellInfo.innerHTML = `<strong>Sum Propagation Wire:</strong> S[${r}][${c}] = <strong>${val}</strong> (Feeding cell below)`;
+				} else if (type === 'carry') {
+					const r = parseInt(wireEl.getAttribute('data-r') || '0', 10);
+					const c = parseInt(wireEl.getAttribute('data-c') || '0', 10);
+					const val = st.C[r][c];
+					multCellInfo.innerHTML = `<strong>Carry Propagation Wire:</strong> C[${r}][${c}] = <strong>${val}</strong> (Feeding diagonally down-left)`;
+				} else if (type === 'prod') {
+					const bit = parseInt(wireEl.getAttribute('data-bit') || '0', 10);
+					const val = st.P[bit];
+					multCellInfo.innerHTML = `<strong>Product Drop Line:</strong> Output Bit <strong>P[${bit}] = ${val}</strong> (Weight 2<sup>${bit}</sup> = ${1 << bit})`;
+				}
+			}
+		});
+
+		multSvg?.addEventListener('mouseleave', () => {
+			if (multCellInfo) {
+				multCellInfo.textContent = 'Hover any cell F or wire to inspect Boolean logic, partial products, sum, and carry propagation.';
+			}
+		});
+
+		// Presets
+		document.querySelectorAll('.mult-pre-btn[data-x]').forEach((btn) => {
+			btn.addEventListener('click', () => {
+				const x = parseInt(btn.getAttribute('data-x') || '0', 10);
+				const y = parseInt(btn.getAttribute('data-y') || '0', 10);
+				multX = x;
+				multY = y;
+				updateMultiplier(true);
+			});
+		});
+
+		multRandBtn?.addEventListener('click', () => {
+			multX = Math.floor(Math.random() * 256);
+			multY = Math.floor(Math.random() * 256);
+			updateMultiplier(true);
+		});
+
+		function openMultiplier() {
+			closeAllActiveModes();
+			isMultiplier = true;
+			if (multiplierModal) {
+				multiplierModal.classList.remove('hidden');
+				multiplierModal.style.display = 'flex';
+			}
+			updateDrawerActiveUI();
+			updateMultiplier(false);
+		}
+
+		function closeMultiplier() {
+			isMultiplier = false;
+			if (multiplierModal) {
+				multiplierModal.classList.add('hidden');
+				multiplierModal.style.display = 'none';
+			}
+			updateDrawerActiveUI();
+		}
+
+		function toggleMultiplier() {
+			if (isMultiplier) {
+				closeMultiplier();
+			} else {
+				openMultiplier();
+			}
+		}
+
+		multCloseBtn?.addEventListener('click', closeMultiplier);
+		multBackdrop?.addEventListener('click', closeMultiplier);
+		triggerMultiplierBtn?.addEventListener('click', () => {
+			extrasModal?.classList.add('hidden');
+			if (extrasModal) extrasModal.style.display = 'none';
+			toggleMultiplier();
+		});
+
+		// Initial SVG structure build
+		buildMultiplierSvg();
+
 		// Global API Exports
 		(window as any).__toggleZeroG = () => (isZeroG ? resetZeroG() : startZeroG());
 		(window as any).__toggleTilt = (force?: boolean) => toggleTilt(force);
@@ -2606,6 +3270,9 @@
 		(window as any).__toggleSphere = () => (isSphere ? resetSphere() : startSphere());
 		(window as any).__toggleQuantum = () => (isQuantum ? resetQuantum() : startQuantum());
 		(window as any).__toggleThermal = () => (isThermal ? resetThermal() : startThermal());
+		(window as any).__toggleMultiplier = () => toggleMultiplier();
+		(window as any).__openMultiplier = () => openMultiplier();
+		(window as any).__closeMultiplier = () => closeMultiplier();
 		(window as any).__toggleLabExtras = () => {
 			if (!extrasModal) return;
 			const isHidden = extrasModal.classList.contains('hidden');
@@ -2622,6 +3289,7 @@
 		function updateDrawerActiveUI() {
 			const sphereBtn = document.getElementById('trigger-sphere-btn');
 			const tiltBtn = document.getElementById('trigger-tilt-btn');
+			const multBtn = document.getElementById('trigger-multiplier-btn');
 			const degaussBtn = document.getElementById('trigger-degauss-btn');
 			const thermalBtn = document.getElementById('trigger-thermal-btn');
 			const quantumBtn = document.getElementById('trigger-quantum-btn');
@@ -2631,6 +3299,7 @@
 
 			sphereBtn?.classList.toggle('active', isSphere);
 			tiltBtn?.classList.toggle('active', isTilt);
+			multBtn?.classList.toggle('active', isMultiplier);
 			degaussBtn?.classList.toggle('active', isDegauss);
 			thermalBtn?.classList.toggle('active', isThermal);
 			quantumBtn?.classList.toggle('active', isQuantum);
@@ -2653,6 +3322,10 @@
 				const waferModal = document.getElementById('wafer-modal');
 				if (waferModal && (!waferModal.classList.contains('hidden') || waferModal.style.display !== 'none')) {
 					(window as any).__closeWaferMap?.();
+					handled = true;
+				}
+				if (isMultiplier) {
+					closeMultiplier();
 					handled = true;
 				}
 				if (isZeroG || isTilt || isDegauss || isSphere || isQuantum || isThermal) {
@@ -3284,6 +3957,395 @@
 	}
 	.wafer-btn.primary:hover {
 		background: #0369a1;
+	}
+
+	/* 8x8 BIT CARRY-SAVE ARRAY MULTIPLIER MODAL & SCHEMATIC */
+	.mult-dialog {
+		max-width: 1180px;
+		width: 96vw;
+		max-height: 94vh;
+		background: #090c12;
+		border: 1px solid rgba(34, 197, 94, 0.45);
+		box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 32px rgba(34, 197, 94, 0.18);
+		border-radius: 12px;
+		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		animation: extrasPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	}
+	.mult-dialog .wafer-title {
+		color: #22c55e;
+	}
+	.mult-header-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.75em;
+	}
+	.mult-gh-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45em;
+		padding: 0.25em 0.65em;
+		background: rgba(255, 255, 255, 0.06);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 6px;
+		font-size: 0.72em;
+		color: #94a3b8;
+		text-decoration: none;
+		transition: all 0.15s ease;
+	}
+	.mult-gh-link:hover {
+		background: rgba(34, 197, 94, 0.15);
+		border-color: #22c55e;
+		color: #22c55e;
+	}
+	.mult-body {
+		padding: 1.1em 1.25em;
+		display: flex;
+		flex-direction: column;
+		gap: 0.85em;
+	}
+	.mult-inputs-card {
+		background: rgba(255, 255, 255, 0.02);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		border-radius: 8px;
+		padding: 0.85em 1.1em;
+		display: flex;
+		flex-direction: column;
+		gap: 0.65em;
+	}
+	.mult-reg-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1em;
+		flex-wrap: wrap;
+	}
+	.mult-reg-label {
+		display: flex;
+		flex-direction: column;
+		font-size: 0.76em;
+		color: #e2e8f0;
+		gap: 0.2em;
+	}
+	.mult-reg-label strong {
+		color: #38bdf8;
+		letter-spacing: 0.05em;
+	}
+	.reg-meta {
+		font-size: 0.9em;
+		color: #94a3b8;
+	}
+	.mult-bits {
+		display: flex;
+		gap: 5px;
+		align-items: center;
+	}
+	.mult-bit-btn {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		width: 42px;
+		height: 44px;
+		background: rgba(15, 23, 42, 0.75);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 6px;
+		cursor: pointer;
+		transition: all 0.12s ease;
+		padding: 2px;
+	}
+	.mult-bit-btn .bit-idx {
+		font-size: 0.62em;
+		color: #64748b;
+		margin-bottom: 1px;
+		pointer-events: none;
+	}
+	.mult-bit-btn .bit-val {
+		font-size: 1.05em;
+		font-weight: 700;
+		color: #94a3b8;
+		pointer-events: none;
+	}
+	.mult-bit-btn:hover {
+		border-color: #38bdf8;
+		background: rgba(56, 189, 248, 0.1);
+	}
+	.mult-bit-btn.active {
+		border-color: #22c55e;
+		background: rgba(34, 197, 94, 0.16);
+		box-shadow: 0 0 10px rgba(34, 197, 94, 0.22);
+	}
+	.mult-bit-btn.active .bit-idx {
+		color: #4ade80;
+	}
+	.mult-bit-btn.active .bit-val {
+		color: #22c55e;
+		font-weight: 800;
+	}
+	.mult-op-badge {
+		font-size: 0.72em;
+		font-weight: 700;
+		color: #f59e0b;
+		letter-spacing: 0.08em;
+		padding: 0.15em 0.55em;
+		background: rgba(245, 158, 11, 0.1);
+		border: 1px solid rgba(245, 158, 11, 0.3);
+		border-radius: 4px;
+		align-self: flex-start;
+	}
+	.mult-presets {
+		display: flex;
+		align-items: center;
+		gap: 0.45em;
+		flex-wrap: wrap;
+		padding-top: 0.45em;
+		border-top: 1px solid rgba(255, 255, 255, 0.06);
+		font-size: 0.74em;
+	}
+	.presets-title {
+		color: #64748b;
+		font-weight: 700;
+		margin-right: 0.3em;
+	}
+	.mult-pre-btn {
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		color: #cbd5e1;
+		border-radius: 4px;
+		padding: 0.3em 0.65em;
+		cursor: pointer;
+		font-size: 0.95em;
+		transition: all 0.15s ease;
+	}
+	.mult-pre-btn:hover {
+		background: rgba(34, 197, 94, 0.15);
+		border-color: #22c55e;
+		color: #22c55e;
+	}
+
+	.mult-schematic-card {
+		background: #06080d;
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		border-radius: 8px;
+		padding: 0.75em 0.9em;
+		display: flex;
+		flex-direction: column;
+		gap: 0.55em;
+	}
+	.mult-schematic-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		font-size: 0.72em;
+		color: #94a3b8;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		flex-wrap: wrap;
+		gap: 0.5em;
+	}
+	.mult-legend {
+		display: flex;
+		gap: 0.85em;
+		align-items: center;
+	}
+	.mult-legend .leg-item {
+		display: flex;
+		align-items: center;
+		gap: 0.35em;
+		font-size: 0.92em;
+	}
+	.mult-legend .leg-line {
+		width: 14px;
+		height: 3px;
+		border-radius: 2px;
+	}
+	.mult-legend .leg-line.active {
+		background: #22c55e;
+		box-shadow: 0 0 6px #22c55e;
+	}
+	.mult-legend .leg-line.dim {
+		background: rgba(148, 163, 184, 0.45);
+	}
+	.mult-svg-scroll-wrap {
+		width: 100%;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+		border-radius: 6px;
+		background: #040609;
+		border: 1px solid rgba(255, 255, 255, 0.04);
+	}
+	.mult-schematic-svg {
+		width: 100%;
+		min-width: 980px;
+		height: auto;
+		display: block;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		user-select: none;
+	}
+	.mult-cell-tooltip {
+		min-height: 2em;
+		font-size: 0.75em;
+		color: #94a3b8;
+		background: rgba(255, 255, 255, 0.02);
+		border: 1px dashed rgba(255, 255, 255, 0.1);
+		border-radius: 6px;
+		padding: 0.45em 0.8em;
+		display: flex;
+		align-items: center;
+		line-height: 1.4;
+	}
+	.mult-cell-tooltip strong {
+		color: #f8fafc;
+	}
+
+	.mult-output-card {
+		background: rgba(34, 197, 94, 0.03);
+		border: 1px solid rgba(34, 197, 94, 0.25);
+		border-radius: 8px;
+		padding: 0.85em 1.1em;
+		display: flex;
+		flex-direction: column;
+		gap: 0.6em;
+	}
+	.mult-output-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.5em;
+	}
+	.mult-product-title {
+		font-size: 0.76em;
+		font-weight: 700;
+		color: #22c55e;
+		letter-spacing: 0.06em;
+	}
+	.mult-product-vals {
+		display: flex;
+		gap: 0.85em;
+		align-items: baseline;
+		font-size: 0.82em;
+	}
+	.mult-product-vals .p-dec {
+		font-size: 1.15em;
+		font-weight: 800;
+		color: #22c55e;
+	}
+	.mult-product-vals .p-hex {
+		color: #38bdf8;
+		font-weight: 700;
+	}
+	.mult-product-vals .p-bin {
+		color: #94a3b8;
+	}
+	.mult-product-bits {
+		display: flex;
+		gap: 4px;
+		flex-wrap: wrap;
+		align-items: center;
+	}
+	.mult-p-led {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		flex: 1;
+		min-width: 32px;
+		height: 40px;
+		background: rgba(15, 23, 42, 0.65);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 4px;
+	}
+	.mult-p-led .p-idx {
+		font-size: 0.6em;
+		color: #64748b;
+	}
+	.mult-p-led .p-val {
+		font-size: 0.98em;
+		font-weight: 700;
+		color: #94a3b8;
+	}
+	.mult-p-led.active {
+		border-color: #22c55e;
+		background: rgba(34, 197, 94, 0.18);
+		box-shadow: 0 0 8px rgba(34, 197, 94, 0.28);
+	}
+	.mult-p-led.active .p-idx {
+		color: #4ade80;
+	}
+	.mult-p-led.active .p-val {
+		color: #22c55e;
+		font-weight: 800;
+	}
+
+	/* SVG CELL & WIRE STYLES */
+	:global(.mult-cell) {
+		cursor: pointer;
+	}
+	:global(.mult-cell rect.cell-box) {
+		fill: #0c1017;
+		stroke: rgba(148, 163, 184, 0.35);
+		stroke-width: 1.5;
+		transition: all 0.15s ease;
+	}
+	:global(.mult-cell:hover rect.cell-box) {
+		stroke: #38bdf8;
+		fill: #162030;
+	}
+	:global(.mult-cell.cell-active rect.cell-box) {
+		stroke: #22c55e;
+		fill: rgba(34, 197, 94, 0.12);
+	}
+	:global(.mult-cell text.cell-label) {
+		fill: #94a3b8;
+		font-size: 13px;
+		font-weight: 700;
+		text-anchor: middle;
+		pointer-events: none;
+	}
+	:global(.mult-cell:hover text.cell-label) {
+		fill: #38bdf8;
+	}
+	:global(.mult-cell.cell-active text.cell-label) {
+		fill: #22c55e;
+		font-weight: 800;
+	}
+	:global(.mult-wire) {
+		stroke-width: 1.5;
+		fill: none;
+		transition: stroke 0.15s ease, filter 0.15s ease;
+	}
+	:global(.mult-wire.wire-dim) {
+		stroke: rgba(148, 163, 184, 0.24);
+	}
+	:global(.mult-wire.wire-active) {
+		stroke: #22c55e;
+		filter: url(#mult-glow);
+	}
+	:global(.wire-label) {
+		font-size: 9px;
+		fill: #475569;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		transition: fill 0.15s;
+		pointer-events: none;
+	}
+	:global(.wire-label.active) {
+		fill: #22c55e;
+		font-weight: 700;
+	}
+	:global(.prod-label) {
+		font-size: 11px;
+		fill: #64748b;
+		font-weight: 700;
+		text-anchor: middle;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		pointer-events: none;
+		transition: fill 0.15s;
+	}
+	:global(.prod-label.active) {
+		fill: #22c55e;
+		font-weight: 800;
 	}
 
 	/* CHIEF MORALE OFFICER: AVATAR BOOP & PARTICLES */

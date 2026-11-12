@@ -158,6 +158,8 @@
 			'dissolve',
 			'thermal',
 			'boop',
+			'multiplier',
+			'virtuoso',
 			'extras'
 		];
 
@@ -755,7 +757,25 @@
 <span class="term-head">DESCRIPTION</span>
     Toggle or query hardware-accelerated GPU backdrop blur filters. When enabled,
     the website background behind the modal and terminal window is softly diffused with
-    a 12px Gaussian blur. When disabled, the background remains sharp. Aliases: backdrop, glass.`
+    a 12px Gaussian blur. When disabled, the background remains sharp. Aliases: backdrop, glass.`,
+
+			multiplier: `
+<span class="term-head">NAME</span>
+    multiplier - 8x8-bit Carry-Save Array (CSA) Multiplier &amp; Vector Merge VLSI
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">multiplier</span>
+    <span class="term-hl">virtuoso</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Launch the interactive 8x8-bit Braun Carry-Save Array Multiplier schematic viewer.
+    Features 72 Full Adder cells, 64 Partial Product AND gates, dynamic signal flow tracing,
+    toggleable 8-bit multiplicand X[7:0] and multiplier Y[7:0] registers, preset vectors,
+    and 16-bit product register P[15:0] based on Bo Wu's Cadence Virtuoso VLSI design.`,
+
+			virtuoso: `
+<span class="term-head">NAME</span>
+    virtuoso - alias for multiplier (Cadence Virtuoso VLSI schematic)`
 		};
 
 		function showManPage(page: string) {
@@ -860,6 +880,7 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-hl">dissolve</span>                 Quantum tunneling disintegration into silicon dust
   <span class="term-hl">extras</span>                   Open the Hardware Lab Extras drawer
   <span class="term-hl">gravity</span>                  Zero-G Verlet physics element collapse &amp; throw
+  <span class="term-hl">multiplier</span> / <span class="term-hl">virtuoso</span>   8x8-bit Carry-Save Array Multiplier VLSI schematic
   <span class="term-hl">sudo</span> [cmd]               Privilege escalation request (try 'sudo rm -rf /')
   <span class="term-hl">thermal</span>                  Infrared thermography &amp; LN2 cryo-spray
   <span class="term-hl">tilt</span>                     3D viewport parallax hologram perspective
@@ -1446,6 +1467,16 @@ Status:     Extruder pressure advance nominal &bull; Cooling fan 60%`);
 						appendOutput('<span class="term-hl">[Chief Morale Officer]</span> Silicon binning overdrive triggered! Good girl boosted.');
 					} else {
 						appendOutput('<span class="term-err">Chief Morale Officer not initialized.</span>');
+					}
+					break;
+
+				case 'multiplier':
+				case 'virtuoso':
+					if (typeof (window as any).__openMultiplier === 'function') {
+						(window as any).__openMultiplier();
+						appendOutput('<span class="term-hl">[8x8 Multiplier]</span> Launched 8×8-bit Carry-Save Array Multiplier (Cadence Virtuoso VLSI) interactive schematic inspector.');
+					} else {
+						appendOutput('<span class="term-err">8x8 Multiplier module not initialized.</span>');
 					}
 					break;
 

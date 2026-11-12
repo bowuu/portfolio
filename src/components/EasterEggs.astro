@@ -227,16 +227,16 @@
 				<div class="mult-schematic-card">
 					<div class="mult-schematic-header mono">
 						<div class="mult-schematic-controls">
-							<div class="mult-legend mono">
-								<span class="leg-item"><span class="leg-line active"></span> HIGH (1)</span>
-								<span class="leg-item"><span class="leg-line dim"></span> LOW (0)</span>
-							</div>
 							<button id="mult-replay-btn" class="mult-speed-toggle mono" type="button" title="Replay Propagation Logic">
 								<span>▶ Replay</span>
 							</button>
 							<button id="mult-speed-btn" class="mult-speed-toggle mono" type="button" title="Toggle between Instant Combinational Logic and Step-by-Step Wave Cascade">
 								<span id="mult-speed-icon">⚡</span> <span id="mult-speed-text">Instant</span>
 							</button>
+						</div>
+						<div class="mult-legend mono">
+							<span class="leg-item"><span class="leg-line active"></span> HIGH (1)</span>
+							<span class="leg-item"><span class="leg-line dim"></span> LOW (0)</span>
 						</div>
 					</div>
 					<div class="mult-svg-scroll-wrap" id="mult-svg-wrap">
@@ -3460,8 +3460,22 @@
 			updateMultiplier(true);
 		});
 
+		function runInstantReplay() {
+			clearCascadeTimeouts();
+			const svg = document.getElementById('mult-schematic-svg');
+			if (svg) {
+				svg.classList.add('instant-reflash');
+				setTimeout(() => svg.classList.remove('instant-reflash'), 120);
+			}
+			updateMultiplier(true, false);
+		}
+
 		multReplayBtn?.addEventListener('click', () => {
-			updateMultiplier(true, true);
+			if (multSlowMode) {
+				runMultiplierCascade(true);
+			} else {
+				runInstantReplay();
+			}
 		});
 
 		function openMultiplier() {
@@ -4426,7 +4440,7 @@
 	}
 	.mult-schematic-header {
 		display: flex;
-		justify-content: flex-start;
+		justify-content: space-between;
 		align-items: center;
 		font-size: 0.7em;
 		color: #94a3b8;
@@ -4445,6 +4459,11 @@
 		display: flex;
 		gap: 0.85em;
 		align-items: center;
+	}
+	:global(#mult-schematic-svg.instant-reflash) {
+		opacity: 0.65;
+		filter: brightness(1.25);
+		transition: opacity 60ms ease, filter 60ms ease;
 	}
 	.mult-legend .leg-item {
 		display: flex;

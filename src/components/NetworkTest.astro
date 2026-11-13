@@ -604,17 +604,23 @@
 	.benchmark-btn {
 		display: inline-flex;
 		align-items: center;
+		justify-content: center;
 		gap: 0.5em;
 		background: var(--accent);
 		color: #ffffff;
 		border: 1px solid transparent;
-		padding: 0.5em 1.15em;
+		padding: 0 1.1em;
+		height: 31px;
 		border-radius: 8px;
-		font-size: 0.88em;
+		font-family: inherit;
+		font-size: 0.82em;
 		font-weight: 600;
+		line-height: 1;
 		cursor: pointer;
 		transition: all 0.15s ease;
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+		box-sizing: border-box;
+		white-space: nowrap;
 	}
 	.benchmark-btn:hover:not(:disabled) {
 		background: #c2410c;

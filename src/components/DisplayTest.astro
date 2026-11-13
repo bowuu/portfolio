@@ -516,13 +516,22 @@
 		align-items: center;
 		flex-wrap: wrap;
 		gap: 0.8em;
-		margin-bottom: 0.5em;
+		padding-bottom: 0.8em;
+		margin-bottom: 0.8em;
+		border-bottom: 1.5px solid var(--border-color);
 	}
 
 	.card-header-wrap .card-title {
+		font-size: clamp(1.2em, 2.5vw, 1.35em);
+		font-weight: 700;
 		margin: 0;
-		padding: 0;
+		color: rgb(var(--black));
+		display: flex;
+		align-items: center;
+		gap: 0.5em;
+		letter-spacing: -0.01em;
 		border-bottom: none;
+		padding-bottom: 0;
 	}
 
 	.header-actions {
@@ -539,6 +548,8 @@
 		border-radius: 8px;
 		padding: 2px;
 		border: 1px solid var(--border-color);
+		height: 31px;
+		box-sizing: border-box;
 	}
 
 	:global(html[data-theme="dark"]) .segmented-control {
@@ -548,60 +559,76 @@
 	.seg-btn {
 		background: transparent;
 		border: none;
-		padding: 0.35em 0.7em;
-		font-family: inherit;
-		font-size: 0.8em;
-		font-weight: 600;
 		color: rgb(var(--gray));
+		font-family: inherit;
+		font-size: 0.78em;
+		font-weight: 700;
+		padding: 0 8px;
+		height: 25px;
 		border-radius: 6px;
 		cursor: pointer;
-		transition: background-color 0.15s ease, color 0.15s ease;
+		transition: all 0.15s ease;
+		line-height: 1;
+		white-space: nowrap;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		box-sizing: border-box;
 	}
 
-	.seg-btn:hover {
+	.seg-btn:hover:not(.active) {
 		color: rgb(var(--black));
+		background: rgba(148, 163, 184, 0.15);
+	}
+
+	:global(html[data-theme="dark"]) .seg-btn:hover:not(.active) {
+		color: #ffffff;
+		background: rgba(255, 255, 255, 0.1);
 	}
 
 	.seg-btn.active {
-		background: var(--bg-card);
-		color: var(--accent);
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-	}
-
-	:global(html[data-theme="dark"]) .seg-btn.active {
-		background: #27272a;
-		color: var(--accent);
-		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+		background: var(--accent);
+		color: #ffffff;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 	}
 
 	.telemetry-btn {
 		display: inline-flex;
 		align-items: center;
+		justify-content: center;
 		gap: 0.45em;
-		background: rgba(148, 163, 184, 0.1);
-		color: rgb(var(--gray-dark));
+		background: rgba(148, 163, 184, 0.12);
 		border: 1px solid var(--border-color);
+		color: rgb(var(--gray-dark));
+		padding: 0 10px;
+		height: 31px;
 		border-radius: 8px;
-		padding: 0.45em 0.85em;
 		font-family: inherit;
-		font-size: 0.82em;
+		font-size: 0.78em;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.15s ease;
+		line-height: 1;
+		white-space: nowrap;
+		box-sizing: border-box;
+	}
+
+	:global(html[data-theme="dark"]) .telemetry-btn {
+		background: rgba(255, 255, 255, 0.05);
+		color: rgba(255, 255, 255, 0.85);
 	}
 
 	.telemetry-btn:hover {
-		background: var(--accent);
-		color: #ffffff;
 		border-color: var(--accent);
-		transform: translateY(-1px);
+		color: var(--accent);
+		background: rgba(var(--accent-rgb), 0.08);
 	}
 
 	.benchmark-desc {
-		font-size: 0.95em;
-		line-height: 1.5;
+		font-size: 0.88em;
+		line-height: 1.55;
 		color: rgb(var(--gray-dark));
-		margin: 0 0 1.2em 0;
+		margin: 0 0 1.25em 0;
 	}
 
 	/* MOTION VIEWPORT */

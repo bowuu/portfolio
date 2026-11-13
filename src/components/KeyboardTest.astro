@@ -678,28 +678,39 @@
 	.telemetry-btn {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.4em;
-		background: rgba(0, 0, 0, 0.04);
+		justify-content: center;
+		gap: 0.45em;
+		background: rgba(148, 163, 184, 0.12);
 		border: 1px solid var(--border-color);
-		color: rgb(var(--gray));
-		padding: 0.38em 0.8em;
-		border-radius: 6px;
+		color: rgb(var(--gray-dark));
+		padding: 0 10px;
+		height: 31px;
+		border-radius: 8px;
+		font-family: inherit;
 		font-size: 0.78em;
-		font-weight: 500;
+		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.15s ease;
+		line-height: 1;
+		white-space: nowrap;
+		box-sizing: border-box;
 	}
+
 	:global(html[data-theme="dark"]) .telemetry-btn {
-		background: rgba(255, 255, 255, 0.04);
+		background: rgba(255, 255, 255, 0.05);
+		color: rgba(255, 255, 255, 0.85);
 	}
+
 	.telemetry-btn:hover {
 		border-color: var(--accent);
 		color: var(--accent);
+		background: rgba(var(--accent-rgb), 0.08);
 	}
+
 	.telemetry-btn.active-sound {
 		border-color: rgba(var(--accent-rgb), 0.6);
 		color: var(--accent);
-		background: rgba(var(--accent-rgb), 0.08);
+		background: rgba(var(--accent-rgb), 0.12);
 	}
 	.hidden {
 		display: none !important;

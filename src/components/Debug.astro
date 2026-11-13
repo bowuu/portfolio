@@ -71,13 +71,14 @@
 				</div>
 			</div>
 			<div class="telemetry-item">
-				<div class="loc-label-bar">
-					<span class="t-label">Location</span>
-					<button id="open-map-btn" class="loc-map-btn hidden" type="button" title="Open interactive OpenStreetMap applet">
-						<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
-						<span>Map</span>
-					</button>
-				</div>
+				<button id="open-map-btn" class="t-subhead-btn" type="button" disabled title="Click to view on interactive OpenStreetMap">
+					<span>Location</span>
+					<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" class="subhead-icon">
+						<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+						<line x1="8" y1="2" x2="8" y2="18"></line>
+						<line x1="16" y1="6" x2="16" y2="22"></line>
+					</svg>
+				</button>
 				<span id="t-location" class="t-val">Detecting...</span>
 			</div>
 			<div class="telemetry-item">
@@ -87,14 +88,6 @@
 			<div class="telemetry-item">
 				<span class="t-label">Network &amp; ISP</span>
 				<span id="t-isp" class="t-val">Detecting...</span>
-			</div>
-			<div class="telemetry-item">
-				<span class="t-label">Transport Protocol</span>
-				<span id="t-transport" class="t-val">Detecting...</span>
-			</div>
-			<div class="telemetry-item">
-				<span class="t-label">WebRTC NAT Traversal</span>
-				<span id="t-nat" class="t-val">Probing STUN...</span>
 			</div>
 		</div>
 	</div>
@@ -130,13 +123,13 @@
 				<span id="t-ram" class="t-val">Detecting...</span>
 			</div>
 			<div class="telemetry-item">
-				<div class="loc-label-bar">
-					<span class="t-label">Graphics Card (GPU)</span>
-					<button id="open-webgpu-btn" class="loc-map-btn hidden" type="button" title="View WebGPU compute limits & architecture">
-						<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>
-						<span>WebGPU</span>
-					</button>
-				</div>
+				<button id="open-webgpu-btn" class="t-subhead-btn" type="button" disabled title="Click to view WebGPU compute architecture & hardware limits">
+					<span>Graphics Card (GPU)</span>
+					<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" class="subhead-icon">
+						<rect x="4" y="4" width="16" height="16" rx="2"/>
+						<rect x="9" y="9" width="6" height="6"/>
+					</svg>
+				</button>
 				<span id="t-gpu" class="t-val">Detecting WebGL...</span>
 			</div>
 		</div>
@@ -197,34 +190,6 @@
 			<div class="telemetry-item">
 				<span class="t-label">Video DRM System</span>
 				<span id="t-drm" class="t-val">Probing CDM modules...</span>
-			</div>
-		</div>
-	</div>
-
-	<!-- SUBSECTION 5: PRIVACY & SANDBOX -->
-	<div class="telemetry-group">
-		<div class="telemetry-group-header">
-			<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
-				<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-			</svg>
-			<span>Privacy &amp; Sandbox</span>
-		</div>
-		<div class="telemetry-grid">
-			<div class="telemetry-item">
-				<span class="t-label">Global Privacy Control</span>
-				<span id="t-gpc" class="t-val">Probing GPC...</span>
-			</div>
-			<div class="telemetry-item">
-				<span class="t-label">Fingerprint Noise Audit</span>
-				<span id="t-fingerprint" class="t-val">Auditing canvas hash...</span>
-			</div>
-			<div class="telemetry-item">
-				<span class="t-label">Storage Partitioning</span>
-				<span id="t-storage-sandbox" class="t-val">Probing sandbox...</span>
-			</div>
-			<div class="telemetry-item">
-				<span class="t-label">Tracker / DNS Sinkhole</span>
-				<span id="t-adblock" class="t-val">Checking local blocklist...</span>
 			</div>
 		</div>
 	</div>
@@ -769,7 +734,8 @@
 				};
 
 				if (openWebgpuBtn) {
-					openWebgpuBtn.classList.remove('hidden');
+					openWebgpuBtn.classList.add('interactive');
+					(openWebgpuBtn as HTMLButtonElement).disabled = false;
 					openWebgpuBtn.onclick = () => {
 						if (!webgpuInfoCache) return;
 						if (webgpuBadge) webgpuBadge.textContent = `${webgpuInfoCache.backend} • WebGPU`;
@@ -821,8 +787,8 @@
 				}
 
 				if (gpuEl) {
-					gpuEl.textContent = `${gpuString} • WebGPU (${backendName})`;
-					gpuEl.title = `Hardware WebGPU adapter verified via navigator.gpu. Backend: ${backendName}. Click 'WebGPU' badge for compute limits.`;
+					gpuEl.textContent = gpuString;
+					gpuEl.title = `Hardware GPU: ${gpuString}. WebGPU backend: ${backendName}. Click 'Graphics Card' header to inspect compute limits.`;
 				}
 			}).catch(() => {});
 		}
@@ -1665,7 +1631,8 @@
 				const lon = parseFloat(data.longitude);
 				if (!isNaN(lat) && !isNaN(lon) && (lat !== 0 || lon !== 0)) {
 					if (openMapBtn) {
-						openMapBtn.classList.remove('hidden');
+						openMapBtn.classList.add('interactive');
+						(openMapBtn as HTMLButtonElement).disabled = false;
 						openMapBtn.title = `View ${locString} on interactive OpenStreetMap`;
 						openMapBtn.onclick = (e) => {
 							e.stopPropagation();
@@ -1678,7 +1645,10 @@
 						locEl.onclick = () => openMapApplet(lat, lon, locString);
 					}
 				} else {
-					if (openMapBtn) openMapBtn.classList.add('hidden');
+					if (openMapBtn) {
+						openMapBtn.classList.remove('interactive');
+						(openMapBtn as HTMLButtonElement).disabled = true;
+					}
 				}
 
 				if (edgeEl) {
@@ -1710,181 +1680,6 @@
 			if (locEl) locEl.textContent = 'Direct Connection';
 			if (edgeEl) edgeEl.textContent = 'Localhost (Dev Edge)';
 			if (ispEl) ispEl.textContent = 'Cloudflare Protected';
-		}
-		// Transport Protocol Detection (HTTP/3 QUIC vs HTTP/2)
-		const transportEl = document.getElementById('t-transport');
-		if (transportEl) {
-			let proto = 'HTTP/2 (Multiplexed TCP)';
-			try {
-				const navEntries = performance.getEntriesByType('navigation');
-				if (navEntries.length > 0) {
-					const nav = navEntries[0] as PerformanceNavigationTiming;
-					const hop = (nav as any).nextHopProtocol || '';
-					if (hop === 'h3' || hop.startsWith('h3-')) {
-						proto = 'HTTP/3 (QUIC / UDP 443)';
-					} else if (hop === 'h2') {
-						proto = 'HTTP/2 (Multiplexed TLS 1.3)';
-					} else if (hop === 'http/1.1') {
-						proto = 'HTTP/1.1 (TCP)';
-					}
-				}
-			} catch (_) {}
-			transportEl.textContent = proto;
-			transportEl.title = 'Active page delivery transport protocol reported by PerformanceNavigationTiming.nextHopProtocol.';
-		}
-
-		// WebRTC NAT Traversal & STUN RTT
-		const natEl = document.getElementById('t-nat');
-		if (natEl) {
-			if (typeof RTCPeerConnection === 'undefined') {
-				natEl.textContent = 'WebRTC Disabled / Blocked';
-				natEl.title = 'RTCPeerConnection not supported or blocked by browser.';
-			} else {
-				const probeNat = async () => {
-					try {
-						const pc = new RTCPeerConnection({
-							iceServers: [
-								{ urls: ['stun:stun.cloudflare.com:3478', 'stun:stun.google.com:19302'] }
-							]
-						});
-						pc.createDataChannel('diag');
-						const startTime = performance.now();
-						let foundSrflx = false;
-						let foundHost = false;
-
-						const timeout = setTimeout(() => {
-							try { pc.close(); } catch (_) {}
-							if (!foundSrflx && !foundHost) {
-								natEl.textContent = 'UDP Restricted (Firewall)';
-								natEl.title = 'No ICE candidates gathered within timeout; UDP port 3478 may be filtered.';
-							}
-						}, 3500);
-
-						pc.onicecandidate = (e) => {
-							if (e.candidate) {
-								const type = e.candidate.type;
-								if (type === 'host') foundHost = true;
-								if (type === 'srflx' && !foundSrflx) {
-									foundSrflx = true;
-									const stunLatency = Math.round(performance.now() - startTime);
-									clearTimeout(timeout);
-									try { pc.close(); } catch (_) {}
-
-									natEl.textContent = `Full Cone NAT • ${stunLatency} ms STUN RTT`;
-									natEl.title = `Gathered server reflexive candidate (srflx) via Cloudflare/Google Anycast STUN in ${stunLatency} ms. Direct P2P UDP traversal supported.`;
-								}
-							} else {
-								clearTimeout(timeout);
-								try { pc.close(); } catch (_) {}
-								if (foundHost && !foundSrflx) {
-									natEl.textContent = 'Symmetric NAT / Hardened UDP';
-									natEl.title = 'Host candidate gathered, but STUN reflexive mapping was blocked or symmetric.';
-								}
-							}
-						};
-
-						const offer = await pc.createOffer();
-						await pc.setLocalDescription(offer);
-					} catch (_) {
-						natEl.textContent = 'WebRTC Shielded';
-						natEl.title = 'WebRTC candidate gathering prevented by browser privacy shield.';
-					}
-				};
-				probeNat();
-			}
-		}
-
-		// SUBSECTION 5: PRIVACY & SANDBOX
-		const gpcEl = document.getElementById('t-gpc');
-		if (gpcEl) {
-			const isGpc = (navigator as any).globalPrivacyControl === true;
-			const isDnt = navigator.doNotTrack === '1' || (window as any).doNotTrack === '1';
-			if (isGpc) {
-				gpcEl.textContent = 'Active (Sec-GPC: 1)';
-				gpcEl.title = 'Global Privacy Control signal is actively asserted to websites (navigator.globalPrivacyControl = true).';
-			} else if (isDnt) {
-				gpcEl.textContent = 'DNT Active (DNT: 1)';
-				gpcEl.title = 'Do Not Track header is actively broadcast (navigator.doNotTrack = 1).';
-			} else {
-				gpcEl.textContent = 'Default (Standard Headers)';
-				gpcEl.title = 'Neither GPC nor DNT signals are asserted by the client.';
-			}
-		}
-
-		const fpEl = document.getElementById('t-fingerprint');
-		if (fpEl) {
-			try {
-				const testCanvas1 = document.createElement('canvas');
-				testCanvas1.width = 32;
-				testCanvas1.height = 32;
-				const ctx1 = testCanvas1.getContext('2d');
-				if (ctx1) {
-					ctx1.fillStyle = '#f97316';
-					ctx1.fillRect(0, 0, 32, 32);
-					ctx1.font = '14px Arial';
-					ctx1.fillStyle = '#0f172a';
-					ctx1.fillText('brob', 2, 20);
-					const data1 = testCanvas1.toDataURL();
-
-					const testCanvas2 = document.createElement('canvas');
-					testCanvas2.width = 32;
-					testCanvas2.height = 32;
-					const ctx2 = testCanvas2.getContext('2d');
-					if (ctx2) {
-						ctx2.fillStyle = '#f97316';
-						ctx2.fillRect(0, 0, 32, 32);
-						ctx2.font = '14px Arial';
-						ctx2.fillStyle = '#0f172a';
-						ctx2.fillText('brob', 2, 20);
-						const data2 = testCanvas2.toDataURL();
-
-						if (data1 !== data2) {
-							fpEl.textContent = 'Randomized (Anti-FP Noise)';
-							fpEl.title = 'Detected canvas fingerprint randomization (Brave Shields or anti-fingerprinting extension actively injects per-render entropy).';
-						} else {
-							fpEl.textContent = 'Consistent / Deterministic';
-							fpEl.title = 'Canvas rendering output is deterministic with zero synthetic noise injection.';
-						}
-					}
-				}
-			} catch (_) {
-				fpEl.textContent = 'Canvas Readback Blocked';
-				fpEl.title = 'Browser security policy blocked canvas pixel readback (toDataURL / getImageData).';
-			}
-		}
-
-		const storageSandboxEl = document.getElementById('t-storage-sandbox');
-		if (storageSandboxEl) {
-			const isIsolated = window.crossOriginIsolated === true;
-			const hasStorageAccess = typeof document.hasStorageAccess === 'function';
-			if (hasStorageAccess) {
-				document.hasStorageAccess().then((hasAccess) => {
-					if (hasAccess === false) {
-						storageSandboxEl.textContent = isIsolated ? 'Partitioned + Isolated' : 'Partitioned (State Isolation)';
-						storageSandboxEl.title = 'Third-party storage partitioning (CHIPS / State Partitioning) active.';
-					} else {
-						storageSandboxEl.textContent = isIsolated ? 'Isolated Origin' : 'Standard Origin Sandbox';
-						storageSandboxEl.title = 'Origin-bound storage sandbox without cross-site partition barriers.';
-					}
-				}).catch(() => {
-					storageSandboxEl.textContent = 'Origin Sandbox';
-				});
-			} else {
-				storageSandboxEl.textContent = isIsolated ? 'Isolated Context' : 'Origin Sandbox';
-			}
-		}
-
-		const adblockEl = document.getElementById('t-adblock');
-		if (adblockEl) {
-			fetch('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', { method: 'HEAD', mode: 'no-cors' })
-				.then(() => {
-					adblockEl.textContent = 'Standard / Unfiltered';
-					adblockEl.title = 'Known advertising/telemetry network hostnames resolved without local client sinkholing.';
-				})
-				.catch(() => {
-					adblockEl.textContent = 'Active (Adblock / DNS Sinkhole)';
-					adblockEl.title = 'Known analytics/tracker request was sinkholed locally by an adblock extension (e.g. uBlock Origin, Brave Shield) or network DNS sinkhole (Pi-hole).';
-				});
 		}
 	}
 
@@ -2187,39 +1982,41 @@
 		border-width: 0;
 	}
 
-	/* LOCATION & MAP BUTTON */
-	.loc-label-bar {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.5em;
-		margin-bottom: 0.1em;
-	}
-	.loc-map-btn {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.3em;
-		background: rgba(var(--accent-rgb), 0.1);
-		border: 1px solid rgba(var(--accent-rgb), 0.35);
-		color: var(--accent);
-		border-radius: 999px;
-		padding: 0.08em 0.55em;
-		font-size: 0.7em;
-		font-weight: 700;
+	/* INTEGRATED INTERACTIVE SUB-HEADERS */
+	.t-subhead-btn {
+		background: transparent;
+		border: none;
+		padding: 0;
+		margin: 0 0 0.1em 0;
+		font-family: inherit;
+		font-size: 0.8em;
+		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
+		color: rgb(var(--gray));
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35em;
+		cursor: default;
+		transition: color 0.15s ease;
+		line-height: inherit;
+		text-align: left;
+	}
+	.t-subhead-btn .subhead-icon {
+		opacity: 0.35;
+		transition: opacity 0.15s ease, transform 0.15s ease, color 0.15s ease;
+		flex-shrink: 0;
+	}
+	.t-subhead-btn.interactive {
 		cursor: pointer;
-		transition: all 0.15s ease;
-		line-height: 1.35;
 	}
-	.loc-map-btn:hover {
-		background: var(--accent);
-		color: #ffffff;
-		border-color: var(--accent);
-		transform: translateY(-1px);
+	.t-subhead-btn.interactive:hover {
+		color: var(--accent);
 	}
-	.loc-map-btn.hidden {
-		display: none !important;
+	.t-subhead-btn.interactive:hover .subhead-icon {
+		opacity: 1;
+		color: var(--accent);
+		transform: scale(1.15);
 	}
 	.loc-clickable {
 		cursor: pointer;

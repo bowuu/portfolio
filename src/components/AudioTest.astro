@@ -21,13 +21,6 @@
 				<input type="range" id="audio-volume-slider" min="0" max="1" step="0.05" value="0.35" class="vol-slider" aria-label="Output Volume" />
 				<span id="audio-vol-text" class="vol-text mono">35%</span>
 			</div>
-
-			<button id="stop-audio-btn" class="telemetry-btn stop-btn" type="button" title="Silence all audio generators">
-				<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-					<rect x="5" y="5" width="14" height="14" rx="2"/>
-				</svg>
-				<span>Stop Audio</span>
-			</button>
 		</div>
 	</div>
 
@@ -179,7 +172,6 @@
 		// UI references
 		const volSlider = document.getElementById('audio-volume-slider') as HTMLInputElement;
 		const volText = document.getElementById('audio-vol-text');
-		const stopBtn = document.getElementById('stop-audio-btn');
 		const dacBadge = document.getElementById('audio-dac-badge');
 		const pipelineSpecEl = document.getElementById('audio-pipeline-spec');
 
@@ -277,8 +269,6 @@
 
 			drawLissajousStatic();
 		}
-
-		if (stopBtn) stopBtn.addEventListener('click', stopAllAudio);
 
 		// Frequency Band Classification
 		function updateFrequencyUI(hz: number) {
@@ -460,8 +450,13 @@
 
 		if (runSweepBtn) runSweepBtn.addEventListener('click', runAutoSweep);
 
-		// CHANNEL ISOLATION & POLARITY TESTS
+		// CHANNEL ISOLATION & POLARITY TESTS (Toggleable on/off)
 		function playPolarityTone(mode: 'left' | 'right' | 'inphase' | 'outphase') {
+			if (activeMode === mode) {
+				stopAllAudio();
+				return;
+			}
+
 			const ctx = getAudioContext();
 			stopAllAudio();
 			activeMode = mode;

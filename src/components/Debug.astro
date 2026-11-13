@@ -1366,17 +1366,32 @@
 
 					if (found.length > 0) {
 						drmEl.textContent = found.join(' • ');
-						drmEl.title = 'Probed via Encrypted Media Extensions (navigator.requestMediaKeySystemAccess) for hardware & software CDM support.';
+						drmEl.title = 'Probed via Encrypted Media Extensions (navigator.requestMediaKeySystemAccess) for hardware & software CDM support. Click to re-probe.';
 					} else {
 						drmEl.textContent = 'Standard / Open Media';
-						drmEl.title = 'No Content Decryption Modules (CDM) supported or allowed by browser.';
+						drmEl.title = 'No Content Decryption Modules (CDM) supported or allowed by browser. Click to re-probe.';
 					}
 				} else {
 					drmEl.textContent = 'Not Supported';
 					drmEl.title = 'Encrypted Media Extensions (EME) API not supported by browser.';
 				}
 			};
-			probeDRM();
+
+			drmEl.classList.add('loc-clickable');
+			drmEl.onclick = () => {
+				drmEl.textContent = 'Probing CDM modules...';
+				probeDRM();
+			};
+
+			// Firefox prompts the user with a permission dialog on navigator.requestMediaKeySystemAccess;
+			// make DRM probe opt-in / click-to-probe on Firefox to avoid intrusive page-load prompts.
+			const isFirefox = /Firefox/i.test(navigator.userAgent);
+			if (isFirefox) {
+				drmEl.textContent = 'Click to probe CDM';
+				drmEl.title = 'In Firefox, querying Widevine DRM triggers a browser permission dialog. Click to probe CDM.';
+			} else {
+				probeDRM();
+			}
 		}
 
 		// 15. Cloudflare Edge Ephemeral Detection & Dual-Stack IP

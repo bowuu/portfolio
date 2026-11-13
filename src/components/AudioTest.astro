@@ -1,0 +1,1057 @@
+---
+// AudioTest.astro - DAC Latency, Stereo Isolation, 180° Polarity & Frequency Sweeper
+---
+
+<section class="card audio-test-card" id="audio-lab">
+	<div class="card-header-wrap">
+		<h2 class="card-title">
+			<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+				<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+				<path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+			</svg>
+			Audio Test
+		</h2>
+
+		<div class="header-actions">
+			<div class="volume-control-wrap" title="Output Volume (Safe Ceiling -18 dBFS)">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="vol-icon">
+					<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+					<path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+				</svg>
+				<input type="range" id="audio-volume-slider" min="0" max="1" step="0.05" value="0.35" class="vol-slider" aria-label="Output Volume" />
+				<span id="audio-vol-text" class="vol-text mono">35%</span>
+			</div>
+
+			<button id="stop-audio-btn" class="telemetry-btn stop-btn" type="button" title="Silence all audio generators">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+					<rect x="5" y="5" width="14" height="14" rx="2"/>
+				</svg>
+				<span>Stop Audio</span>
+			</button>
+		</div>
+	</div>
+
+	<p class="benchmark-desc">
+		Measure DAC hardware sample rate and buffer latency, verify Left/Right channel separation, diagnose 180&deg; wiring phase polarity, and test frequency response from 20 Hz to 20,000 Hz.
+	</p>
+
+	<!-- TWO-COLUMN WORKBENCH -->
+	<div class="audio-workbench-grid">
+		<!-- COLUMN 1: POLARITY & CHANNEL ISOLATION -->
+		<div class="audio-col">
+			<div class="col-head">
+				<div class="col-head-left">
+					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="col-icon">
+						<circle cx="12" cy="12" r="10"/>
+						<line x1="12" y1="2" x2="12" y2="22"/>
+					</svg>
+					<span class="col-title">Stereo Isolation &amp; 180&deg; Phase Polarity</span>
+				</div>
+				<span class="badge mono" id="audio-dac-badge">48.0 kHz</span>
+			</div>
+
+			<!-- PHASE LISSAJOUS CANVAS -->
+			<div class="lissajous-box">
+				<canvas id="lissajous-canvas" width="400" height="100"></canvas>
+				<div class="lissajous-overlay">
+					<span id="lissajous-mode-label" class="lissajous-label">Standby &bull; Select Tone Below</span>
+				</div>
+			</div>
+
+			<!-- POLARITY BUTTON GRID -->
+			<div class="tone-buttons-grid">
+				<button class="tone-btn" id="btn-tone-left" type="button">
+					<div class="tone-btn-top">
+						<span class="tone-pill">L</span>
+						<span class="tone-name">Left Channel</span>
+					</div>
+					<span class="tone-sub">1 kHz &bull; Left Ear Only</span>
+				</button>
+
+				<button class="tone-btn" id="btn-tone-right" type="button">
+					<div class="tone-btn-top">
+						<span class="tone-pill">R</span>
+						<span class="tone-name">Right Channel</span>
+					</div>
+					<span class="tone-sub">1 kHz &bull; Right Ear Only</span>
+				</button>
+
+				<button class="tone-btn" id="btn-tone-inphase" type="button">
+					<div class="tone-btn-top">
+						<span class="tone-pill">0&deg;</span>
+						<span class="tone-name">In-Phase (Center)</span>
+					</div>
+					<span class="tone-sub">Correlated &bull; Pinpoint Center Image</span>
+				</button>
+
+				<button class="tone-btn" id="btn-tone-outphase" type="button">
+					<div class="tone-btn-top">
+						<span class="tone-pill warn">180&deg;</span>
+						<span class="tone-name">Out-of-Phase</span>
+					</div>
+					<span class="tone-sub">Inverted Phase &bull; Diffuse / Hollow</span>
+				</button>
+			</div>
+
+			<div class="audio-specs-strip">
+				<span id="audio-pipeline-spec">DAC Pipeline: Probing...</span>
+			</div>
+		</div>
+
+		<!-- COLUMN 2: LOGARITHMIC FREQUENCY SWEEPER -->
+		<div class="audio-col">
+			<div class="col-head">
+				<div class="col-head-left">
+					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="col-icon">
+						<path d="M2 12h4l3 8 4-16 3 8h6"/>
+					</svg>
+					<span class="col-title">Logarithmic Frequency Generator</span>
+				</div>
+				<div class="segmented-control" role="group" aria-label="Audio Waveform">
+					<button class="seg-btn active" data-wave="sine" type="button">Sine</button>
+					<button class="seg-btn" data-wave="pink" type="button" title="Pink Noise (1/f Equal Energy)">Pink</button>
+					<button class="seg-btn" data-wave="white" type="button" title="White Noise">White</button>
+				</div>
+			</div>
+
+			<!-- FREQUENCY DISPLAY HERO -->
+			<div class="freq-display-box">
+				<div class="freq-num-wrap">
+					<span id="freq-num" class="freq-num mono">1,000</span>
+					<span class="freq-unit">Hz</span>
+				</div>
+				<span id="freq-band-tag" class="freq-band-tag">Midrange (1 kHz Reference)</span>
+			</div>
+
+			<!-- SCRUB SLIDER -->
+			<div class="slider-row">
+				<input type="range" id="freq-slider" min="20" max="20000" step="1" value="1000" class="freq-slider" aria-label="Frequency Slider" />
+			</div>
+
+			<!-- PRESET PILLS -->
+			<div class="freq-presets-row">
+				<button class="freq-pill" data-hz="20" type="button">20 Hz (Sub)</button>
+				<button class="freq-pill" data-hz="60" type="button">60 Hz (Bass)</button>
+				<button class="freq-pill" data-hz="250" type="button">250 Hz (Low-Mid)</button>
+				<button class="freq-pill active" data-hz="1000" type="button">1 kHz (Ref)</button>
+				<button class="freq-pill" data-hz="8000" type="button">8 kHz (Pres)</button>
+				<button class="freq-pill" data-hz="16000" type="button">16 kHz (Treble)</button>
+			</div>
+
+			<!-- SWEEP ACTION ROW -->
+			<div class="sweep-actions-row">
+				<button id="toggle-tone-btn" class="sweep-btn" type="button">
+					<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" id="toggle-tone-icon">
+						<polygon points="5 3 19 12 5 21 5 3"/>
+					</svg>
+					<span id="toggle-tone-text">Play Tone</span>
+				</button>
+
+				<button id="run-sweep-btn" class="sweep-btn sweep-auto-btn" type="button">
+					<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+						<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+						<polyline points="17 6 23 6 23 12"/>
+					</svg>
+					<span id="run-sweep-text">Auto Sweep (20Hz&ndash;20kHz)</span>
+				</button>
+			</div>
+		</div>
+	</div>
+</section>
+
+<script>
+	function setupAudioTest() {
+		let audioCtx: AudioContext | null = null;
+		let masterGain: GainNode | null = null;
+		let compressor: DynamicsCompressorNode | null = null;
+
+		let currentOsc: OscillatorNode | null = null;
+		let noiseNode: AudioNode | null = null;
+		let pannerNode: StereoPannerNode | null = null;
+		let leftGain: GainNode | null = null;
+		let rightGain: GainNode | null = null;
+
+		let activeMode: 'none' | 'left' | 'right' | 'inphase' | 'outphase' | 'tone' | 'sweep' = 'none';
+		let activeWave: 'sine' | 'pink' | 'white' = 'sine';
+		let isSweeping = false;
+		let sweepRafId: number | null = null;
+
+		// UI references
+		const volSlider = document.getElementById('audio-volume-slider') as HTMLInputElement;
+		const volText = document.getElementById('audio-vol-text');
+		const stopBtn = document.getElementById('stop-audio-btn');
+		const dacBadge = document.getElementById('audio-dac-badge');
+		const pipelineSpecEl = document.getElementById('audio-pipeline-spec');
+
+		const freqNumEl = document.getElementById('freq-num');
+		const freqBandEl = document.getElementById('freq-band-tag');
+		const freqSlider = document.getElementById('freq-slider') as HTMLInputElement;
+		const toggleToneBtn = document.getElementById('toggle-tone-btn');
+		const toggleToneText = document.getElementById('toggle-tone-text');
+		const runSweepBtn = document.getElementById('run-sweep-btn');
+		const runSweepText = document.getElementById('run-sweep-text');
+
+		const lissajousCanvas = document.getElementById('lissajous-canvas') as HTMLCanvasElement;
+		const lissajousLabel = document.getElementById('lissajous-mode-label');
+		const lissajousCtx = lissajousCanvas?.getContext('2d');
+
+		// Lazy initialize AudioContext on user interaction
+		function getAudioContext(): AudioContext {
+			if (!audioCtx) {
+				const AudioConstructor = window.AudioContext || (window as any).webkitAudioContext;
+				audioCtx = new AudioConstructor();
+
+				// Master compressor to prevent clipping / distortion
+				compressor = audioCtx.createDynamicsCompressor();
+				compressor.threshold.setValueAtTime(-12, audioCtx.currentTime);
+				compressor.knee.setValueAtTime(30, audioCtx.currentTime);
+				compressor.ratio.setValueAtTime(12, audioCtx.currentTime);
+				compressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
+				compressor.release.setValueAtTime(0.25, audioCtx.currentTime);
+
+				masterGain = audioCtx.createGain();
+				const initialVol = volSlider ? parseFloat(volSlider.value) : 0.35;
+				masterGain.gain.setValueAtTime(initialVol * 0.45, audioCtx.currentTime);
+
+				compressor.connect(audioCtx.destination);
+				masterGain.connect(compressor);
+
+				// Update DAC specs in UI
+				if (dacBadge) {
+					dacBadge.textContent = `${(audioCtx.sampleRate / 1000).toFixed(1)} kHz`;
+				}
+				if (pipelineSpecEl) {
+					const channels = audioCtx.destination.maxChannelCount || 2;
+					const chLabel = channels > 2 ? `${channels}ch Surround` : '2ch Stereo';
+					const baseLat = ((audioCtx.baseLatency || 0.005) * 1000).toFixed(1);
+					pipelineSpecEl.textContent = `DAC Pipeline: ${audioCtx.sampleRate} Hz • ${chLabel} • ${baseLat} ms buffer latency`;
+				}
+			}
+
+			if (audioCtx.state === 'suspended') {
+				audioCtx.resume().catch(() => {});
+			}
+			return audioCtx;
+		}
+
+		// Update Master Volume
+		if (volSlider) {
+			volSlider.addEventListener('input', () => {
+				const val = parseFloat(volSlider.value);
+				if (volText) volText.textContent = `${Math.round(val * 100)}%`;
+				if (masterGain && audioCtx) {
+					masterGain.gain.setTargetAtTime(val * 0.45, audioCtx.currentTime, 0.03);
+				}
+			});
+		}
+
+		// Stop All Active Audio
+		function stopAllAudio() {
+			if (sweepRafId) {
+				cancelAnimationFrame(sweepRafId);
+				sweepRafId = null;
+			}
+			isSweeping = false;
+
+			if (currentOsc) {
+				try {
+					currentOsc.stop();
+					currentOsc.disconnect();
+				} catch (_) {}
+				currentOsc = null;
+			}
+			if (noiseNode) {
+				try {
+					noiseNode.disconnect();
+				} catch (_) {}
+				noiseNode = null;
+			}
+
+			activeMode = 'none';
+			document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
+			if (toggleToneBtn) toggleToneBtn.classList.remove('active');
+			if (toggleToneText) toggleToneText.textContent = 'Play Tone';
+			if (runSweepBtn) runSweepBtn.classList.remove('active');
+			if (runSweepText) runSweepText.textContent = 'Auto Sweep (20Hz–20kHz)';
+			if (lissajousLabel) lissajousLabel.textContent = 'Standby • Select Tone Below';
+
+			drawLissajousStatic();
+		}
+
+		if (stopBtn) stopBtn.addEventListener('click', stopAllAudio);
+
+		// Frequency Band Classification
+		function updateFrequencyUI(hz: number) {
+			if (freqNumEl) freqNumEl.textContent = Math.round(hz).toLocaleString();
+			let band = 'Midrange';
+			if (hz < 60) band = 'Sub-Bass (Feel more than hear)';
+			else if (hz < 250) band = 'Bass / Punch';
+			else if (hz < 500) band = 'Low-Mid / Body';
+			else if (hz < 2000) band = 'Midrange (Vocal fundamental)';
+			else if (hz < 4000) band = 'High-Mid / Clarinet / Attack';
+			else if (hz < 8000) band = 'Presence / Sibilance';
+			else if (hz < 14000) band = 'Brilliance / Air';
+			else band = 'Ultra-High Treble (Hearing limit)';
+
+			if (freqBandEl) freqBandEl.textContent = band;
+		}
+
+		// Slider Scrub
+		if (freqSlider) {
+			freqSlider.addEventListener('input', () => {
+				const sliderVal = parseFloat(freqSlider.value);
+				// Logarithmic mapping for natural frequency perception
+				const minLog = Math.log(20);
+				const maxLog = Math.log(20000);
+				const scale = (sliderVal - 20) / (20000 - 20);
+				const hz = Math.round(Math.exp(minLog + scale * (maxLog - minLog)));
+
+				updateFrequencyUI(hz);
+				if (currentOsc && audioCtx) {
+					currentOsc.frequency.setTargetAtTime(hz, audioCtx.currentTime, 0.02);
+				}
+				document.querySelectorAll('.freq-pill').forEach(p => p.classList.remove('active'));
+			});
+		}
+
+		// Preset Frequency Pills
+		const freqPills = document.querySelectorAll('.freq-pill');
+		freqPills.forEach((pill) => {
+			pill.addEventListener('click', () => {
+				freqPills.forEach(p => p.classList.remove('active'));
+				pill.classList.add('active');
+				const targetHz = parseInt(pill.getAttribute('data-hz') || '1000', 10);
+				updateFrequencyUI(targetHz);
+
+				// Reverse map to slider
+				const minLog = Math.log(20);
+				const maxLog = Math.log(20000);
+				const scale = (Math.log(targetHz) - minLog) / (maxLog - minLog);
+				if (freqSlider) freqSlider.value = String(Math.round(20 + scale * (20000 - 20)));
+
+				if (currentOsc && audioCtx) {
+					currentOsc.frequency.setTargetAtTime(targetHz, audioCtx.currentTime, 0.02);
+				}
+			});
+		});
+
+		// Waveform segmented control
+		const waveBtns = document.querySelectorAll('.audio-test-card .seg-btn[data-wave]');
+		waveBtns.forEach((btn) => {
+			btn.addEventListener('click', () => {
+				waveBtns.forEach(b => b.classList.remove('active'));
+				btn.classList.add('active');
+				activeWave = (btn.getAttribute('data-wave') as any) || 'sine';
+				if (activeMode === 'tone') {
+					startToneGenerator();
+				}
+			});
+		});
+
+		// Play / Pause Frequency Generator
+		function startToneGenerator() {
+			const ctx = getAudioContext();
+			stopAllAudio();
+			activeMode = 'tone';
+
+			const hz = parseInt(freqNumEl?.textContent?.replace(/,/g, '') || '1000', 10);
+
+			if (activeWave === 'sine') {
+				const osc = ctx.createOscillator();
+				osc.type = 'sine';
+				osc.frequency.setValueAtTime(hz, ctx.currentTime);
+				osc.connect(masterGain!);
+				osc.start();
+				currentOsc = osc;
+			} else {
+				// Buffer Noise Generator (Pink / White)
+				const bufferSize = ctx.sampleRate * 2;
+				const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+				const output = noiseBuffer.getChannelData(0);
+
+				if (activeWave === 'white') {
+					for (let i = 0; i < bufferSize; i++) {
+						output[i] = Math.random() * 2 - 1;
+					}
+				} else {
+					// Pink noise 1/f Paul Kellet filter
+					let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+					for (let i = 0; i < bufferSize; i++) {
+						const white = Math.random() * 2 - 1;
+						b0 = 0.99886 * b0 + white * 0.0555179;
+						b1 = 0.99332 * b1 + white * 0.0750759;
+						b2 = 0.96900 * b2 + white * 0.1538520;
+						b3 = 0.86650 * b3 + white * 0.3104856;
+						b4 = 0.55000 * b4 + white * 0.5329522;
+						b5 = -0.7616 * b5 - white * 0.0168980;
+						output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+						b6 = white * 0.115926;
+					}
+				}
+
+				const whiteSource = ctx.createBufferSource();
+				whiteSource.buffer = noiseBuffer;
+				whiteSource.loop = true;
+				whiteSource.connect(masterGain!);
+				whiteSource.start();
+				noiseNode = whiteSource;
+			}
+
+			if (toggleToneBtn) toggleToneBtn.classList.add('active');
+			if (toggleToneText) toggleToneText.textContent = 'Pause Tone';
+			if (lissajousLabel) lissajousLabel.textContent = `Generator Active • ${activeWave.toUpperCase()} • ${hz} Hz`;
+		}
+
+		if (toggleToneBtn) {
+			toggleToneBtn.addEventListener('click', () => {
+				if (activeMode === 'tone') {
+					stopAllAudio();
+				} else {
+					startToneGenerator();
+				}
+			});
+		}
+
+		// Auto Frequency Sweep (20Hz - 20,000Hz over 10 seconds)
+		function runAutoSweep() {
+			if (isSweeping) {
+				stopAllAudio();
+				return;
+			}
+			const ctx = getAudioContext();
+			stopAllAudio();
+			isSweeping = true;
+			activeMode = 'sweep';
+
+			const osc = ctx.createOscillator();
+			osc.type = 'sine';
+			osc.frequency.setValueAtTime(20, ctx.currentTime);
+			osc.frequency.exponentialRampToValueAtTime(20000, ctx.currentTime + 10);
+			osc.connect(masterGain!);
+			osc.start();
+			currentOsc = osc;
+
+			if (runSweepBtn) runSweepBtn.classList.add('active');
+			if (runSweepText) runSweepText.textContent = 'Stop Sweep';
+			if (lissajousLabel) lissajousLabel.textContent = 'Logarithmic Sweep Running (20Hz → 20kHz)...';
+
+			const sweepStart = performance.now();
+			function updateSweepProgress() {
+				if (!isSweeping) return;
+				const elapsed = (performance.now() - sweepStart) / 1000;
+				if (elapsed >= 10) {
+					stopAllAudio();
+					return;
+				}
+				// Exponential frequency calculation
+				const currentSweepHz = 20 * Math.pow(20000 / 20, elapsed / 10);
+				updateFrequencyUI(currentSweepHz);
+
+				// Update slider
+				const minLog = Math.log(20);
+				const maxLog = Math.log(20000);
+				const scale = (Math.log(currentSweepHz) - minLog) / (maxLog - minLog);
+				if (freqSlider) freqSlider.value = String(Math.round(20 + scale * (20000 - 20)));
+
+				sweepRafId = requestAnimationFrame(updateSweepProgress);
+			}
+			sweepRafId = requestAnimationFrame(updateSweepProgress);
+		}
+
+		if (runSweepBtn) runSweepBtn.addEventListener('click', runAutoSweep);
+
+		// CHANNEL ISOLATION & POLARITY TESTS
+		function playPolarityTone(mode: 'left' | 'right' | 'inphase' | 'outphase') {
+			const ctx = getAudioContext();
+			stopAllAudio();
+			activeMode = mode;
+
+			const osc = ctx.createOscillator();
+			osc.type = 'sine';
+			osc.frequency.setValueAtTime(1000, ctx.currentTime);
+
+			const merger = ctx.createChannelMerger(2);
+
+			if (mode === 'left') {
+				const leftG = ctx.createGain();
+				leftG.gain.setValueAtTime(1.0, ctx.currentTime);
+				osc.connect(leftG);
+				leftG.connect(merger, 0, 0); // connect to Left channel only
+				if (lissajousLabel) lissajousLabel.textContent = 'Left Channel Active • Right Muted';
+			} else if (mode === 'right') {
+				const rightG = ctx.createGain();
+				rightG.gain.setValueAtTime(1.0, ctx.currentTime);
+				osc.connect(rightG);
+				rightG.connect(merger, 0, 1); // connect to Right channel only
+				if (lissajousLabel) lissajousLabel.textContent = 'Right Channel Active • Left Muted';
+			} else if (mode === 'inphase') {
+				const leftG = ctx.createGain();
+				const rightG = ctx.createGain();
+				leftG.gain.setValueAtTime(1.0, ctx.currentTime);
+				rightG.gain.setValueAtTime(1.0, ctx.currentTime);
+				osc.connect(leftG);
+				osc.connect(rightG);
+				leftG.connect(merger, 0, 0);
+				rightG.connect(merger, 0, 1);
+				if (lissajousLabel) lissajousLabel.textContent = 'In-Phase (0°) • Centered Image in Stereo Field';
+			} else if (mode === 'outphase') {
+				const leftG = ctx.createGain();
+				const rightG = ctx.createGain();
+				leftG.gain.setValueAtTime(1.0, ctx.currentTime);
+				rightG.gain.setValueAtTime(-1.0, ctx.currentTime); // 180° PHASE INVERSION
+				osc.connect(leftG);
+				osc.connect(rightG);
+				leftG.connect(merger, 0, 0);
+				rightG.connect(merger, 0, 1);
+				if (lissajousLabel) lissajousLabel.textContent = '180° Inverted Polarity • Diffuse Acoustic Cancellation';
+			}
+
+			merger.connect(masterGain!);
+			osc.start();
+			currentOsc = osc;
+
+			// Highlight active button
+			const btnMap: Record<string, string> = {
+				left: 'btn-tone-left',
+				right: 'btn-tone-right',
+				inphase: 'btn-tone-inphase',
+				outphase: 'btn-tone-outphase'
+			};
+			document.getElementById(btnMap[mode])?.classList.add('active');
+		}
+
+		document.getElementById('btn-tone-left')?.addEventListener('click', () => playPolarityTone('left'));
+		document.getElementById('btn-tone-right')?.addEventListener('click', () => playPolarityTone('right'));
+		document.getElementById('btn-tone-inphase')?.addEventListener('click', () => playPolarityTone('inphase'));
+		document.getElementById('btn-tone-outphase')?.addEventListener('click', () => playPolarityTone('outphase'));
+
+		// Real-time Lissajous phase visualization loop
+		function drawLissajousStatic() {
+			if (!lissajousCtx || !lissajousCanvas) return;
+			const w = lissajousCanvas.width;
+			const h = lissajousCanvas.height;
+			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+			lissajousCtx.clearRect(0, 0, w, h);
+			lissajousCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
+			lissajousCtx.fillRect(0, 0, w, h);
+
+			// Center crosshairs
+			lissajousCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+			lissajousCtx.lineWidth = 1;
+			lissajousCtx.beginPath();
+			lissajousCtx.moveTo(w / 2, 0);
+			lissajousCtx.lineTo(w / 2, h);
+			lissajousCtx.moveTo(0, h / 2);
+			lissajousCtx.lineTo(w, h / 2);
+			lissajousCtx.stroke();
+		}
+		drawLissajousStatic();
+
+		function renderLissajous() {
+			if (!lissajousCtx || !lissajousCanvas) return;
+			if (activeMode === 'none') {
+				requestAnimationFrame(renderLissajous);
+				return;
+			}
+
+			const w = lissajousCanvas.width;
+			const h = lissajousCanvas.height;
+			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+			const cx = w / 2;
+			const cy = h / 2;
+			const radius = Math.min(cx, cy) * 0.75;
+
+			lissajousCtx.clearRect(0, 0, w, h);
+			lissajousCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
+			lissajousCtx.fillRect(0, 0, w, h);
+
+			// Crosshairs
+			lissajousCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+			lissajousCtx.lineWidth = 1;
+			lissajousCtx.beginPath();
+			lissajousCtx.moveTo(cx, 0);
+			lissajousCtx.lineTo(cx, h);
+			lissajousCtx.moveTo(0, cy);
+			lissajousCtx.lineTo(w, cy);
+			lissajousCtx.stroke();
+
+			const t = performance.now() / 150;
+			lissajousCtx.lineWidth = 2.5;
+
+			if (activeMode === 'left') {
+				// Vertical oscillating line (Left channel only)
+				lissajousCtx.strokeStyle = '#38bdf8';
+				lissajousCtx.beginPath();
+				lissajousCtx.moveTo(cx, cy - radius * Math.sin(t));
+				lissajousCtx.lineTo(cx, cy + radius * Math.sin(t));
+				lissajousCtx.stroke();
+			} else if (activeMode === 'right') {
+				// Horizontal oscillating line (Right channel only)
+				lissajousCtx.strokeStyle = '#f59e0b';
+				lissajousCtx.beginPath();
+				lissajousCtx.moveTo(cx - radius * Math.sin(t), cy);
+				lissajousCtx.lineTo(cx + radius * Math.sin(t), cy);
+				lissajousCtx.stroke();
+			} else if (activeMode === 'inphase') {
+				// 45° diagonal line (Perfect in-phase stereo correlation)
+				lissajousCtx.strokeStyle = '#22c55e';
+				lissajousCtx.beginPath();
+				lissajousCtx.moveTo(cx - radius * 0.7 * Math.sin(t), cy + radius * 0.7 * Math.sin(t));
+				lissajousCtx.lineTo(cx + radius * 0.7 * Math.sin(t), cy - radius * 0.7 * Math.sin(t));
+				lissajousCtx.stroke();
+			} else if (activeMode === 'outphase') {
+				// -45° diagonal line (180° inverted phase anti-correlation)
+				lissajousCtx.strokeStyle = '#ef4444';
+				lissajousCtx.beginPath();
+				lissajousCtx.moveTo(cx - radius * 0.7 * Math.sin(t), cy - radius * 0.7 * Math.sin(t));
+				lissajousCtx.lineTo(cx + radius * 0.7 * Math.sin(t), cy + radius * 0.7 * Math.sin(t));
+				lissajousCtx.stroke();
+			} else {
+				// Generator Lissajous ring
+				lissajousCtx.strokeStyle = '#f97316';
+				lissajousCtx.beginPath();
+				for (let i = 0; i <= 60; i++) {
+					const angle = (i / 60) * Math.PI * 2;
+					const px = cx + Math.cos(angle) * (radius * 0.6 + Math.sin(t * 3 + angle * 2) * 6);
+					const py = cy + Math.sin(angle) * (radius * 0.6 + Math.cos(t * 3 + angle * 2) * 6);
+					if (i === 0) lissajousCtx.moveTo(px, py);
+					else lissajousCtx.lineTo(px, py);
+				}
+				lissajousCtx.stroke();
+			}
+
+			requestAnimationFrame(renderLissajous);
+		}
+		requestAnimationFrame(renderLissajous);
+	}
+
+	setupAudioTest();
+	document.addEventListener('astro:page-load', setupAudioTest);
+</script>
+
+<style>
+	.audio-test-card {
+		padding: clamp(1.2em, 3vw, 2em);
+		margin-top: 1.8em;
+	}
+
+	.card-header-wrap {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.8em;
+		margin-bottom: 0.5em;
+	}
+
+	.card-header-wrap .card-title {
+		margin: 0;
+		padding: 0;
+		border-bottom: none;
+	}
+
+	.header-actions {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.8em;
+	}
+
+	.volume-control-wrap {
+		display: flex;
+		align-items: center;
+		gap: 0.45em;
+		background: rgba(148, 163, 184, 0.1);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		padding: 0.35em 0.7em;
+	}
+
+	:global(html[data-theme="dark"]) .volume-control-wrap {
+		background: rgba(255, 255, 255, 0.04);
+	}
+
+	.vol-icon {
+		color: rgb(var(--gray));
+		flex-shrink: 0;
+	}
+
+	.vol-slider {
+		width: 70px;
+		accent-color: var(--accent);
+		cursor: pointer;
+	}
+
+	.vol-text {
+		font-size: 0.75em;
+		font-weight: 700;
+		color: rgb(var(--gray-dark));
+		min-width: 32px;
+	}
+
+	.telemetry-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45em;
+		background: rgba(148, 163, 184, 0.1);
+		color: rgb(var(--gray-dark));
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		padding: 0.45em 0.85em;
+		font-family: inherit;
+		font-size: 0.82em;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.stop-btn:hover {
+		background: #ef4444;
+		color: #ffffff;
+		border-color: #ef4444;
+	}
+
+	.benchmark-desc {
+		font-size: 0.95em;
+		line-height: 1.5;
+		color: rgb(var(--gray-dark));
+		margin: 0 0 1.2em 0;
+	}
+
+	/* WORKBENCH GRID */
+	.audio-workbench-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1.2em;
+	}
+
+	@media (max-width: 780px) {
+		.audio-workbench-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.audio-col {
+		background: rgba(148, 163, 184, 0.04);
+		border: 1px solid var(--border-color);
+		border-radius: 10px;
+		padding: 1.1em;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+	}
+
+	:global(html[data-theme="dark"]) .audio-col {
+		background: rgba(255, 255, 255, 0.02);
+	}
+
+	.col-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 0.9em;
+	}
+
+	.col-head-left {
+		display: flex;
+		align-items: center;
+		gap: 0.5em;
+	}
+
+	.col-icon {
+		color: var(--accent);
+	}
+
+	.col-title {
+		font-size: 0.88em;
+		font-weight: 700;
+		color: rgb(var(--black));
+	}
+
+	.badge {
+		font-size: 0.72em;
+		font-weight: 700;
+		padding: 0.25em 0.6em;
+		border-radius: 6px;
+		background: rgba(148, 163, 184, 0.15);
+		color: rgb(var(--gray-dark));
+	}
+
+	:global(html[data-theme="dark"]) .badge {
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	/* LISSAJOUS */
+	.lissajous-box {
+		position: relative;
+		width: 100%;
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		overflow: hidden;
+		background: #09090b;
+		margin-bottom: 1em;
+	}
+
+	#lissajous-canvas {
+		display: block;
+		width: 100%;
+		height: 100px;
+	}
+
+	.lissajous-overlay {
+		position: absolute;
+		bottom: 6px;
+		left: 10px;
+		right: 10px;
+		display: flex;
+		justify-content: center;
+		pointer-events: none;
+	}
+
+	.lissajous-label {
+		font-size: 0.74em;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.85);
+		background: rgba(0, 0, 0, 0.6);
+		padding: 2px 8px;
+		border-radius: 4px;
+	}
+
+	/* TONE BUTTONS */
+	.tone-buttons-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.6em;
+		margin-bottom: 0.9em;
+	}
+
+	.tone-btn {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		background: var(--bg-card);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		padding: 0.65em 0.8em;
+		font-family: inherit;
+		cursor: pointer;
+		text-align: left;
+		transition: all 0.15s ease;
+	}
+
+	:global(html[data-theme="dark"]) .tone-btn {
+		background: #18181b;
+	}
+
+	.tone-btn:hover {
+		border-color: var(--accent);
+		transform: translateY(-1px);
+	}
+
+	.tone-btn.active {
+		border-color: var(--accent);
+		background: rgba(var(--accent-rgb), 0.08);
+		box-shadow: 0 0 0 1px var(--accent);
+	}
+
+	.tone-btn-top {
+		display: flex;
+		align-items: center;
+		gap: 0.5em;
+		margin-bottom: 0.2em;
+	}
+
+	.tone-pill {
+		font-size: 0.72em;
+		font-weight: 800;
+		background: rgba(148, 163, 184, 0.2);
+		color: rgb(var(--black));
+		padding: 2px 6px;
+		border-radius: 4px;
+	}
+
+	.tone-pill.warn {
+		background: rgba(239, 68, 68, 0.2);
+		color: #ef4444;
+	}
+
+	.tone-name {
+		font-size: 0.84em;
+		font-weight: 700;
+		color: rgb(var(--black));
+	}
+
+	.tone-sub {
+		font-size: 0.7em;
+		color: rgb(var(--gray));
+	}
+
+	.audio-specs-strip {
+		font-size: 0.76em;
+		color: rgb(var(--gray));
+		line-height: 1.4;
+		border-top: 1px solid var(--border-color);
+		padding-top: 0.6em;
+	}
+
+	/* FREQUENCY GENERATOR */
+	.segmented-control {
+		display: inline-flex;
+		align-items: center;
+		background: rgba(148, 163, 184, 0.12);
+		border-radius: 6px;
+		padding: 2px;
+	}
+
+	:global(html[data-theme="dark"]) .segmented-control {
+		background: rgba(255, 255, 255, 0.06);
+	}
+
+	.seg-btn {
+		background: transparent;
+		border: none;
+		padding: 0.25em 0.6em;
+		font-family: inherit;
+		font-size: 0.75em;
+		font-weight: 600;
+		color: rgb(var(--gray));
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.seg-btn.active {
+		background: var(--bg-card);
+		color: var(--accent);
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+	}
+
+	:global(html[data-theme="dark"]) .seg-btn.active {
+		background: #27272a;
+	}
+
+	.freq-display-box {
+		background: rgba(148, 163, 184, 0.08);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		padding: 0.9em;
+		text-align: center;
+		margin-bottom: 0.8em;
+	}
+
+	:global(html[data-theme="dark"]) .freq-display-box {
+		background: rgba(0, 0, 0, 0.3);
+	}
+
+	.freq-num-wrap {
+		display: flex;
+		align-items: baseline;
+		justify-content: center;
+		gap: 0.35em;
+	}
+
+	.freq-num {
+		font-size: clamp(1.8em, 3vw, 2.4em);
+		font-weight: 800;
+		color: rgb(var(--black));
+		line-height: 1;
+	}
+
+	.freq-unit {
+		font-size: 1em;
+		font-weight: 700;
+		color: var(--accent);
+	}
+
+	.freq-band-tag {
+		display: block;
+		font-size: 0.76em;
+		color: rgb(var(--gray));
+		margin-top: 0.3em;
+		font-weight: 600;
+	}
+
+	.slider-row {
+		margin-bottom: 0.7em;
+	}
+
+	.freq-slider {
+		width: 100%;
+		accent-color: var(--accent);
+		cursor: pointer;
+	}
+
+	.freq-presets-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35em;
+		margin-bottom: 0.9em;
+	}
+
+	.freq-pill {
+		background: rgba(148, 163, 184, 0.1);
+		border: 1px solid var(--border-color);
+		border-radius: 6px;
+		padding: 0.3em 0.55em;
+		font-size: 0.72em;
+		font-weight: 600;
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.freq-pill:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+
+	.freq-pill.active {
+		background: var(--accent);
+		color: #ffffff;
+		border-color: var(--accent);
+	}
+
+	.sweep-actions-row {
+		display: flex;
+		gap: 0.6em;
+	}
+
+	.sweep-btn {
+		flex: 1;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5em;
+		background: var(--bg-card);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		padding: 0.6em 0.8em;
+		font-family: inherit;
+		font-size: 0.82em;
+		font-weight: 700;
+		color: rgb(var(--black));
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	:global(html[data-theme="dark"]) .sweep-btn {
+		background: #18181b;
+	}
+
+	.sweep-btn:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+		transform: translateY(-1px);
+	}
+
+	.sweep-btn.active {
+		background: var(--accent);
+		color: #ffffff;
+		border-color: var(--accent);
+	}
+
+	.mono {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	}
+</style>

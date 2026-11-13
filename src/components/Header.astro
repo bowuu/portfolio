@@ -119,10 +119,10 @@ import ThemeToggle from './ThemeToggle.astro';
 
 		// 2. Dynamic Scroll / Nav Highlight
 		if (!navLinks.length) return;
-		const sectionIds = ['about', 'skills', 'projects', 'lab', 'benchmark', 'input-lab', 'keyboard-lab', 'debug'];
+		const sectionIds = ['about', 'skills', 'projects', 'lab', 'benchmark', 'storage-lab', 'display-lab', 'audio-lab', 'input-lab', 'keyboard-lab', 'debug'];
 
 		function setActive(id: string) {
-			const targetId = (id === 'benchmark' || id === 'input-lab' || id === 'keyboard-lab') ? 'lab' : id;
+			const targetId = (id === 'benchmark' || id === 'storage-lab' || id === 'display-lab' || id === 'audio-lab' || id === 'input-lab' || id === 'keyboard-lab') ? 'lab' : id;
 			navLinks.forEach((link) => {
 				const href = link.getAttribute('href') || '';
 				if (href.endsWith(`#${targetId}`) || (targetId === 'about' && href === '/')) {

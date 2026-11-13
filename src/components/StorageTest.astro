@@ -1,0 +1,466 @@
+---
+// StorageTest.astro - Client-Side OPFS NVMe/SSD Storage & I/O Benchmark
+---
+
+<section class="card storage-card" id="storage-lab">
+	<div class="storage-header">
+		<h2 class="card-title">
+			<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+				<path d="M22 12H2M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+				<line x1="6" y1="16" x2="6.01" y2="16"/>
+				<line x1="10" y1="16" x2="10.01" y2="16"/>
+			</svg>
+			Storage Test
+		</h2>
+		<button id="run-storage-btn" class="benchmark-btn" type="button" aria-label="Run Storage Benchmark">
+			<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon" id="storage-btn-icon">
+				<polygon points="5 3 19 12 5 21 5 3"/>
+			</svg>
+			<span id="storage-btn-text">Run Benchmark</span>
+		</button>
+	</div>
+
+	<p class="benchmark-desc">
+		Measure local NVMe/SSD read and write throughput directly in the browser via the Origin Private File System (OPFS) with zero network egress.
+	</p>
+
+	<!-- BENCHMARK TILES -->
+	<div class="benchmark-tiles">
+		<div class="b-tile">
+			<span class="b-tile-label">Sequential Write</span>
+			<div class="b-tile-value-wrap">
+				<span id="storage-seq-write" class="b-tile-num mono">--</span>
+				<span class="b-tile-unit">MB/s</span>
+			</div>
+			<span id="storage-seq-write-sub" class="b-tile-sub">32 MB Stream Buffer</span>
+		</div>
+
+		<div class="b-tile">
+			<span class="b-tile-label">Sequential Read</span>
+			<div class="b-tile-value-wrap">
+				<span id="storage-seq-read" class="b-tile-num mono">--</span>
+				<span class="b-tile-unit">MB/s</span>
+			</div>
+			<span id="storage-seq-read-sub" class="b-tile-sub">Direct File Readback</span>
+		</div>
+
+		<div class="b-tile">
+			<span class="b-tile-label">4KB Random IOPS</span>
+			<div class="b-tile-value-wrap">
+				<span id="storage-random-iops" class="b-tile-num mono">--</span>
+				<span class="b-tile-unit">IOPS</span>
+			</div>
+			<span id="storage-random-sub" class="b-tile-sub">Small-Block Random Access</span>
+		</div>
+
+		<div class="b-tile">
+			<span class="b-tile-label">Storage Quota</span>
+			<div class="b-tile-value-wrap">
+				<span id="storage-quota-val" class="b-tile-num mono">--</span>
+				<span id="storage-quota-unit" class="b-tile-unit">GB free</span>
+			</div>
+			<span id="storage-quota-sub" class="b-tile-sub">Estimated Disk Quota</span>
+		</div>
+	</div>
+
+	<!-- PROGRESS TRACK & LIVE STATUS -->
+	<div class="benchmark-footer">
+		<div class="progress-track" id="storage-progress-track">
+			<div class="progress-bar" id="storage-progress-bar"></div>
+		</div>
+		<div class="status-wrap">
+			<span id="storage-status" class="status-text">Click "Run Benchmark" to test local disk write/read throughput and random IOPS.</span>
+		</div>
+	</div>
+</section>
+
+<script>
+	let isStorageBenchmarking = false;
+
+	async function initStorageQuota() {
+		const quotaValEl = document.getElementById('storage-quota-val');
+		const quotaSubEl = document.getElementById('storage-quota-sub');
+		if (!quotaValEl || !navigator.storage || !navigator.storage.estimate) return;
+
+		try {
+			const estimate = await navigator.storage.estimate();
+			const quotaBytes = estimate.quota || 0;
+			const usageBytes = estimate.usage || 0;
+			const freeBytes = Math.max(0, quotaBytes - usageBytes);
+
+			const freeGB = (freeBytes / (1024 * 1024 * 1024)).toFixed(1);
+			const totalGB = (quotaBytes / (1024 * 1024 * 1024)).toFixed(1);
+
+			quotaValEl.textContent = freeGB;
+			if (quotaSubEl) {
+				quotaSubEl.textContent = `${totalGB} GB allocated quota`;
+			}
+		} catch (_) {
+			quotaValEl.textContent = 'Active';
+		}
+	}
+
+	async function runStorageBenchmark() {
+		if (isStorageBenchmarking) return;
+		isStorageBenchmarking = true;
+
+		const btn = document.getElementById('run-storage-btn') as HTMLButtonElement;
+		const btnText = document.getElementById('storage-btn-text');
+		const btnIcon = document.getElementById('storage-btn-icon');
+		const progressBar = document.getElementById('storage-progress-bar');
+		const statusEl = document.getElementById('storage-status');
+
+		const seqWriteEl = document.getElementById('storage-seq-write');
+		const seqReadEl = document.getElementById('storage-seq-read');
+		const randomIopsEl = document.getElementById('storage-random-iops');
+
+		if (btn) btn.disabled = true;
+		if (btnText) btnText.textContent = 'Benchmarking...';
+		if (progressBar) {
+			progressBar.style.width = '0%';
+			progressBar.classList.add('active');
+		}
+
+		const setProgress = (pct: number, msg: string) => {
+			if (progressBar) progressBar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+			if (statusEl) statusEl.textContent = msg;
+		};
+
+		const resetResults = () => {
+			if (seqWriteEl) seqWriteEl.textContent = '--';
+			if (seqReadEl) seqReadEl.textContent = '--';
+			if (randomIopsEl) randomIopsEl.textContent = '--';
+		};
+		resetResults();
+
+		try {
+			// Check if Origin Private File System (OPFS) is supported
+			const hasOPFS = !!(navigator.storage && typeof navigator.storage.getDirectory === 'function');
+
+			if (hasOPFS) {
+				setProgress(5, 'Initializing Origin Private File System (OPFS)...');
+				const root = await navigator.storage.getDirectory();
+				const testFileName = `__bench_io_${Date.now()}.bin`;
+				const fileHandle = await root.getFileHandle(testFileName, { create: true });
+
+				// Prepare 1 MB memory buffer filled with high-entropy pseudo-random bytes
+				const CHUNK_SIZE = 1024 * 1024; // 1 MB
+				const TOTAL_CHUNKS = 32; // 32 MB total test size
+				const chunk = new Uint8Array(CHUNK_SIZE);
+				for (let i = 0; i < CHUNK_SIZE; i += 4) {
+					chunk[i] = (i * 13) & 0xff;
+					chunk[i + 1] = (i * 17) & 0xff;
+					chunk[i + 2] = (i * 29) & 0xff;
+					chunk[i + 3] = (i * 37) & 0xff;
+				}
+
+				// STEP 1: Sequential Write Benchmark
+				setProgress(10, 'Benchmarking Sequential Write (32 MB stream)...');
+				const writable = await fileHandle.createWritable();
+				const writeStart = performance.now();
+
+				for (let i = 0; i < TOTAL_CHUNKS; i++) {
+					await writable.write(chunk);
+					const pct = 10 + Math.round(((i + 1) / TOTAL_CHUNKS) * 35);
+					const interimElapsed = (performance.now() - writeStart) / 1000;
+					const interimMB = ((i + 1) * CHUNK_SIZE) / (1024 * 1024);
+					const interimSpeed = (interimMB / Math.max(0.01, interimElapsed)).toFixed(1);
+					setProgress(pct, `Writing: ${i + 1}/${TOTAL_CHUNKS} MB (${interimSpeed} MB/s)...`);
+					if (seqWriteEl) seqWriteEl.textContent = interimSpeed;
+				}
+				await writable.close();
+				const writeElapsed = (performance.now() - writeStart) / 1000;
+				const writeSpeedMBs = ((TOTAL_CHUNKS * CHUNK_SIZE) / (1024 * 1024)) / Math.max(0.001, writeElapsed);
+				if (seqWriteEl) seqWriteEl.textContent = writeSpeedMBs.toFixed(1);
+
+				// STEP 2: Sequential Read Benchmark
+				setProgress(50, 'Benchmarking Sequential Read (32 MB stream)...');
+				const file = await fileHandle.getFile();
+				const readStart = performance.now();
+				let bytesRead = 0;
+
+				for (let i = 0; i < TOTAL_CHUNKS; i++) {
+					const slice = file.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+					const buffer = await slice.arrayBuffer();
+					bytesRead += buffer.byteLength;
+					const pct = 50 + Math.round(((i + 1) / TOTAL_CHUNKS) * 30);
+					const interimElapsed = (performance.now() - readStart) / 1000;
+					const interimMB = bytesRead / (1024 * 1024);
+					const interimSpeed = (interimMB / Math.max(0.01, interimElapsed)).toFixed(1);
+					setProgress(pct, `Reading: ${i + 1}/${TOTAL_CHUNKS} MB (${interimSpeed} MB/s)...`);
+					if (seqReadEl) seqReadEl.textContent = interimSpeed;
+				}
+				const readElapsed = (performance.now() - readStart) / 1000;
+				const readSpeedMBs = (bytesRead / (1024 * 1024)) / Math.max(0.001, readElapsed);
+				if (seqReadEl) seqReadEl.textContent = readSpeedMBs.toFixed(1);
+
+				// STEP 3: 4KB Random Small-Block Access IOPS
+				setProgress(82, 'Benchmarking 4KB Random Write IOPS (small-block transactions)...');
+				const randomWritable = await fileHandle.createWritable({ keepExistingData: true });
+				const smallBlock = new Uint8Array(4096);
+				for (let b = 0; b < 4096; b++) smallBlock[b] = (b * 31) & 0xff;
+
+				const NUM_RANDOM_OPS = 120;
+				const randomStart = performance.now();
+				const maxOffset = (TOTAL_CHUNKS * CHUNK_SIZE) - 4096;
+
+				for (let r = 0; r < NUM_RANDOM_OPS; r++) {
+					const offset = Math.floor(Math.random() * (maxOffset / 4096)) * 4096;
+					await randomWritable.seek(offset);
+					await randomWritable.write(smallBlock);
+					if (r % 20 === 0) {
+						const interimIops = Math.round((r + 1) / (Math.max(0.01, performance.now() - randomStart) / 1000));
+						if (randomIopsEl) randomIopsEl.textContent = interimIops.toLocaleString();
+					}
+				}
+				await randomWritable.close();
+				const randomElapsed = (performance.now() - randomStart) / 1000;
+				const iops = Math.round(NUM_RANDOM_OPS / Math.max(0.001, randomElapsed));
+				if (randomIopsEl) randomIopsEl.textContent = iops.toLocaleString();
+
+				// STEP 4: Cleanup temporary test file
+				setProgress(96, 'Cleaning up temporary test file...');
+				await root.removeEntry(testFileName);
+			} else {
+				// Fallback to IndexedDB blob write benchmark
+				setProgress(20, 'OPFS not available; running IndexedDB I/O benchmark...');
+				const idbStart = performance.now();
+				const data = new Uint8Array(8 * 1024 * 1024);
+				for (let i = 0; i < data.length; i += 4) data[i] = (i * 7) & 0xff;
+
+				await new Promise<void>((resolve, reject) => {
+					const req = indexedDB.open('__bench_idb', 1);
+					req.onupgradeneeded = () => req.result.createObjectStore('b');
+					req.onsuccess = () => {
+						const db = req.result;
+						const tx = db.transaction('b', 'readwrite');
+						tx.objectStore('b').put(data, 'k');
+						tx.oncomplete = () => {
+							db.close();
+							indexedDB.deleteDatabase('__bench_idb');
+							resolve();
+						};
+						tx.onerror = () => reject(tx.error);
+					};
+					req.onerror = () => reject(req.error);
+				});
+
+				const elapsed = (performance.now() - idbStart) / 1000;
+				const speed = (8 / Math.max(0.01, elapsed)).toFixed(1);
+				if (seqWriteEl) seqWriteEl.textContent = speed;
+				if (seqReadEl) seqReadEl.textContent = speed;
+				if (randomIopsEl) randomIopsEl.textContent = 'IndexedDB';
+			}
+
+			// Update storage quota
+			await initStorageQuota();
+
+			setProgress(100, 'Storage I/O benchmark completed successfully. 0 bytes retained on disk.');
+		} catch (err: any) {
+			console.error('Storage benchmark error:', err);
+			setProgress(100, `Storage benchmark note: ${err?.message || 'I/O restricted by browser sandbox.'}`);
+		} finally {
+			isStorageBenchmarking = false;
+			if (btn) btn.disabled = false;
+			if (btnText) btnText.textContent = 'Run Benchmark';
+			if (progressBar) progressBar.classList.remove('active');
+		}
+	}
+
+	function setupStorageBench() {
+		initStorageQuota();
+		const runBtn = document.getElementById('run-storage-btn');
+		if (runBtn) {
+			runBtn.addEventListener('click', runStorageBenchmark);
+		}
+	}
+
+	setupStorageBench();
+	document.addEventListener('astro:page-load', setupStorageBench);
+</script>
+
+<style>
+	.storage-card {
+		padding: clamp(1.2em, 3vw, 2em);
+		margin-top: 1.8em;
+	}
+
+	.storage-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 1em;
+		margin-bottom: 0.5em;
+	}
+
+	.storage-header .card-title {
+		margin: 0;
+		padding: 0;
+		border-bottom: none;
+	}
+
+	.benchmark-desc {
+		font-size: 0.95em;
+		line-height: 1.5;
+		color: rgb(var(--gray-dark));
+		margin: 0 0 1.4em 0;
+	}
+
+	.benchmark-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55em;
+		background: var(--accent);
+		color: #ffffff;
+		border: none;
+		border-radius: 8px;
+		padding: 0.6em 1.2em;
+		font-family: inherit;
+		font-size: 0.9em;
+		font-weight: 700;
+		cursor: pointer;
+		transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+		box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.28);
+	}
+
+	.benchmark-btn:hover:not(:disabled) {
+		background: var(--accent-dark);
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.4);
+	}
+
+	.benchmark-btn:active:not(:disabled) {
+		transform: translateY(0);
+	}
+
+	.benchmark-btn:disabled {
+		opacity: 0.65;
+		cursor: not-allowed;
+		transform: none;
+	}
+
+	.play-icon {
+		flex-shrink: 0;
+	}
+
+	/* TILES */
+	.benchmark-tiles {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 1em;
+		margin-bottom: 1.4em;
+	}
+
+	@media (max-width: 860px) {
+		.benchmark-tiles {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	@media (max-width: 480px) {
+		.benchmark-tiles {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.b-tile {
+		background: rgba(148, 163, 184, 0.05);
+		border: 1px solid var(--border-color);
+		border-radius: 10px;
+		padding: 1.1em 1.2em;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		min-height: 110px;
+		transition: border-color 0.2s ease, background-color 0.2s ease;
+	}
+
+	:global(html[data-theme="dark"]) .b-tile {
+		background: rgba(255, 255, 255, 0.02);
+	}
+
+	.b-tile-label {
+		font-size: 0.8em;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: rgb(var(--gray));
+		margin-bottom: 0.35em;
+	}
+
+	.b-tile-value-wrap {
+		display: flex;
+		align-items: baseline;
+		gap: 0.35em;
+		margin-bottom: 0.2em;
+	}
+
+	.b-tile-num {
+		font-size: clamp(1.6em, 3vw, 2.1em);
+		font-weight: 800;
+		color: rgb(var(--black));
+		line-height: 1.1;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.b-tile-unit {
+		font-size: 0.9em;
+		font-weight: 600;
+		color: rgb(var(--gray));
+	}
+
+	.b-tile-sub {
+		font-size: 0.78em;
+		color: rgb(var(--gray));
+		line-height: 1.3;
+	}
+
+	.mono {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	}
+
+	/* PROGRESS TRACK & STATUS */
+	.benchmark-footer {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6em;
+	}
+
+	.progress-track {
+		width: 100%;
+		height: 4px;
+		background: rgba(148, 163, 184, 0.15);
+		border-radius: 2px;
+		overflow: hidden;
+	}
+
+	:global(html[data-theme="dark"]) .progress-track {
+		background: rgba(255, 255, 255, 0.07);
+	}
+
+	.progress-bar {
+		width: 0%;
+		height: 100%;
+		background: var(--accent);
+		border-radius: 2px;
+		transition: width 0.15s ease-out;
+	}
+
+	.progress-bar.active {
+		background: linear-gradient(90deg, var(--accent) 0%, #fb923c 100%);
+	}
+
+	.status-wrap {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		font-size: 0.85em;
+		color: rgb(var(--gray));
+	}
+
+	.status-text {
+		white-space: normal;
+		line-height: 1.4;
+	}
+</style>

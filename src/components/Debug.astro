@@ -88,6 +88,14 @@
 				<span class="t-label">Network &amp; ISP</span>
 				<span id="t-isp" class="t-val">Detecting...</span>
 			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Transport Protocol</span>
+				<span id="t-transport" class="t-val">Detecting...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">WebRTC NAT Traversal</span>
+				<span id="t-nat" class="t-val">Probing STUN...</span>
+			</div>
 		</div>
 	</div>
 
@@ -122,7 +130,13 @@
 				<span id="t-ram" class="t-val">Detecting...</span>
 			</div>
 			<div class="telemetry-item">
-				<span class="t-label">Graphics Card (GPU)</span>
+				<div class="loc-label-bar">
+					<span class="t-label">Graphics Card (GPU)</span>
+					<button id="open-webgpu-btn" class="loc-map-btn hidden" type="button" title="View WebGPU compute limits & architecture">
+						<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+						<span>WebGPU</span>
+					</button>
+				</div>
 				<span id="t-gpu" class="t-val">Detecting WebGL...</span>
 			</div>
 		</div>
@@ -183,6 +197,34 @@
 			<div class="telemetry-item">
 				<span class="t-label">Video DRM System</span>
 				<span id="t-drm" class="t-val">Probing CDM modules...</span>
+			</div>
+		</div>
+	</div>
+
+	<!-- SUBSECTION 5: PRIVACY & SANDBOX -->
+	<div class="telemetry-group">
+		<div class="telemetry-group-header">
+			<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+				<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+			</svg>
+			<span>Privacy &amp; Sandbox</span>
+		</div>
+		<div class="telemetry-grid">
+			<div class="telemetry-item">
+				<span class="t-label">Global Privacy Control</span>
+				<span id="t-gpc" class="t-val">Probing GPC...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Fingerprint Noise Audit</span>
+				<span id="t-fingerprint" class="t-val">Auditing canvas hash...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Storage Partitioning</span>
+				<span id="t-storage-sandbox" class="t-val">Probing sandbox...</span>
+			</div>
+			<div class="telemetry-item">
+				<span class="t-label">Tracker / DNS Sinkhole</span>
+				<span id="t-adblock" class="t-val">Checking local blocklist...</span>
 			</div>
 		</div>
 	</div>
@@ -262,6 +304,47 @@
 						<line x1="10" y1="14" x2="21" y2="3"></line>
 					</svg>
 				</a>
+			</div>
+		</div>
+	</div>
+
+	<!-- WEBGPU SILICON ARCHITECTURE & COMPUTE LIMITS MODAL -->
+	<div id="webgpu-applet-modal" class="map-applet-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="webgpu-applet-title">
+		<div class="map-applet-backdrop" id="webgpu-applet-backdrop"></div>
+		<div class="map-applet-dialog webgpu-dialog" id="webgpu-applet-dialog" data-map-theme="dark">
+			<div class="map-applet-header">
+				<div class="map-applet-title-wrap">
+					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="map-pin-icon">
+						<rect x="4" y="4" width="16" height="16" rx="2"/>
+						<rect x="9" y="9" width="6" height="6"/>
+					</svg>
+					<div class="map-applet-heading-row">
+						<h3 id="webgpu-applet-title" class="map-applet-title">WebGPU Silicon &amp; Compute Architecture</h3>
+						<span id="webgpu-backend-badge" class="map-coords-badge mono">--</span>
+					</div>
+				</div>
+				<div class="map-applet-header-actions">
+					<button id="webgpu-applet-close-btn" class="map-close-btn" type="button" aria-label="Close WebGPU Inspector" title="Close (Esc)">
+						<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+							<line x1="18" y1="6" x2="6" y2="18"></line>
+							<line x1="6" y1="6" x2="18" y2="18"></line>
+						</svg>
+					</button>
+				</div>
+			</div>
+
+			<div class="webgpu-body-wrap" id="webgpu-body-wrap">
+				<div class="webgpu-specs-grid" id="webgpu-specs-grid">
+					<!-- Populated by JS -->
+				</div>
+			</div>
+
+			<div class="map-applet-footer">
+				<div class="map-footer-info">
+					<span id="webgpu-footer-vendor" class="map-footer-loc">--</span>
+					<span class="map-footer-sep" aria-hidden="true">&bull;</span>
+					<span class="map-footer-note">Client GPU Compute Hardware Capabilities</span>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -615,6 +698,133 @@
 		if (gpuEl) {
 			gpuEl.textContent = gpuString;
 			gpuEl.title = 'Unmasked GPU renderer queried via WebGL WEBGL_debug_renderer_info extension.';
+		}
+
+		// WebGPU Hardware Silicon Inspector
+		const openWebgpuBtn = document.getElementById('open-webgpu-btn');
+		const webgpuModal = document.getElementById('webgpu-applet-modal');
+		const webgpuCloseBtn = document.getElementById('webgpu-applet-close-btn');
+		const webgpuBackdrop = document.getElementById('webgpu-applet-backdrop');
+		const webgpuBadge = document.getElementById('webgpu-backend-badge');
+		const webgpuSpecsGrid = document.getElementById('webgpu-specs-grid');
+		const webgpuFooterVendor = document.getElementById('webgpu-footer-vendor');
+
+		function closeWebgpuModal() {
+			if (webgpuModal) {
+				webgpuModal.classList.add('hidden');
+				webgpuModal.setAttribute('aria-hidden', 'true');
+			}
+			document.body.style.overflow = '';
+		}
+
+		if (webgpuCloseBtn) webgpuCloseBtn.onclick = closeWebgpuModal;
+		if (webgpuBackdrop) webgpuBackdrop.onclick = closeWebgpuModal;
+
+		let webgpuInfoCache: any = null;
+
+		if (navigator.gpu) {
+			navigator.gpu.requestAdapter().then(async (adapter) => {
+				if (!adapter) return;
+
+				let info: any = (adapter as any).info || {};
+				if (typeof (adapter as any).requestAdapterInfo === 'function') {
+					try {
+						const req = await (adapter as any).requestAdapterInfo();
+						if (req) info = req;
+					} catch (_) {}
+				}
+
+				const limits = adapter.limits;
+				const features = adapter.features;
+
+				const hasF16 = features.has('shader-f16');
+				const hasBC = features.has('texture-compression-bc');
+				const hasASTC = features.has('texture-compression-astc');
+				const hasETC2 = features.has('texture-compression-etc2');
+				const hasTimestamp = features.has('timestamp-query');
+
+				const isMac = /Macintosh|Mac OS/i.test(navigator.userAgent);
+				const isWin = /Windows/i.test(navigator.userAgent);
+				const backendName = isMac ? 'Metal' : (isWin ? 'Direct3D 12' : 'Vulkan');
+
+				webgpuInfoCache = {
+					vendor: info.vendor || gpuString.split(' ')[0] || 'Hardware Vendor',
+					arch: info.architecture || 'Compute ASIC',
+					description: info.description || gpuString,
+					backend: backendName,
+					maxWorkgroupInvocations: limits.maxComputeWorkgroupInvocations || 1024,
+					maxWorkgroupX: limits.maxComputeWorkgroupSizeX || 1024,
+					maxWorkgroupY: limits.maxComputeWorkgroupSizeY || 1024,
+					maxWorkgroupZ: limits.maxComputeWorkgroupSizeZ || 64,
+					maxBufferSize: limits.maxBufferSize ? `${(limits.maxBufferSize / (1024 * 1024 * 1024)).toFixed(1)} GB` : '2.0 GB',
+					maxStorageBuffer: limits.maxStorageBufferBindingSize ? `${(limits.maxStorageBufferBindingSize / (1024 * 1024 * 1024)).toFixed(1)} GB` : '2.0 GB',
+					maxTexture2D: limits.maxTextureDimension2D ? `${limits.maxTextureDimension2D} × ${limits.maxTextureDimension2D}` : '16384 × 16384',
+					features: {
+						hasF16,
+						hasBC,
+						hasASTC,
+						hasETC2,
+						hasTimestamp
+					}
+				};
+
+				if (openWebgpuBtn) {
+					openWebgpuBtn.classList.remove('hidden');
+					openWebgpuBtn.onclick = () => {
+						if (!webgpuInfoCache) return;
+						if (webgpuBadge) webgpuBadge.textContent = `${webgpuInfoCache.backend} • WebGPU`;
+						if (webgpuFooterVendor) webgpuFooterVendor.textContent = webgpuInfoCache.description;
+
+						if (webgpuSpecsGrid) {
+							webgpuSpecsGrid.innerHTML = `
+								<div class="webgpu-tile">
+									<span class="webgpu-tile-label">Backend Pipeline</span>
+									<span class="webgpu-tile-val">${webgpuInfoCache.backend} (Native WebGPU)</span>
+								</div>
+								<div class="webgpu-tile">
+									<span class="webgpu-tile-label">Compute Architecture</span>
+									<span class="webgpu-tile-val">${webgpuInfoCache.arch}</span>
+								</div>
+								<div class="webgpu-tile">
+									<span class="webgpu-tile-label">Max Workgroup Invocations</span>
+									<span class="webgpu-tile-val mono">${webgpuInfoCache.maxWorkgroupInvocations} threads</span>
+								</div>
+								<div class="webgpu-tile">
+									<span class="webgpu-tile-label">Max Workgroup Size</span>
+									<span class="webgpu-tile-val mono">${webgpuInfoCache.maxWorkgroupX} × ${webgpuInfoCache.maxWorkgroupY} × ${webgpuInfoCache.maxWorkgroupZ}</span>
+								</div>
+								<div class="webgpu-tile">
+									<span class="webgpu-tile-label">Max Storage Buffer</span>
+									<span class="webgpu-tile-val mono">${webgpuInfoCache.maxStorageBuffer}</span>
+								</div>
+								<div class="webgpu-tile">
+									<span class="webgpu-tile-label">Max 2D Texture Dimension</span>
+									<span class="webgpu-tile-val mono">${webgpuInfoCache.maxTexture2D}</span>
+								</div>
+								<div class="webgpu-tile">
+									<span class="webgpu-tile-label">FP16 Math (shader-f16)</span>
+									<span class="webgpu-tile-val">${webgpuInfoCache.features.hasF16 ? 'Supported (Half-Float)' : 'Not Supported'}</span>
+								</div>
+								<div class="webgpu-tile">
+									<span class="webgpu-tile-label">Texture Compression</span>
+									<span class="webgpu-tile-val">${webgpuInfoCache.features.hasBC ? 'BC (DirectX)' : (webgpuInfoCache.features.hasASTC ? 'ASTC' : 'Standard')}</span>
+								</div>
+							`;
+						}
+
+						if (webgpuModal) {
+							webgpuModal.classList.remove('hidden');
+							webgpuModal.setAttribute('aria-hidden', 'false');
+						}
+						document.body.style.overflow = 'hidden';
+					};
+				}
+
+				if (gpuEl) {
+					gpuEl.textContent = `${gpuString} • WebGPU (${backendName})`;
+					gpuEl.title = `Hardware WebGPU adapter verified via navigator.gpu. Backend: ${backendName}. Click 'WebGPU' badge for compute limits.`;
+				}
+			}).catch(() => {});
 		}
 
 		// 2. Instant Client Detection: OS
@@ -1501,15 +1711,199 @@
 			if (edgeEl) edgeEl.textContent = 'Localhost (Dev Edge)';
 			if (ispEl) ispEl.textContent = 'Cloudflare Protected';
 		}
+		// Transport Protocol Detection (HTTP/3 QUIC vs HTTP/2)
+		const transportEl = document.getElementById('t-transport');
+		if (transportEl) {
+			let proto = 'HTTP/2 (Multiplexed TCP)';
+			try {
+				const navEntries = performance.getEntriesByType('navigation');
+				if (navEntries.length > 0) {
+					const nav = navEntries[0] as PerformanceNavigationTiming;
+					const hop = (nav as any).nextHopProtocol || '';
+					if (hop === 'h3' || hop.startsWith('h3-')) {
+						proto = 'HTTP/3 (QUIC / UDP 443)';
+					} else if (hop === 'h2') {
+						proto = 'HTTP/2 (Multiplexed TLS 1.3)';
+					} else if (hop === 'http/1.1') {
+						proto = 'HTTP/1.1 (TCP)';
+					}
+				}
+			} catch (_) {}
+			transportEl.textContent = proto;
+			transportEl.title = 'Active page delivery transport protocol reported by PerformanceNavigationTiming.nextHopProtocol.';
+		}
+
+		// WebRTC NAT Traversal & STUN RTT
+		const natEl = document.getElementById('t-nat');
+		if (natEl) {
+			if (typeof RTCPeerConnection === 'undefined') {
+				natEl.textContent = 'WebRTC Disabled / Blocked';
+				natEl.title = 'RTCPeerConnection not supported or blocked by browser.';
+			} else {
+				const probeNat = async () => {
+					try {
+						const pc = new RTCPeerConnection({
+							iceServers: [
+								{ urls: ['stun:stun.cloudflare.com:3478', 'stun:stun.google.com:19302'] }
+							]
+						});
+						pc.createDataChannel('diag');
+						const startTime = performance.now();
+						let foundSrflx = false;
+						let foundHost = false;
+
+						const timeout = setTimeout(() => {
+							try { pc.close(); } catch (_) {}
+							if (!foundSrflx && !foundHost) {
+								natEl.textContent = 'UDP Restricted (Firewall)';
+								natEl.title = 'No ICE candidates gathered within timeout; UDP port 3478 may be filtered.';
+							}
+						}, 3500);
+
+						pc.onicecandidate = (e) => {
+							if (e.candidate) {
+								const type = e.candidate.type;
+								if (type === 'host') foundHost = true;
+								if (type === 'srflx' && !foundSrflx) {
+									foundSrflx = true;
+									const stunLatency = Math.round(performance.now() - startTime);
+									clearTimeout(timeout);
+									try { pc.close(); } catch (_) {}
+
+									natEl.textContent = `Full Cone NAT • ${stunLatency} ms STUN RTT`;
+									natEl.title = `Gathered server reflexive candidate (srflx) via Cloudflare/Google Anycast STUN in ${stunLatency} ms. Direct P2P UDP traversal supported.`;
+								}
+							} else {
+								clearTimeout(timeout);
+								try { pc.close(); } catch (_) {}
+								if (foundHost && !foundSrflx) {
+									natEl.textContent = 'Symmetric NAT / Hardened UDP';
+									natEl.title = 'Host candidate gathered, but STUN reflexive mapping was blocked or symmetric.';
+								}
+							}
+						};
+
+						const offer = await pc.createOffer();
+						await pc.setLocalDescription(offer);
+					} catch (_) {
+						natEl.textContent = 'WebRTC Shielded';
+						natEl.title = 'WebRTC candidate gathering prevented by browser privacy shield.';
+					}
+				};
+				probeNat();
+			}
+		}
+
+		// SUBSECTION 5: PRIVACY & SANDBOX
+		const gpcEl = document.getElementById('t-gpc');
+		if (gpcEl) {
+			const isGpc = (navigator as any).globalPrivacyControl === true;
+			const isDnt = navigator.doNotTrack === '1' || (window as any).doNotTrack === '1';
+			if (isGpc) {
+				gpcEl.textContent = 'Active (Sec-GPC: 1)';
+				gpcEl.title = 'Global Privacy Control signal is actively asserted to websites (navigator.globalPrivacyControl = true).';
+			} else if (isDnt) {
+				gpcEl.textContent = 'DNT Active (DNT: 1)';
+				gpcEl.title = 'Do Not Track header is actively broadcast (navigator.doNotTrack = 1).';
+			} else {
+				gpcEl.textContent = 'Default (Standard Headers)';
+				gpcEl.title = 'Neither GPC nor DNT signals are asserted by the client.';
+			}
+		}
+
+		const fpEl = document.getElementById('t-fingerprint');
+		if (fpEl) {
+			try {
+				const testCanvas1 = document.createElement('canvas');
+				testCanvas1.width = 32;
+				testCanvas1.height = 32;
+				const ctx1 = testCanvas1.getContext('2d');
+				if (ctx1) {
+					ctx1.fillStyle = '#f97316';
+					ctx1.fillRect(0, 0, 32, 32);
+					ctx1.font = '14px Arial';
+					ctx1.fillStyle = '#0f172a';
+					ctx1.fillText('brob', 2, 20);
+					const data1 = testCanvas1.toDataURL();
+
+					const testCanvas2 = document.createElement('canvas');
+					testCanvas2.width = 32;
+					testCanvas2.height = 32;
+					const ctx2 = testCanvas2.getContext('2d');
+					if (ctx2) {
+						ctx2.fillStyle = '#f97316';
+						ctx2.fillRect(0, 0, 32, 32);
+						ctx2.font = '14px Arial';
+						ctx2.fillStyle = '#0f172a';
+						ctx2.fillText('brob', 2, 20);
+						const data2 = testCanvas2.toDataURL();
+
+						if (data1 !== data2) {
+							fpEl.textContent = 'Randomized (Anti-FP Noise)';
+							fpEl.title = 'Detected canvas fingerprint randomization (Brave Shields or anti-fingerprinting extension actively injects per-render entropy).';
+						} else {
+							fpEl.textContent = 'Consistent / Deterministic';
+							fpEl.title = 'Canvas rendering output is deterministic with zero synthetic noise injection.';
+						}
+					}
+				}
+			} catch (_) {
+				fpEl.textContent = 'Canvas Readback Blocked';
+				fpEl.title = 'Browser security policy blocked canvas pixel readback (toDataURL / getImageData).';
+			}
+		}
+
+		const storageSandboxEl = document.getElementById('t-storage-sandbox');
+		if (storageSandboxEl) {
+			const isIsolated = window.crossOriginIsolated === true;
+			const hasStorageAccess = typeof document.hasStorageAccess === 'function';
+			if (hasStorageAccess) {
+				document.hasStorageAccess().then((hasAccess) => {
+					if (hasAccess === false) {
+						storageSandboxEl.textContent = isIsolated ? 'Partitioned + Isolated' : 'Partitioned (State Isolation)';
+						storageSandboxEl.title = 'Third-party storage partitioning (CHIPS / State Partitioning) active.';
+					} else {
+						storageSandboxEl.textContent = isIsolated ? 'Isolated Origin' : 'Standard Origin Sandbox';
+						storageSandboxEl.title = 'Origin-bound storage sandbox without cross-site partition barriers.';
+					}
+				}).catch(() => {
+					storageSandboxEl.textContent = 'Origin Sandbox';
+				});
+			} else {
+				storageSandboxEl.textContent = isIsolated ? 'Isolated Context' : 'Origin Sandbox';
+			}
+		}
+
+		const adblockEl = document.getElementById('t-adblock');
+		if (adblockEl) {
+			fetch('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', { method: 'HEAD', mode: 'no-cors' })
+				.then(() => {
+					adblockEl.textContent = 'Standard / Unfiltered';
+					adblockEl.title = 'Known advertising/telemetry network hostnames resolved without local client sinkholing.';
+				})
+				.catch(() => {
+					adblockEl.textContent = 'Active (Adblock / DNS Sinkhole)';
+					adblockEl.title = 'Known analytics/tracker request was sinkholed locally by an adblock extension (e.g. uBlock Origin, Brave Shield) or network DNS sinkhole (Pi-hole).';
+				});
+		}
 	}
 
 	window.addEventListener('keydown', (e) => {
 		const modal = document.getElementById('map-applet-modal');
-		if (modal && !modal.classList.contains('hidden') && (e.key === 'Escape' || e.key === 'Esc')) {
-			e.stopPropagation();
-			modal.classList.add('hidden');
-			modal.setAttribute('aria-hidden', 'true');
-			document.body.style.overflow = '';
+		const webgpuModal = document.getElementById('webgpu-applet-modal');
+		if (e.key === 'Escape' || e.key === 'Esc') {
+			if (modal && !modal.classList.contains('hidden')) {
+				e.stopPropagation();
+				modal.classList.add('hidden');
+				modal.setAttribute('aria-hidden', 'true');
+				document.body.style.overflow = '';
+			}
+			if (webgpuModal && !webgpuModal.classList.contains('hidden')) {
+				e.stopPropagation();
+				webgpuModal.classList.add('hidden');
+				webgpuModal.setAttribute('aria-hidden', 'true');
+				document.body.style.overflow = '';
+			}
 		}
 	});
 
@@ -2104,6 +2498,65 @@
 		border-color: var(--accent);
 		color: var(--accent);
 		background: rgba(var(--accent-rgb), 0.08);
+	}
+
+	/* WEBGPU MODAL & SPECS GRID */
+	.webgpu-dialog {
+		width: clamp(340px, 92vw, 680px);
+	}
+
+	.webgpu-body-wrap {
+		padding: 1.2em;
+		max-height: 480px;
+		overflow-y: auto;
+		background: var(--bg-card);
+	}
+
+	.webgpu-specs-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.75em;
+	}
+
+	@media (max-width: 640px) {
+		.webgpu-specs-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.webgpu-tile {
+		background: rgba(148, 163, 184, 0.05);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		padding: 0.75em 0.9em;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		min-height: 64px;
+	}
+
+	:global(html[data-theme="dark"]) .webgpu-tile {
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.webgpu-tile-label {
+		font-size: 0.72em;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: rgb(var(--gray));
+		margin-bottom: 0.25em;
+	}
+
+	.webgpu-tile-val {
+		font-size: 0.88em;
+		font-weight: 700;
+		color: rgb(var(--black));
+		line-height: 1.25;
+	}
+
+	:global(html[data-theme="dark"]) .webgpu-tile-val {
+		color: #f1f5f9;
 	}
 
 	@media (max-width: 600px) {

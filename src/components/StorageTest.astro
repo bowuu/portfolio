@@ -12,12 +12,21 @@
 			</svg>
 			Storage Test
 		</h2>
-		<button id="run-storage-btn" class="benchmark-btn" type="button" aria-label="Run Storage Benchmark">
-			<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon" id="storage-btn-icon">
-				<polygon points="5 3 19 12 5 21 5 3"/>
-			</svg>
-			<span id="storage-btn-text">Run Benchmark</span>
-		</button>
+		<div class="storage-actions">
+			<div class="size-segmented" role="group" aria-label="Benchmark File Size">
+				<button class="size-btn" data-size="64" type="button">64 MB</button>
+				<button class="size-btn active" data-size="128" type="button">128 MB</button>
+				<button class="size-btn" data-size="256" type="button">256 MB</button>
+				<button class="size-btn" data-size="512" type="button">512 MB</button>
+				<button class="size-btn" data-size="1024" type="button">1 GB</button>
+			</div>
+			<button id="run-storage-btn" class="benchmark-btn" type="button" aria-label="Run Storage Benchmark">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon" id="storage-btn-icon">
+					<polygon points="5 3 19 12 5 21 5 3"/>
+				</svg>
+				<span id="storage-btn-text">Run Benchmark</span>
+			</button>
+		</div>
 	</div>
 
 	<p class="benchmark-desc">
@@ -76,6 +85,25 @@
 
 <script>
 	let isStorageBenchmarking = false;
+	let selectedStorageMB = 128;
+
+	function setupSizeSelector() {
+		const sizeBtns = document.querySelectorAll('.size-btn');
+		const seqWriteSub = document.getElementById('storage-seq-write-sub');
+
+		sizeBtns.forEach((btn) => {
+			btn.addEventListener('click', () => {
+				if (isStorageBenchmarking) return;
+				sizeBtns.forEach((b) => b.classList.remove('active'));
+				btn.classList.add('active');
+				const size = parseInt(btn.getAttribute('data-size') || '128', 10);
+				selectedStorageMB = size;
+				if (seqWriteSub) {
+					seqWriteSub.textContent = `${size >= 1024 ? '1 GB' : size + ' MB'} Synchronous I/O`;
+				}
+			});
+		});
+	}
 
 	async function initStorageQuota() {
 		const quotaValEl = document.getElementById('storage-quota-val');
@@ -138,7 +166,8 @@
 			const hasOPFS = !!(navigator.storage && typeof navigator.storage.getDirectory === 'function');
 
 			if (hasOPFS) {
-				setProgress(5, 'Initializing Origin Private File System (OPFS)...');
+				const sizeLabel = selectedStorageMB >= 1024 ? '1 GB' : `${selectedStorageMB} MB`;
+				setProgress(5, `Initializing Origin Private File System (OPFS) for ${sizeLabel} test...`);
 
 				// Attempt high-performance synchronous OPFS benchmarking via Dedicated Web Worker
 				let usedWorker = false;
@@ -147,6 +176,7 @@
 						const workerScript = `
 							self.onmessage = async (e) => {
 								try {
+									const selectedMB = Number(e.data?.sizeMB) || 128;
 									const root = await navigator.storage.getDirectory();
 									const testFileName = '__bench_io_' + Date.now() + '.bin';
 									const fileHandle = await root.getFileHandle(testFileName, { create: true });
@@ -158,8 +188,9 @@
 
 									const accessHandle = await fileHandle.createSyncAccessHandle();
 									const CHUNK_SIZE = 8 * 1024 * 1024; // 8 MB chunks
-									const TOTAL_CHUNKS = 16; // 128 MB total
+									const TOTAL_CHUNKS = Math.max(1, Math.round(selectedMB / 8));
 									const totalBytes = CHUNK_SIZE * TOTAL_CHUNKS;
+									const sizeLabel = selectedMB >= 1024 ? '1 GB' : selectedMB + ' MB';
 
 									const chunk = new Uint8Array(CHUNK_SIZE);
 									for (let i = 0; i < CHUNK_SIZE; i += 4) {
@@ -177,8 +208,8 @@
 									}
 									accessHandle.flush();
 									const writeElapsed = (performance.now() - writeStart) / 1000;
-									const finalWriteSpeed = (128 / Math.max(0.001, writeElapsed)).toFixed(1);
-									self.postMessage({ type: 'progress', step: 'write', speed: finalWriteSpeed, pct: 45, msg: 'Write complete: 128 MB (' + finalWriteSpeed + ' MB/s)...' });
+									const finalWriteSpeed = (selectedMB / Math.max(0.001, writeElapsed)).toFixed(1);
+									self.postMessage({ type: 'progress', step: 'write', speed: finalWriteSpeed, pct: 45, msg: 'Write complete: ' + sizeLabel + ' (' + finalWriteSpeed + ' MB/s)...' });
 
 									// STEP 2: Sequential Read (Direct synchronous kernel readback)
 									const readBuf = new Uint8Array(CHUNK_SIZE);
@@ -187,8 +218,8 @@
 										accessHandle.read(readBuf, { at: i * CHUNK_SIZE });
 									}
 									const readElapsed = (performance.now() - readStart) / 1000;
-									const finalReadSpeed = (128 / Math.max(0.001, readElapsed)).toFixed(1);
-									self.postMessage({ type: 'progress', step: 'read', speed: finalReadSpeed, pct: 80, msg: 'Read complete: 128 MB (' + finalReadSpeed + ' MB/s)...' });
+									const finalReadSpeed = (selectedMB / Math.max(0.001, readElapsed)).toFixed(1);
+									self.postMessage({ type: 'progress', step: 'read', speed: finalReadSpeed, pct: 80, msg: 'Read complete: ' + sizeLabel + ' (' + finalReadSpeed + ' MB/s)...' });
 
 									// STEP 3: 4KB Random Access IOPS (Small-block synchronous transactions)
 									const smallBlock = new Uint8Array(4096);
@@ -262,21 +293,22 @@
 								URL.revokeObjectURL(workerUrl);
 								reject(err);
 							};
-							worker.postMessage({ start: true });
+							worker.postMessage({ start: true, sizeMB: selectedStorageMB });
 						});
 					} catch (_) {
 						usedWorker = false;
 					}
 				}
 
-				// Fallback to main-thread stream benchmark with 128 MB (8 MB chunks) if Worker is unavailable
+				// Fallback to main-thread stream benchmark if Worker is unavailable
 				if (!usedWorker) {
 					const root = await navigator.storage.getDirectory();
 					const testFileName = `__bench_io_${Date.now()}.bin`;
 					const fileHandle = await root.getFileHandle(testFileName, { create: true });
 
 					const CHUNK_SIZE = 8 * 1024 * 1024; // 8 MB
-					const TOTAL_CHUNKS = 16; // 128 MB
+					const TOTAL_CHUNKS = Math.max(1, Math.round(selectedStorageMB / 8));
+					const sizeLabel = selectedStorageMB >= 1024 ? '1 GB' : `${selectedStorageMB} MB`;
 					const chunk = new Uint8Array(CHUNK_SIZE);
 					for (let i = 0; i < CHUNK_SIZE; i += 4) {
 						chunk[i] = (i * 13) & 0xff;
@@ -286,26 +318,21 @@
 					}
 
 					// STEP 1: Sequential Write Benchmark
-					setProgress(10, 'Benchmarking Sequential Write (128 MB stream)...');
+					setProgress(10, `Benchmarking Sequential Write (${sizeLabel} stream)...`);
 					const writable = await fileHandle.createWritable();
 					const writeStart = performance.now();
 
 					for (let i = 0; i < TOTAL_CHUNKS; i++) {
 						await writable.write(chunk);
-						const pct = 10 + Math.round(((i + 1) / TOTAL_CHUNKS) * 38);
-						const interimElapsed = (performance.now() - writeStart) / 1000;
-						const interimMB = ((i + 1) * CHUNK_SIZE) / (1024 * 1024);
-						const interimSpeed = (interimMB / Math.max(0.01, interimElapsed)).toFixed(1);
-						setProgress(pct, `Writing: ${(i + 1) * 8}/128 MB (${interimSpeed} MB/s)...`);
-						if (seqWriteEl) seqWriteEl.textContent = interimSpeed;
 					}
 					await writable.close();
 					const writeElapsed = (performance.now() - writeStart) / 1000;
-					const writeSpeedMBs = (128 / Math.max(0.001, writeElapsed));
+					const writeSpeedMBs = (selectedStorageMB / Math.max(0.001, writeElapsed));
 					if (seqWriteEl) seqWriteEl.textContent = writeSpeedMBs.toFixed(1);
+					setProgress(48, `Write complete: ${sizeLabel} (${writeSpeedMBs.toFixed(1)} MB/s)...`);
 
 					// STEP 2: Sequential Read Benchmark
-					setProgress(50, 'Benchmarking Sequential Read (128 MB stream)...');
+					setProgress(50, `Benchmarking Sequential Read (${sizeLabel} stream)...`);
 					const file = await fileHandle.getFile();
 					const readStart = performance.now();
 					let bytesRead = 0;
@@ -314,16 +341,11 @@
 						const slice = file.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
 						const buffer = await slice.arrayBuffer();
 						bytesRead += buffer.byteLength;
-						const pct = 50 + Math.round(((i + 1) / TOTAL_CHUNKS) * 32);
-						const interimElapsed = (performance.now() - readStart) / 1000;
-						const interimMB = bytesRead / (1024 * 1024);
-						const interimSpeed = (interimMB / Math.max(0.01, interimElapsed)).toFixed(1);
-						setProgress(pct, `Reading: ${(i + 1) * 8}/128 MB (${interimSpeed} MB/s)...`);
-						if (seqReadEl) seqReadEl.textContent = interimSpeed;
 					}
 					const readElapsed = (performance.now() - readStart) / 1000;
 					const readSpeedMBs = (bytesRead / (1024 * 1024)) / Math.max(0.001, readElapsed);
 					if (seqReadEl) seqReadEl.textContent = readSpeedMBs.toFixed(1);
+					setProgress(80, `Read complete: ${sizeLabel} (${readSpeedMBs.toFixed(1)} MB/s)...`);
 
 					// STEP 3: 4KB Random Small-Block Access IOPS
 					setProgress(82, 'Benchmarking 4KB Random Write IOPS...');
@@ -401,6 +423,7 @@
 
 	function setupStorageBench() {
 		initStorageQuota();
+		setupSizeSelector();
 		const runBtn = document.getElementById('run-storage-btn');
 		if (runBtn) {
 			runBtn.addEventListener('click', runStorageBenchmark);
@@ -430,6 +453,51 @@
 		margin: 0;
 		padding: 0;
 		border-bottom: none;
+	}
+
+	.storage-actions {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.75em;
+	}
+
+	.size-segmented {
+		display: inline-flex;
+		align-items: center;
+		background: rgba(148, 163, 184, 0.1);
+		border-radius: 8px;
+		padding: 3px;
+		gap: 2px;
+	}
+
+	:global(html[data-theme="dark"]) .size-segmented {
+		background: rgba(255, 255, 255, 0.05);
+	}
+
+	.size-btn {
+		background: transparent;
+		border: none;
+		color: rgb(var(--gray));
+		font-family: inherit;
+		font-size: 0.78em;
+		font-weight: 700;
+		padding: 5px 10px;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		line-height: 1.2;
+	}
+
+	.size-btn:hover:not(.active) {
+		color: rgb(var(--black));
+		background: rgba(148, 163, 184, 0.15);
+	}
+
+	.size-btn.active {
+		background: var(--accent);
+		color: #ffffff;
+		box-shadow: 0 1px 4px rgba(var(--accent-rgb), 0.3);
 	}
 
 	.benchmark-desc {

@@ -799,6 +799,7 @@
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 1.2em;
+		align-items: stretch;
 	}
 
 	@media (max-width: 780px) {
@@ -814,7 +815,8 @@
 		padding: 1.1em;
 		display: flex;
 		flex-direction: column;
-		justify-content: space-between;
+		height: 100%;
+		box-sizing: border-box;
 	}
 
 	:global(html[data-theme="dark"]) .audio-col {
@@ -898,7 +900,8 @@
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 0.6em;
-		margin-bottom: 0.9em;
+		margin-top: auto;
+		margin-bottom: 0;
 	}
 
 	.tone-btn {
@@ -1107,6 +1110,8 @@
 	.sweep-actions-row {
 		display: flex;
 		gap: 0.6em;
+		margin-top: auto;
+		margin-bottom: 0;
 	}
 
 	.sweep-btn {

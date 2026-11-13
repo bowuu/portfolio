@@ -26,6 +26,16 @@
 				<button class="seg-btn" data-pattern="checker" type="button" title="Checkerboard">Checker</button>
 			</div>
 
+			<button id="toggle-display-btn" class="telemetry-btn" type="button" title="Stop or resume display motion benchmark">
+				<svg id="toggle-display-icon-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+					<rect x="5" y="5" width="14" height="14" rx="2"/>
+				</svg>
+				<svg id="toggle-display-icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="hidden">
+					<polygon points="5 3 19 12 5 21 5 3"/>
+				</svg>
+				<span id="toggle-display-text">Stop Motion</span>
+			</button>
+
 			<button id="open-pixel-checker-btn" class="telemetry-btn" type="button" title="Open Fullscreen Dead / Stuck Pixel Checker">
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
 					<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
@@ -68,7 +78,6 @@
 			<span class="hud-label">Dynamic Range</span>
 			<div class="hud-val-wrap">
 				<span id="display-hdr-tag" class="hud-val">SDR</span>
-				<span id="display-hdr-badge" class="hud-unit">Standard</span>
 			</div>
 			<span id="display-depth-tag" class="hud-sub">Color Depth</span>
 		</div>
@@ -116,6 +125,7 @@
 		let lastTimestamp = 0;
 		let rafId: number | null = null;
 		let isVisible = false;
+		let isMotionRunning = true;
 
 		const fpsEl = document.getElementById('display-fps');
 		const frameTimeEl = document.getElementById('display-frame-time');
@@ -137,9 +147,6 @@
 		const hdrBadgeEl = document.getElementById('display-hdr-badge');
 		if (hdrTagEl) {
 			hdrTagEl.textContent = isHDR ? 'HDR' : 'SDR';
-		}
-		if (hdrBadgeEl) {
-			hdrBadgeEl.textContent = isHDR ? 'High Dynamic' : 'Standard';
 		}
 		if (depthTagEl) {
 			const gamut = isRec2020 ? 'Rec.2020' : (isP3 ? 'Display P3' : 'sRGB');
@@ -167,14 +174,14 @@
 			ctx.save();
 			ctx.translate(x, y);
 
-			const bodyW = w * 0.78;
-			const bodyH = h * 0.65;
+			const bodyW = w * 0.82;
+			const bodyH = h * 0.70;
 			const halfW = bodyW / 2;
 			const halfH = bodyH / 2;
 
 			// Lead pins (8 on top, 8 on bottom)
 			const numPins = 8;
-			const pinW = Math.max(3, Math.round(5.5 * (w / 150)));
+			const pinW = Math.max(3, Math.round(5.5 * (w / 160)));
 			const pinExt = (h - bodyH) / 2;
 			const pinSpacing = (bodyW - 18) / (numPins - 1);
 
@@ -208,14 +215,14 @@
 
 			// Laser etched text (sharp high-frequency contrast test)
 			ctx.fillStyle = isDark ? '#f8fafc' : '#ffffff';
-			ctx.font = `bold ${Math.round(14 * (w / 150))}px monospace`;
+			ctx.font = `bold ${Math.round(19 * (w / 160))}px monospace`;
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
-			ctx.fillText('BROB-IC', 0, -8);
+			ctx.fillText('TEST-IC', 0, Math.round(-10 * (h / 98)));
 
 			ctx.fillStyle = isDark ? '#94a3b8' : '#94a3b8';
-			ctx.font = `${Math.round(8.5 * (w / 150))}px monospace`;
-			ctx.fillText('3nm FINFET • 8-CH', 0, 9);
+			ctx.font = `bold ${Math.round(13 * (w / 160))}px monospace`;
+			ctx.fillText('3nm FinFET', 0, Math.round(11 * (h / 98)));
 
 			ctx.restore();
 		}
@@ -321,7 +328,7 @@
 			const renderY = h / 2;
 
 			if (patternType === 'chip') {
-				drawSiliconChip(renderX, renderY, 150 * dpr, 92 * dpr, isDark);
+				drawSiliconChip(renderX, renderY, 160 * dpr, 98 * dpr, isDark);
 			} else if (patternType === 'bars') {
 				drawPursuitBars(renderX, w, h, isDark);
 			} else if (patternType === 'checker') {
@@ -350,13 +357,42 @@
 		const observer = new IntersectionObserver((entries) => {
 			entries.forEach((entry) => {
 				isVisible = entry.isIntersecting;
-				if (isVisible && !rafId) {
+				if (isVisible && isMotionRunning && !rafId) {
 					lastTimestamp = performance.now();
 					rafId = requestAnimationFrame(renderLoop);
 				}
 			});
 		}, { threshold: 0.05 });
 		observer.observe(viewportWrap);
+
+		// Stop / Resume motion toggle
+		const toggleDisplayBtn = document.getElementById('toggle-display-btn');
+		const toggleDisplayStopIcon = document.getElementById('toggle-display-icon-stop');
+		const toggleDisplayPlayIcon = document.getElementById('toggle-display-icon-play');
+		const toggleDisplayText = document.getElementById('toggle-display-text');
+
+		toggleDisplayBtn?.addEventListener('click', () => {
+			isMotionRunning = !isMotionRunning;
+			if (!isMotionRunning) {
+				if (rafId) {
+					cancelAnimationFrame(rafId);
+					rafId = null;
+				}
+				toggleDisplayStopIcon?.classList.add('hidden');
+				toggleDisplayPlayIcon?.classList.remove('hidden');
+				if (toggleDisplayText) toggleDisplayText.textContent = 'Resume Motion';
+				toggleDisplayBtn.setAttribute('title', 'Resume display motion benchmark');
+				if (fpsEl) fpsEl.textContent = 'Paused';
+				if (frameTimeEl) frameTimeEl.textContent = 'Motion paused';
+			} else {
+				toggleDisplayStopIcon?.classList.remove('hidden');
+				toggleDisplayPlayIcon?.classList.add('hidden');
+				if (toggleDisplayText) toggleDisplayText.textContent = 'Stop Motion';
+				toggleDisplayBtn.setAttribute('title', 'Stop display motion benchmark');
+				lastTimestamp = performance.now();
+				rafId = requestAnimationFrame(renderLoop);
+			}
+		});
 
 		// Speed button controls
 		const speedBtns = document.querySelectorAll('.display-test-card .seg-btn[data-speed]');

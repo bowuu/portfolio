@@ -392,16 +392,16 @@
 
 						if (tierBadgeEl) {
 							if (peakHz >= 3500) {
-								tierBadgeEl.textContent = 'Esports (8000Hz)';
+								tierBadgeEl.textContent = '8,000 Hz HID';
 								tierBadgeEl.className = 'badge mono badge-orange';
 							} else if (peakHz >= 850) {
-								tierBadgeEl.textContent = 'Gaming (1000Hz)';
+								tierBadgeEl.textContent = '1,000 Hz HID';
 								tierBadgeEl.className = 'badge mono badge-orange';
 							} else if (peakHz >= 400) {
-								tierBadgeEl.textContent = 'Gaming (500Hz)';
+								tierBadgeEl.textContent = '500 Hz HID';
 								tierBadgeEl.className = 'badge mono';
 							} else if (peakHz >= 110) {
-								tierBadgeEl.textContent = 'Office (125Hz)';
+								tierBadgeEl.textContent = '125 Hz USB';
 								tierBadgeEl.className = 'badge mono';
 							} else {
 								tierBadgeEl.textContent = `${peakHz} Hz`;
@@ -477,11 +477,11 @@
 
 					if (reactionTimeVal) reactionTimeVal.textContent = `${reactionDelta}`;
 
-					let rating = 'Average';
-					if (reactionDelta < 185) rating = 'Pro Esports';
+					let rating = 'Nominal';
+					if (reactionDelta < 185) rating = 'Ultra-Fast';
 					else if (reactionDelta < 225) rating = 'Fast';
-					else if (reactionDelta < 275) rating = 'Normal';
-					else rating = 'Slow';
+					else if (reactionDelta < 275) rating = 'Nominal';
+					else rating = 'Extended';
 
 					if (pollReflexBox) pollReflexBox.className = 'poll-reflex-box result';
 					if (reactionHeadline) reactionHeadline.textContent = `${reactionDelta} ms (${rating})`;

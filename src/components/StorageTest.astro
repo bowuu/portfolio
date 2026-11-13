@@ -20,11 +20,11 @@
 				<button class="size-btn" data-size="512" type="button">512 MB</button>
 				<button class="size-btn" data-size="1024" type="button">1 GB</button>
 			</div>
-			<button id="run-storage-btn" class="benchmark-btn" type="button" aria-label="Run Storage Benchmark">
+			<button id="run-storage-btn" class="benchmark-btn" type="button" aria-label="Run Storage Test">
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon" id="storage-btn-icon">
 					<polygon points="5 3 19 12 5 21 5 3"/>
 				</svg>
-				<span id="storage-btn-text">Run Benchmark</span>
+				<span id="storage-btn-text">Run Test</span>
 			</button>
 		</div>
 	</div>
@@ -78,7 +78,7 @@
 			<div class="progress-bar" id="storage-progress-bar"></div>
 		</div>
 		<div class="status-wrap">
-			<span id="storage-status" class="status-text">Click "Run Benchmark" to test local disk write/read throughput and random IOPS.</span>
+			<span id="storage-status" class="status-text">Click "Run Test" to test local disk write/read throughput and random IOPS.</span>
 		</div>
 	</div>
 </section>
@@ -187,8 +187,8 @@
 									}
 
 									const accessHandle = await fileHandle.createSyncAccessHandle();
-									const CHUNK_SIZE = 8 * 1024 * 1024; // 8 MB chunks
-									const TOTAL_CHUNKS = Math.max(1, Math.round(selectedMB / 8));
+									const CHUNK_SIZE = 16 * 1024 * 1024; // 16 MB chunks to minimize browser sandbox Mojo IPC context switches
+									const TOTAL_CHUNKS = Math.max(1, Math.round(selectedMB / 16));
 									const totalBytes = CHUNK_SIZE * TOTAL_CHUNKS;
 									const sizeLabel = selectedMB >= 1024 ? '1 GB' : selectedMB + ' MB';
 
@@ -416,7 +416,7 @@
 		} finally {
 			isStorageBenchmarking = false;
 			if (btn) btn.disabled = false;
-			if (btnText) btnText.textContent = 'Run Benchmark';
+			if (btnText) btnText.textContent = 'Run Again';
 			if (progressBar) progressBar.classList.remove('active');
 		}
 	}
@@ -445,8 +445,10 @@
 		justify-content: space-between;
 		align-items: center;
 		flex-wrap: wrap;
-		gap: 1em;
-		margin-bottom: 0.5em;
+		gap: 0.8em;
+		padding-bottom: 0.8em;
+		margin-bottom: 0.8em;
+		border-bottom: 1.5px solid var(--border-color);
 	}
 
 	.storage-header .card-title {
@@ -459,16 +461,16 @@
 		display: flex;
 		align-items: center;
 		flex-wrap: wrap;
-		gap: 0.75em;
+		gap: 0.6em;
 	}
 
 	.size-segmented {
 		display: inline-flex;
 		align-items: center;
-		background: rgba(148, 163, 184, 0.1);
+		background: rgba(148, 163, 184, 0.12);
 		border-radius: 8px;
-		padding: 3px;
-		gap: 2px;
+		padding: 2px;
+		border: 1px solid var(--border-color);
 	}
 
 	:global(html[data-theme="dark"]) .size-segmented {
@@ -482,7 +484,7 @@
 		font-family: inherit;
 		font-size: 0.78em;
 		font-weight: 700;
-		padding: 5px 10px;
+		padding: 4px 8px;
 		border-radius: 6px;
 		cursor: pointer;
 		transition: all 0.15s ease;
@@ -494,40 +496,45 @@
 		background: rgba(148, 163, 184, 0.15);
 	}
 
+	:global(html[data-theme="dark"]) .size-btn:hover:not(.active) {
+		color: #ffffff;
+		background: rgba(255, 255, 255, 0.1);
+	}
+
 	.size-btn.active {
 		background: var(--accent);
 		color: #ffffff;
-		box-shadow: 0 1px 4px rgba(var(--accent-rgb), 0.3);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 	}
 
 	.benchmark-desc {
-		font-size: 0.95em;
-		line-height: 1.5;
+		font-size: 0.88em;
+		line-height: 1.55;
 		color: rgb(var(--gray-dark));
-		margin: 0 0 1.4em 0;
+		margin: 0 0 1.25em 0;
 	}
 
+	/* BENCHMARK BUTTON (EXACT NETWORK TEST PARITY) */
 	.benchmark-btn {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.55em;
+		gap: 0.5em;
 		background: var(--accent);
 		color: #ffffff;
-		border: none;
+		border: 1px solid transparent;
+		padding: 0.5em 1.15em;
 		border-radius: 8px;
-		padding: 0.6em 1.2em;
-		font-family: inherit;
-		font-size: 0.9em;
-		font-weight: 700;
+		font-size: 0.88em;
+		font-weight: 600;
 		cursor: pointer;
-		transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
-		box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.28);
+		transition: all 0.15s ease;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 	}
 
 	.benchmark-btn:hover:not(:disabled) {
-		background: var(--accent-dark);
+		background: #c2410c;
 		transform: translateY(-1px);
-		box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.4);
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 	}
 
 	.benchmark-btn:active:not(:disabled) {
@@ -535,7 +542,7 @@
 	}
 
 	.benchmark-btn:disabled {
-		opacity: 0.65;
+		opacity: 0.6;
 		cursor: not-allowed;
 		transform: none;
 	}
@@ -544,36 +551,23 @@
 		flex-shrink: 0;
 	}
 
-	/* TILES */
+	/* TILES GRID (EXACT NETWORK TEST PARITY) */
 	.benchmark-tiles {
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
 		gap: 1em;
-		margin-bottom: 1.4em;
-	}
-
-	@media (max-width: 860px) {
-		.benchmark-tiles {
-			grid-template-columns: repeat(2, 1fr);
-		}
-	}
-
-	@media (max-width: 480px) {
-		.benchmark-tiles {
-			grid-template-columns: 1fr;
-		}
+		margin-bottom: 1.2em;
 	}
 
 	.b-tile {
-		background: rgba(148, 163, 184, 0.05);
+		background: rgba(0, 0, 0, 0.02);
 		border: 1px solid var(--border-color);
-		border-radius: 10px;
-		padding: 1.1em 1.2em;
+		border-radius: 8px;
+		padding: 0.9em 1.05em;
 		display: flex;
 		flex-direction: column;
-		justify-content: space-between;
-		min-height: 110px;
-		transition: border-color 0.2s ease, background-color 0.2s ease;
+		gap: 0.25em;
+		transition: border-color 0.2s ease, background 0.2s ease;
 	}
 
 	:global(html[data-theme="dark"]) .b-tile {
@@ -581,39 +575,37 @@
 	}
 
 	.b-tile-label {
-		font-size: 0.8em;
-		font-weight: 600;
+		font-size: 0.74em;
+		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: rgb(var(--gray));
-		margin-bottom: 0.35em;
 	}
 
 	.b-tile-value-wrap {
 		display: flex;
 		align-items: baseline;
-		gap: 0.35em;
-		margin-bottom: 0.2em;
+		gap: 0.3em;
 	}
 
 	.b-tile-num {
-		font-size: clamp(1.6em, 3vw, 2.1em);
+		font-size: 1.55em;
 		font-weight: 800;
 		color: rgb(var(--black));
-		line-height: 1.1;
+		line-height: 1.2;
 		font-variant-numeric: tabular-nums;
 	}
 
 	.b-tile-unit {
-		font-size: 0.9em;
+		font-size: 0.85em;
 		font-weight: 600;
 		color: rgb(var(--gray));
 	}
 
 	.b-tile-sub {
-		font-size: 0.78em;
+		font-size: 0.74em;
 		color: rgb(var(--gray));
-		line-height: 1.3;
+		margin-top: 0.1em;
 	}
 
 	.mono {
@@ -624,43 +616,62 @@
 	.benchmark-footer {
 		display: flex;
 		flex-direction: column;
-		gap: 0.6em;
+		gap: 0.55em;
 	}
 
 	.progress-track {
 		width: 100%;
-		height: 4px;
-		background: rgba(148, 163, 184, 0.15);
-		border-radius: 2px;
+		height: 5px;
+		background: rgba(0, 0, 0, 0.06);
+		border-radius: 999px;
 		overflow: hidden;
 	}
 
 	:global(html[data-theme="dark"]) .progress-track {
-		background: rgba(255, 255, 255, 0.07);
+		background: rgba(255, 255, 255, 0.08);
 	}
 
 	.progress-bar {
 		width: 0%;
 		height: 100%;
 		background: var(--accent);
-		border-radius: 2px;
-		transition: width 0.15s ease-out;
-	}
-
-	.progress-bar.active {
-		background: linear-gradient(90deg, var(--accent) 0%, #fb923c 100%);
+		border-radius: 999px;
+		transition: width 0.25s ease;
 	}
 
 	.status-wrap {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		font-size: 0.85em;
-		color: rgb(var(--gray));
 	}
 
 	.status-text {
-		white-space: normal;
+		font-size: 0.78em;
+		color: rgb(var(--gray));
 		line-height: 1.4;
+	}
+
+	@media (max-width: 860px) {
+		.benchmark-tiles {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+	@media (max-width: 520px) {
+		.storage-header {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+		.storage-actions {
+			width: 100%;
+			flex-direction: column;
+			align-items: stretch;
+		}
+		.benchmark-btn {
+			width: 100%;
+			justify-content: center;
+		}
+		.benchmark-tiles {
+			grid-template-columns: 1fr;
+		}
 	}
 </style>

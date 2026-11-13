@@ -25,7 +25,7 @@
 	</div>
 
 	<p class="benchmark-desc">
-		Measure DAC hardware sample rate and buffer latency, verify Left/Right channel separation, diagnose 180&deg; wiring phase polarity, and test frequency response from 20 Hz to 20,000 Hz.
+		Test DAC hardware latency, channel separation, 180&deg; wiring phase, and 20 Hz&ndash;20 kHz frequency response.
 	</p>
 
 	<!-- TWO-COLUMN WORKBENCH -->
@@ -58,7 +58,7 @@
 						<span class="tone-pill">L</span>
 						<span class="tone-name">Left Channel</span>
 					</div>
-					<span class="tone-sub">Voice "Left" &bull; Left Ear Only</span>
+					<span class="tone-sub">Left Ear Only</span>
 				</button>
 
 				<button class="tone-btn" id="btn-tone-right" type="button">
@@ -66,7 +66,7 @@
 						<span class="tone-pill">R</span>
 						<span class="tone-name">Right Channel</span>
 					</div>
-					<span class="tone-sub">Voice "Right" &bull; Right Ear Only</span>
+					<span class="tone-sub">Right Ear Only</span>
 				</button>
 
 				<button class="tone-btn" id="btn-tone-inphase" type="button">
@@ -74,7 +74,7 @@
 						<span class="tone-pill">0&deg;</span>
 						<span class="tone-name">In-Phase (Center)</span>
 					</div>
-					<span class="tone-sub">Voice "Center" &bull; Pinpoint Center</span>
+					<span class="tone-sub">Pinpoint Center</span>
 				</button>
 
 				<button class="tone-btn" id="btn-tone-outphase" type="button">
@@ -82,7 +82,7 @@
 						<span class="tone-pill warn">180&deg;</span>
 						<span class="tone-name">Out-of-Phase</span>
 					</div>
-					<span class="tone-sub">Voice "Out of phase" &bull; Inverted Phase</span>
+					<span class="tone-sub">180&deg; Inverted Phase</span>
 				</button>
 			</div>
 		</div>
@@ -753,7 +753,7 @@
 	}
 
 	.vol-slider {
-		width: 70px;
+		width: 115px;
 		accent-color: var(--accent);
 		cursor: pointer;
 	}
@@ -963,7 +963,8 @@
 	}
 
 	.tone-sub {
-		font-size: 0.76em;
+		font-size: 0.82em;
+		font-weight: 600;
 		color: rgb(var(--gray));
 	}
 
@@ -1069,20 +1070,21 @@
 		background: rgba(148, 163, 184, 0.08);
 		border: 1px solid var(--border-color);
 		border-radius: 6px;
-		padding: 0.35em 0.15em;
+		padding: 0.45em 0.25em;
 		cursor: pointer;
 		transition: all 0.15s ease;
 	}
 
 	.freq-pill .pill-hz {
-		font-size: 0.76em;
+		font-size: 0.84em;
 		font-weight: 700;
 		color: rgb(var(--gray-dark));
-		line-height: 1.1;
+		line-height: 1.15;
 	}
 
 	.freq-pill .pill-tag {
-		font-size: 0.65em;
+		font-size: 0.72em;
+		font-weight: 600;
 		color: rgb(var(--gray));
 		margin-top: 0.15em;
 	}

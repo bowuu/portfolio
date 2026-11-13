@@ -657,9 +657,14 @@
 
 		// 1. Instant Client Detection: GPU
 		const gpuString = detectGPU();
+		const isFirefox = /Firefox/i.test(navigator.userAgent);
+		const isFirefoxSpoofed = isFirefox && /GTX 980/i.test(gpuString);
+
 		if (gpuEl) {
 			gpuEl.textContent = gpuString;
-			gpuEl.title = 'Unmasked GPU renderer queried via WebGL WEBGL_debug_renderer_info extension.';
+			gpuEl.title = isFirefoxSpoofed
+				? 'Unmasked GPU: NVIDIA GeForce GTX 980. Note: Firefox Resist Fingerprinting (RFP) masks modern discrete GPUs as a GTX 980 to protect user privacy.'
+				: 'Unmasked GPU renderer queried via WebGL WEBGL_debug_renderer_info extension.';
 		}
 
 		// WebGPU Hardware Silicon Inspector
@@ -709,10 +714,12 @@
 				const isWin = /Windows/i.test(navigator.userAgent);
 				const backendName = isMac ? 'Metal' : (isWin ? 'Direct3D 12' : 'Vulkan');
 
+				const displayVendor = info.description || info.device || gpuString;
+
 				webgpuInfoCache = {
 					vendor: info.vendor || gpuString.split(' ')[0] || 'Hardware Vendor',
 					arch: info.architecture || 'Compute ASIC',
-					description: info.description || gpuString,
+					description: displayVendor,
 					backend: backendName,
 					maxWorkgroupInvocations: limits.maxComputeWorkgroupInvocations || 1024,
 					maxWorkgroupX: limits.maxComputeWorkgroupSizeX || 1024,
@@ -738,41 +745,45 @@
 					openWebgpuBtn.onclick = () => {
 						if (!webgpuInfoCache) return;
 						if (webgpuBadge) webgpuBadge.textContent = `${webgpuInfoCache.backend} • WebGPU`;
-						if (webgpuFooterVendor) webgpuFooterVendor.textContent = webgpuInfoCache.description;
+						if (webgpuFooterVendor) {
+							webgpuFooterVendor.textContent = isFirefoxSpoofed
+								? `${webgpuInfoCache.description} (Firefox Anti-Fingerprint Profile)`
+								: webgpuInfoCache.description;
+						}
 
 						if (webgpuSpecsGrid) {
 							webgpuSpecsGrid.innerHTML = `
 								<div class="webgpu-tile">
-									<span class="webgpu-tile-label">Backend Pipeline</span>
-									<span class="webgpu-tile-val">${webgpuInfoCache.backend} (Native WebGPU)</span>
+									<div class="webgpu-tile-label">Backend Pipeline</div>
+									<div class="webgpu-tile-val">${webgpuInfoCache.backend} <span class="webgpu-tile-sub">(Native WebGPU)</span></div>
 								</div>
 								<div class="webgpu-tile">
-									<span class="webgpu-tile-label">Compute Architecture</span>
-									<span class="webgpu-tile-val">${webgpuInfoCache.arch}</span>
+									<div class="webgpu-tile-label">Compute Architecture</div>
+									<div class="webgpu-tile-val">${webgpuInfoCache.arch}</div>
 								</div>
 								<div class="webgpu-tile">
-									<span class="webgpu-tile-label">Max Workgroup Invocations</span>
-									<span class="webgpu-tile-val mono">${webgpuInfoCache.maxWorkgroupInvocations} threads</span>
+									<div class="webgpu-tile-label">Max Workgroup Invocations</div>
+									<div class="webgpu-tile-val mono">${webgpuInfoCache.maxWorkgroupInvocations} <span class="webgpu-tile-sub">threads</span></div>
 								</div>
 								<div class="webgpu-tile">
-									<span class="webgpu-tile-label">Max Workgroup Size</span>
-									<span class="webgpu-tile-val mono">${webgpuInfoCache.maxWorkgroupX} × ${webgpuInfoCache.maxWorkgroupY} × ${webgpuInfoCache.maxWorkgroupZ}</span>
+									<div class="webgpu-tile-label">Max Workgroup Size</div>
+									<div class="webgpu-tile-val mono">${webgpuInfoCache.maxWorkgroupX} &times; ${webgpuInfoCache.maxWorkgroupY} &times; ${webgpuInfoCache.maxWorkgroupZ}</div>
 								</div>
 								<div class="webgpu-tile">
-									<span class="webgpu-tile-label">Max Storage Buffer</span>
-									<span class="webgpu-tile-val mono">${webgpuInfoCache.maxStorageBuffer}</span>
+									<div class="webgpu-tile-label">Max Storage Buffer</div>
+									<div class="webgpu-tile-val mono">${webgpuInfoCache.maxStorageBuffer}</div>
 								</div>
 								<div class="webgpu-tile">
-									<span class="webgpu-tile-label">Max 2D Texture Dimension</span>
-									<span class="webgpu-tile-val mono">${webgpuInfoCache.maxTexture2D}</span>
+									<div class="webgpu-tile-label">Max 2D Texture Dimension</div>
+									<div class="webgpu-tile-val mono">${webgpuInfoCache.maxTexture2D}</div>
 								</div>
 								<div class="webgpu-tile">
-									<span class="webgpu-tile-label">FP16 Math (shader-f16)</span>
-									<span class="webgpu-tile-val">${webgpuInfoCache.features.hasF16 ? 'Supported (Half-Float)' : 'Not Supported'}</span>
+									<div class="webgpu-tile-label">FP16 Math (shader-f16)</div>
+									<div class="webgpu-tile-val">${webgpuInfoCache.features.hasF16 ? 'Supported <span class="webgpu-tile-sub">(Half-Float)</span>' : '<span class="webgpu-tile-sub">Not Supported</span>'}</div>
 								</div>
 								<div class="webgpu-tile">
-									<span class="webgpu-tile-label">Texture Compression</span>
-									<span class="webgpu-tile-val">${webgpuInfoCache.features.hasBC ? 'BC (DirectX)' : (webgpuInfoCache.features.hasASTC ? 'ASTC' : 'Standard')}</span>
+									<div class="webgpu-tile-label">Texture Compression</div>
+									<div class="webgpu-tile-val">${webgpuInfoCache.features.hasBC ? 'BC <span class="webgpu-tile-sub">(DirectX)</span>' : (webgpuInfoCache.features.hasASTC ? 'ASTC' : 'Standard')}</div>
 								</div>
 							`;
 						}
@@ -787,7 +798,9 @@
 
 				if (gpuEl) {
 					gpuEl.textContent = gpuString;
-					gpuEl.title = `Hardware GPU: ${gpuString}. WebGPU backend: ${backendName}. Click 'Graphics Card' header to inspect compute limits.`;
+					gpuEl.title = isFirefoxSpoofed
+						? `Hardware GPU: ${gpuString} (Firefox Fingerprint Protection: modern GPUs are spoofed as a GTX 980). WebGPU backend: ${backendName}. Click 'Graphics Card' header to inspect compute limits.`
+						: `Hardware GPU: ${gpuString}. WebGPU backend: ${backendName}. Click 'Graphics Card' header to inspect compute limits.`;
 				}
 			}).catch(() => {});
 		}
@@ -2298,7 +2311,7 @@
 	}
 
 	.webgpu-body-wrap {
-		padding: 1.2em;
+		padding: 1.25em;
 		max-height: 480px;
 		overflow-y: auto;
 		background: var(--bg-card);
@@ -2307,48 +2320,70 @@
 	.webgpu-specs-grid {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
-		gap: 0.75em;
+		gap: 0.85em;
 	}
 
 	@media (max-width: 640px) {
 		.webgpu-specs-grid {
 			grid-template-columns: 1fr;
+			gap: 0.75em;
 		}
 	}
 
-	.webgpu-tile {
+	:global(.webgpu-tile) {
 		background: rgba(148, 163, 184, 0.05);
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
-		padding: 0.75em 0.9em;
+		padding: 0.85em 1.1em;
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
-		min-height: 64px;
+		min-height: 68px;
+		box-sizing: border-box;
+		transition: border-color 0.15s ease, background 0.15s ease;
 	}
 
-	:global(html[data-theme="dark"]) .webgpu-tile {
+	:global(html[data-theme="dark"] .webgpu-tile) {
 		background: rgba(255, 255, 255, 0.03);
+		border-color: rgba(255, 255, 255, 0.08);
 	}
 
-	.webgpu-tile-label {
-		font-size: 0.72em;
+	:global(.webgpu-tile:hover) {
+		border-color: rgba(var(--accent-rgb), 0.35);
+		background: rgba(var(--accent-rgb), 0.03);
+	}
+
+	:global(.webgpu-tile-label) {
+		font-size: 0.74em;
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: rgb(var(--gray));
-		margin-bottom: 0.25em;
+		margin-bottom: 0.3em;
+		user-select: none;
 	}
 
-	.webgpu-tile-val {
-		font-size: 0.88em;
-		font-weight: 700;
+	:global(.webgpu-tile-val) {
+		font-size: 0.95em;
+		font-weight: 800;
 		color: rgb(var(--black));
-		line-height: 1.25;
+		line-height: 1.35;
+		word-break: break-word;
 	}
 
-	:global(html[data-theme="dark"]) .webgpu-tile-val {
-		color: #f1f5f9;
+	:global(html[data-theme="dark"] .webgpu-tile-val) {
+		color: #f8fafc;
+	}
+
+	:global(.webgpu-tile-val.mono) {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		font-size: 0.92em;
+	}
+
+	:global(.webgpu-tile-sub) {
+		font-weight: 500;
+		font-size: 0.88em;
+		color: rgb(var(--gray));
 	}
 
 	@media (max-width: 600px) {

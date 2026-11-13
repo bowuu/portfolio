@@ -58,7 +58,7 @@
 						<span class="tone-pill">L</span>
 						<span class="tone-name">Left Channel</span>
 					</div>
-					<span class="tone-sub">1 kHz &bull; Left Ear Only</span>
+					<span class="tone-sub">Voice "Left" &bull; Left Ear Only</span>
 				</button>
 
 				<button class="tone-btn" id="btn-tone-right" type="button">
@@ -66,7 +66,7 @@
 						<span class="tone-pill">R</span>
 						<span class="tone-name">Right Channel</span>
 					</div>
-					<span class="tone-sub">1 kHz &bull; Right Ear Only</span>
+					<span class="tone-sub">Voice "Right" &bull; Right Ear Only</span>
 				</button>
 
 				<button class="tone-btn" id="btn-tone-inphase" type="button">
@@ -74,7 +74,7 @@
 						<span class="tone-pill">0&deg;</span>
 						<span class="tone-name">In-Phase (Center)</span>
 					</div>
-					<span class="tone-sub">Correlated &bull; Pinpoint Center Image</span>
+					<span class="tone-sub">Voice "Center" &bull; Pinpoint Center</span>
 				</button>
 
 				<button class="tone-btn" id="btn-tone-outphase" type="button">
@@ -82,12 +82,8 @@
 						<span class="tone-pill warn">180&deg;</span>
 						<span class="tone-name">Out-of-Phase</span>
 					</div>
-					<span class="tone-sub">Inverted Phase &bull; Diffuse / Hollow</span>
+					<span class="tone-sub">Voice "Out of phase" &bull; Inverted Phase</span>
 				</button>
-			</div>
-
-			<div class="audio-specs-strip">
-				<span id="audio-pipeline-spec">DAC Pipeline: Probing...</span>
 			</div>
 		</div>
 
@@ -145,7 +141,7 @@
 						<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
 						<polyline points="17 6 23 6 23 12"/>
 					</svg>
-					<span id="run-sweep-text">Auto Sweep (20Hz&ndash;20kHz)</span>
+					<span id="run-sweep-text">Auto Sweep</span>
 				</button>
 			</div>
 		</div>
@@ -173,7 +169,6 @@
 		const volSlider = document.getElementById('audio-volume-slider') as HTMLInputElement;
 		const volText = document.getElementById('audio-vol-text');
 		const dacBadge = document.getElementById('audio-dac-badge');
-		const pipelineSpecEl = document.getElementById('audio-pipeline-spec');
 
 		const freqNumEl = document.getElementById('freq-num');
 		const freqBandEl = document.getElementById('freq-band-tag');
@@ -208,15 +203,9 @@
 				compressor.connect(audioCtx.destination);
 				masterGain.connect(compressor);
 
-				// Update DAC specs in UI
+				// Update DAC specs in UI badge
 				if (dacBadge) {
 					dacBadge.textContent = `${(audioCtx.sampleRate / 1000).toFixed(1)} kHz`;
-				}
-				if (pipelineSpecEl) {
-					const channels = audioCtx.destination.maxChannelCount || 2;
-					const chLabel = channels > 2 ? `${channels}ch Surround` : '2ch Stereo';
-					const baseLat = ((audioCtx.baseLatency || 0.005) * 1000).toFixed(1);
-					pipelineSpecEl.textContent = `DAC Pipeline: ${audioCtx.sampleRate} Hz • ${chLabel} • ${baseLat} ms buffer latency`;
 				}
 			}
 
@@ -237,6 +226,32 @@
 			});
 		}
 
+		// Voice Audio Buffers for Spoken Tests
+		const voiceBufferCache: Record<string, AudioBuffer> = {};
+		let voiceLoopTimeout: number | null = null;
+		let currentSourceNode: AudioBufferSourceNode | null = null;
+
+		async function loadVoiceBuffer(mode: 'left' | 'right' | 'inphase' | 'outphase'): Promise<AudioBuffer | null> {
+			if (voiceBufferCache[mode]) return voiceBufferCache[mode];
+			const fileMap: Record<string, string> = {
+				left: '/audio/voice-left.mp3',
+				right: '/audio/voice-right.mp3',
+				inphase: '/audio/voice-center.mp3',
+				outphase: '/audio/voice-outphase.mp3',
+			};
+			try {
+				const res = await fetch(fileMap[mode]);
+				const arr = await res.arrayBuffer();
+				const ctx = getAudioContext();
+				const buf = await ctx.decodeAudioData(arr);
+				voiceBufferCache[mode] = buf;
+				return buf;
+			} catch (e) {
+				console.error('Failed to load voice buffer', e);
+				return null;
+			}
+		}
+
 		// Stop All Active Audio
 		function stopAllAudio() {
 			if (sweepRafId) {
@@ -245,6 +260,17 @@
 			}
 			isSweeping = false;
 
+			if (voiceLoopTimeout) {
+				clearTimeout(voiceLoopTimeout);
+				voiceLoopTimeout = null;
+			}
+			if (currentSourceNode) {
+				try {
+					currentSourceNode.stop();
+					currentSourceNode.disconnect();
+				} catch (_) {}
+				currentSourceNode = null;
+			}
 			if (currentOsc) {
 				try {
 					currentOsc.stop();
@@ -264,8 +290,8 @@
 			if (toggleToneBtn) toggleToneBtn.classList.remove('active');
 			if (toggleToneText) toggleToneText.textContent = 'Play Tone';
 			if (runSweepBtn) runSweepBtn.classList.remove('active');
-			if (runSweepText) runSweepText.textContent = 'Auto Sweep (20Hz–20kHz)';
-			if (lissajousLabel) lissajousLabel.textContent = 'Standby • Select Tone Below';
+			if (runSweepText) runSweepText.textContent = 'Auto Sweep';
+			if (lissajousLabel) lissajousLabel.textContent = 'Standby • Select Channel Below';
 
 			drawLissajousStatic();
 		}
@@ -450,8 +476,8 @@
 
 		if (runSweepBtn) runSweepBtn.addEventListener('click', runAutoSweep);
 
-		// CHANNEL ISOLATION & POLARITY TESTS (Toggleable on/off)
-		function playPolarityTone(mode: 'left' | 'right' | 'inphase' | 'outphase') {
+		// CHANNEL ISOLATION & POLARITY TESTS (Toggleable on/off with spoken voice clips)
+		async function playPolarityTone(mode: 'left' | 'right' | 'inphase' | 'outphase') {
 			if (activeMode === mode) {
 				stopAllAudio();
 				return;
@@ -461,50 +487,6 @@
 			stopAllAudio();
 			activeMode = mode;
 
-			const osc = ctx.createOscillator();
-			osc.type = 'sine';
-			osc.frequency.setValueAtTime(1000, ctx.currentTime);
-
-			const merger = ctx.createChannelMerger(2);
-
-			if (mode === 'left') {
-				const leftG = ctx.createGain();
-				leftG.gain.setValueAtTime(1.0, ctx.currentTime);
-				osc.connect(leftG);
-				leftG.connect(merger, 0, 0); // connect to Left channel only
-				if (lissajousLabel) lissajousLabel.textContent = 'Left Channel Active • Right Muted';
-			} else if (mode === 'right') {
-				const rightG = ctx.createGain();
-				rightG.gain.setValueAtTime(1.0, ctx.currentTime);
-				osc.connect(rightG);
-				rightG.connect(merger, 0, 1); // connect to Right channel only
-				if (lissajousLabel) lissajousLabel.textContent = 'Right Channel Active • Left Muted';
-			} else if (mode === 'inphase') {
-				const leftG = ctx.createGain();
-				const rightG = ctx.createGain();
-				leftG.gain.setValueAtTime(1.0, ctx.currentTime);
-				rightG.gain.setValueAtTime(1.0, ctx.currentTime);
-				osc.connect(leftG);
-				osc.connect(rightG);
-				leftG.connect(merger, 0, 0);
-				rightG.connect(merger, 0, 1);
-				if (lissajousLabel) lissajousLabel.textContent = 'In-Phase (0°) • Centered Image in Stereo Field';
-			} else if (mode === 'outphase') {
-				const leftG = ctx.createGain();
-				const rightG = ctx.createGain();
-				leftG.gain.setValueAtTime(1.0, ctx.currentTime);
-				rightG.gain.setValueAtTime(-1.0, ctx.currentTime); // 180° PHASE INVERSION
-				osc.connect(leftG);
-				osc.connect(rightG);
-				leftG.connect(merger, 0, 0);
-				rightG.connect(merger, 0, 1);
-				if (lissajousLabel) lissajousLabel.textContent = '180° Inverted Polarity • Diffuse Acoustic Cancellation';
-			}
-
-			merger.connect(masterGain!);
-			osc.start();
-			currentOsc = osc;
-
 			// Highlight active button
 			const btnMap: Record<string, string> = {
 				left: 'btn-tone-left',
@@ -513,6 +495,104 @@
 				outphase: 'btn-tone-outphase'
 			};
 			document.getElementById(btnMap[mode])?.classList.add('active');
+
+			if (lissajousLabel) {
+				const labelMap: Record<string, string> = {
+					left: 'Voice "Left" • Left Ear Only',
+					right: 'Voice "Right" • Right Ear Only',
+					inphase: 'Voice "Center" • Pinpoint Center Image',
+					outphase: 'Voice "Out of phase" • 180° Inverted Phase'
+				};
+				lissajousLabel.textContent = labelMap[mode];
+			}
+
+			const buf = await loadVoiceBuffer(mode);
+			if (activeMode !== mode) return; // Mode changed or stopped while fetching
+
+			function playVoiceClip() {
+				if (activeMode !== mode || !masterGain) return;
+				const c = getAudioContext();
+				const merger = c.createChannelMerger(2);
+
+				if (buf) {
+					const source = c.createBufferSource();
+					source.buffer = buf;
+
+					if (mode === 'left') {
+						const g = c.createGain();
+						g.gain.setValueAtTime(1.0, c.currentTime);
+						source.connect(g);
+						g.connect(merger, 0, 0); // left ear only
+					} else if (mode === 'right') {
+						const g = c.createGain();
+						g.gain.setValueAtTime(1.0, c.currentTime);
+						source.connect(g);
+						g.connect(merger, 0, 1); // right ear only
+					} else if (mode === 'inphase') {
+						const leftG = c.createGain();
+						const rightG = c.createGain();
+						leftG.gain.setValueAtTime(1.0, c.currentTime);
+						rightG.gain.setValueAtTime(1.0, c.currentTime);
+						source.connect(leftG);
+						source.connect(rightG);
+						leftG.connect(merger, 0, 0);
+						rightG.connect(merger, 0, 1);
+					} else if (mode === 'outphase') {
+						const leftG = c.createGain();
+						const rightG = c.createGain();
+						leftG.gain.setValueAtTime(1.0, c.currentTime);
+						rightG.gain.setValueAtTime(-1.0, c.currentTime); // 180° phase inversion
+						source.connect(leftG);
+						source.connect(rightG);
+						leftG.connect(merger, 0, 0);
+						rightG.connect(merger, 0, 1);
+					}
+
+					merger.connect(masterGain);
+					source.start();
+					currentSourceNode = source;
+
+					source.onended = () => {
+						if (activeMode === mode) {
+							voiceLoopTimeout = window.setTimeout(() => {
+								if (activeMode === mode) playVoiceClip();
+							}, 800);
+						}
+					};
+				} else {
+					// Fallback to sine wave if audio file fails to load
+					const osc = c.createOscillator();
+					osc.type = 'sine';
+					osc.frequency.setValueAtTime(1000, c.currentTime);
+					if (mode === 'left') {
+						const leftG = c.createGain();
+						leftG.gain.setValueAtTime(1.0, c.currentTime);
+						osc.connect(leftG);
+						leftG.connect(merger, 0, 0);
+					} else if (mode === 'right') {
+						const rightG = c.createGain();
+						rightG.gain.setValueAtTime(1.0, c.currentTime);
+						osc.connect(rightG);
+						rightG.connect(merger, 0, 1);
+					} else if (mode === 'inphase') {
+						osc.connect(merger, 0, 0);
+						osc.connect(merger, 0, 1);
+					} else if (mode === 'outphase') {
+						const leftG = c.createGain();
+						const rightG = c.createGain();
+						rightG.gain.setValueAtTime(-1.0, c.currentTime);
+						osc.connect(leftG);
+						osc.connect(rightG);
+						leftG.connect(merger, 0, 0);
+						rightG.connect(merger, 0, 1);
+					}
+					merger.connect(masterGain);
+					osc.start();
+					currentOsc = osc;
+				}
+			}
+
+			playVoiceClip();
 		}
 
 		document.getElementById('btn-tone-left')?.addEventListener('click', () => playPolarityTone('left'));
@@ -882,14 +962,6 @@
 		color: rgb(var(--gray));
 	}
 
-	.audio-specs-strip {
-		font-size: 0.76em;
-		color: rgb(var(--gray));
-		line-height: 1.4;
-		border-top: 1px solid var(--border-color);
-		padding-top: 0.6em;
-	}
-
 	/* FREQUENCY GENERATOR */
 	.segmented-control {
 		display: inline-flex;
@@ -1022,6 +1094,8 @@
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
 		padding: 0.6em 0.8em;
+		min-height: 42px;
+		white-space: nowrap;
 		font-family: inherit;
 		font-size: 0.82em;
 		font-weight: 700;

@@ -783,13 +783,22 @@
 				strokeColor = '#f97316'; // Stereo spread (orange)
 			}
 
+			lissajousCtx.save();
+			lissajousCtx.beginPath();
+			// Circular clip to guarantee the indicator NEVER draws outside the scope boundary
+			lissajousCtx.arc(cx, cy, radius * 0.94, 0, Math.PI * 2);
+			lissajousCtx.clip();
+
 			lissajousCtx.strokeStyle = strokeColor;
 			lissajousCtx.lineWidth = 2.0;
 			lissajousCtx.shadowColor = strokeColor;
 			lissajousCtx.shadowBlur = 4;
 			lissajousCtx.beginPath();
 
-			const ampGain = radius * 1.15;
+			// M/S normalized deflection: keeps 0 dBFS sine generator tones safely within the circular reticle
+			const ampGain = radius * 0.58;
+			const maxRadius = radius * 0.90;
+
 			for (let i = 0; i < bufLen; i++) {
 				const l = timeL[i];
 				const r = timeR[i];
@@ -798,13 +807,17 @@
 				// Right audio deflects toward top-right (Right side of graph)
 				// Center audio deflects straight UP
 				// Out-of-phase audio deflects horizontally
-				const x = cx + (r - l) * invSqrt2 * ampGain;
-				const y = cy - (l + r) * invSqrt2 * ampGain;
+				const dx = (r - l) * invSqrt2 * ampGain;
+				const dy = -(l + r) * invSqrt2 * ampGain;
+				const dist = Math.sqrt(dx * dx + dy * dy);
+				const scale = dist > maxRadius ? (maxRadius / dist) : 1.0;
+				const x = cx + dx * scale;
+				const y = cy + dy * scale;
 				if (i === 0) lissajousCtx.moveTo(x, y);
 				else lissajousCtx.lineTo(x, y);
 			}
 			lissajousCtx.stroke();
-			lissajousCtx.shadowBlur = 0;
+			lissajousCtx.restore();
 		}
 
 		// REAL-TIME 2D SPECTROGRAM WATERFALL (Time-Frequency Heatmap)
@@ -1253,6 +1266,51 @@
 
 	:global(html[data-theme="dark"]) .badge {
 		background: rgba(255, 255, 255, 0.08);
+	}
+
+	/* SEGMENTED CONTROLS (PARITY WITH STORAGE TEST SELECTOR) */
+	.segmented-control {
+		display: inline-flex;
+		align-items: center;
+		background: rgba(148, 163, 184, 0.12);
+		border-radius: 8px;
+		padding: 2px;
+		border: 1px solid var(--border-color);
+	}
+
+	:global(html[data-theme="dark"]) .segmented-control {
+		background: rgba(255, 255, 255, 0.05);
+	}
+
+	.seg-btn {
+		background: transparent;
+		border: none;
+		color: rgb(var(--gray));
+		font-family: inherit;
+		font-size: 0.78em;
+		font-weight: 700;
+		padding: 4px 8px;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		line-height: 1.2;
+		white-space: nowrap;
+	}
+
+	.seg-btn:hover:not(.active) {
+		color: rgb(var(--black));
+		background: rgba(148, 163, 184, 0.15);
+	}
+
+	:global(html[data-theme="dark"]) .seg-btn:hover:not(.active) {
+		color: #ffffff;
+		background: rgba(255, 255, 255, 0.1);
+	}
+
+	.seg-btn.active {
+		background: var(--accent);
+		color: #ffffff;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 	}
 
 	/* VISUALIZER BOXES (MATCHING SYMMETRY) */

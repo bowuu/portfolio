@@ -71,11 +71,10 @@
 				</div>
 			</div>
 			<div class="telemetry-item">
-				<div class="loc-label-bar">
-					<span class="t-label">Location</span>
-					<button id="open-map-btn" class="loc-map-btn hidden" type="button" title="Open interactive OpenStreetMap applet">
+				<div class="t-subhead-pill-wrap">
+					<button id="open-map-btn" class="t-subhead-pill-btn" type="button" disabled title="Click to view on interactive OpenStreetMap">
 						<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
-						<span>Map</span>
+						<span>Location</span>
 					</button>
 				</div>
 				<span id="t-location" class="t-val">Detecting...</span>
@@ -122,11 +121,10 @@
 				<span id="t-ram" class="t-val">Detecting...</span>
 			</div>
 			<div class="telemetry-item">
-				<div class="loc-label-bar">
-					<span class="t-label">Graphics Card (GPU)</span>
-					<button id="open-webgpu-btn" class="loc-map-btn hidden" type="button" title="View WebGPU compute limits & architecture">
+				<div class="t-subhead-pill-wrap">
+					<button id="open-webgpu-btn" class="t-subhead-pill-btn" type="button" disabled title="View WebGPU compute limits & hardware architecture">
 						<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>
-						<span>WebGPU</span>
+						<span>Graphics Card (GPU)</span>
 					</button>
 				</div>
 				<span id="t-gpu" class="t-val">Detecting WebGL...</span>
@@ -734,6 +732,9 @@
 
 				if (openWebgpuBtn) {
 					openWebgpuBtn.classList.remove('hidden');
+					(openWebgpuBtn as HTMLButtonElement).disabled = false;
+					openWebgpuBtn.classList.add('interactive');
+					openWebgpuBtn.title = 'Click to inspect WebGPU compute limits & hardware architecture';
 					openWebgpuBtn.onclick = () => {
 						if (!webgpuInfoCache) return;
 						if (webgpuBadge) webgpuBadge.textContent = `${webgpuInfoCache.backend} • WebGPU`;
@@ -1625,7 +1626,8 @@
 				const lon = parseFloat(data.longitude);
 				if (!isNaN(lat) && !isNaN(lon) && (lat !== 0 || lon !== 0)) {
 					if (openMapBtn) {
-						openMapBtn.classList.remove('hidden');
+						(openMapBtn as HTMLButtonElement).disabled = false;
+						openMapBtn.classList.add('interactive');
 						openMapBtn.title = `View ${locString} on interactive OpenStreetMap`;
 						openMapBtn.onclick = (e) => {
 							e.stopPropagation();
@@ -1634,7 +1636,9 @@
 					}
 				} else {
 					if (openMapBtn) {
-						openMapBtn.classList.add('hidden');
+						(openMapBtn as HTMLButtonElement).disabled = true;
+						openMapBtn.classList.remove('interactive');
+						openMapBtn.title = 'Location detected via edge headers';
 					}
 				}
 
@@ -1969,38 +1973,44 @@
 		border-width: 0;
 	}
 
-	/* LOCATION & APPLET FLYOUT BUTTONS */
-	.loc-label-bar {
+	/* LOCATION & WEBGPU SUBHEAD PILL BUTTONS */
+	.t-subhead-pill-wrap {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		gap: 0.5em;
 		margin-bottom: 0.1em;
 	}
-	.loc-map-btn {
+	.t-subhead-pill-btn {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.3em;
+		gap: 0.35em;
 		background: rgba(var(--accent-rgb), 0.1);
 		border: 1px solid rgba(var(--accent-rgb), 0.35);
 		color: var(--accent);
 		border-radius: 999px;
 		padding: 0.08em 0.55em;
-		font-size: 0.7em;
+		font-size: 0.76em;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		cursor: pointer;
+		cursor: default;
 		transition: all 0.15s ease;
 		line-height: 1.35;
+		font-family: inherit;
 	}
-	.loc-map-btn:hover {
+	.t-subhead-pill-btn.interactive {
+		cursor: pointer;
+	}
+	.t-subhead-pill-btn.interactive:hover {
 		background: var(--accent);
 		color: #ffffff;
 		border-color: var(--accent);
 		transform: translateY(-1px);
+		box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.3);
 	}
-	.loc-map-btn.hidden {
+	.t-subhead-pill-btn svg {
+		flex-shrink: 0;
+	}
+	.t-subhead-pill-btn.hidden {
 		display: none !important;
 	}
 	.loc-clickable {

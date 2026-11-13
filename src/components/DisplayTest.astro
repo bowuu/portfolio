@@ -65,9 +65,10 @@
 		</div>
 
 		<div class="hud-item">
-			<span class="hud-label">Dynamic Range &amp; Depth</span>
+			<span class="hud-label">Dynamic Range</span>
 			<div class="hud-val-wrap">
-				<span id="display-hdr-tag" class="hud-val mono">--</span>
+				<span id="display-hdr-tag" class="hud-val">SDR</span>
+				<span id="display-hdr-badge" class="hud-unit">Standard</span>
 			</div>
 			<span id="display-depth-tag" class="hud-sub">Color Depth</span>
 		</div>
@@ -75,7 +76,7 @@
 		<div class="hud-item" title="Track moving edges with your eyes: trailing dark blur indicates slow pixel response (smear); trailing bright/dark halos indicate excessive monitor overdrive overshoot.">
 			<span class="hud-label">Overdrive Coronas</span>
 			<div class="hud-val-wrap">
-				<span id="display-motion-diag" class="hud-val">Inspect Halos</span>
+				<span id="display-motion-diag" class="hud-val hud-val-text">Clean Halos</span>
 			</div>
 			<span class="hud-sub">No halos = optimal overdrive</span>
 		</div>
@@ -133,8 +134,12 @@
 		const isP3 = window.matchMedia('(color-gamut: p3)').matches;
 		const depth = window.screen.colorDepth || 24;
 
+		const hdrBadgeEl = document.getElementById('display-hdr-badge');
 		if (hdrTagEl) {
-			hdrTagEl.textContent = isHDR ? 'HDR High Dynamic' : 'SDR Standard';
+			hdrTagEl.textContent = isHDR ? 'HDR' : 'SDR';
+		}
+		if (hdrBadgeEl) {
+			hdrBadgeEl.textContent = isHDR ? 'High Dynamic' : 'Standard';
 		}
 		if (depthTagEl) {
 			const gamut = isRec2020 ? 'Rec.2020' : (isP3 ? 'Display P3' : 'sRGB');
@@ -156,26 +161,26 @@
 		resizeCanvas();
 		window.addEventListener('resize', resizeCanvas, { passive: true });
 
-		// Draw Silicon IC Package
+		// Draw Silicon IC Package (Scaled to prominent size with high-contrast pins & markings)
 		function drawSiliconChip(x: number, y: number, w: number, h: number, isDark: boolean) {
 			if (!ctx) return;
 			ctx.save();
 			ctx.translate(x, y);
 
 			const bodyW = w * 0.78;
-			const bodyH = h * 0.62;
+			const bodyH = h * 0.65;
 			const halfW = bodyW / 2;
 			const halfH = bodyH / 2;
 
-			// Lead pins (6 on top, 6 on bottom)
-			const numPins = 6;
-			const pinW = 4 * (w / 72);
+			// Lead pins (8 on top, 8 on bottom)
+			const numPins = 8;
+			const pinW = Math.max(3, Math.round(5.5 * (w / 150)));
 			const pinExt = (h - bodyH) / 2;
-			const pinSpacing = (bodyW - 12) / (numPins - 1);
+			const pinSpacing = (bodyW - 18) / (numPins - 1);
 
 			ctx.fillStyle = isDark ? '#f59e0b' : '#d97706'; // Gold/copper metallic pin leads
 			for (let i = 0; i < numPins; i++) {
-				const px = -halfW + 6 + i * pinSpacing - pinW / 2;
+				const px = -halfW + 9 + i * pinSpacing - pinW / 2;
 				// Top pins
 				ctx.fillRect(px, -halfH - pinExt, pinW, pinExt + 1);
 				// Bottom pins
@@ -184,11 +189,11 @@
 
 			// Main IC Epoxy Package Body
 			ctx.fillStyle = isDark ? '#1e293b' : '#0f172a';
-			ctx.strokeStyle = isDark ? '#475569' : '#334155';
-			ctx.lineWidth = 1.5;
+			ctx.strokeStyle = isDark ? '#64748b' : '#334155';
+			ctx.lineWidth = 2;
 			ctx.beginPath();
 			if (typeof ctx.roundRect === 'function') {
-				ctx.roundRect(-halfW, -halfH, bodyW, bodyH, 4);
+				ctx.roundRect(-halfW, -halfH, bodyW, bodyH, 6);
 			} else {
 				ctx.rect(-halfW, -halfH, bodyW, bodyH);
 			}
@@ -198,19 +203,19 @@
 			// Pin 1 Index Notch (circular indent)
 			ctx.fillStyle = isDark ? '#0f172a' : '#020617';
 			ctx.beginPath();
-			ctx.arc(-halfW + 6, -halfH + 6, 2.5, 0, Math.PI * 2);
+			ctx.arc(-halfW + 10, -halfH + 10, 4, 0, Math.PI * 2);
 			ctx.fill();
 
 			// Laser etched text (sharp high-frequency contrast test)
-			ctx.fillStyle = isDark ? '#e2e8f0' : '#cbd5e1';
-			ctx.font = `bold ${Math.round(8 * (w / 72))}px monospace`;
+			ctx.fillStyle = isDark ? '#f8fafc' : '#ffffff';
+			ctx.font = `bold ${Math.round(14 * (w / 150))}px monospace`;
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
-			ctx.fillText('BROB-IC', 0, -2);
+			ctx.fillText('BROB-IC', 0, -8);
 
-			ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
-			ctx.font = `${Math.round(5.5 * (w / 72))}px monospace`;
-			ctx.fillText('3nm FINFET', 0, 8);
+			ctx.fillStyle = isDark ? '#94a3b8' : '#94a3b8';
+			ctx.font = `${Math.round(8.5 * (w / 150))}px monospace`;
+			ctx.fillText('3nm FINFET • 8-CH', 0, 9);
 
 			ctx.restore();
 		}
@@ -276,8 +281,8 @@
 				const dtSec = deltaMs / 1000;
 				const canvasCSSWidth = canvas.width / (Math.min(window.devicePixelRatio || 1, 2));
 				posX += speedPxPerSec * dtSec;
-				if (posX > canvasCSSWidth + 120) {
-					posX = -120;
+				if (posX > canvasCSSWidth + 160) {
+					posX = -160;
 				}
 			}
 
@@ -316,7 +321,7 @@
 			const renderY = h / 2;
 
 			if (patternType === 'chip') {
-				drawSiliconChip(renderX, renderY, 76 * dpr, 46 * dpr, isDark);
+				drawSiliconChip(renderX, renderY, 150 * dpr, 92 * dpr, isDark);
 			} else if (patternType === 'bars') {
 				drawPursuitBars(renderX, w, h, isDark);
 			} else if (patternType === 'checker') {
@@ -594,10 +599,11 @@
 		background: rgba(148, 163, 184, 0.05);
 		border: 1px solid var(--border-color);
 		border-radius: 10px;
-		padding: 0.9em 1.1em;
+		padding: 0.85em 1em;
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
+		min-height: 92px;
 	}
 
 	:global(html[data-theme="dark"]) .hud-item {
@@ -605,12 +611,12 @@
 	}
 
 	.hud-label {
-		font-size: 0.78em;
-		font-weight: 600;
+		font-size: 0.74em;
+		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: rgb(var(--gray));
-		margin-bottom: 0.3em;
+		margin-bottom: 0.35em;
 	}
 
 	.hud-val-wrap {
@@ -621,20 +627,25 @@
 	}
 
 	.hud-val {
-		font-size: clamp(1.4em, 2.5vw, 1.8em);
+		font-size: clamp(1.3em, 2vw, 1.6em);
 		font-weight: 800;
 		color: rgb(var(--black));
 		line-height: 1.1;
 	}
 
+	.hud-val-text {
+		font-size: clamp(1.05em, 1.6vw, 1.25em);
+		font-weight: 700;
+	}
+
 	.hud-unit {
-		font-size: 0.85em;
+		font-size: 0.8em;
 		font-weight: 600;
 		color: rgb(var(--gray));
 	}
 
 	.hud-sub {
-		font-size: 0.76em;
+		font-size: 0.74em;
 		color: rgb(var(--gray));
 		line-height: 1.3;
 	}

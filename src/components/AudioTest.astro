@@ -45,7 +45,7 @@
 
 			<!-- PHASE LISSAJOUS CANVAS -->
 			<div class="lissajous-box">
-				<canvas id="lissajous-canvas" width="400" height="100"></canvas>
+				<canvas id="lissajous-canvas" width="400" height="125"></canvas>
 				<div class="lissajous-overlay">
 					<span id="lissajous-mode-label" class="lissajous-label">Standby &bull; Select Tone Below</span>
 				</div>
@@ -117,14 +117,14 @@
 				<input type="range" id="freq-slider" min="20" max="20000" step="1" value="1000" class="freq-slider" aria-label="Frequency Slider" />
 			</div>
 
-			<!-- PRESET PILLS -->
-			<div class="freq-presets-row">
-				<button class="freq-pill" data-hz="20" type="button">20 Hz (Sub)</button>
-				<button class="freq-pill" data-hz="60" type="button">60 Hz (Bass)</button>
-				<button class="freq-pill" data-hz="250" type="button">250 Hz (Low-Mid)</button>
-				<button class="freq-pill active" data-hz="1000" type="button">1 kHz (Ref)</button>
-				<button class="freq-pill" data-hz="8000" type="button">8 kHz (Pres)</button>
-				<button class="freq-pill" data-hz="16000" type="button">16 kHz (Treble)</button>
+			<!-- PRESET PILLS (Symmetrical 6-column grid) -->
+			<div class="freq-presets-grid">
+				<button class="freq-pill" data-hz="20" type="button"><span class="pill-hz mono">20 Hz</span><span class="pill-tag">Sub</span></button>
+				<button class="freq-pill" data-hz="60" type="button"><span class="pill-hz mono">60 Hz</span><span class="pill-tag">Bass</span></button>
+				<button class="freq-pill" data-hz="250" type="button"><span class="pill-hz mono">250 Hz</span><span class="pill-tag">Mid</span></button>
+				<button class="freq-pill active" data-hz="1000" type="button"><span class="pill-hz mono">1 kHz</span><span class="pill-tag">Ref</span></button>
+				<button class="freq-pill" data-hz="8000" type="button"><span class="pill-hz mono">8 kHz</span><span class="pill-tag">Pres</span></button>
+				<button class="freq-pill" data-hz="16000" type="button"><span class="pill-hz mono">16 kHz</span><span class="pill-tag">Treble</span></button>
 			</div>
 
 			<!-- SWEEP ACTION ROW -->
@@ -871,7 +871,7 @@
 	#lissajous-canvas {
 		display: block;
 		width: 100%;
-		height: 100px;
+		height: 125px;
 	}
 
 	.lissajous-overlay {
@@ -905,10 +905,12 @@
 		display: flex;
 		flex-direction: column;
 		align-items: flex-start;
+		justify-content: center;
 		background: var(--bg-card);
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
-		padding: 0.65em 0.8em;
+		padding: 0.8em 0.9em;
+		min-height: 62px;
 		font-family: inherit;
 		cursor: pointer;
 		text-align: left;
@@ -934,16 +936,16 @@
 		display: flex;
 		align-items: center;
 		gap: 0.5em;
-		margin-bottom: 0.2em;
+		margin-bottom: 0.25em;
 	}
 
 	.tone-pill {
-		font-size: 0.72em;
+		font-size: 0.78em;
 		font-weight: 800;
 		background: rgba(148, 163, 184, 0.2);
 		color: rgb(var(--black));
-		padding: 2px 6px;
-		border-radius: 4px;
+		padding: 2px 7px;
+		border-radius: 5px;
 	}
 
 	.tone-pill.warn {
@@ -952,13 +954,13 @@
 	}
 
 	.tone-name {
-		font-size: 0.84em;
+		font-size: 0.92em;
 		font-weight: 700;
 		color: rgb(var(--black));
 	}
 
 	.tone-sub {
-		font-size: 0.7em;
+		font-size: 0.76em;
 		color: rgb(var(--gray));
 	}
 
@@ -1049,34 +1051,57 @@
 		cursor: pointer;
 	}
 
-	.freq-presets-row {
-		display: flex;
-		flex-wrap: wrap;
+	.freq-presets-grid {
+		display: grid;
+		grid-template-columns: repeat(6, 1fr);
 		gap: 0.35em;
 		margin-bottom: 0.9em;
 	}
 
 	.freq-pill {
-		background: rgba(148, 163, 184, 0.1);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		background: rgba(148, 163, 184, 0.08);
 		border: 1px solid var(--border-color);
 		border-radius: 6px;
-		padding: 0.3em 0.55em;
-		font-size: 0.72em;
-		font-weight: 600;
-		color: rgb(var(--gray-dark));
+		padding: 0.35em 0.15em;
 		cursor: pointer;
 		transition: all 0.15s ease;
 	}
 
+	.freq-pill .pill-hz {
+		font-size: 0.76em;
+		font-weight: 700;
+		color: rgb(var(--gray-dark));
+		line-height: 1.1;
+	}
+
+	.freq-pill .pill-tag {
+		font-size: 0.65em;
+		color: rgb(var(--gray));
+		margin-top: 0.15em;
+	}
+
 	.freq-pill:hover {
 		border-color: var(--accent);
+		background: rgba(var(--accent-rgb), 0.08);
+	}
+
+	.freq-pill:hover .pill-hz,
+	.freq-pill:hover .pill-tag {
 		color: var(--accent);
 	}
 
 	.freq-pill.active {
 		background: var(--accent);
-		color: #ffffff;
 		border-color: var(--accent);
+	}
+
+	.freq-pill.active .pill-hz,
+	.freq-pill.active .pill-tag {
+		color: #ffffff;
 	}
 
 	.sweep-actions-row {

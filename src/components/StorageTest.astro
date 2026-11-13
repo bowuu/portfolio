@@ -14,11 +14,10 @@
 		</h2>
 		<div class="storage-actions">
 			<div class="size-segmented" role="group" aria-label="Benchmark File Size">
-				<button class="size-btn" data-size="64" type="button">64 MB</button>
-				<button class="size-btn active" data-size="128" type="button">128 MB</button>
+				<button class="size-btn" data-size="32" type="button">32 MB</button>
+				<button class="size-btn active" data-size="64" type="button">64 MB</button>
+				<button class="size-btn" data-size="128" type="button">128 MB</button>
 				<button class="size-btn" data-size="256" type="button">256 MB</button>
-				<button class="size-btn" data-size="512" type="button">512 MB</button>
-				<button class="size-btn" data-size="1024" type="button">1 GB</button>
 			</div>
 			<button id="run-storage-btn" class="benchmark-btn" type="button" aria-label="Run Storage Test">
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon" id="storage-btn-icon">
@@ -41,7 +40,7 @@
 				<span id="storage-seq-write" class="b-tile-num mono">--</span>
 				<span class="b-tile-unit">MB/s</span>
 			</div>
-			<span id="storage-seq-write-sub" class="b-tile-sub">128 MB Synchronous I/O</span>
+			<span id="storage-seq-write-sub" class="b-tile-sub">64 MB Synchronous I/O</span>
 		</div>
 
 		<div class="b-tile" title="Direct synchronous readback via OPFS. Because browser sandboxes cannot bypass OS cache (no O_DIRECT / FILE_FLAG_NO_BUFFERING), recently written data is served directly from OS page cache (DRAM memory bandwidth).">
@@ -85,7 +84,7 @@
 
 <script>
 	let isStorageBenchmarking = false;
-	let selectedStorageMB = 128;
+	let selectedStorageMB = 64;
 
 	function setupSizeSelector() {
 		const sizeBtns = document.querySelectorAll('.size-btn');
@@ -96,10 +95,10 @@
 				if (isStorageBenchmarking) return;
 				sizeBtns.forEach((b) => b.classList.remove('active'));
 				btn.classList.add('active');
-				const size = parseInt(btn.getAttribute('data-size') || '128', 10);
+				const size = parseInt(btn.getAttribute('data-size') || '64', 10);
 				selectedStorageMB = size;
 				if (seqWriteSub) {
-					seqWriteSub.textContent = `${size >= 1024 ? '1 GB' : size + ' MB'} Synchronous I/O`;
+					seqWriteSub.textContent = `${size} MB Synchronous I/O`;
 				}
 			});
 		});
@@ -176,7 +175,7 @@
 						const workerScript = `
 							self.onmessage = async (e) => {
 								try {
-									const selectedMB = Number(e.data?.sizeMB) || 128;
+									const selectedMB = Number(e.data?.sizeMB) || 64;
 									const root = await navigator.storage.getDirectory();
 									const testFileName = '__bench_io_' + Date.now() + '.bin';
 									const fileHandle = await root.getFileHandle(testFileName, { create: true });
@@ -190,7 +189,7 @@
 									const CHUNK_SIZE = 16 * 1024 * 1024; // 16 MB chunks to minimize browser sandbox Mojo IPC context switches
 									const TOTAL_CHUNKS = Math.max(1, Math.round(selectedMB / 16));
 									const totalBytes = CHUNK_SIZE * TOTAL_CHUNKS;
-									const sizeLabel = selectedMB >= 1024 ? '1 GB' : selectedMB + ' MB';
+									const sizeLabel = selectedMB + ' MB';
 
 									const chunk = new Uint8Array(CHUNK_SIZE);
 									for (let i = 0; i < CHUNK_SIZE; i += 4) {

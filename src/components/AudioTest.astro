@@ -177,6 +177,7 @@
 		const runSweepText = document.getElementById('run-sweep-text');
 
 		const lissajousCanvas = document.getElementById('lissajous-canvas') as HTMLCanvasElement;
+		const lissajousBox = document.querySelector('.lissajous-box');
 		const lissajousLabel = document.getElementById('lissajous-mode-label');
 		const lissajousCtx = lissajousCanvas?.getContext('2d');
 
@@ -250,12 +251,14 @@
 			if (mode === 'scope') {
 				modeScopeBtn?.classList.add('active');
 				modeSpectrogramBtn?.classList.remove('active');
+				lissajousBox?.classList.remove('spectrogram-mode');
 				if (lissajousLabel && activeMode === 'none') {
-					lissajousLabel.textContent = 'Standby • Select Tone Below';
+					lissajousLabel.textContent = 'Standby • Select Channel Below';
 				}
 			} else {
 				modeSpectrogramBtn?.classList.add('active');
 				modeScopeBtn?.classList.remove('active');
+				lissajousBox?.classList.add('spectrogram-mode');
 				if (lissajousLabel && activeMode === 'none') {
 					lissajousLabel.textContent = 'Spectrogram • Live Waterfall';
 				}
@@ -341,7 +344,11 @@
 			if (toggleToneText) toggleToneText.textContent = 'Play Tone';
 			if (runSweepBtn) runSweepBtn.classList.remove('active');
 			if (runSweepText) runSweepText.textContent = 'Auto Sweep';
-			if (lissajousLabel) lissajousLabel.textContent = 'Standby • Select Channel Below';
+			if (lissajousLabel) {
+				lissajousLabel.textContent = activeStereoMode === 'spectrogram'
+					? 'Spectrogram • Live Waterfall'
+					: 'Standby • Select Channel Below';
+			}
 		}
 
 		// Frequency Band Classification
@@ -510,6 +517,9 @@
 				// Exponential frequency calculation
 				const currentSweepHz = 20 * Math.pow(20000 / 20, elapsed / 10);
 				updateFrequencyUI(currentSweepHz);
+				if (lissajousLabel && activeStereoMode === 'spectrogram') {
+					lissajousLabel.textContent = `Auto Sweep • ${Math.round(currentSweepHz).toLocaleString()} Hz`;
+				}
 
 				// Update slider
 				const minLog = Math.log(20);
@@ -820,7 +830,7 @@
 			lissajousCtx.restore();
 		}
 
-		// REAL-TIME 2D SPECTROGRAM WATERFALL (Time-Frequency Heatmap)
+		// REAL-TIME 2D SPECTROGRAM WATERFALL (Time-Frequency Heatmap, Horizontal Frequency X-Axis)
 		let specHistoryCanvas: HTMLCanvasElement | null = null;
 		let specHistoryCtx: CanvasRenderingContext2D | null = null;
 		let lastSpecTime = 0;
@@ -830,15 +840,17 @@
 			const w = lissajousCanvas.width;
 			const h = lissajousCanvas.height;
 			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+			const bottomY = h - 16;
+			const waterfallH = Math.max(1, bottomY);
 
-			if (!specHistoryCanvas || specHistoryCanvas.width !== w || specHistoryCanvas.height !== h) {
+			if (!specHistoryCanvas || specHistoryCanvas.width !== w || specHistoryCanvas.height !== waterfallH) {
 				specHistoryCanvas = document.createElement('canvas');
 				specHistoryCanvas.width = w;
-				specHistoryCanvas.height = h;
+				specHistoryCanvas.height = waterfallH;
 				specHistoryCtx = specHistoryCanvas.getContext('2d', { willReadFrequently: true });
 				if (specHistoryCtx) {
 					specHistoryCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
-					specHistoryCtx.fillRect(0, 0, w, h);
+					specHistoryCtx.fillRect(0, 0, w, waterfallH);
 				}
 			}
 
@@ -846,18 +858,21 @@
 
 			const now = performance.now();
 			const dt = now - lastSpecTime;
-			// 1-pixel ultra-fine scroll increment for maximum horizontal resolution
 			const scrollSpeed = 1;
 
 			if (dt >= 15) {
 				lastSpecTime = now;
 
-				// Shift history canvas left by 1 pixel
-				specHistoryCtx.drawImage(specHistoryCanvas, scrollSpeed, 0, w - scrollSpeed, h, 0, 0, w - scrollSpeed, h);
+				// Waterfall scrolls downward: live audio enters at top (y = 0) and flows down
+				specHistoryCtx.drawImage(
+					specHistoryCanvas,
+					0, 0, w, waterfallH - scrollSpeed,
+					0, scrollSpeed, w, waterfallH - scrollSpeed
+				);
 
-				// Blank newly scrolled column
+				// Blank new top row
 				specHistoryCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
-				specHistoryCtx.fillRect(w - scrollSpeed, 0, scrollSpeed, h);
+				specHistoryCtx.fillRect(0, 0, w, scrollSpeed);
 
 				if (fftAnalyser && audioCtx) {
 					const binCount = fftAnalyser.frequencyBinCount;
@@ -873,18 +888,17 @@
 					const logMax = Math.log10(maxFreq);
 					const logRange = logMax - logMin;
 
-					const imgData = specHistoryCtx.createImageData(1, h);
+					const imgData = specHistoryCtx.createImageData(w, scrollSpeed);
 					const data = imgData.data;
 
-					for (let y = 0; y < h; y++) {
-						// Smooth continuous logarithmic frequency mapping with peak decimation across high-frequency bins
-						const normYTop = Math.min(1, Math.max(0, (h - 1 - (y - 0.5)) / (h - 1)));
-						const normYBottom = Math.min(1, Math.max(0, (h - 1 - (y + 0.5)) / (h - 1)));
-						const hzTop = Math.pow(10, logMin + normYTop * logRange);
-						const hzBottom = Math.pow(10, logMin + normYBottom * logRange);
-
-						const binStart = Math.max(0, Math.floor(hzBottom / binWidth));
-						const binEnd = Math.min(binCount - 1, Math.ceil(hzTop / binWidth));
+					for (let x = 0; x < w; x++) {
+						// Horizontal logarithmic frequency mapping matching Frequency Generator
+						const normX0 = Math.max(0, (x - 0.5) / Math.max(1, w - 1));
+						const normX1 = Math.min(1, (x + 0.5) / Math.max(1, w - 1));
+						const hz0 = Math.pow(10, logMin + normX0 * logRange);
+						const hz1 = Math.pow(10, logMin + normX1 * logRange);
+						const binStart = Math.max(0, Math.floor(hz0 / binWidth));
+						const binEnd = Math.min(binCount - 1, Math.ceil(hz1 / binWidth));
 
 						let rawVal = 0;
 						if (binEnd > binStart) {
@@ -892,7 +906,7 @@
 								if (freqData[b] > rawVal) rawVal = freqData[b];
 							}
 						} else {
-							const hz = Math.pow(10, logMin + ((h - 1 - y) / Math.max(1, h - 1)) * logRange);
+							const hz = Math.pow(10, logMin + (x / Math.max(1, w - 1)) * logRange);
 							const binExact = Math.min(binCount - 1, Math.max(0, hz / binWidth));
 							const b0 = Math.floor(binExact);
 							const b1 = Math.min(binCount - 1, b0 + 1);
@@ -903,7 +917,11 @@
 						// Dynamic gamma expansion for rich contrast and vibrant formants
 						const val = Math.min(255, Math.pow(rawVal / 255, 0.85) * 260);
 
-						let r = 9, g = 9, b = 11, a = 255;
+						let r = isDark ? 9 : 12;
+						let g = isDark ? 9 : 10;
+						let b = isDark ? 11 : 9;
+						let a = 255;
+
 						if (val > 8) {
 							// Silky smooth continuous thermal heatmap ramp
 							if (val < 65) {
@@ -929,71 +947,85 @@
 							}
 						}
 
-						const idx = y * 4;
-						data[idx] = r;
-						data[idx + 1] = g;
-						data[idx + 2] = b;
-						data[idx + 3] = a;
+						for (let s = 0; s < scrollSpeed; s++) {
+							const idx = (s * w + x) * 4;
+							data[idx] = r;
+							data[idx + 1] = g;
+							data[idx + 2] = b;
+							data[idx + 3] = a;
+						}
 					}
-					specHistoryCtx.putImageData(imgData, w - scrollSpeed, 0);
+					specHistoryCtx.putImageData(imgData, 0, 0);
 				}
 			}
 
-			// Blit history to display canvas
+			// Clear and fill canvas background
+			lissajousCtx.clearRect(0, 0, w, h);
+			lissajousCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
+			lissajousCtx.fillRect(0, 0, w, h);
+
+			// Blit waterfall history
 			lissajousCtx.drawImage(specHistoryCanvas, 0, 0);
 
-			// Draw subtle frequency landmarks matching Frequency Generator logarithmic scale
-			const landmarks = [
-				{ hz: 100, label: '100 Hz' },
-				{ hz: 1000, label: '1 kHz' },
-				{ hz: 10000, label: '10 kHz' },
-			];
-			const logMin = Math.log10(20);
-			const logMax = Math.log10(20000);
+			const minFreq = 20;
+			const maxFreq = 20000;
+			const logMin = Math.log10(minFreq);
+			const logMax = Math.log10(maxFreq);
 			const logRange = logMax - logMin;
+			const freqToX = (hz: number) => {
+				const clamped = Math.max(minFreq, Math.min(maxFreq, hz));
+				return ((Math.log10(clamped) - logMin) / logRange) * w;
+			};
 
-			lissajousCtx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+			// Horizontal divider above bottom gutter
+			lissajousCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+			lissajousCtx.lineWidth = 1;
+			lissajousCtx.beginPath();
+			lissajousCtx.moveTo(0, bottomY);
+			lissajousCtx.lineTo(w, bottomY);
+			lissajousCtx.stroke();
+
+			// Vertical grid lines (100 Hz, 1 kHz, 10 kHz)
+			lissajousCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
 			lissajousCtx.lineWidth = 1;
 			lissajousCtx.setLineDash([2, 4]);
-
-			const fontSize = Math.max(9, Math.round(10 * (w / 400)));
-			lissajousCtx.font = `${fontSize}px monospace`;
-			lissajousCtx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-			lissajousCtx.textAlign = 'right';
-
-			landmarks.forEach(({ hz, label }) => {
-				const normY = (Math.log10(hz) - logMin) / logRange;
-				const y = Math.round(h - 1 - normY * (h - 1));
+			[100, 1000, 10000].forEach((hz) => {
+				const x = freqToX(hz);
 				lissajousCtx.beginPath();
-				lissajousCtx.moveTo(0, y);
-				lissajousCtx.lineTo(w, y);
+				lissajousCtx.moveTo(x, 0);
+				lissajousCtx.lineTo(x, bottomY);
 				lissajousCtx.stroke();
-
-				// For 10 kHz near top, draw text slightly lower so it doesn't clip top edge
-				const textY = hz === 10000 ? y + fontSize + 2 : y - 3;
-				lissajousCtx.fillText(label, w - 8, textY);
 			});
 			lissajousCtx.setLineDash([]);
 
-			// Top & bottom scale boundaries (20 Hz - 20 kHz)
-			lissajousCtx.fillText('20 kHz', w - 8, fontSize + 2);
-			lissajousCtx.fillText('20 Hz', w - 8, h - 4);
+			// Frequency labels matching Frequency Generator (20 Hz, 100 Hz, 1 kHz, 10 kHz, 20 kHz)
+			const fontSize = Math.max(9, Math.round(10 * (w / 400)));
+			lissajousCtx.font = `${fontSize}px monospace`;
+			lissajousCtx.fillStyle = 'rgba(255, 255, 255, 0.3)';
 
-			// Tuning target frequency marker (matching Frequency Generator)
+			lissajousCtx.textAlign = 'left';
+			lissajousCtx.fillText('20 Hz', 4, h - 4);
+
+			lissajousCtx.textAlign = 'center';
+			lissajousCtx.fillText('100 Hz', freqToX(100), h - 4);
+			lissajousCtx.fillText('1 kHz', freqToX(1000), h - 4);
+
+			lissajousCtx.textAlign = 'right';
+			lissajousCtx.fillText('10 kHz', freqToX(10000) - 3, h - 4);
+			lissajousCtx.fillText('20 kHz', w - 4, h - 4);
+
+			// Tuning target cursor (matching Frequency Generator)
 			if (activeMode === 'tone' || activeMode === 'sweep') {
 				const currentHz = parseInt(freqNumEl?.textContent?.replace(/,/g, '') || '1000', 10);
-				if (currentHz >= 20 && currentHz <= 20000) {
-					const normY = (Math.log10(currentHz) - logMin) / logRange;
-					const targetY = Math.round(h - 1 - normY * (h - 1));
-					lissajousCtx.strokeStyle = 'rgba(249, 115, 22, 0.45)';
-					lissajousCtx.lineWidth = 1;
-					lissajousCtx.setLineDash([2, 2]);
-					lissajousCtx.beginPath();
-					lissajousCtx.moveTo(0, targetY);
-					lissajousCtx.lineTo(w, targetY);
-					lissajousCtx.stroke();
-					lissajousCtx.setLineDash([]);
-				}
+				const targetX = freqToX(currentHz);
+				lissajousCtx.strokeStyle = 'rgba(249, 115, 22, 0.4)';
+				lissajousCtx.lineWidth = 1;
+				lissajousCtx.setLineDash([2, 2]);
+				lissajousCtx.beginPath();
+				lissajousCtx.moveTo(targetX, 0);
+				lissajousCtx.lineTo(targetX, bottomY);
+				lissajousCtx.stroke();
+				lissajousCtx.setLineDash([]);
 			}
 		}
 
@@ -1021,29 +1053,42 @@
 
 			const bottomY = h - 16;
 
-			// Landmark grid lines: 100 Hz, 1 kHz, 10 kHz
-			const landmarks = [
-				{ hz: 100, label: '100 Hz' },
-				{ hz: 1000, label: '1 kHz' },
-				{ hz: 10000, label: '10 kHz' },
-			];
+			// Horizontal divider above bottom gutter
+			spectrumCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+			spectrumCtx.lineWidth = 1;
+			spectrumCtx.beginPath();
+			spectrumCtx.moveTo(0, bottomY);
+			spectrumCtx.lineTo(w, bottomY);
+			spectrumCtx.stroke();
 
+			// Landmark grid lines: 100 Hz, 1 kHz, 10 kHz
 			spectrumCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
 			spectrumCtx.lineWidth = 1;
 			spectrumCtx.setLineDash([2, 4]);
-			landmarks.forEach(({ hz, label }) => {
+			[100, 1000, 10000].forEach((hz) => {
 				const x = freqToX(hz);
 				spectrumCtx.beginPath();
 				spectrumCtx.moveTo(x, 0);
 				spectrumCtx.lineTo(x, bottomY);
 				spectrumCtx.stroke();
-
-				spectrumCtx.font = `${Math.max(9, Math.round(10 * (w / 400)))}px monospace`;
-				spectrumCtx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-				spectrumCtx.textAlign = 'center';
-				spectrumCtx.fillText(label, x, h - 4);
 			});
 			spectrumCtx.setLineDash([]);
+
+			// Frequency labels matching Spectrogram (20 Hz, 100 Hz, 1 kHz, 10 kHz, 20 kHz)
+			const fontSize = Math.max(9, Math.round(10 * (w / 400)));
+			spectrumCtx.font = `${fontSize}px monospace`;
+			spectrumCtx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+
+			spectrumCtx.textAlign = 'left';
+			spectrumCtx.fillText('20 Hz', 4, h - 4);
+
+			spectrumCtx.textAlign = 'center';
+			spectrumCtx.fillText('100 Hz', freqToX(100), h - 4);
+			spectrumCtx.fillText('1 kHz', freqToX(1000), h - 4);
+
+			spectrumCtx.textAlign = 'right';
+			spectrumCtx.fillText('10 kHz', freqToX(10000) - 3, h - 4);
+			spectrumCtx.fillText('20 kHz', w - 4, h - 4);
 
 			// Horizontal dB guide lines
 			spectrumCtx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
@@ -1416,6 +1461,14 @@
 		display: flex;
 		justify-content: center;
 		pointer-events: none;
+	}
+
+	.lissajous-box.spectrogram-mode .lissajous-overlay {
+		top: 6px;
+		bottom: auto;
+		left: 8px;
+		right: 8px;
+		justify-content: flex-start;
 	}
 
 	.spectrum-overlay {

@@ -242,40 +242,45 @@
 		}
 
 		// Draw Pursuit Bars
-		function drawPursuitBars(x: number, width: number, height: number, isDark: boolean) {
+		function drawPursuitBars(x: number, h: number, dpr: number, isDark: boolean) {
 			if (!ctx) return;
-			const barWidth = 24;
+			const barWidth = Math.round(24 * dpr);
 			const totalWidth = barWidth * 8;
-			const startX = x - totalWidth / 2;
+			const startX = Math.round(x - totalWidth / 2);
+			const marginY = Math.round(12 * dpr);
+			const barHeight = h - marginY * 2;
+			const tickH = Math.round(8 * dpr);
 
 			ctx.save();
 			for (let i = 0; i < 8; i++) {
 				const bx = startX + i * barWidth;
 				ctx.fillStyle = (i % 2 === 0) ? (isDark ? '#fafafa' : '#0f172a') : (isDark ? '#09090b' : '#f8fafc');
-				ctx.fillRect(bx, 10, barWidth, height - 20);
+				ctx.fillRect(bx, marginY, barWidth, barHeight);
 
 				// Contrast tick markers
 				ctx.fillStyle = (i % 2 === 0) ? '#f97316' : '#38bdf8';
-				ctx.fillRect(bx, height / 2 - 4, barWidth, 8);
+				ctx.fillRect(bx, Math.round(h / 2 - tickH / 2), barWidth, tickH);
 			}
 			ctx.restore();
 		}
 
 		// Draw Checkerboard
-		function drawCheckerboard(x: number, width: number, height: number, isDark: boolean) {
+		function drawCheckerboard(x: number, h: number, dpr: number, isDark: boolean) {
 			if (!ctx) return;
-			const size = 18;
+			const sqSize = Math.round(25 * dpr);
 			const cols = 8;
 			const rows = 5;
-			const startX = x - (cols * size) / 2;
-			const startY = height / 2 - (rows * size) / 2;
+			const totalWidth = cols * sqSize;
+			const totalHeight = rows * sqSize;
+			const startX = Math.round(x - totalWidth / 2);
+			const startY = Math.round(h / 2 - totalHeight / 2);
 
 			ctx.save();
 			for (let r = 0; r < rows; r++) {
 				for (let c = 0; c < cols; c++) {
 					const isEven = (r + c) % 2 === 0;
 					ctx.fillStyle = isEven ? (isDark ? '#ffffff' : '#000000') : (isDark ? '#1e293b' : '#e2e8f0');
-					ctx.fillRect(startX + c * size, startY + r * size, size, size);
+					ctx.fillRect(startX + c * sqSize, startY + r * sqSize, sqSize, sqSize);
 				}
 			}
 			ctx.restore();
@@ -320,9 +325,9 @@
 			if (patternType === 'chip') {
 				drawSiliconChip(renderX, renderY, dpr, isDark);
 			} else if (patternType === 'bars') {
-				drawPursuitBars(renderX, w, h, isDark);
+				drawPursuitBars(renderX, h, dpr, isDark);
 			} else if (patternType === 'checker') {
-				drawCheckerboard(renderX, w, h, isDark);
+				drawCheckerboard(renderX, h, dpr, isDark);
 			}
 		}
 

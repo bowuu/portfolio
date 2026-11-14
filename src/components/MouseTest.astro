@@ -311,11 +311,11 @@
 							: [200, 125, 60])));
 
 			// Draw standard tier guidelines and labels
-			const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-			const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.07)';
-			const textColor = isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.38)';
+			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+			const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.09)';
+			const textColor = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(0, 0, 0, 0.58)';
 
-			ctx.font = '500 9px ui-monospace, SFMono-Regular, Menlo, monospace';
+			ctx.font = '600 9px ui-monospace, SFMono-Regular, Menlo, monospace';
 			ctx.textAlign = 'right';
 
 			for (const tier of standardTiers) {
@@ -765,6 +765,17 @@
 
 		drawSparkline();
 		window.addEventListener('resize', drawSparkline);
+
+		// Instantly redraw canvas when theme toggles
+		const themeObserver = new MutationObserver((mutations) => {
+			for (const mutation of mutations) {
+				if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+					drawSparkline();
+					break;
+				}
+			}
+		});
+		themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 	}
 
 	if (document.readyState === 'loading') {
@@ -772,6 +783,7 @@
 	} else {
 		initInputLatencyLab();
 	}
+	document.addEventListener('astro:page-load', initInputLatencyLab);
 </script>
 
 <style>

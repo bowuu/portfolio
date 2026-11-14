@@ -20,7 +20,33 @@
 				</svg>
 				<span>Pixel Checker</span>
 			</button>
+		</div>
+	</div>
 
+	<p class="benchmark-desc">
+		Inspect monitor pixel response times, sample-and-hold motion blur, overdrive coronas, and test for dead or stuck subpixels.
+	</p>
+
+	<!-- MOTION CONTROLS TOOLBAR -->
+	<div class="motion-toolbar">
+		<div class="toolbar-group toolbar-left">
+			<button id="toggle-display-btn" class="telemetry-btn" type="button" title="Start display motion benchmark">
+				<svg id="toggle-display-icon-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="hidden">
+					<rect x="5" y="5" width="14" height="14" rx="2"/>
+				</svg>
+				<svg id="toggle-display-icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+					<polygon points="5 3 19 12 5 21 5 3"/>
+				</svg>
+				<span id="toggle-display-text">Start</span>
+			</button>
+
+			<div class="segmented-control" role="group" aria-label="Motion Trajectory">
+				<button class="seg-btn active" data-trajectory="wrap" type="button" title="Continuous pursuit tracking (wrap-around)">Wrap</button>
+				<button class="seg-btn" data-trajectory="bounce" type="button" title="Bidirectional rebound (ping-pong)">Bounce</button>
+			</div>
+		</div>
+
+		<div class="toolbar-group toolbar-right">
 			<div class="segmented-control" role="group" aria-label="Motion Speed">
 				<button class="seg-btn" data-speed="240" type="button" title="240 pixels per second">240 px/s</button>
 				<button class="seg-btn active" data-speed="480" type="button" title="480 pixels per second (Standard)">480 px/s</button>
@@ -32,22 +58,8 @@
 				<button class="seg-btn" data-pattern="bars" type="button" title="Pursuit Bars">Bars</button>
 				<button class="seg-btn" data-pattern="checker" type="button" title="Checkerboard">Checker</button>
 			</div>
-
-			<button id="toggle-display-btn" class="telemetry-btn" type="button" title="Start display motion benchmark">
-				<svg id="toggle-display-icon-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="hidden">
-					<rect x="5" y="5" width="14" height="14" rx="2"/>
-				</svg>
-				<svg id="toggle-display-icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-					<polygon points="5 3 19 12 5 21 5 3"/>
-				</svg>
-				<span id="toggle-display-text">Start</span>
-			</button>
 		</div>
 	</div>
-
-	<p class="benchmark-desc">
-		Inspect monitor pixel response times, sample-and-hold motion blur, overdrive coronas, and test for dead or stuck subpixels.
-	</p>
 
 	<!-- MOTION CANVAS VIEWPORT -->
 	<div class="motion-viewport-wrap" id="motion-viewport-wrap">
@@ -121,6 +133,8 @@
 
 		let speedPxPerSec = 480;
 		let patternType: 'chip' | 'bars' | 'checker' = 'chip';
+		let motionTrajectory: 'wrap' | 'bounce' = 'wrap';
+		let motionDir: 1 | -1 = 1;
 		const initDpr = window.devicePixelRatio || 1;
 		let posX = Math.round((canvas.width / initDpr) / 2);
 		let lastTimestamp = 0;
@@ -165,6 +179,14 @@
 			if (canvas.width !== targetW || canvas.height !== targetH) {
 				canvas.width = targetW;
 				canvas.height = targetH;
+				if (motionTrajectory === 'bounce') {
+					const halfW = patternType === 'checker' ? 100 : (patternType === 'bars' ? 96 : 63);
+					const canvasCSSWidth = canvas.width / dpr;
+					const minX = halfW + 10;
+					const maxX = Math.max(minX, canvasCSSWidth - halfW - 10);
+					if (posX < minX) posX = minX;
+					else if (posX > maxX) posX = maxX;
+				}
 				if (!isMotionRunning) {
 					drawFrame();
 				}
@@ -352,9 +374,28 @@
 				const dtSec = deltaMs / 1000;
 				const curDpr = window.devicePixelRatio || 1;
 				const canvasCSSWidth = canvas.width / curDpr;
-				posX += speedPxPerSec * dtSec;
-				if (posX > canvasCSSWidth + 140) {
-					posX = -140;
+
+				if (motionTrajectory === 'bounce') {
+					// Pattern half-width in CSS pixels (Chip: 63, Bars: 96, Checker: 100)
+					const halfW = patternType === 'checker' ? 100 : (patternType === 'bars' ? 96 : 63);
+					const pad = 10;
+					const minX = halfW + pad;
+					const maxX = Math.max(minX, canvasCSSWidth - halfW - pad);
+
+					posX += motionDir * speedPxPerSec * dtSec;
+					if (posX >= maxX) {
+						posX = maxX;
+						motionDir = -1;
+					} else if (posX <= minX) {
+						posX = minX;
+						motionDir = 1;
+					}
+				} else {
+					// Continuous unidirectional pursuit (wrap-around)
+					posX += speedPxPerSec * dtSec;
+					if (posX > canvasCSSWidth + 140) {
+						posX = -140;
+					}
 				}
 			}
 
@@ -441,6 +482,33 @@
 			}
 		});
 
+		// Trajectory button controls (Wrap / Bounce)
+		const trajectoryBtns = document.querySelectorAll('.display-test-card .seg-btn[data-trajectory]');
+		trajectoryBtns.forEach((btn) => {
+			btn.addEventListener('click', () => {
+				trajectoryBtns.forEach(b => b.classList.remove('active'));
+				btn.classList.add('active');
+				motionTrajectory = (btn.getAttribute('data-trajectory') as any) || 'wrap';
+				if (motionTrajectory === 'bounce') {
+					const halfW = patternType === 'checker' ? 100 : (patternType === 'bars' ? 96 : 63);
+					const curDpr = window.devicePixelRatio || 1;
+					const canvasCSSWidth = canvas.width / curDpr;
+					const minX = halfW + 10;
+					const maxX = Math.max(minX, canvasCSSWidth - halfW - 10);
+					if (posX < minX) {
+						posX = minX;
+						motionDir = 1;
+					} else if (posX > maxX) {
+						posX = maxX;
+						motionDir = -1;
+					}
+				}
+				if (!isMotionRunning) {
+					drawFrame();
+				}
+			});
+		});
+
 		// Speed button controls
 		const speedBtns = document.querySelectorAll('.display-test-card .seg-btn[data-speed]');
 		speedBtns.forEach((btn) => {
@@ -459,6 +527,15 @@
 				patternBtns.forEach(b => b.classList.remove('active'));
 				btn.classList.add('active');
 				patternType = (btn.getAttribute('data-pattern') as any) || 'chip';
+				if (motionTrajectory === 'bounce') {
+					const halfW = patternType === 'checker' ? 100 : (patternType === 'bars' ? 96 : 63);
+					const curDpr = window.devicePixelRatio || 1;
+					const canvasCSSWidth = canvas.width / curDpr;
+					const minX = halfW + 10;
+					const maxX = Math.max(minX, canvasCSSWidth - halfW - 10);
+					if (posX < minX) posX = minX;
+					else if (posX > maxX) posX = maxX;
+				}
 				if (!isMotionRunning) {
 					drawFrame();
 				}
@@ -755,6 +832,54 @@
 		line-height: 1.55;
 		color: rgb(var(--gray-dark));
 		margin: 0 0 1.25em 0;
+	}
+
+	/* MOTION BENCHMARK TOOLBAR */
+	.motion-toolbar {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.6em;
+		margin-bottom: 0.85em;
+	}
+
+	.toolbar-group {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.6em;
+	}
+
+	@media (max-width: 760px) {
+		.motion-toolbar {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0.6em;
+		}
+
+		.toolbar-group {
+			justify-content: space-between;
+			width: 100%;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.toolbar-group {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0.5em;
+		}
+
+		.toolbar-group .segmented-control,
+		.toolbar-group .telemetry-btn {
+			width: 100%;
+			justify-content: center;
+		}
+
+		.toolbar-group .seg-btn {
+			flex: 1;
+		}
 	}
 
 	/* MOTION VIEWPORT */

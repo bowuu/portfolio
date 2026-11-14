@@ -402,6 +402,9 @@
 			}
 
 			updateHudOverlay();
+			if (!rafVisualizerId && isAudioVisible) {
+				renderActiveVisualizer();
+			}
 		}
 
 		modeWaveformBtn?.addEventListener('click', () => setHeroVisualizerMode('waveform'));
@@ -518,6 +521,9 @@
 			}
 
 			updateHudOverlay();
+			if (mode === 'mic' || mode === 'both') {
+				ensureVisualizerRunning();
+			}
 		}
 
 		btnSrcMic?.addEventListener('click', () => setSourceMode('mic'));
@@ -720,6 +726,7 @@
 			});
 
 			updateHudOverlay();
+			ensureVisualizerRunning();
 		}
 
 		// Auto Frequency Sweep (20Hz - 20,000Hz over 10 seconds)
@@ -745,6 +752,7 @@
 			if (runSweepBtn) runSweepBtn.classList.add('active');
 			if (runSweepText) runSweepText.textContent = 'Stop Frequency Sweep';
 			updateHudOverlay();
+			ensureVisualizerRunning();
 
 			const sweepStart = performance.now();
 			function updateSweepProgress() {
@@ -820,6 +828,7 @@
 			btnNoisePink?.classList.toggle('active', activeNoiseType === 'pink');
 			btnNoiseWhite?.classList.toggle('active', activeNoiseType === 'white');
 			updateHudOverlay();
+			ensureVisualizerRunning();
 		}
 
 		// CHANNEL ISOLATION & POLARITY TESTS
@@ -929,6 +938,7 @@
 			}
 
 			playVoiceClip();
+			ensureVisualizerRunning();
 		}
 
 		document.getElementById('btn-tone-left')?.addEventListener('click', () => playPolarityTone('left'));
@@ -956,6 +966,9 @@
 					meterCanvas.width = targetW;
 					meterCanvas.height = targetH;
 				}
+			}
+			if (!rafVisualizerId && isAudioVisible) {
+				renderActiveVisualizer();
 			}
 		}
 		resizeCanvases();
@@ -1761,6 +1774,12 @@
 		let isAudioVisible = false;
 		let rafVisualizerId: number | null = null;
 
+		function ensureVisualizerRunning() {
+			if (isAudioVisible && !rafVisualizerId) {
+				rafVisualizerId = requestAnimationFrame(renderActiveVisualizer);
+			}
+		}
+
 		function renderActiveVisualizer() {
 			if (!isAudioVisible) {
 				rafVisualizerId = null;
@@ -1783,29 +1802,55 @@
 			// Render horizontal stereo VU meter
 			renderStereoMeter();
 
-			rafVisualizerId = requestAnimationFrame(renderActiveVisualizer);
+			// If audio is actively playing or VU meter ballistics are still decaying, keep animating
+			const isDecaying = smoothL > -59.5 || smoothR > -59.5;
+			const isProducing = activeMode !== 'none' || isSweeping || !!micStream;
+
+			if (isProducing || isDecaying) {
+				rafVisualizerId = requestAnimationFrame(renderActiveVisualizer);
+			} else {
+				rafVisualizerId = null;
+			}
 		}
 
-		// 0% CPU consumption when off-screen
+		// 0% CPU consumption when off-screen or idle
 		const cardEl = document.getElementById('audio-lab');
 		if (cardEl) {
 			const obs = new IntersectionObserver((entries) => {
 				entries.forEach((e) => {
 					isAudioVisible = e.isIntersecting;
-					if (isAudioVisible && !rafVisualizerId) {
-						rafVisualizerId = requestAnimationFrame(renderActiveVisualizer);
+					if (isAudioVisible) {
+						if (!rafVisualizerId) {
+							renderActiveVisualizer();
+						}
+					} else if (rafVisualizerId) {
+						cancelAnimationFrame(rafVisualizerId);
+						rafVisualizerId = null;
 					}
 				});
 			}, { threshold: 0.05 });
 			obs.observe(cardEl);
 		} else {
 			isAudioVisible = true;
-			rafVisualizerId = requestAnimationFrame(renderActiveVisualizer);
+			renderActiveVisualizer();
 		}
+
+		// Redraw canvas instantly when theme swaps while idle
+		const themeObserver = new MutationObserver((mutations) => {
+			for (const mutation of mutations) {
+				if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+					if (!rafVisualizerId && isAudioVisible) {
+						renderActiveVisualizer();
+					}
+				}
+			}
+		});
+		themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 		document.addEventListener('astro:before-swap', () => {
 			stopAllAudio();
 			stopMicrophone();
+			themeObserver.disconnect();
 		}, { once: true });
 	}
 
@@ -1817,6 +1862,9 @@
 	.audio-test-card {
 		padding: clamp(1.2em, 3vw, 2em);
 		margin-top: 1.8em;
+		isolation: isolate;
+		contain: paint;
+		background: var(--bg-card);
 	}
 
 	.card-header-wrap {
@@ -1923,6 +1971,7 @@
 		grid-template-columns: 1.15fr 0.85fr;
 		gap: 1.25em;
 		align-items: stretch;
+		isolation: isolate;
 	}
 
 	@media (max-width: 860px) {
@@ -1933,18 +1982,19 @@
 	}
 
 	.audio-col {
-		background: rgba(148, 163, 184, 0.04);
+		background: #f8fafc;
 		border: 1px solid var(--border-color);
 		border-radius: 10px;
 		padding: 1.1em;
 		display: flex;
 		flex-direction: column;
-		height: 100%;
+		min-height: 0;
 		box-sizing: border-box;
+		background-clip: padding-box;
 	}
 
 	:global(html[data-theme="dark"]) .audio-col {
-		background: rgba(255, 255, 255, 0.02);
+		background: #151518;
 	}
 
 	.col-head {
@@ -1954,6 +2004,7 @@
 		margin-bottom: 0.8em;
 		flex-wrap: wrap;
 		gap: 0.5em;
+		flex-shrink: 0;
 	}
 
 	.col-head-left {
@@ -1976,16 +2027,18 @@
 	.segmented-control {
 		display: inline-flex;
 		align-items: center;
-		background: rgba(148, 163, 184, 0.12);
+		background: #eef2f6;
 		border-radius: 8px;
 		padding: 2px;
 		border: 1px solid var(--border-color);
 		height: 31px;
 		box-sizing: border-box;
+		background-clip: padding-box;
+		isolation: isolate;
 	}
 
 	:global(html[data-theme="dark"]) .segmented-control {
-		background: rgba(255, 255, 255, 0.05);
+		background: #1f1f23;
 	}
 
 	.seg-btn {
@@ -2031,6 +2084,7 @@
 		gap: 0.6em;
 		width: 100%;
 		flex: 1;
+		min-height: 0;
 		box-sizing: border-box;
 	}
 
@@ -2044,7 +2098,6 @@
 		background: #f8fafc;
 		background-clip: padding-box;
 		box-sizing: border-box;
-		transform: translateZ(0);
 	}
 
 	:global(html[data-theme="dark"]) .hero-canvas-box {
@@ -2092,7 +2145,6 @@
 		background-clip: padding-box;
 		box-sizing: border-box;
 		flex-shrink: 0;
-		transform: translateZ(0);
 	}
 
 	:global(html[data-theme="dark"]) .stereo-meter-box {

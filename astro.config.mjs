@@ -29,6 +29,9 @@ export default defineConfig({
   integrations: [sitemap()],
   adapter: cloudflare(),
   vite: {
+    build: {
+      cssMinify: "esbuild",
+    },
     define: {
       "import.meta.env.PUBLIC_GIT_COMMIT_DATE": JSON.stringify(gitCommitDate),
       "import.meta.env.PUBLIC_GIT_COMMIT_HASH": JSON.stringify(gitCommitHash),

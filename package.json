@@ -7,7 +7,7 @@
     "@astrojs/cloudflare": "14.4.8",
     "@astrojs/sitemap": "3.7.5",
     "@types/three": "^0.187.0",
-    "astro": "7.4.12",
+    "astro": "^7.4.12",
     "three": "^0.187.0",
     "typescript": "5.8.3"
   },

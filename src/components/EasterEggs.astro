@@ -435,43 +435,68 @@
 
 			if (this.profile === 'blue') {
 				// CLICKY BLUE (Cherry MX Blue / Kailh Box White):
-				// 1. Sharp click jacket snap: crisp tactile high-frequency dual snap
-				this.playResonantImpulse(t, 3950 * pitchMod, 5.2, 0.004, 0.20 * gainJitter);
-				this.playResonantImpulse(t, 6200 * pitchMod, 3.8, 0.003, 0.12 * gainJitter);
-				// 2. Plastic housing bottom-out clack: solid mid-frequency body resonance
-				const bodyFreq = isSpace ? 165 : isBig ? 240 : 360;
-				this.playResonantImpulse(t + 0.0015, bodyFreq * pitchMod, 3.2, 0.022, 0.18 * gainJitter);
-				this.playResonantImpulse(t + 0.0015, 1100 * pitchMod, 2.2, 0.012, 0.08 * gainJitter);
+				// 1. Sharp tactile click jacket snap: crisp tactile high-frequency dual snap
+				this.playResonantImpulse(t, 4800 * pitchMod, 6.5, 0.0035, 0.22 * gainJitter);
+				this.playResonantImpulse(t, 7200 * pitchMod, 5.0, 0.0025, 0.14 * gainJitter);
+				this.playResonantImpulse(t, 3400 * pitchMod, 8.0, 0.0040, 0.10 * gainJitter);
+
+				// 2. Physical keystroke travel delay (~16ms between tactile click and bottom-out impact)
+				const bottomDelay = 0.016 + Math.random() * 0.003;
+				const bodyThumpStart = (isSpace ? 180 : isBig ? 240 : 320) * pitchMod;
+				const bodyThumpEnd = (isSpace ? 85 : isBig ? 120 : 160) * pitchMod;
+				this.playThump(t + bottomDelay, bodyThumpStart, bodyThumpEnd, isSpace ? 0.038 : 0.024, 0.24 * gainJitter);
+
+				// Solid plastic housing bottom-out clack
+				const housingFreq = (isSpace ? 320 : isBig ? 420 : 560) * pitchMod;
+				this.playResonantImpulse(t + bottomDelay, housingFreq, 3.2, 0.018, 0.16 * gainJitter);
+				this.playResonantImpulse(t + bottomDelay, 1250 * pitchMod, 2.5, 0.010, 0.10 * gainJitter);
+
 				if (isSpace) {
 					// Spacebar wire stabilizer tick
-					this.playResonantImpulse(t + 0.001, 3200, 4.0, 0.003, 0.08 * gainJitter);
+					this.playResonantImpulse(t + bottomDelay, 3600, 4.5, 0.003, 0.08 * gainJitter);
 				}
 			} else if (this.profile === 'red') {
 				// LINEAR RED (Cherry MX Red / Smooth POM Stem Bottom-Out / Deep "Thock"):
 				// No click leaf! Pure solid plastic impact on switch floor + keycap cavity resonance
-				const cavityFreq = isSpace ? 135 : isBig ? 180 : 235;
-				const cavityDur = isSpace ? 0.038 : isBig ? 0.028 : 0.022;
-				// Primary keycap Helmholtz cavity resonance (solid deep thock)
-				this.playResonantImpulse(t, cavityFreq * pitchMod, 3.4, cavityDur, 0.26 * gainJitter);
-				// Secondary switch housing plate impact
-				this.playResonantImpulse(t, 490 * pitchMod, 2.5, 0.016, 0.14 * gainJitter);
-				// Subtle stem collision transient
-				this.playResonantImpulse(t, 2400 * pitchMod, 1.8, 0.003, 0.06 * gainJitter);
+				const thockStart = (isSpace ? 190 : isBig ? 230 : 280) * pitchMod;
+				const thockEnd = (isSpace ? 85 : isBig ? 115 : 150) * pitchMod;
+				const thockDur = isSpace ? 0.045 : isBig ? 0.034 : 0.026;
+
+				// 1. Deep solid bottom-out thump (dynamic physical deceleration envelope)
+				this.playThump(t, thockStart, thockEnd, thockDur, 0.28 * gainJitter);
+
+				// 2. Primary keycap Helmholtz cavity resonance (solid deep "thock")
+				const cavityFreq = (isSpace ? 130 : isBig ? 175 : 225) * pitchMod;
+				this.playResonantImpulse(t, cavityFreq, 2.8, thockDur * 1.1, 0.22 * gainJitter);
+
+				// 3. Switch housing floor impact
+				this.playResonantImpulse(t, 460 * pitchMod, 2.4, 0.016, 0.14 * gainJitter);
+
+				// 4. Subtle stem collision transient
+				this.playResonantImpulse(t, 1850 * pitchMod, 1.6, 0.003, 0.05 * gainJitter);
+
 				if (isSpace) {
 					// Spacebar hollow air resonance & wire stabilizer
-					this.playResonantImpulse(t + 0.002, 105, 2.8, 0.042, 0.12 * gainJitter);
+					this.playThump(t + 0.002, 110, 55, 0.050, 0.18 * gainJitter);
+					this.playResonantImpulse(t + 0.001, 2800, 3.5, 0.004, 0.06 * gainJitter);
 				}
 			} else if (this.profile === 'modelm') {
 				// BUCKLING SPRING (IBM Model M / Unicomp):
 				// 1. Music wire coil buckle: sharp mechanical snap
-				this.playResonantImpulse(t, 2850 * pitchMod, 4.2, 0.005, 0.20 * gainJitter);
+				this.playResonantImpulse(t, 3100 * pitchMod, 4.5, 0.004, 0.22 * gainJitter);
+				this.playResonantImpulse(t, 4900 * pitchMod, 3.8, 0.003, 0.14 * gainJitter);
+
 				// 2. Plastic flipper hitting curved 1.5mm steel backplate: heavy solid thud
-				const steelFreq = isSpace ? 130 : isBig ? 165 : 210;
-				const steelDur = isSpace ? 0.048 : 0.034;
-				this.playResonantImpulse(t + 0.001, steelFreq * pitchMod, 2.8, steelDur, 0.22 * gainJitter);
-				// 3. Steel spring acoustic ringing (the iconic Model M spring ping / twang)
+				const steelStart = (isSpace ? 150 : isBig ? 190 : 240) * pitchMod;
+				const steelEnd = (isSpace ? 75 : isBig ? 100 : 130) * pitchMod;
+				this.playThump(t + 0.007, steelStart, steelEnd, isSpace ? 0.045 : 0.032, 0.25 * gainJitter);
+
+				// 3. Barrel housing resonance
+				this.playResonantImpulse(t + 0.007, 680 * pitchMod, 3.0, 0.024, 0.14 * gainJitter);
+
+				// 4. Steel spring acoustic ringing (the iconic Model M spring ping / twang)
 				// Twin high-Q resonant modes creating natural metallic acoustic beating
-				this.playSpringRing(t + 0.001, 2640 * pitchMod, 2850 * pitchMod, 0.085, 0.12 * gainJitter);
+				this.playSpringRing(t + 0.005, 2680 * pitchMod, 2920 * pitchMod, 0.095, 0.13 * gainJitter);
 			}
 		}
 
@@ -484,11 +509,11 @@
 		// Modal physical acoustic synthesis: excite tuned resonant bandpass filter with shaped micro-impulse
 		private playResonantImpulse(time: number, freq: number, Q: number, dur: number, vol: number) {
 			if (!this.ctx) return;
-			const bufferSize = Math.max(16, Math.floor(this.ctx.sampleRate * Math.min(dur, 0.012)));
+			const bufferSize = Math.max(16, Math.floor(this.ctx.sampleRate * Math.min(dur, 0.008)));
 			const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
 			const data = buffer.getChannelData(0);
 			for (let i = 0; i < bufferSize; i++) {
-				data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.28));
+				data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.25));
 			}
 
 			const source = this.ctx.createBufferSource();
@@ -508,7 +533,6 @@
 			gain.connect(this.ctx.destination);
 
 			source.start(time);
-			source.stop(time + dur);
 		}
 
 		// Model M steel spring ping: two high-Q damped resonant sine modes with natural metallic acoustic beating

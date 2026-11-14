@@ -1,7 +1,7 @@
 # Bo Wu — Portfolio & Engineering Showcase
 
 [![Live Site](https://img.shields.io/badge/Live-brob.uk-ea580c?style=flat&logo=cloudflare)](https://brob.uk)
-[![Astro](https://img.shields.io/badge/Astro-5.10-bc52ee?logo=astro)](https://astro.build)
+[![Astro](https://img.shields.io/badge/Astro-7.4-bc52ee?logo=astro)](https://astro.build)
 [![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages-f38020?logo=cloudflare)](https://developers.cloudflare.com/pages/)
 [![Three.js](https://img.shields.io/badge/Three.js-WebGL-000000?logo=three.js)](https://threejs.org/)
 
@@ -24,7 +24,7 @@ Personal portfolio for **Bo Wu**, Computer Engineer specializing in silicon test
 
 ## Tech Stack
 
-- **Framework:** [Astro 5](https://astro.build) (SSG on Cloudflare Pages)
+- **Framework:** [Astro 7](https://astro.build) (SSR/Edge on Cloudflare Workers)
 - **3D Graphics:** [Three.js](https://threejs.org) with OrbitControls
 - **CAD Kernel:** [Open CASCADE Technology](https://dev.opencascade.org/) (`occt-import-js`)
 - **Theme:** Modern engineering dark/light palette with pure CSS variables

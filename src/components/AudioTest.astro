@@ -161,7 +161,7 @@
 							<span class="slider-hint">Sine Frequency Scrub</span>
 							<span class="slider-hz-val mono" id="slider-hz-display">1,000 Hz</span>
 						</div>
-						<input type="range" id="freq-slider" min="20" max="20000" step="1" value="1000" class="freq-slider" aria-label="Frequency Slider" />
+						<input type="range" id="freq-slider" min="20" max="20000" step="1" value="11335" class="freq-slider" aria-label="Frequency Slider" aria-valuenow="1000" aria-valuetext="1,000 Hz" />
 					</div>
 
 					<!-- PRESET BUTTONS (Compact 3-Column Grid) -->
@@ -246,6 +246,29 @@
 		const freqSlider = document.getElementById('freq-slider') as HTMLInputElement;
 		const runSweepBtn = document.getElementById('run-sweep-btn');
 		const runSweepText = document.getElementById('run-sweep-text');
+
+		// Logarithmic frequency slider mapping (20 Hz - 20,000 Hz)
+		const MIN_HZ = 20;
+		const MAX_HZ = 20000;
+		const MIN_LOG = Math.log(MIN_HZ);
+		const MAX_LOG = Math.log(MAX_HZ);
+
+		function hzToSliderVal(hz: number): number {
+			const clamped = Math.max(MIN_HZ, Math.min(MAX_HZ, hz));
+			const scale = (Math.log(clamped) - MIN_LOG) / (MAX_LOG - MIN_LOG);
+			return Math.round(MIN_HZ + scale * (MAX_HZ - MIN_HZ));
+		}
+
+		function sliderValToHz(sliderVal: number): number {
+			const scale = (sliderVal - MIN_HZ) / (MAX_HZ - MIN_HZ);
+			return Math.round(Math.exp(MIN_LOG + scale * (MAX_LOG - MIN_LOG)));
+		}
+
+		if (freqSlider) {
+			freqSlider.value = String(hzToSliderVal(currentToneHz));
+			freqSlider.setAttribute('aria-valuenow', String(Math.round(currentToneHz)));
+			freqSlider.setAttribute('aria-valuetext', `${Math.round(currentToneHz).toLocaleString()} Hz`);
+		}
 
 		const freqBtns = document.querySelectorAll('.freq-btn');
 		const btnNoisePink = document.getElementById('btn-noise-pink');
@@ -466,10 +489,15 @@
 		}
 
 		// Frequency UI updates
-		function updateFrequencyUI(hz: number) {
+		function updateFrequencyUI(hz: number, syncSlider = false) {
 			currentToneHz = hz;
 			if (sliderHzDisplay) {
 				sliderHzDisplay.textContent = `${Math.round(hz).toLocaleString()} Hz`;
+			}
+			if (syncSlider && freqSlider) {
+				freqSlider.value = String(hzToSliderVal(hz));
+				freqSlider.setAttribute('aria-valuenow', String(Math.round(hz)));
+				freqSlider.setAttribute('aria-valuetext', `${Math.round(hz).toLocaleString()} Hz`);
 			}
 			updateHudOverlay();
 		}
@@ -478,14 +506,13 @@
 		if (freqSlider) {
 			freqSlider.addEventListener('input', () => {
 				const sliderVal = parseFloat(freqSlider.value);
-				// Logarithmic mapping for natural frequency perception
-				const minLog = Math.log(20);
-				const maxLog = Math.log(20000);
-				const scale = (sliderVal - 20) / (20000 - 20);
-				const hz = Math.round(Math.exp(minLog + scale * (maxLog - minLog)));
+				const hz = sliderValToHz(sliderVal);
 
 				activeSignal = 'sine';
-				updateFrequencyUI(hz);
+				updateFrequencyUI(hz, false);
+				freqSlider.setAttribute('aria-valuenow', String(Math.round(hz)));
+				freqSlider.setAttribute('aria-valuetext', `${Math.round(hz).toLocaleString()} Hz`);
+
 				if (activeMode === 'tone' && currentOsc && audioCtx) {
 					currentOsc.frequency.setTargetAtTime(hz, audioCtx.currentTime, 0.02);
 				}
@@ -510,14 +537,7 @@
 				}
 
 				activeSignal = 'sine';
-				updateFrequencyUI(targetHz);
-
-				// Reverse map to slider
-				const minLog = Math.log(20);
-				const maxLog = Math.log(20000);
-				const scale = (Math.log(targetHz) - minLog) / (maxLog - minLog);
-				if (freqSlider) freqSlider.value = String(Math.round(20 + scale * (20000 - 20)));
-
+				updateFrequencyUI(targetHz, true);
 				startToneGenerator(targetHz);
 			});
 		});
@@ -600,13 +620,7 @@
 				}
 				// Exponential frequency calculation
 				const sweepHz = 20 * Math.pow(20000 / 20, elapsed / 10);
-				updateFrequencyUI(sweepHz);
-
-				// Update slider
-				const minLog = Math.log(20);
-				const maxLog = Math.log(20000);
-				const scale = (Math.log(sweepHz) - minLog) / (maxLog - minLog);
-				if (freqSlider) freqSlider.value = String(Math.round(20 + scale * (20000 - 20)));
+				updateFrequencyUI(sweepHz, true);
 
 				sweepRafId = requestAnimationFrame(updateSweepProgress);
 			}

@@ -1,5 +1,5 @@
 ---
-// AudioTest.astro - DAC Latency, Stereo Isolation, 180° Polarity & Frequency Sweeper
+// AudioTest.astro - DAC Latency, Stereo Isolation, 180° Polarity, Frequency Sweeper & Noise Generator
 ---
 
 <section class="card audio-test-card" id="audio-lab">
@@ -25,119 +25,186 @@
 	</div>
 
 	<p class="benchmark-desc">
-		Test DAC hardware latency, channel separation, 180&deg; wiring phase, and 20 Hz&ndash;20 kHz frequency response.
+		Test DAC hardware latency, channel separation, 180&deg; wiring phase, 20 Hz&ndash;20 kHz frequency response, and acoustic noise calibration.
 	</p>
 
-	<!-- TWO-COLUMN WORKBENCH -->
+	<!-- TWO-COLUMN WORKBENCH (HERO VISUALIZER ON LEFT / TOP ON MOBILE, CONTROLS ON RIGHT) -->
 	<div class="audio-workbench-grid">
-		<!-- COLUMN 1: POLARITY & CHANNEL ISOLATION -->
-		<div class="audio-col">
-			<div class="col-head">
-				<div class="col-head-left">
-					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="col-icon">
-						<circle cx="12" cy="12" r="10"/>
-						<line x1="12" y1="2" x2="12" y2="22"/>
-					</svg>
-					<span class="col-title">Stereo &amp; Phase Test</span>
-				</div>
-				<div class="segmented-control" role="group" aria-label="Stereo Visualizer Mode">
-					<button class="seg-btn active" id="btn-mode-scope" data-stereo-mode="scope" type="button">Scope</button>
-					<button class="seg-btn" id="btn-mode-spectrogram" data-stereo-mode="spectrogram" type="button">Spectrogram</button>
-				</div>
-			</div>
-
-			<!-- PHASE LISSAJOUS / 2D SPECTROGRAM CANVAS -->
-			<div class="lissajous-box">
-				<canvas id="lissajous-canvas" width="400" height="150"></canvas>
-				<div class="lissajous-overlay">
-					<span id="lissajous-mode-label" class="lissajous-label">Standby &bull; Select Channel Below</span>
-				</div>
-			</div>
-
-			<!-- POLARITY BUTTON GRID -->
-			<div class="tone-buttons-grid">
-				<button class="tone-btn" id="btn-tone-left" type="button">
-					<span class="tone-pill">L</span>
-					<span class="tone-name">Left Channel</span>
-				</button>
-
-				<button class="tone-btn" id="btn-tone-right" type="button">
-					<span class="tone-pill">R</span>
-					<span class="tone-name">Right Channel</span>
-				</button>
-
-				<button class="tone-btn" id="btn-tone-inphase" type="button">
-					<span class="tone-pill">0&deg;</span>
-					<span class="tone-name">Center Channel</span>
-				</button>
-
-				<button class="tone-btn" id="btn-tone-outphase" type="button">
-					<span class="tone-pill warn">180&deg;</span>
-					<span class="tone-name">Out-of-Phase</span>
-				</button>
-			</div>
-		</div>
-
-		<!-- COLUMN 2: FREQUENCY GENERATOR -->
-		<div class="audio-col">
+		<!-- COLUMN 1: UNIFIED HERO VISUALIZER -->
+		<div class="audio-col hero-visualizer-col">
 			<div class="col-head">
 				<div class="col-head-left">
 					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="col-icon">
 						<path d="M2 12h4l3 8 4-16 3 8h6"/>
 					</svg>
-					<span class="col-title">Frequency Generator</span>
+					<span class="col-title">Live Visualizer</span>
 				</div>
-				<div class="segmented-control" role="group" aria-label="Audio Waveform">
-					<button class="seg-btn active" data-wave="sine" type="button">Sine</button>
-					<button class="seg-btn" data-wave="pink" type="button" title="Pink Noise (1/f Equal Energy)">Pink</button>
-					<button class="seg-btn" data-wave="white" type="button" title="White Noise">White</button>
+				<!-- MODE SWITCHER -->
+				<div class="segmented-control" role="group" aria-label="Hero Visualizer Mode">
+					<button class="seg-btn active" id="btn-hero-waveform" data-hero-mode="waveform" type="button">Waveform</button>
+					<button class="seg-btn" id="btn-hero-spectrum" data-hero-mode="spectrum" type="button">Spectrum</button>
+					<button class="seg-btn" id="btn-hero-spectrogram" data-hero-mode="spectrogram" type="button">Spectrogram</button>
 				</div>
 			</div>
 
-			<!-- REAL FREQUENCY RESPONSE SPECTRUM HERO -->
-			<div class="spectrum-box">
-				<canvas id="spectrum-canvas" width="400" height="150"></canvas>
-				<div class="spectrum-overlay">
-					<div class="spectrum-hud-badge">
-						<span id="freq-num" class="freq-num mono">1,000</span>
-						<span class="freq-unit">Hz</span>
+			<!-- HERO CANVAS CONTAINER -->
+			<div class="hero-canvas-box" id="hero-canvas-box">
+				<canvas id="audio-hero-canvas" width="600" height="320"></canvas>
+
+				<!-- FLOATING HUD OVERLAY BADGE -->
+				<div class="hero-hud-overlay" id="hero-hud-overlay">
+					<div class="hud-badge-wrap" id="hud-badge-wrap">
+						<span id="hero-hud-main" class="hud-main-text mono">Standby</span>
 						<span class="hud-sep">&bull;</span>
-						<span id="freq-band-tag" class="freq-band-tag">Midrange (1 kHz Reference)</span>
+						<span id="hero-hud-sub" class="hud-sub-text">Select Test Below</span>
+					</div>
+				</div>
+
+				<!-- TIME-DOMAIN WAVEFORM HUD / PHASE BAR (Active in waveform mode) -->
+				<div class="waveform-hud-bar" id="waveform-hud-bar">
+					<div class="trace-legend">
+						<span class="legend-dot cyan"></span><span class="legend-label">Left</span>
+						<span class="legend-dot amber"></span><span class="legend-label">Right</span>
+					</div>
+					<div class="phase-meter-wrap" title="Phase Correlation (-1.0 Inverted to +1.0 In-Phase)">
+						<span class="phase-meter-tag mono">-1.0</span>
+						<div class="phase-meter-track">
+							<div class="phase-meter-center"></div>
+							<div class="phase-meter-fill" id="phase-meter-fill"></div>
+						</div>
+						<span class="phase-meter-tag mono">+1.0</span>
+						<span class="phase-val mono" id="phase-val-text">+1.00</span>
 					</div>
 				</div>
 			</div>
 
-			<!-- SCRUB SLIDER -->
-			<div class="slider-row">
-				<input type="range" id="freq-slider" min="20" max="20000" step="1" value="1000" class="freq-slider" aria-label="Frequency Slider" />
+			<!-- BOTTOM TELEMETRY BAR -->
+			<div class="visualizer-footer-bar">
+				<div class="telemetry-pill">
+					<span class="telemetry-label">Engine:</span>
+					<span class="telemetry-value mono" id="audio-engine-info">Web Audio &bull; 48 kHz &bull; 2ch Stereo</span>
+				</div>
+				<div class="telemetry-pill">
+					<span class="telemetry-label">Ceiling:</span>
+					<span class="telemetry-value mono">-18 dBFS Soft Knee</span>
+				</div>
+			</div>
+		</div>
+
+		<!-- COLUMN 2: HARDWARE TEST CONTROLS -->
+		<div class="audio-col controls-col">
+			<!-- SECTION 1: STEREO & POLARITY ISOLATION -->
+			<div class="control-group">
+				<div class="group-header">
+					<div class="group-header-left">
+						<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="group-icon">
+							<circle cx="12" cy="12" r="10"/>
+							<line x1="12" y1="2" x2="12" y2="22"/>
+						</svg>
+						<span class="group-title">Stereo &amp; Polarity Isolation</span>
+					</div>
+					<span class="group-badge">Voice + Tone</span>
+				</div>
+
+				<div class="tone-buttons-grid">
+					<button class="tone-btn" id="btn-tone-left" type="button">
+						<span class="tone-pill">L</span>
+						<span class="tone-name">Left Channel</span>
+					</button>
+
+					<button class="tone-btn" id="btn-tone-right" type="button">
+						<span class="tone-pill">R</span>
+						<span class="tone-name">Right Channel</span>
+					</button>
+
+					<button class="tone-btn" id="btn-tone-inphase" type="button">
+						<span class="tone-pill">0&deg;</span>
+						<span class="tone-name">Center Channel</span>
+					</button>
+
+					<button class="tone-btn" id="btn-tone-outphase" type="button">
+						<span class="tone-pill warn">180&deg;</span>
+						<span class="tone-name">Out-of-Phase</span>
+					</button>
+				</div>
 			</div>
 
-			<!-- PRESET PILLS (Symmetrical 6-column grid) -->
-			<div class="freq-presets-grid">
-				<button class="freq-pill" data-hz="20" type="button"><span class="pill-hz mono">20 Hz</span><span class="pill-tag">Sub</span></button>
-				<button class="freq-pill" data-hz="60" type="button"><span class="pill-hz mono">60 Hz</span><span class="pill-tag">Bass</span></button>
-				<button class="freq-pill" data-hz="250" type="button"><span class="pill-hz mono">250 Hz</span><span class="pill-tag">Mid</span></button>
-				<button class="freq-pill active" data-hz="1000" type="button"><span class="pill-hz mono">1 kHz</span><span class="pill-tag">Ref</span></button>
-				<button class="freq-pill" data-hz="8000" type="button"><span class="pill-hz mono">8 kHz</span><span class="pill-tag">Pres</span></button>
-				<button class="freq-pill" data-hz="16000" type="button"><span class="pill-hz mono">16 kHz</span><span class="pill-tag">Treble</span></button>
+			<!-- SECTION 2: TONE GENERATOR & FREQUENCY SWEEPER -->
+			<div class="control-group">
+				<div class="group-header">
+					<div class="group-header-left">
+						<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="group-icon">
+							<path d="M2 12h4l3 8 4-16 3 8h6"/>
+						</svg>
+						<span class="group-title">Tone Generator &amp; Sweeper</span>
+					</div>
+					<span class="group-badge">Pure Sine</span>
+				</div>
+
+				<!-- SWEEP ACTIONS -->
+				<div class="sweep-actions-row">
+					<button id="toggle-tone-btn" class="sweep-btn" type="button">
+						<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" id="toggle-tone-icon">
+							<polygon points="5 3 19 12 5 21 5 3"/>
+						</svg>
+						<span id="toggle-tone-text">Play Tone</span>
+					</button>
+
+					<button id="run-sweep-btn" class="sweep-btn sweep-auto-btn" type="button">
+						<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+							<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+							<polyline points="17 6 23 6 23 12"/>
+						</svg>
+						<span id="run-sweep-text">Auto Sweep (10s)</span>
+					</button>
+				</div>
+
+				<!-- SCRUB SLIDER -->
+				<div class="slider-row">
+					<div class="slider-header-info">
+						<span class="slider-hint">Frequency Scrub</span>
+						<span class="slider-hz-val mono" id="slider-hz-display">1,000 Hz</span>
+					</div>
+					<input type="range" id="freq-slider" min="20" max="20000" step="1" value="1000" class="freq-slider" aria-label="Frequency Slider" />
+				</div>
+
+				<!-- PRESET PILLS (Symmetrical 6-column grid) -->
+				<div class="freq-presets-grid">
+					<button class="freq-pill" data-hz="20" type="button"><span class="pill-hz mono">20 Hz</span><span class="pill-tag">Sub</span></button>
+					<button class="freq-pill" data-hz="60" type="button"><span class="pill-hz mono">60 Hz</span><span class="pill-tag">Bass</span></button>
+					<button class="freq-pill" data-hz="250" type="button"><span class="pill-hz mono">250 Hz</span><span class="pill-tag">Mid</span></button>
+					<button class="freq-pill active" data-hz="1000" type="button"><span class="pill-hz mono">1 kHz</span><span class="pill-tag">Ref</span></button>
+					<button class="freq-pill" data-hz="8000" type="button"><span class="pill-hz mono">8 kHz</span><span class="pill-tag">Pres</span></button>
+					<button class="freq-pill" data-hz="16000" type="button"><span class="pill-hz mono">16 kHz</span><span class="pill-tag">Treble</span></button>
+				</div>
 			</div>
 
-			<!-- SWEEP ACTION ROW -->
-			<div class="sweep-actions-row">
-				<button id="toggle-tone-btn" class="sweep-btn" type="button">
-					<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" id="toggle-tone-icon">
-						<polygon points="5 3 19 12 5 21 5 3"/>
-					</svg>
-					<span id="toggle-tone-text">Play Tone</span>
-				</button>
+			<!-- SECTION 3: BROADBAND NOISE GENERATOR -->
+			<div class="control-group noise-group">
+				<div class="group-header">
+					<div class="group-header-left">
+						<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="group-icon">
+							<path d="M4 12v3m4-6v9m4-12v15m4-9v6m4-4v2"/>
+						</svg>
+						<span class="group-title">Broadband Noise</span>
+					</div>
+					<div class="noise-segmented-control" role="group" aria-label="Noise Type">
+						<button class="noise-seg-btn active" data-noise="pink" type="button">Pink (1/f)</button>
+						<button class="noise-seg-btn" data-noise="white" type="button">White</button>
+					</div>
+				</div>
 
-				<button id="run-sweep-btn" class="sweep-btn sweep-auto-btn" type="button">
-					<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-						<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-						<polyline points="17 6 23 6 23 12"/>
-					</svg>
-					<span id="run-sweep-text">Auto Sweep</span>
-				</button>
+				<div class="noise-action-row">
+					<button id="toggle-noise-btn" class="sweep-btn noise-btn" type="button">
+						<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" id="toggle-noise-icon">
+							<polygon points="5 3 19 12 5 21 5 3"/>
+						</svg>
+						<span id="toggle-noise-text">Play Noise</span>
+					</button>
+					<div class="noise-desc-pill">
+						<span id="noise-desc-text">Pink: Equal energy per octave (-3 dB/oct). Room EQ calibration.</span>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -152,37 +219,46 @@
 
 		let currentOsc: OscillatorNode | null = null;
 		let noiseNode: AudioNode | null = null;
-		let pannerNode: StereoPannerNode | null = null;
 		let leftGain: GainNode | null = null;
 		let rightGain: GainNode | null = null;
 
-		let activeStereoMode: 'scope' | 'spectrogram' = 'scope';
-		let activeMode: 'none' | 'left' | 'right' | 'inphase' | 'outphase' | 'tone' | 'sweep' = 'none';
-		let activeWave: 'sine' | 'pink' | 'white' = 'sine';
+		let activeHeroMode: 'waveform' | 'spectrum' | 'spectrogram' = 'waveform';
+		let activeMode: 'none' | 'left' | 'right' | 'inphase' | 'outphase' | 'tone' | 'sweep' | 'noise' = 'none';
+		let activeNoiseType: 'pink' | 'white' = 'pink';
+		let currentToneHz = 1000;
 		let isSweeping = false;
 		let sweepRafId: number | null = null;
 
 		// UI references
-		const modeScopeBtn = document.getElementById('btn-mode-scope');
-		const modeSpectrogramBtn = document.getElementById('btn-mode-spectrogram');
+		const modeWaveformBtn = document.getElementById('btn-hero-waveform');
+		const modeSpectrumBtn = document.getElementById('btn-hero-spectrum');
+		const modeSpectrogramBtn = document.getElementById('btn-hero-spectrogram');
+		const waveformHudBar = document.getElementById('waveform-hud-bar');
+
 		const volSlider = document.getElementById('audio-volume-slider') as HTMLInputElement;
 		const volText = document.getElementById('audio-vol-text');
 
-		const freqNumEl = document.getElementById('freq-num');
-		const freqBandEl = document.getElementById('freq-band-tag');
+		const heroHudMain = document.getElementById('hero-hud-main');
+		const heroHudSub = document.getElementById('hero-hud-sub');
+		const phaseMeterFill = document.getElementById('phase-meter-fill');
+		const phaseValText = document.getElementById('phase-val-text');
+		const audioEngineInfo = document.getElementById('audio-engine-info');
+
+		const sliderHzDisplay = document.getElementById('slider-hz-display');
 		const freqSlider = document.getElementById('freq-slider') as HTMLInputElement;
 		const toggleToneBtn = document.getElementById('toggle-tone-btn');
 		const toggleToneText = document.getElementById('toggle-tone-text');
 		const runSweepBtn = document.getElementById('run-sweep-btn');
 		const runSweepText = document.getElementById('run-sweep-text');
 
-		const lissajousCanvas = document.getElementById('lissajous-canvas') as HTMLCanvasElement;
-		const lissajousBox = document.querySelector('.lissajous-box');
-		const lissajousLabel = document.getElementById('lissajous-mode-label');
-		const lissajousCtx = lissajousCanvas?.getContext('2d');
+		const noiseBtns = document.querySelectorAll('.noise-seg-btn');
+		const toggleNoiseBtn = document.getElementById('toggle-noise-btn');
+		const toggleNoiseText = document.getElementById('toggle-noise-text');
+		const noiseDescText = document.getElementById('noise-desc-text');
 
-		const spectrumCanvas = document.getElementById('spectrum-canvas') as HTMLCanvasElement;
-		const spectrumCtx = spectrumCanvas?.getContext('2d');
+		const heroCanvas = document.getElementById('audio-hero-canvas') as HTMLCanvasElement;
+		const heroCanvasBox = document.getElementById('hero-canvas-box');
+		const heroCtx = heroCanvas?.getContext('2d');
 
 		let splitter: ChannelSplitterNode | null = null;
 		let analyserLeft: AnalyserNode | null = null;
@@ -218,12 +294,12 @@
 				masterGain.connect(compressor);
 				compressor.connect(audioCtx.destination);
 
-				// Real Stereo & Phase Vector Scope (Left / Right split)
+				// Real Stereo & Phase Vector Split (Left / Right split for oscilloscope)
 				splitter = audioCtx.createChannelSplitter(2);
 				analyserLeft = audioCtx.createAnalyser();
 				analyserRight = audioCtx.createAnalyser();
-				analyserLeft.fftSize = 512;
-				analyserRight.fftSize = 512;
+				analyserLeft.fftSize = 2048;
+				analyserRight.fftSize = 2048;
 
 				audioBus.connect(splitter);
 				splitter.connect(analyserLeft, 0);
@@ -237,6 +313,10 @@
 				fftAnalyser.maxDecibels = -10;
 
 				audioBus.connect(fftAnalyser);
+
+				if (audioEngineInfo) {
+					audioEngineInfo.textContent = `Web Audio • ${Math.round(audioCtx.sampleRate / 1000)} kHz • 2ch Stereo`;
+				}
 			}
 
 			if (audioCtx.state === 'suspended') {
@@ -245,28 +325,23 @@
 			return audioCtx;
 		}
 
-		// Visualizer Mode Toggle
-		function setStereoVisualizerMode(mode: 'scope' | 'spectrogram') {
-			activeStereoMode = mode;
-			if (mode === 'scope') {
-				modeScopeBtn?.classList.add('active');
-				modeSpectrogramBtn?.classList.remove('active');
-				lissajousBox?.classList.remove('spectrogram-mode');
-				if (lissajousLabel && activeMode === 'none') {
-					lissajousLabel.textContent = 'Standby • Select Channel Below';
-				}
-			} else {
-				modeSpectrogramBtn?.classList.add('active');
-				modeScopeBtn?.classList.remove('active');
-				lissajousBox?.classList.add('spectrogram-mode');
-				if (lissajousLabel && activeMode === 'none') {
-					lissajousLabel.textContent = 'Spectrogram • Live Waterfall';
-				}
+		// Visualizer Mode Switcher
+		function setHeroVisualizerMode(mode: 'waveform' | 'spectrum' | 'spectrogram') {
+			activeHeroMode = mode;
+			modeWaveformBtn?.classList.toggle('active', mode === 'waveform');
+			modeSpectrumBtn?.classList.toggle('active', mode === 'spectrum');
+			modeSpectrogramBtn?.classList.toggle('active', mode === 'spectrogram');
+
+			if (waveformHudBar) {
+				waveformHudBar.style.display = mode === 'waveform' ? 'flex' : 'none';
 			}
+
+			updateHudOverlay();
 		}
 
-		modeScopeBtn?.addEventListener('click', () => setStereoVisualizerMode('scope'));
-		modeSpectrogramBtn?.addEventListener('click', () => setStereoVisualizerMode('spectrogram'));
+		modeWaveformBtn?.addEventListener('click', () => setHeroVisualizerMode('waveform'));
+		modeSpectrumBtn?.addEventListener('click', () => setHeroVisualizerMode('spectrum'));
+		modeSpectrogramBtn?.addEventListener('click', () => setHeroVisualizerMode('spectrogram'));
 
 		// Update Master Volume
 		if (volSlider) {
@@ -305,6 +380,56 @@
 			}
 		}
 
+		// Update HUD text banner
+		function updateHudOverlay() {
+			if (!heroHudMain || !heroHudSub) return;
+
+			if (activeMode === 'none') {
+				heroHudMain.textContent = 'Standby';
+				heroHudSub.textContent = 'Select Test Below';
+				return;
+			}
+
+			if (activeMode === 'left') {
+				heroHudMain.textContent = 'Left Channel Only';
+				heroHudSub.textContent = 'Panned 100% Left';
+			} else if (activeMode === 'right') {
+				heroHudMain.textContent = 'Right Channel Only';
+				heroHudSub.textContent = 'Panned 100% Right';
+			} else if (activeMode === 'inphase') {
+				heroHudMain.textContent = 'Center Channel (0°)';
+				heroHudSub.textContent = 'In-Phase Phantom Center';
+			} else if (activeMode === 'outphase') {
+				heroHudMain.textContent = 'Out-of-Phase (180°)';
+				heroHudSub.textContent = 'Polarity Inverted Cancellation';
+			} else if (activeMode === 'tone') {
+				heroHudMain.textContent = `${Math.round(currentToneHz).toLocaleString()} Hz`;
+				heroHudSub.textContent = getBandTag(currentToneHz);
+			} else if (activeMode === 'sweep') {
+				heroHudMain.textContent = `${Math.round(currentToneHz).toLocaleString()} Hz`;
+				heroHudSub.textContent = 'Logarithmic Sweep (20 Hz → 20 kHz)';
+			} else if (activeMode === 'noise') {
+				if (activeNoiseType === 'pink') {
+					heroHudMain.textContent = 'Pink Noise (1/f)';
+					heroHudSub.textContent = 'Equal Energy Per Octave (-3 dB/oct)';
+				} else {
+					heroHudMain.textContent = 'White Noise';
+					heroHudSub.textContent = 'Flat Power Spectral Density';
+				}
+			}
+		}
+
+		function getBandTag(hz: number): string {
+			if (hz < 60) return 'Sub-Bass (Feel more than hear)';
+			if (hz < 250) return 'Bass / Punch';
+			if (hz < 500) return 'Low-Mid / Warmth';
+			if (hz < 2000) return 'Midrange (Vocal Fundamental)';
+			if (hz < 4000) return 'High-Mid / Clarinet / Attack';
+			if (hz < 8000) return 'Presence / Sibilance';
+			if (hz < 14000) return 'Brilliance / Air';
+			return 'Ultra-High Treble (Hearing Limit)';
+		}
+
 		// Stop All Active Audio
 		function stopAllAudio() {
 			if (sweepRafId) {
@@ -333,6 +458,7 @@
 			}
 			if (noiseNode) {
 				try {
+					(noiseNode as any).stop?.();
 					noiseNode.disconnect();
 				} catch (_) {}
 				noiseNode = null;
@@ -343,28 +469,20 @@
 			if (toggleToneBtn) toggleToneBtn.classList.remove('active');
 			if (toggleToneText) toggleToneText.textContent = 'Play Tone';
 			if (runSweepBtn) runSweepBtn.classList.remove('active');
-			if (runSweepText) runSweepText.textContent = 'Auto Sweep';
-			if (lissajousLabel) {
-				lissajousLabel.textContent = activeStereoMode === 'spectrogram'
-					? 'Spectrogram • Live Waterfall'
-					: 'Standby • Select Channel Below';
-			}
+			if (runSweepText) runSweepText.textContent = 'Auto Sweep (10s)';
+			if (toggleNoiseBtn) toggleNoiseBtn.classList.remove('active');
+			if (toggleNoiseText) toggleNoiseText.textContent = 'Play Noise';
+
+			updateHudOverlay();
 		}
 
-		// Frequency Band Classification
+		// Frequency UI updates
 		function updateFrequencyUI(hz: number) {
-			if (freqNumEl) freqNumEl.textContent = Math.round(hz).toLocaleString();
-			let band = 'Midrange';
-			if (hz < 60) band = 'Sub-Bass (Feel more than hear)';
-			else if (hz < 250) band = 'Bass / Punch';
-			else if (hz < 500) band = 'Low-Mid / Body';
-			else if (hz < 2000) band = 'Midrange (Vocal fundamental)';
-			else if (hz < 4000) band = 'High-Mid / Clarinet / Attack';
-			else if (hz < 8000) band = 'Presence / Sibilance';
-			else if (hz < 14000) band = 'Brilliance / Air';
-			else band = 'Ultra-High Treble (Hearing limit)';
-
-			if (freqBandEl) freqBandEl.textContent = band;
+			currentToneHz = hz;
+			if (sliderHzDisplay) {
+				sliderHzDisplay.textContent = `${Math.round(hz).toLocaleString()} Hz`;
+			}
+			updateHudOverlay();
 		}
 
 		// Slider Scrub
@@ -406,71 +524,22 @@
 			});
 		});
 
-		// Waveform segmented control
-		const waveBtns = document.querySelectorAll('.audio-test-card .seg-btn[data-wave]');
-		waveBtns.forEach((btn) => {
-			btn.addEventListener('click', () => {
-				waveBtns.forEach(b => b.classList.remove('active'));
-				btn.classList.add('active');
-				activeWave = (btn.getAttribute('data-wave') as any) || 'sine';
-				if (activeMode === 'tone') {
-					startToneGenerator();
-				}
-			});
-		});
-
-		// Play / Pause Frequency Generator
+		// Play / Pause Sine Tone Generator
 		function startToneGenerator() {
 			const ctx = getAudioContext();
 			stopAllAudio();
 			activeMode = 'tone';
 
-			const hz = parseInt(freqNumEl?.textContent?.replace(/,/g, '') || '1000', 10);
-
-			if (activeWave === 'sine') {
-				const osc = ctx.createOscillator();
-				osc.type = 'sine';
-				osc.frequency.setValueAtTime(hz, ctx.currentTime);
-				osc.connect(audioBus || masterGain!);
-				osc.start();
-				currentOsc = osc;
-			} else {
-				// Buffer Noise Generator (Pink / White)
-				const bufferSize = ctx.sampleRate * 2;
-				const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-				const output = noiseBuffer.getChannelData(0);
-
-				if (activeWave === 'white') {
-					for (let i = 0; i < bufferSize; i++) {
-						output[i] = Math.random() * 2 - 1;
-					}
-				} else {
-					// Pink noise 1/f Paul Kellet filter
-					let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-					for (let i = 0; i < bufferSize; i++) {
-						const white = Math.random() * 2 - 1;
-						b0 = 0.99886 * b0 + white * 0.0555179;
-						b1 = 0.99332 * b1 + white * 0.0750759;
-						b2 = 0.96900 * b2 + white * 0.1538520;
-						b3 = 0.86650 * b3 + white * 0.3104856;
-						b4 = 0.55000 * b4 + white * 0.5329522;
-						b5 = -0.7616 * b5 - white * 0.0168980;
-						output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
-						b6 = white * 0.115926;
-					}
-				}
-
-				const whiteSource = ctx.createBufferSource();
-				whiteSource.buffer = noiseBuffer;
-				whiteSource.loop = true;
-				whiteSource.connect(audioBus || masterGain!);
-				whiteSource.start();
-				noiseNode = whiteSource;
-			}
+			const osc = ctx.createOscillator();
+			osc.type = 'sine';
+			osc.frequency.setValueAtTime(currentToneHz, ctx.currentTime);
+			osc.connect(audioBus || masterGain!);
+			osc.start();
+			currentOsc = osc;
 
 			if (toggleToneBtn) toggleToneBtn.classList.add('active');
 			if (toggleToneText) toggleToneText.textContent = 'Pause Tone';
-			if (lissajousLabel) lissajousLabel.textContent = `Generator Active • ${activeWave.toUpperCase()} • ${hz} Hz`;
+			updateHudOverlay();
 		}
 
 		if (toggleToneBtn) {
@@ -504,7 +573,7 @@
 
 			if (runSweepBtn) runSweepBtn.classList.add('active');
 			if (runSweepText) runSweepText.textContent = 'Stop Sweep';
-			if (lissajousLabel) lissajousLabel.textContent = 'Logarithmic Sweep Running (20Hz → 20kHz)...';
+			updateHudOverlay();
 
 			const sweepStart = performance.now();
 			function updateSweepProgress() {
@@ -515,16 +584,13 @@
 					return;
 				}
 				// Exponential frequency calculation
-				const currentSweepHz = 20 * Math.pow(20000 / 20, elapsed / 10);
-				updateFrequencyUI(currentSweepHz);
-				if (lissajousLabel && activeStereoMode === 'spectrogram') {
-					lissajousLabel.textContent = `Auto Sweep • ${Math.round(currentSweepHz).toLocaleString()} Hz`;
-				}
+				const sweepHz = 20 * Math.pow(20000 / 20, elapsed / 10);
+				updateFrequencyUI(sweepHz);
 
 				// Update slider
 				const minLog = Math.log(20);
 				const maxLog = Math.log(20000);
-				const scale = (Math.log(currentSweepHz) - minLog) / (maxLog - minLog);
+				const scale = (Math.log(sweepHz) - minLog) / (maxLog - minLog);
 				if (freqSlider) freqSlider.value = String(Math.round(20 + scale * (20000 - 20)));
 
 				sweepRafId = requestAnimationFrame(updateSweepProgress);
@@ -534,7 +600,92 @@
 
 		if (runSweepBtn) runSweepBtn.addEventListener('click', runAutoSweep);
 
-		// CHANNEL ISOLATION & POLARITY TESTS (Toggleable on/off with spoken voice clips)
+		// BROADBAND NOISE GENERATOR (Pink / White)
+		noiseBtns.forEach((btn) => {
+			btn.addEventListener('click', () => {
+				noiseBtns.forEach(b => b.classList.remove('active'));
+				btn.classList.add('active');
+				activeNoiseType = (btn.getAttribute('data-noise') as any) || 'pink';
+
+				if (noiseDescText) {
+					if (activeNoiseType === 'pink') {
+						noiseDescText.textContent = 'Pink: Equal energy per octave (-3 dB/oct). Room EQ calibration.';
+					} else {
+						noiseDescText.textContent = 'White: Flat power spectral density (20 Hz–20 kHz). Pure hiss.';
+					}
+				}
+
+				if (activeMode === 'noise') {
+					startNoiseGenerator();
+				}
+			});
+		});
+
+		function startNoiseGenerator() {
+			const ctx = getAudioContext();
+			stopAllAudio();
+			activeMode = 'noise';
+
+			const bufferSize = ctx.sampleRate * 2;
+			const noiseBuffer = ctx.createBuffer(2, bufferSize, ctx.sampleRate);
+			const outL = noiseBuffer.getChannelData(0);
+			const outR = noiseBuffer.getChannelData(1);
+
+			if (activeNoiseType === 'white') {
+				for (let i = 0; i < bufferSize; i++) {
+					outL[i] = (Math.random() * 2 - 1) * 0.45;
+					outR[i] = (Math.random() * 2 - 1) * 0.45;
+				}
+			} else {
+				// Pink noise: Paul Kellet 6-pole IIR filter algorithm (-3 dB/oct)
+				let b0L = 0, b1L = 0, b2L = 0, b3L = 0, b4L = 0, b5L = 0, b6L = 0;
+				let b0R = 0, b1R = 0, b2R = 0, b3R = 0, b4R = 0, b5R = 0, b6R = 0;
+				for (let i = 0; i < bufferSize; i++) {
+					const whiteL = Math.random() * 2 - 1;
+					b0L = 0.99886 * b0L + whiteL * 0.0555179;
+					b1L = 0.99332 * b1L + whiteL * 0.0750759;
+					b2L = 0.96900 * b2L + whiteL * 0.1538520;
+					b3L = 0.86650 * b3L + whiteL * 0.3104856;
+					b4L = 0.55000 * b4L + whiteL * 0.5329522;
+					b5L = -0.7616 * b5L - whiteL * 0.0168980;
+					outL[i] = (b0L + b1L + b2L + b3L + b4L + b5L + b6L + whiteL * 0.5362) * 0.07;
+					b6L = whiteL * 0.115926;
+
+					const whiteR = Math.random() * 2 - 1;
+					b0R = 0.99886 * b0R + whiteR * 0.0555179;
+					b1R = 0.99332 * b1R + whiteR * 0.0750759;
+					b2R = 0.96900 * b2R + whiteR * 0.1538520;
+					b3R = 0.86650 * b3R + whiteR * 0.3104856;
+					b4R = 0.55000 * b4R + whiteR * 0.5329522;
+					b5R = -0.7616 * b5R - whiteR * 0.0168980;
+					outR[i] = (b0R + b1R + b2R + b3R + b4R + b5R + b6R + whiteR * 0.5362) * 0.07;
+					b6R = whiteR * 0.115926;
+				}
+			}
+
+			const noiseSource = ctx.createBufferSource();
+			noiseSource.buffer = noiseBuffer;
+			noiseSource.loop = true;
+			noiseSource.connect(audioBus || masterGain!);
+			noiseSource.start();
+			noiseNode = noiseSource;
+
+			if (toggleNoiseBtn) toggleNoiseBtn.classList.add('active');
+			if (toggleNoiseText) toggleNoiseText.textContent = 'Stop Noise';
+			updateHudOverlay();
+		}
+
+		if (toggleNoiseBtn) {
+			toggleNoiseBtn.addEventListener('click', () => {
+				if (activeMode === 'noise') {
+					stopAllAudio();
+				} else {
+					startNoiseGenerator();
+				}
+			});
+		}
+
+		// CHANNEL ISOLATION & POLARITY TESTS
 		async function playPolarityTone(mode: 'left' | 'right' | 'inphase' | 'outphase') {
 			if (activeMode === mode) {
 				stopAllAudio();
@@ -545,7 +696,6 @@
 			stopAllAudio();
 			activeMode = mode;
 
-			// Highlight active button
 			const btnMap: Record<string, string> = {
 				left: 'btn-tone-left',
 				right: 'btn-tone-right',
@@ -553,16 +703,7 @@
 				outphase: 'btn-tone-outphase'
 			};
 			document.getElementById(btnMap[mode])?.classList.add('active');
-
-			if (lissajousLabel) {
-				const labelMap: Record<string, string> = {
-					left: 'Voice "Left Channel" • Left Ear Only',
-					right: 'Voice "Right Channel" • Right Ear Only',
-					inphase: 'Voice "Center Channel" • Center Channel',
-					outphase: 'Voice "Out-of-Phase" • 180° Inverted Phase'
-				};
-				lissajousLabel.textContent = labelMap[mode];
-			}
+			updateHudOverlay();
 
 			const buf = await loadVoiceBuffer(mode);
 			if (activeMode !== mode) return; // Mode changed or stopped while fetching
@@ -659,90 +800,73 @@
 		document.getElementById('btn-tone-outphase')?.addEventListener('click', () => playPolarityTone('outphase'));
 
 		// Responsive canvas resizing (DPR Retina scaling)
-		function resizeCanvases() {
+		function resizeCanvas() {
 			const dpr = Math.min(window.devicePixelRatio || 1, 2);
-			if (lissajousCanvas) {
-				const rect = lissajousCanvas.getBoundingClientRect();
-				const targetW = Math.round((rect.width || 400) * dpr);
-				const targetH = Math.round(150 * dpr);
-				if (lissajousCanvas.width !== targetW || lissajousCanvas.height !== targetH) {
-					lissajousCanvas.width = targetW;
-					lissajousCanvas.height = targetH;
-				}
-			}
-			if (spectrumCanvas) {
-				const rect = spectrumCanvas.getBoundingClientRect();
-				const targetW = Math.round((rect.width || 400) * dpr);
-				const targetH = Math.round(150 * dpr);
-				if (spectrumCanvas.width !== targetW || spectrumCanvas.height !== targetH) {
-					spectrumCanvas.width = targetW;
-					spectrumCanvas.height = targetH;
+			if (heroCanvas) {
+				const rect = heroCanvas.getBoundingClientRect();
+				const targetW = Math.round((rect.width || 600) * dpr);
+				const targetH = Math.round((rect.height || 320) * dpr);
+				if (heroCanvas.width !== targetW || heroCanvas.height !== targetH) {
+					heroCanvas.width = targetW;
+					heroCanvas.height = targetH;
 				}
 			}
 		}
-		resizeCanvases();
-		window.addEventListener('resize', resizeCanvases, { passive: true });
+		resizeCanvas();
+		window.addEventListener('resize', resizeCanvas, { passive: true });
 
-		// REAL-TIME STEREO & PHASE VECTOR SCOPE (Rotated Goniometer: L on Left, R on Right, Center Vertical)
-		function renderLissajousScope() {
-			if (!lissajousCtx || !lissajousCanvas) return;
-			const w = lissajousCanvas.width;
-			const h = lissajousCanvas.height;
+		// -------------------------------------------------------------
+		// VISUALIZER 1: DUAL-TRACE WAVEFORM OSCILLOSCOPE & PHASE METER
+		// -------------------------------------------------------------
+		function renderWaveformScope() {
+			if (!heroCtx || !heroCanvas) return;
+			const w = heroCanvas.width;
+			const h = heroCanvas.height;
 			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-			const cx = w / 2;
 			const cy = h / 2;
-			const radius = Math.min(cx, cy) * 0.82;
 
-			lissajousCtx.clearRect(0, 0, w, h);
-			lissajousCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
-			lissajousCtx.fillRect(0, 0, w, h);
+			heroCtx.clearRect(0, 0, w, h);
+			heroCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
+			heroCtx.fillRect(0, 0, w, h);
 
-			const invSqrt2 = 0.70710678;
+			// Oscilloscope Grid Divisions
+			heroCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+			heroCtx.lineWidth = 1;
 
-			// Center crosshairs: Vertical (0° In-Phase / Mid) and Horizontal (180° Out-of-Phase / Side)
-			lissajousCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-			lissajousCtx.lineWidth = 1;
-			lissajousCtx.beginPath();
-			lissajousCtx.moveTo(cx, cy - radius * 0.95);
-			lissajousCtx.lineTo(cx, cy + radius * 0.95);
-			lissajousCtx.moveTo(cx - radius * 0.95, cy);
-			lissajousCtx.lineTo(cx + radius * 0.95, cy);
-			lissajousCtx.stroke();
+			// Horizontal division lines (±1.0, ±0.5, 0 baseline)
+			const gridYSteps = [0.15, 0.32, 0.5, 0.68, 0.85];
+			gridYSteps.forEach((ratio) => {
+				const y = Math.round(h * ratio);
+				heroCtx.beginPath();
+				heroCtx.moveTo(0, y);
+				heroCtx.lineTo(w, y);
+				heroCtx.stroke();
+			});
 
-			// 45° Diagonal Channel Axes: Left (top-left) and Right (top-right)
-			lissajousCtx.setLineDash([3, 5]);
-			lissajousCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-			lissajousCtx.beginPath();
-			// Left channel diagonal (-45°)
-			lissajousCtx.moveTo(cx - radius * invSqrt2 * 0.95, cy - radius * invSqrt2 * 0.95);
-			lissajousCtx.lineTo(cx + radius * invSqrt2 * 0.95, cy + radius * invSqrt2 * 0.95);
-			// Right channel diagonal (+45°)
-			lissajousCtx.moveTo(cx + radius * invSqrt2 * 0.95, cy - radius * invSqrt2 * 0.95);
-			lissajousCtx.lineTo(cx - radius * invSqrt2 * 0.95, cy + radius * invSqrt2 * 0.95);
-			lissajousCtx.stroke();
-			lissajousCtx.setLineDash([]);
+			// Vertical division lines
+			const gridCols = 8;
+			for (let col = 1; col < gridCols; col++) {
+				const x = Math.round((w / gridCols) * col);
+				heroCtx.beginPath();
+				heroCtx.moveTo(x, 0);
+				heroCtx.lineTo(x, h);
+				heroCtx.stroke();
+			}
 
-			// Axis landmark indicators: Left on left, Right on right, Center at top, Out at sides
-			lissajousCtx.font = `${Math.max(9, Math.round(10 * (w / 400)))}px monospace`;
-			lissajousCtx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-			lissajousCtx.textAlign = 'center';
-
-			// L (Left Channel) at top-left
-			lissajousCtx.fillText('L', cx - radius * invSqrt2 * 0.95 - 8, cy - radius * invSqrt2 * 0.95 - 4);
-			// R (Right Channel) at top-right
-			lissajousCtx.fillText('R', cx + radius * invSqrt2 * 0.95 + 8, cy - radius * invSqrt2 * 0.95 - 4);
-			// 0° (In-Phase / Center) at top
-			lissajousCtx.fillText('0° (In)', cx, cy - radius * 0.95 - 4);
-			// 180° (Out-of-Phase / Invert) at right
-			lissajousCtx.textAlign = 'left';
-			lissajousCtx.fillText('180° (Out)', cx + radius * 0.95 + 6, cy + 4);
+			// Center baseline (0V reference)
+			heroCtx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+			heroCtx.beginPath();
+			heroCtx.moveTo(0, cy);
+			heroCtx.lineTo(w, cy);
+			heroCtx.stroke();
 
 			if (!analyserLeft || !analyserRight) {
-				// Standby resting center dot
-				lissajousCtx.fillStyle = 'rgba(249, 115, 22, 0.5)';
-				lissajousCtx.beginPath();
-				lissajousCtx.arc(cx, cy, 2.5, 0, Math.PI * 2);
-				lissajousCtx.fill();
+				// Standby resting zero baselines
+				heroCtx.strokeStyle = 'rgba(56, 189, 248, 0.35)'; // Left Cyan
+				heroCtx.beginPath();
+				heroCtx.moveTo(0, cy);
+				heroCtx.lineTo(w, cy);
+				heroCtx.stroke();
 				return;
 			}
 
@@ -752,7 +876,7 @@
 			analyserLeft.getFloatTimeDomainData(timeL);
 			analyserRight.getFloatTimeDomainData(timeR);
 
-			// Calculate RMS energy and Pearson correlation
+			// Calculate Pearson correlation & RMS energy
 			let sumSqL = 0;
 			let sumSqR = 0;
 			let dotProd = 0;
@@ -767,80 +891,284 @@
 			const rmsR = Math.sqrt(sumSqR / bufLen);
 			const maxRms = Math.max(rmsL, rmsR);
 
-			if (maxRms < 0.003) {
-				// Resting center dot during silence
-				lissajousCtx.fillStyle = 'rgba(249, 115, 22, 0.4)';
-				lissajousCtx.beginPath();
-				lissajousCtx.arc(cx, cy, 2, 0, Math.PI * 2);
-				lissajousCtx.fill();
+			// Phase correlation computation: r in [-1.0 .. +1.0]
+			const denom = Math.sqrt(sumSqL * sumSqR);
+			let correlation = 1.0;
+			if (denom > 0.0001) {
+				correlation = Math.max(-1.0, Math.min(1.0, dotProd / denom));
+			} else if (rmsL > 0.01 && rmsR <= 0.005) {
+				correlation = 0.0;
+			} else if (rmsR > 0.01 && rmsL <= 0.005) {
+				correlation = 0.0;
+			}
+
+			// Update Phase Correlation Meter HUD UI
+			if (phaseValText && phaseMeterFill) {
+				if (maxRms < 0.002) {
+					phaseValText.textContent = '0.00';
+					phaseMeterFill.style.width = '50%';
+					phaseMeterFill.style.background = 'rgba(148, 163, 184, 0.4)';
+				} else if (rmsL > 0.01 && rmsR < 0.003) {
+					phaseValText.textContent = 'L Only';
+					phaseMeterFill.style.width = '50%';
+					phaseMeterFill.style.background = '#38bdf8';
+				} else if (rmsR > 0.01 && rmsL < 0.003) {
+					phaseValText.textContent = 'R Only';
+					phaseMeterFill.style.width = '50%';
+					phaseMeterFill.style.background = '#f59e0b';
+				} else {
+					phaseValText.textContent = (correlation >= 0 ? '+' : '') + correlation.toFixed(2);
+					// Map [-1.0 .. +1.0] to [0% .. 100%]
+					const pct = Math.round(((correlation + 1) / 2) * 100);
+					phaseMeterFill.style.width = `${pct}%`;
+					if (correlation > 0.65) {
+						phaseMeterFill.style.background = '#22c55e'; // In-Phase (Green)
+					} else if (correlation < -0.65) {
+						phaseMeterFill.style.background = '#ef4444'; // Out-of-Phase (Red)
+					} else {
+						phaseMeterFill.style.background = '#f97316'; // Stereo Spread (Orange)
+					}
+				}
+			}
+
+			// Trigger detection: find rising zero-crossing to stabilize periodic waveforms
+			let triggerIdx = 0;
+			if (maxRms > 0.005) {
+				const triggerArray = rmsL >= rmsR ? timeL : timeR;
+				for (let i = 1; i < 256; i++) {
+					if (triggerArray[i - 1] <= 0 && triggerArray[i] > 0) {
+						triggerIdx = i;
+						break;
+					}
+				}
+			}
+
+			// Dynamic sample display window tailored to fundamental period
+			let displayLen = 512;
+			if (activeMode === 'tone' || activeMode === 'sweep') {
+				const hz = Math.max(20, Math.min(20000, currentToneHz));
+				if (audioCtx) {
+					const periodSamples = Math.round(audioCtx.sampleRate / hz);
+					displayLen = Math.min(bufLen - triggerIdx - 1, Math.max(64, periodSamples * 4));
+				}
+			}
+
+			const ampHeight = (h / 2) * 0.82;
+			const stepX = w / (displayLen - 1);
+
+			// Render Left Channel Waveform (Cyan #38bdf8)
+			heroCtx.save();
+			heroCtx.strokeStyle = '#38bdf8';
+			heroCtx.lineWidth = 2.0;
+			heroCtx.shadowColor = 'rgba(56, 189, 248, 0.5)';
+			heroCtx.shadowBlur = 4;
+			heroCtx.beginPath();
+			for (let i = 0; i < displayLen; i++) {
+				const sampleIdx = triggerIdx + i;
+				const sL = sampleIdx < bufLen ? timeL[sampleIdx] : 0;
+				const x = i * stepX;
+				const y = cy - sL * ampHeight;
+				if (i === 0) heroCtx.moveTo(x, y);
+				else heroCtx.lineTo(x, y);
+			}
+			heroCtx.stroke();
+			heroCtx.restore();
+
+			// Render Right Channel Waveform (Amber #f59e0b)
+			heroCtx.save();
+			heroCtx.strokeStyle = '#f59e0b';
+			heroCtx.lineWidth = 2.0;
+			heroCtx.shadowColor = 'rgba(245, 158, 11, 0.5)';
+			heroCtx.shadowBlur = 4;
+			heroCtx.beginPath();
+			for (let i = 0; i < displayLen; i++) {
+				const sampleIdx = triggerIdx + i;
+				const sR = sampleIdx < bufLen ? timeR[sampleIdx] : 0;
+				const x = i * stepX;
+				const y = cy - sR * ampHeight;
+				if (i === 0) heroCtx.moveTo(x, y);
+				else heroCtx.lineTo(x, y);
+			}
+			heroCtx.stroke();
+			heroCtx.restore();
+		}
+
+		// -------------------------------------------------------------
+		// VISUALIZER 2: 4096-POINT FFT SPECTRUM ANALYSER
+		// -------------------------------------------------------------
+		function renderSpectrumScope() {
+			if (!heroCtx || !heroCanvas) return;
+			const w = heroCanvas.width;
+			const h = heroCanvas.height;
+			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+			heroCtx.clearRect(0, 0, w, h);
+			heroCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
+			heroCtx.fillRect(0, 0, w, h);
+
+			const minFreq = 20;
+			const maxFreq = 20000;
+			const logMin = Math.log10(minFreq);
+			const logMax = Math.log10(maxFreq);
+			const logRange = logMax - logMin;
+
+			const freqToX = (hz: number) => {
+				const clamped = Math.max(minFreq, Math.min(maxFreq, hz));
+				return ((Math.log10(clamped) - logMin) / logRange) * w;
+			};
+
+			const bottomY = h - 20;
+
+			// Horizontal divider above bottom gutter
+			heroCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+			heroCtx.lineWidth = 1;
+			heroCtx.beginPath();
+			heroCtx.moveTo(0, bottomY);
+			heroCtx.lineTo(w, bottomY);
+			heroCtx.stroke();
+
+			// Landmark grid lines: 100 Hz, 1 kHz, 10 kHz
+			heroCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+			heroCtx.lineWidth = 1;
+			heroCtx.setLineDash([2, 4]);
+			[100, 1000, 10000].forEach((hz) => {
+				const x = freqToX(hz);
+				heroCtx.beginPath();
+				heroCtx.moveTo(x, 0);
+				heroCtx.lineTo(x, bottomY);
+				heroCtx.stroke();
+			});
+			heroCtx.setLineDash([]);
+
+			// Frequency labels matching Spectrogram (20 Hz, 100 Hz, 1 kHz, 10 kHz, 20 kHz)
+			const fontSize = Math.max(10, Math.round(11 * (w / 600)));
+			heroCtx.font = `${fontSize}px monospace`;
+			heroCtx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+
+			heroCtx.textAlign = 'left';
+			heroCtx.fillText('20 Hz', 6, h - 5);
+
+			heroCtx.textAlign = 'center';
+			heroCtx.fillText('100 Hz', freqToX(100), h - 5);
+			heroCtx.fillText('1 kHz', freqToX(1000), h - 5);
+
+			heroCtx.textAlign = 'right';
+			heroCtx.fillText('10 kHz', freqToX(10000) - 4, h - 5);
+			heroCtx.fillText('20 kHz', w - 6, h - 5);
+
+			// Horizontal dB guide lines
+			heroCtx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+			[0.25, 0.5, 0.75].forEach(ratio => {
+				const y = bottomY - ratio * (bottomY - 14);
+				heroCtx.beginPath();
+				heroCtx.moveTo(0, y);
+				heroCtx.lineTo(w, y);
+				heroCtx.stroke();
+			});
+
+			if (!fftAnalyser || !audioCtx) {
+				// Flat baseline
+				heroCtx.strokeStyle = 'rgba(249, 115, 22, 0.25)';
+				heroCtx.beginPath();
+				heroCtx.moveTo(0, bottomY);
+				heroCtx.lineTo(w, bottomY);
+				heroCtx.stroke();
 				return;
 			}
 
-			// Color coding by live phase correlation
-			const denom = Math.sqrt(sumSqL * sumSqR);
-			const correlation = denom > 0.0001 ? (dotProd / denom) : 0;
+			const binCount = fftAnalyser.frequencyBinCount;
+			const freqData = new Uint8Array(binCount);
+			fftAnalyser.getByteFrequencyData(freqData);
 
-			let strokeColor = '#38bdf8';
-			if (rmsL > 0.01 && rmsR < 0.003) {
-				strokeColor = '#38bdf8'; // Left only (cyan)
-			} else if (rmsR > 0.01 && rmsL < 0.003) {
-				strokeColor = '#f59e0b'; // Right only (amber)
-			} else if (correlation > 0.60) {
-				strokeColor = '#22c55e'; // In-phase (green)
-			} else if (correlation < -0.60) {
-				strokeColor = '#ef4444'; // Out-of-phase (red)
-			} else {
-				strokeColor = '#f97316'; // Stereo spread (orange)
+			const sampleRate = audioCtx.sampleRate;
+			const binWidth = (sampleRate / 2) / binCount;
+
+			const stepPx = Math.max(1, Math.round(w / 300));
+			const yPoints: number[] = [];
+
+			for (let x = 0; x <= w; x += stepPx) {
+				const normX0 = Math.max(0, (x - stepPx * 0.5) / w);
+				const normX1 = Math.min(1, (x + stepPx * 0.5) / w);
+				const hz0 = Math.pow(10, logMin + normX0 * logRange);
+				const hz1 = Math.pow(10, logMin + normX1 * logRange);
+				const binStart = Math.max(0, Math.floor(hz0 / binWidth));
+				const binEnd = Math.min(binCount - 1, Math.ceil(hz1 / binWidth));
+
+				let val = 0;
+				if (binEnd > binStart) {
+					for (let b = binStart; b <= binEnd; b++) {
+						if (freqData[b] > val) val = freqData[b];
+					}
+				} else {
+					const hz = Math.pow(10, logMin + (x / w) * logRange);
+					const binExact = Math.min(binCount - 1, Math.max(0, hz / binWidth));
+					const b0 = Math.floor(binExact);
+					const b1 = Math.min(binCount - 1, b0 + 1);
+					const frac = binExact - b0;
+					val = freqData[b0] * (1 - frac) + freqData[b1] * frac;
+				}
+
+				const norm = Math.min(1.0, Math.pow(val / 255, 0.78) * 1.25);
+				const y = bottomY - norm * (bottomY - 14);
+				yPoints.push(y);
 			}
 
-			lissajousCtx.save();
-			lissajousCtx.beginPath();
-			// Circular clip to guarantee the indicator NEVER draws outside the scope boundary
-			lissajousCtx.arc(cx, cy, radius * 0.94, 0, Math.PI * 2);
-			lissajousCtx.clip();
-
-			lissajousCtx.strokeStyle = strokeColor;
-			lissajousCtx.lineWidth = 2.0;
-			lissajousCtx.shadowColor = strokeColor;
-			lissajousCtx.shadowBlur = 4;
-			lissajousCtx.beginPath();
-
-			// M/S normalized deflection: keeps 0 dBFS sine generator tones safely within the circular reticle
-			const ampGain = radius * 0.58;
-			const maxRadius = radius * 0.90;
-
-			for (let i = 0; i < bufLen; i++) {
-				const l = timeL[i];
-				const r = timeR[i];
-				// Rotated vectorscope transform:
-				// Left audio deflects toward top-left (Left side of graph)
-				// Right audio deflects toward top-right (Right side of graph)
-				// Center audio deflects straight UP
-				// Out-of-phase audio deflects horizontally
-				const dx = (r - l) * invSqrt2 * ampGain;
-				const dy = -(l + r) * invSqrt2 * ampGain;
-				const dist = Math.sqrt(dx * dx + dy * dy);
-				const scale = dist > maxRadius ? (maxRadius / dist) : 1.0;
-				const x = cx + dx * scale;
-				const y = cy + dy * scale;
-				if (i === 0) lissajousCtx.moveTo(x, y);
-				else lissajousCtx.lineTo(x, y);
+			// Build filled polygon
+			heroCtx.beginPath();
+			heroCtx.moveTo(0, bottomY);
+			for (let i = 0, x = 0; x <= w; x += stepPx, i++) {
+				heroCtx.lineTo(x, yPoints[i]);
 			}
-			lissajousCtx.stroke();
-			lissajousCtx.restore();
+			heroCtx.lineTo(w, bottomY);
+			heroCtx.closePath();
+
+			const grad = heroCtx.createLinearGradient(0, 0, 0, bottomY);
+			grad.addColorStop(0, 'rgba(249, 115, 22, 0.55)');
+			grad.addColorStop(0.65, 'rgba(249, 115, 22, 0.2)');
+			grad.addColorStop(1, 'rgba(249, 115, 22, 0.02)');
+			heroCtx.fillStyle = grad;
+			heroCtx.fill();
+
+			// Curve stroke with orange glow
+			heroCtx.strokeStyle = '#f97316';
+			heroCtx.lineWidth = 2.0;
+			heroCtx.shadowColor = '#f97316';
+			heroCtx.shadowBlur = 6;
+			heroCtx.beginPath();
+			for (let i = 0, x = 0; x <= w; x += stepPx, i++) {
+				if (x === 0) heroCtx.moveTo(x, yPoints[i]);
+				else heroCtx.lineTo(x, yPoints[i]);
+			}
+			heroCtx.stroke();
+			heroCtx.shadowBlur = 0;
+
+			// Tuning target frequency marker
+			if (activeMode === 'tone' || activeMode === 'sweep') {
+				const targetX = freqToX(currentToneHz);
+				heroCtx.strokeStyle = 'rgba(249, 115, 22, 0.45)';
+				heroCtx.lineWidth = 1;
+				heroCtx.setLineDash([2, 2]);
+				heroCtx.beginPath();
+				heroCtx.moveTo(targetX, 0);
+				heroCtx.lineTo(targetX, bottomY);
+				heroCtx.stroke();
+				heroCtx.setLineDash([]);
+			}
 		}
 
-		// REAL-TIME 2D SPECTROGRAM WATERFALL (Time-Frequency Heatmap, Horizontal Frequency X-Axis)
+		// -------------------------------------------------------------
+		// VISUALIZER 3: 2D SPECTROGRAM WATERFALL (DOWNWARD HEATMAP)
+		// -------------------------------------------------------------
 		let specHistoryCanvas: HTMLCanvasElement | null = null;
 		let specHistoryCtx: CanvasRenderingContext2D | null = null;
 		let lastSpecTime = 0;
 
-		function renderSpectrogram() {
-			if (!lissajousCtx || !lissajousCanvas) return;
-			const w = lissajousCanvas.width;
-			const h = lissajousCanvas.height;
+		function renderSpectrogramScope() {
+			if (!heroCtx || !heroCanvas) return;
+			const w = heroCanvas.width;
+			const h = heroCanvas.height;
 			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-			const bottomY = h - 16;
+			const bottomY = h - 20;
 			const waterfallH = Math.max(1, bottomY);
 
 			if (!specHistoryCanvas || specHistoryCanvas.width !== w || specHistoryCanvas.height !== waterfallH) {
@@ -892,7 +1220,6 @@
 					const data = imgData.data;
 
 					for (let x = 0; x < w; x++) {
-						// Horizontal logarithmic frequency mapping matching Frequency Generator
 						const normX0 = Math.max(0, (x - 0.5) / Math.max(1, w - 1));
 						const normX1 = Math.min(1, (x + 0.5) / Math.max(1, w - 1));
 						const hz0 = Math.pow(10, logMin + normX0 * logRange);
@@ -914,7 +1241,6 @@
 							rawVal = freqData[b0] * (1 - frac) + freqData[b1] * frac;
 						}
 
-						// Dynamic gamma expansion for rich contrast and vibrant formants
 						const val = Math.min(255, Math.pow(rawVal / 255, 0.85) * 260);
 
 						let r = isDark ? 9 : 12;
@@ -923,7 +1249,6 @@
 						let a = 255;
 
 						if (val > 8) {
-							// Silky smooth continuous thermal heatmap ramp
 							if (val < 65) {
 								const t = val / 65;
 								r = Math.round(12 + t * 95);
@@ -931,19 +1256,19 @@
 								b = Math.round(25 + t * 50);
 							} else if (val < 145) {
 								const t = (val - 65) / 80;
-								r = Math.round(107 + t * 142); // -> 249
-								g = Math.round(37 + t * 78);   // -> 115
-								b = Math.round(75 - t * 53);   // -> 22
+								r = Math.round(107 + t * 142);
+								g = Math.round(37 + t * 78);
+								b = Math.round(75 - t * 53);
 							} else if (val < 215) {
 								const t = (val - 145) / 70;
-								r = Math.round(249 + t * 2);   // -> 251
-								g = Math.round(115 + t * 76);  // -> 191
-								b = Math.round(22 + t * 14);   // -> 36
+								r = Math.round(249 + t * 2);
+								g = Math.round(115 + t * 76);
+								b = Math.round(22 + t * 14);
 							} else {
 								const t = (val - 215) / 40;
-								r = Math.round(251 + t * 4);   // -> 255
-								g = Math.round(191 + t * 64);  // -> 255
-								b = Math.round(36 + t * 219);  // -> 255
+								r = Math.round(251 + t * 4);
+								g = Math.round(191 + t * 64);
+								b = Math.round(36 + t * 219);
 							}
 						}
 
@@ -960,12 +1285,12 @@
 			}
 
 			// Clear and fill canvas background
-			lissajousCtx.clearRect(0, 0, w, h);
-			lissajousCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
-			lissajousCtx.fillRect(0, 0, w, h);
+			heroCtx.clearRect(0, 0, w, h);
+			heroCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
+			heroCtx.fillRect(0, 0, w, h);
 
 			// Blit waterfall history
-			lissajousCtx.drawImage(specHistoryCanvas, 0, 0);
+			heroCtx.drawImage(specHistoryCanvas, 0, 0);
 
 			const minFreq = 20;
 			const maxFreq = 20000;
@@ -978,249 +1303,90 @@
 			};
 
 			// Horizontal divider above bottom gutter
-			lissajousCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-			lissajousCtx.lineWidth = 1;
-			lissajousCtx.beginPath();
-			lissajousCtx.moveTo(0, bottomY);
-			lissajousCtx.lineTo(w, bottomY);
-			lissajousCtx.stroke();
+			heroCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+			heroCtx.lineWidth = 1;
+			heroCtx.beginPath();
+			heroCtx.moveTo(0, bottomY);
+			heroCtx.lineTo(w, bottomY);
+			heroCtx.stroke();
 
 			// Vertical grid lines (100 Hz, 1 kHz, 10 kHz)
-			lissajousCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-			lissajousCtx.lineWidth = 1;
-			lissajousCtx.setLineDash([2, 4]);
+			heroCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+			heroCtx.lineWidth = 1;
+			heroCtx.setLineDash([2, 4]);
 			[100, 1000, 10000].forEach((hz) => {
 				const x = freqToX(hz);
-				lissajousCtx.beginPath();
-				lissajousCtx.moveTo(x, 0);
-				lissajousCtx.lineTo(x, bottomY);
-				lissajousCtx.stroke();
+				heroCtx.beginPath();
+				heroCtx.moveTo(x, 0);
+				heroCtx.lineTo(x, bottomY);
+				heroCtx.stroke();
 			});
-			lissajousCtx.setLineDash([]);
+			heroCtx.setLineDash([]);
 
 			// Frequency labels matching Frequency Generator (20 Hz, 100 Hz, 1 kHz, 10 kHz, 20 kHz)
-			const fontSize = Math.max(9, Math.round(10 * (w / 400)));
-			lissajousCtx.font = `${fontSize}px monospace`;
-			lissajousCtx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+			const fontSize = Math.max(10, Math.round(11 * (w / 600)));
+			heroCtx.font = `${fontSize}px monospace`;
+			heroCtx.fillStyle = 'rgba(255, 255, 255, 0.35)';
 
-			lissajousCtx.textAlign = 'left';
-			lissajousCtx.fillText('20 Hz', 4, h - 4);
+			heroCtx.textAlign = 'left';
+			heroCtx.fillText('20 Hz', 6, h - 5);
 
-			lissajousCtx.textAlign = 'center';
-			lissajousCtx.fillText('100 Hz', freqToX(100), h - 4);
-			lissajousCtx.fillText('1 kHz', freqToX(1000), h - 4);
+			heroCtx.textAlign = 'center';
+			heroCtx.fillText('100 Hz', freqToX(100), h - 5);
+			heroCtx.fillText('1 kHz', freqToX(1000), h - 5);
 
-			lissajousCtx.textAlign = 'right';
-			lissajousCtx.fillText('10 kHz', freqToX(10000) - 3, h - 4);
-			lissajousCtx.fillText('20 kHz', w - 4, h - 4);
+			heroCtx.textAlign = 'right';
+			heroCtx.fillText('10 kHz', freqToX(10000) - 4, h - 5);
+			heroCtx.fillText('20 kHz', w - 6, h - 5);
 
-			// Tuning target cursor (matching Frequency Generator)
+			// Tuning target cursor
 			if (activeMode === 'tone' || activeMode === 'sweep') {
-				const currentHz = parseInt(freqNumEl?.textContent?.replace(/,/g, '') || '1000', 10);
-				const targetX = freqToX(currentHz);
-				lissajousCtx.strokeStyle = 'rgba(249, 115, 22, 0.4)';
-				lissajousCtx.lineWidth = 1;
-				lissajousCtx.setLineDash([2, 2]);
-				lissajousCtx.beginPath();
-				lissajousCtx.moveTo(targetX, 0);
-				lissajousCtx.lineTo(targetX, bottomY);
-				lissajousCtx.stroke();
-				lissajousCtx.setLineDash([]);
+				const targetX = freqToX(currentToneHz);
+				heroCtx.strokeStyle = 'rgba(249, 115, 22, 0.45)';
+				heroCtx.lineWidth = 1;
+				heroCtx.setLineDash([2, 2]);
+				heroCtx.beginPath();
+				heroCtx.moveTo(targetX, 0);
+				heroCtx.lineTo(targetX, bottomY);
+				heroCtx.stroke();
+				heroCtx.setLineDash([]);
 			}
 		}
 
-		// REAL-TIME FREQUENCY RESPONSE SPECTRUM ANALYSER
-		function renderSpectrumScope() {
-			if (!spectrumCtx || !spectrumCanvas) return;
-			const w = spectrumCanvas.width;
-			const h = spectrumCanvas.height;
-			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-
-			spectrumCtx.clearRect(0, 0, w, h);
-			spectrumCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
-			spectrumCtx.fillRect(0, 0, w, h);
-
-			const minFreq = 20;
-			const maxFreq = 20000;
-			const logMin = Math.log10(minFreq); // 1.3010
-			const logMax = Math.log10(maxFreq); // 4.3010
-			const logRange = logMax - logMin;   // 3.0
-
-			const freqToX = (hz: number) => {
-				const clamped = Math.max(minFreq, Math.min(maxFreq, hz));
-				return ((Math.log10(clamped) - logMin) / logRange) * w;
-			};
-
-			const bottomY = h - 16;
-
-			// Horizontal divider above bottom gutter
-			spectrumCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-			spectrumCtx.lineWidth = 1;
-			spectrumCtx.beginPath();
-			spectrumCtx.moveTo(0, bottomY);
-			spectrumCtx.lineTo(w, bottomY);
-			spectrumCtx.stroke();
-
-			// Landmark grid lines: 100 Hz, 1 kHz, 10 kHz
-			spectrumCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-			spectrumCtx.lineWidth = 1;
-			spectrumCtx.setLineDash([2, 4]);
-			[100, 1000, 10000].forEach((hz) => {
-				const x = freqToX(hz);
-				spectrumCtx.beginPath();
-				spectrumCtx.moveTo(x, 0);
-				spectrumCtx.lineTo(x, bottomY);
-				spectrumCtx.stroke();
-			});
-			spectrumCtx.setLineDash([]);
-
-			// Frequency labels matching Spectrogram (20 Hz, 100 Hz, 1 kHz, 10 kHz, 20 kHz)
-			const fontSize = Math.max(9, Math.round(10 * (w / 400)));
-			spectrumCtx.font = `${fontSize}px monospace`;
-			spectrumCtx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-
-			spectrumCtx.textAlign = 'left';
-			spectrumCtx.fillText('20 Hz', 4, h - 4);
-
-			spectrumCtx.textAlign = 'center';
-			spectrumCtx.fillText('100 Hz', freqToX(100), h - 4);
-			spectrumCtx.fillText('1 kHz', freqToX(1000), h - 4);
-
-			spectrumCtx.textAlign = 'right';
-			spectrumCtx.fillText('10 kHz', freqToX(10000) - 3, h - 4);
-			spectrumCtx.fillText('20 kHz', w - 4, h - 4);
-
-			// Horizontal dB guide lines
-			spectrumCtx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
-			[0.25, 0.5, 0.75].forEach(ratio => {
-				const y = bottomY - ratio * (bottomY - 14);
-				spectrumCtx.beginPath();
-				spectrumCtx.moveTo(0, y);
-				spectrumCtx.lineTo(w, y);
-				spectrumCtx.stroke();
-			});
-
-			if (!fftAnalyser || !audioCtx) {
-				// Flat baseline
-				spectrumCtx.strokeStyle = 'rgba(249, 115, 22, 0.25)';
-				spectrumCtx.beginPath();
-				spectrumCtx.moveTo(0, bottomY);
-				spectrumCtx.lineTo(w, bottomY);
-				spectrumCtx.stroke();
-				return;
-			}
-
-			const binCount = fftAnalyser.frequencyBinCount;
-			const freqData = new Uint8Array(binCount);
-			fftAnalyser.getByteFrequencyData(freqData);
-
-			const sampleRate = audioCtx.sampleRate;
-			const binWidth = (sampleRate / 2) / binCount;
-
-			const stepPx = Math.max(1, Math.round(w / 200));
-			const yPoints: number[] = [];
-
-			for (let x = 0; x <= w; x += stepPx) {
-				const normX0 = Math.max(0, (x - stepPx * 0.5) / w);
-				const normX1 = Math.min(1, (x + stepPx * 0.5) / w);
-				const hz0 = Math.pow(10, logMin + normX0 * logRange);
-				const hz1 = Math.pow(10, logMin + normX1 * logRange);
-				const binStart = Math.max(0, Math.floor(hz0 / binWidth));
-				const binEnd = Math.min(binCount - 1, Math.ceil(hz1 / binWidth));
-
-				let val = 0;
-				if (binEnd > binStart) {
-					for (let b = binStart; b <= binEnd; b++) {
-						if (freqData[b] > val) val = freqData[b];
-					}
-				} else {
-					const hz = Math.pow(10, logMin + (x / w) * logRange);
-					const binExact = Math.min(binCount - 1, Math.max(0, hz / binWidth));
-					const b0 = Math.floor(binExact);
-					const b1 = Math.min(binCount - 1, b0 + 1);
-					const frac = binExact - b0;
-					val = freqData[b0] * (1 - frac) + freqData[b1] * frac;
-				}
-
-				// Boosted prominent curve scaling so bars and curves show clearly
-				const norm = Math.min(1.0, Math.pow(val / 255, 0.78) * 1.25);
-				const y = bottomY - norm * (bottomY - 12);
-				yPoints.push(y);
-			}
-
-			// Build filled polygon
-			spectrumCtx.beginPath();
-			spectrumCtx.moveTo(0, bottomY);
-			for (let i = 0, x = 0; x <= w; x += stepPx, i++) {
-				spectrumCtx.lineTo(x, yPoints[i]);
-			}
-			spectrumCtx.lineTo(w, bottomY);
-			spectrumCtx.closePath();
-
-			const grad = spectrumCtx.createLinearGradient(0, 0, 0, bottomY);
-			grad.addColorStop(0, 'rgba(249, 115, 22, 0.55)');
-			grad.addColorStop(0.65, 'rgba(249, 115, 22, 0.2)');
-			grad.addColorStop(1, 'rgba(249, 115, 22, 0.02)');
-			spectrumCtx.fillStyle = grad;
-			spectrumCtx.fill();
-
-			// Curve stroke with orange glow
-			spectrumCtx.strokeStyle = '#f97316';
-			spectrumCtx.lineWidth = 2.0;
-			spectrumCtx.shadowColor = '#f97316';
-			spectrumCtx.shadowBlur = 6;
-			spectrumCtx.beginPath();
-			for (let i = 0, x = 0; x <= w; x += stepPx, i++) {
-				if (x === 0) spectrumCtx.moveTo(x, yPoints[i]);
-				else spectrumCtx.lineTo(x, yPoints[i]);
-			}
-			spectrumCtx.stroke();
-			spectrumCtx.shadowBlur = 0;
-
-			// Tuning target frequency marker
-			const currentHz = parseInt(freqNumEl?.textContent?.replace(/,/g, '') || '1000', 10);
-			const targetX = freqToX(currentHz);
-			spectrumCtx.strokeStyle = 'rgba(249, 115, 22, 0.4)';
-			spectrumCtx.lineWidth = 1;
-			spectrumCtx.setLineDash([2, 2]);
-			spectrumCtx.beginPath();
-			spectrumCtx.moveTo(targetX, 0);
-			spectrumCtx.lineTo(targetX, bottomY);
-			spectrumCtx.stroke();
-			spectrumCtx.setLineDash([]);
-		}
-
+		// Main visualizer animation loop
 		let isAudioVisible = false;
 		let rafVisualizerId: number | null = null;
 
-		function renderVisualizers() {
+		function renderActiveVisualizer() {
 			if (!isAudioVisible) {
 				rafVisualizerId = null;
 				return;
 			}
-			if (activeStereoMode === 'scope') {
-				renderLissajousScope();
+			if (activeHeroMode === 'waveform') {
+				renderWaveformScope();
+			} else if (activeHeroMode === 'spectrum') {
+				renderSpectrumScope();
 			} else {
-				renderSpectrogram();
+				renderSpectrogramScope();
 			}
-			renderSpectrumScope();
-			rafVisualizerId = requestAnimationFrame(renderVisualizers);
+			rafVisualizerId = requestAnimationFrame(renderActiveVisualizer);
 		}
 
+		// 0% CPU consumption when off-screen
 		const cardEl = document.getElementById('audio-lab');
 		if (cardEl) {
 			const obs = new IntersectionObserver((entries) => {
 				entries.forEach((e) => {
 					isAudioVisible = e.isIntersecting;
 					if (isAudioVisible && !rafVisualizerId) {
-						rafVisualizerId = requestAnimationFrame(renderVisualizers);
+						rafVisualizerId = requestAnimationFrame(renderActiveVisualizer);
 					}
 				});
 			}, { threshold: 0.05 });
 			obs.observe(cardEl);
 		} else {
 			isAudioVisible = true;
-			rafVisualizerId = requestAnimationFrame(renderVisualizers);
+			rafVisualizerId = requestAnimationFrame(renderActiveVisualizer);
 		}
 	}
 
@@ -1315,17 +1481,18 @@
 		margin: 0 0 1.25em 0;
 	}
 
-	/* WORKBENCH GRID */
+	/* TWO-COLUMN WORKBENCH GRID */
 	.audio-workbench-grid {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 1.2em;
+		grid-template-columns: 1.08fr 0.92fr;
+		gap: 1.25em;
 		align-items: stretch;
 	}
 
-	@media (max-width: 780px) {
+	@media (max-width: 860px) {
 		.audio-workbench-grid {
 			grid-template-columns: 1fr;
+			gap: 1.1em;
 		}
 	}
 
@@ -1348,7 +1515,9 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-bottom: 0.9em;
+		margin-bottom: 0.8em;
+		flex-wrap: wrap;
+		gap: 0.5em;
 	}
 
 	.col-head-left {
@@ -1367,20 +1536,7 @@
 		color: rgb(var(--black));
 	}
 
-	.badge {
-		font-size: 0.72em;
-		font-weight: 700;
-		padding: 0.25em 0.6em;
-		border-radius: 6px;
-		background: rgba(148, 163, 184, 0.15);
-		color: rgb(var(--gray-dark));
-	}
-
-	:global(html[data-theme="dark"]) .badge {
-		background: rgba(255, 255, 255, 0.08);
-	}
-
-	/* SEGMENTED CONTROLS (PARITY WITH STORAGE TEST SELECTOR) */
+	/* SEGMENTED CONTROL */
 	.segmented-control {
 		display: inline-flex;
 		align-items: center;
@@ -1403,7 +1559,7 @@
 		font-family: inherit;
 		font-size: 0.78em;
 		font-weight: 700;
-		padding: 0 8px;
+		padding: 0 9px;
 		height: 25px;
 		border-radius: 6px;
 		cursor: pointer;
@@ -1432,115 +1588,286 @@
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 	}
 
-	/* VISUALIZER BOXES (MATCHING SYMMETRY) */
-	.lissajous-box,
-	.spectrum-box {
+	/* HERO CANVAS BOX */
+	.hero-canvas-box {
 		position: relative;
 		width: 100%;
-		height: 150px;
+		height: 320px;
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
 		overflow: hidden;
 		background: #09090b;
-		margin-bottom: 1em;
+		margin-bottom: 0.75em;
 		box-sizing: border-box;
 	}
 
-	#lissajous-canvas,
-	#spectrum-canvas {
+	@media (max-width: 860px) {
+		.hero-canvas-box {
+			height: 220px;
+		}
+	}
+
+	#audio-hero-canvas {
 		display: block;
 		width: 100%;
-		height: 150px;
+		height: 100%;
 	}
 
-	.lissajous-overlay {
+	/* FLOATING HUD BADGE */
+	.hero-hud-overlay {
 		position: absolute;
-		bottom: 6px;
-		left: 10px;
-		right: 10px;
-		display: flex;
-		justify-content: center;
-		pointer-events: none;
-	}
-
-	.lissajous-box.spectrogram-mode .lissajous-overlay {
-		top: 6px;
-		bottom: auto;
-		left: 8px;
-		right: 8px;
-		justify-content: flex-start;
-	}
-
-	.spectrum-overlay {
-		position: absolute;
-		top: 6px;
-		bottom: auto;
+		top: 8px;
 		left: 8px;
 		right: 8px;
 		display: flex;
 		justify-content: flex-start;
 		pointer-events: none;
+		z-index: 2;
 	}
 
-	.lissajous-label,
-	.spectrum-hud-badge {
+	.hud-badge-wrap {
 		font-size: 0.74em;
 		font-weight: 600;
-		color: rgba(255, 255, 255, 0.9);
-		background: rgba(0, 0, 0, 0.65);
-		backdrop-filter: blur(4px);
-		border: 1px solid rgba(255, 255, 255, 0.08);
-		padding: 3px 8px;
-		border-radius: 5px;
+		color: rgba(255, 255, 255, 0.92);
+		background: rgba(0, 0, 0, 0.7);
+		backdrop-filter: blur(6px);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		padding: 4px 9px;
+		border-radius: 6px;
 		display: inline-flex;
 		align-items: baseline;
-		gap: 0.4em;
+		gap: 0.45em;
+		max-width: calc(100% - 16px);
 	}
 
-	.spectrum-hud-badge .freq-num {
+	.hud-main-text {
 		font-size: 1.15em;
 		font-weight: 800;
 		color: #ffffff;
 		line-height: 1;
 	}
 
-	.spectrum-hud-badge .freq-unit {
-		font-size: 0.85em;
-		font-weight: 700;
-		color: var(--accent);
-	}
-
-	.spectrum-hud-badge .hud-sep {
+	.hud-sep {
 		color: rgba(255, 255, 255, 0.35);
-		font-size: 0.8em;
+		font-size: 0.85em;
 	}
 
-	.spectrum-hud-badge .freq-band-tag {
+	.hud-sub-text {
 		font-size: 0.9em;
-		color: rgba(255, 255, 255, 0.8);
-		font-weight: 600;
+		color: var(--accent);
+		font-weight: 700;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
-	/* TONE BUTTONS */
+	/* WAVEFORM HUD BAR (PHASE METER + TRACE LEGEND) */
+	.waveform-hud-bar {
+		position: absolute;
+		bottom: 8px;
+		left: 8px;
+		right: 8px;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.8em;
+		background: rgba(0, 0, 0, 0.65);
+		backdrop-filter: blur(6px);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		border-radius: 6px;
+		padding: 4px 10px;
+		pointer-events: none;
+		z-index: 2;
+	}
+
+	.trace-legend {
+		display: flex;
+		align-items: center;
+		gap: 0.5em;
+	}
+
+	.legend-dot {
+		display: inline-block;
+		width: 7px;
+		height: 7px;
+		border-radius: 50%;
+	}
+
+	.legend-dot.cyan {
+		background: #38bdf8;
+		box-shadow: 0 0 6px #38bdf8;
+	}
+
+	.legend-dot.amber {
+		background: #f59e0b;
+		box-shadow: 0 0 6px #f59e0b;
+		margin-left: 0.3em;
+	}
+
+	.legend-label {
+		font-size: 0.72em;
+		font-weight: 700;
+		color: rgba(255, 255, 255, 0.85);
+	}
+
+	.phase-meter-wrap {
+		display: flex;
+		align-items: center;
+		gap: 0.45em;
+		flex-shrink: 0;
+	}
+
+	.phase-meter-tag {
+		font-size: 0.68em;
+		font-weight: 700;
+		color: rgba(255, 255, 255, 0.4);
+	}
+
+	.phase-meter-track {
+		position: relative;
+		width: clamp(60px, 12vw, 100px);
+		height: 6px;
+		background: rgba(255, 255, 255, 0.1);
+		border-radius: 3px;
+		overflow: hidden;
+	}
+
+	.phase-meter-center {
+		position: absolute;
+		left: 50%;
+		top: 0;
+		bottom: 0;
+		width: 1.5px;
+		background: rgba(255, 255, 255, 0.4);
+		transform: translateX(-50%);
+		z-index: 2;
+	}
+
+	.phase-meter-fill {
+		height: 100%;
+		width: 100%;
+		background: #22c55e;
+		border-radius: 3px;
+		transition: width 0.08s ease, background 0.15s ease;
+	}
+
+	.phase-val {
+		font-size: 0.72em;
+		font-weight: 800;
+		color: #ffffff;
+		min-width: 40px;
+		text-align: right;
+	}
+
+	/* VISUALIZER FOOTER BAR */
+	.visualizer-footer-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.6em;
+		flex-wrap: wrap;
+		margin-top: auto;
+	}
+
+	.telemetry-pill {
+		display: flex;
+		align-items: center;
+		gap: 0.35em;
+		background: rgba(148, 163, 184, 0.08);
+		border: 1px solid var(--border-color);
+		border-radius: 6px;
+		padding: 3px 7px;
+		font-size: 0.72em;
+	}
+
+	:global(html[data-theme="dark"]) .telemetry-pill {
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.telemetry-label {
+		font-weight: 700;
+		color: rgb(var(--gray));
+	}
+
+	.telemetry-value {
+		font-weight: 600;
+		color: rgb(var(--gray-dark));
+	}
+
+	/* CONTROLS COLUMN */
+	.controls-col {
+		gap: 0.9em;
+		padding: 1.1em;
+	}
+
+	.control-group {
+		background: rgba(148, 163, 184, 0.06);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		padding: 0.85em;
+		display: flex;
+		flex-direction: column;
+		gap: 0.7em;
+	}
+
+	:global(html[data-theme="dark"]) .control-group {
+		background: rgba(255, 255, 255, 0.02);
+	}
+
+	.group-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5em;
+		flex-wrap: wrap;
+	}
+
+	.group-header-left {
+		display: flex;
+		align-items: center;
+		gap: 0.45em;
+	}
+
+	.group-icon {
+		color: var(--accent);
+		flex-shrink: 0;
+	}
+
+	.group-title {
+		font-size: 0.82em;
+		font-weight: 700;
+		color: rgb(var(--black));
+	}
+
+	.group-badge {
+		font-size: 0.7em;
+		font-weight: 700;
+		padding: 0.2em 0.5em;
+		border-radius: 4px;
+		background: rgba(148, 163, 184, 0.15);
+		color: rgb(var(--gray-dark));
+	}
+
+	:global(html[data-theme="dark"]) .group-badge {
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	/* TONE BUTTONS (POLARITY) */
 	.tone-buttons-grid {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 0.6em;
-		margin-top: auto;
-		margin-bottom: 0;
+		gap: 0.5em;
 	}
 
 	.tone-btn {
 		display: flex;
-		flex-direction: row;
 		align-items: center;
-		justify-content: flex-start;
-		gap: 0.65em;
+		gap: 0.6em;
 		background: var(--bg-card);
 		border: 1px solid var(--border-color);
-		border-radius: 8px;
-		padding: 0.8em 0.9em;
-		min-height: 52px;
+		border-radius: 7px;
+		padding: 0.65em 0.75em;
+		min-height: 44px;
 		font-family: inherit;
 		cursor: pointer;
 		text-align: left;
@@ -1563,12 +1890,12 @@
 	}
 
 	.tone-pill {
-		font-size: 0.88em;
+		font-size: 0.82em;
 		font-weight: 800;
 		background: rgba(148, 163, 184, 0.2);
 		color: rgb(var(--black));
-		padding: 3px 8px;
-		border-radius: 5px;
+		padding: 2px 7px;
+		border-radius: 4px;
 		flex-shrink: 0;
 		line-height: 1.2;
 	}
@@ -1579,117 +1906,16 @@
 	}
 
 	.tone-name {
-		font-size: 0.98em;
+		font-size: 0.88em;
 		font-weight: 700;
 		color: rgb(var(--black));
 		line-height: 1.2;
 	}
 
-	/* FREQUENCY GENERATOR */
-	.segmented-control {
-		display: inline-flex;
-		align-items: center;
-		background: rgba(148, 163, 184, 0.12);
-		border-radius: 6px;
-		padding: 2px;
-	}
-
-	:global(html[data-theme="dark"]) .segmented-control {
-		background: rgba(255, 255, 255, 0.06);
-	}
-
-	.seg-btn {
-		background: transparent;
-		border: none;
-		padding: 0.25em 0.6em;
-		font-family: inherit;
-		font-size: 0.75em;
-		font-weight: 600;
-		color: rgb(var(--gray));
-		border-radius: 4px;
-		cursor: pointer;
-		transition: all 0.15s ease;
-	}
-
-	.seg-btn.active {
-		background: var(--bg-card);
-		color: var(--accent);
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-	}
-
-	:global(html[data-theme="dark"]) .seg-btn.active {
-		background: #27272a;
-	}
-
-	.slider-row {
-		margin-bottom: 0.7em;
-	}
-
-	.freq-slider {
-		width: 100%;
-		accent-color: var(--accent);
-		cursor: pointer;
-	}
-
-	.freq-presets-grid {
-		display: grid;
-		grid-template-columns: repeat(6, 1fr);
-		gap: 0.35em;
-		margin-bottom: 0.9em;
-	}
-
-	.freq-pill {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		background: rgba(148, 163, 184, 0.08);
-		border: 1px solid var(--border-color);
-		border-radius: 6px;
-		padding: 0.45em 0.25em;
-		cursor: pointer;
-		transition: all 0.15s ease;
-	}
-
-	.freq-pill .pill-hz {
-		font-size: 0.84em;
-		font-weight: 700;
-		color: rgb(var(--gray-dark));
-		line-height: 1.15;
-	}
-
-	.freq-pill .pill-tag {
-		font-size: 0.72em;
-		font-weight: 600;
-		color: rgb(var(--gray));
-		margin-top: 0.15em;
-	}
-
-	.freq-pill:hover {
-		border-color: var(--accent);
-		background: rgba(var(--accent-rgb), 0.08);
-	}
-
-	.freq-pill:hover .pill-hz,
-	.freq-pill:hover .pill-tag {
-		color: var(--accent);
-	}
-
-	.freq-pill.active {
-		background: var(--accent);
-		border-color: var(--accent);
-	}
-
-	.freq-pill.active .pill-hz,
-	.freq-pill.active .pill-tag {
-		color: #ffffff;
-	}
-
+	/* SWEEP ACTIONS */
 	.sweep-actions-row {
 		display: flex;
-		gap: 0.6em;
-		margin-top: auto;
-		margin-bottom: 0;
+		gap: 0.5em;
 	}
 
 	.sweep-btn {
@@ -1697,15 +1923,15 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.5em;
+		gap: 0.45em;
 		background: var(--bg-card);
 		border: 1px solid var(--border-color);
-		border-radius: 8px;
-		padding: 0.6em 0.8em;
-		min-height: 42px;
+		border-radius: 7px;
+		padding: 0.55em 0.75em;
+		min-height: 38px;
 		white-space: nowrap;
 		font-family: inherit;
-		font-size: 0.82em;
+		font-size: 0.8em;
 		font-weight: 700;
 		color: rgb(var(--black));
 		cursor: pointer;
@@ -1728,11 +1954,181 @@
 		border-color: var(--accent);
 	}
 
+	/* SLIDER ROW */
+	.slider-row {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35em;
+	}
+
+	.slider-header-info {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+	}
+
+	.slider-hint {
+		font-size: 0.74em;
+		font-weight: 600;
+		color: rgb(var(--gray));
+	}
+
+	.slider-hz-val {
+		font-size: 0.85em;
+		font-weight: 800;
+		color: var(--accent);
+	}
+
+	.freq-slider {
+		width: 100%;
+		accent-color: var(--accent);
+		cursor: pointer;
+	}
+
+	/* PRESET PILLS */
+	.freq-presets-grid {
+		display: grid;
+		grid-template-columns: repeat(6, 1fr);
+		gap: 0.35em;
+	}
+
+	.freq-pill {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		background: rgba(148, 163, 184, 0.08);
+		border: 1px solid var(--border-color);
+		border-radius: 5px;
+		padding: 0.4em 0.2em;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.freq-pill .pill-hz {
+		font-size: 0.8em;
+		font-weight: 700;
+		color: rgb(var(--gray-dark));
+		line-height: 1.15;
+	}
+
+	.freq-pill .pill-tag {
+		font-size: 0.68em;
+		font-weight: 600;
+		color: rgb(var(--gray));
+		margin-top: 0.1em;
+	}
+
+	.freq-pill:hover {
+		border-color: var(--accent);
+		background: rgba(var(--accent-rgb), 0.08);
+	}
+
+	.freq-pill:hover .pill-hz,
+	.freq-pill:hover .pill-tag {
+		color: var(--accent);
+	}
+
+	.freq-pill.active {
+		background: var(--accent);
+		border-color: var(--accent);
+	}
+
+	.freq-pill.active .pill-hz,
+	.freq-pill.active .pill-tag {
+		color: #ffffff;
+	}
+
+	/* NOISE GENERATOR */
+	.noise-group {
+		margin-top: auto;
+	}
+
+	.noise-segmented-control {
+		display: inline-flex;
+		align-items: center;
+		background: rgba(148, 163, 184, 0.12);
+		border-radius: 6px;
+		padding: 2px;
+		border: 1px solid var(--border-color);
+		height: 27px;
+		box-sizing: border-box;
+	}
+
+	:global(html[data-theme="dark"]) .noise-segmented-control {
+		background: rgba(255, 255, 255, 0.05);
+	}
+
+	.noise-seg-btn {
+		background: transparent;
+		border: none;
+		color: rgb(var(--gray));
+		font-family: inherit;
+		font-size: 0.74em;
+		font-weight: 700;
+		padding: 0 7px;
+		height: 21px;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		line-height: 1;
+		white-space: nowrap;
+	}
+
+	.noise-seg-btn:hover:not(.active) {
+		color: rgb(var(--black));
+	}
+
+	:global(html[data-theme="dark"]) .noise-seg-btn:hover:not(.active) {
+		color: #ffffff;
+	}
+
+	.noise-seg-btn.active {
+		background: var(--accent);
+		color: #ffffff;
+	}
+
+	.noise-action-row {
+		display: flex;
+		gap: 0.6em;
+		align-items: center;
+	}
+
+	.noise-btn {
+		flex: 0 0 120px;
+	}
+
+	.noise-desc-pill {
+		flex: 1;
+		background: rgba(148, 163, 184, 0.08);
+		border: 1px solid var(--border-color);
+		border-radius: 6px;
+		padding: 0.45em 0.65em;
+		font-size: 0.72em;
+		line-height: 1.35;
+		color: rgb(var(--gray-dark));
+	}
+
+	:global(html[data-theme="dark"]) .noise-desc-pill {
+		background: rgba(255, 255, 255, 0.03);
+	}
+
 	.mono {
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 	}
 
-	@media (max-width: 340px) {
+	@media (max-width: 480px) {
+		.noise-action-row {
+			flex-direction: column;
+			align-items: stretch;
+		}
+		.noise-btn {
+			width: 100%;
+			flex: auto;
+		}
+	}
+
+	@media (max-width: 360px) {
 		.card-header-wrap {
 			flex-wrap: wrap;
 		}
@@ -1747,6 +2143,9 @@
 			flex: 1;
 			width: auto;
 			max-width: none;
+		}
+		.tone-buttons-grid {
+			grid-template-columns: 1fr;
 		}
 	}
 </style>

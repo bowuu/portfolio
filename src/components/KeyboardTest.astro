@@ -812,6 +812,13 @@
 		border-bottom: 1.5px solid var(--border-color);
 	}
 
+	.header-actions {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.65em;
+	}
+
 	.telemetry-btn {
 		display: inline-flex;
 		align-items: center;
@@ -831,6 +838,21 @@
 		line-height: 1;
 		white-space: nowrap;
 		box-sizing: border-box;
+	}
+
+	.telemetry-btn svg {
+		flex-shrink: 0;
+	}
+
+	#kb-sound-btn {
+		width: 8.65em;
+		justify-content: center;
+	}
+
+	#kb-sound-label {
+		display: inline-block;
+		text-align: left;
+		width: 5.4em;
 	}
 
 	:global(html[data-theme="dark"]) .telemetry-btn {

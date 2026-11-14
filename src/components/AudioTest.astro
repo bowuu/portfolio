@@ -25,7 +25,7 @@
 	</div>
 
 	<p class="benchmark-desc">
-		Test DAC hardware latency, channel separation, 180&deg; wiring phase, 20 Hz&ndash;20 kHz frequency response, and acoustic noise calibration.
+		Inspect stereo channel separation, 180&deg; wiring phase, broadband noise, and 20 Hz&ndash;20 kHz frequency response.
 	</p>
 
 	<!-- TWO-COLUMN WORKBENCH (HERO VISUALIZER ON LEFT, CONTROLS ON RIGHT) -->
@@ -79,7 +79,7 @@
 
 				<!-- DEDICATED HORIZONTAL STEREO PEAK / VU METER (FULL HORIZONTAL WIDTH) -->
 				<div class="stereo-meter-box" id="stereo-meter-box" title="Stereo Peak / VU Meter (Left & Right Channels in dBFS)">
-					<canvas id="audio-meter-canvas" width="600" height="52"></canvas>
+					<canvas id="audio-meter-canvas" width="600" height="58"></canvas>
 				</div>
 			</div>
 		</div>
@@ -100,17 +100,17 @@
 
 				<div class="tone-buttons-grid">
 					<button class="tone-btn" id="btn-tone-left" type="button">
-						<span class="tone-pill">L</span>
+						<span class="tone-pill cyan">L</span>
 						<span class="tone-name">Left Channel</span>
 					</button>
 
 					<button class="tone-btn" id="btn-tone-right" type="button">
-						<span class="tone-pill">R</span>
+						<span class="tone-pill amber">R</span>
 						<span class="tone-name">Right Channel</span>
 					</button>
 
 					<button class="tone-btn" id="btn-tone-inphase" type="button">
-						<span class="tone-pill">0&deg;</span>
+						<span class="tone-pill green">0&deg;</span>
 						<span class="tone-name">Center Channel</span>
 					</button>
 
@@ -118,16 +118,15 @@
 						<span class="tone-pill warn">180&deg;</span>
 						<span class="tone-name">Out-of-Phase</span>
 					</button>
-				</div>
 
-				<div class="noise-presets-grid">
-					<button class="noise-pill" id="btn-noise-pink" data-noise="pink" type="button">
-						<span class="pill-hz">Pink Noise</span>
-						<span class="pill-tag">1/f Equal Energy</span>
+					<button class="tone-btn" id="btn-noise-pink" data-noise="pink" type="button">
+						<span class="tone-pill pink">P</span>
+						<span class="tone-name">Pink Noise</span>
 					</button>
-					<button class="noise-pill" id="btn-noise-white" data-noise="white" type="button">
-						<span class="pill-hz">White Noise</span>
-						<span class="pill-tag">Flat PSD (20 Hz–20 kHz)</span>
+
+					<button class="tone-btn" id="btn-noise-white" data-noise="white" type="button">
+						<span class="tone-pill white">W</span>
+						<span class="tone-name">White Noise</span>
 					</button>
 				</div>
 			</div>
@@ -147,12 +146,14 @@
 				<div class="tone-controls-section">
 					<!-- SWEEP ACTIONS -->
 					<div class="sweep-actions-row">
-						<button id="run-sweep-btn" class="sweep-btn sweep-auto-btn" type="button">
-							<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-								<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-								<polyline points="17 6 23 6 23 12"/>
-							</svg>
-							<span id="run-sweep-text">Auto Sweep (10s)</span>
+						<button id="run-sweep-btn" class="tone-btn sweep-btn" type="button">
+							<span class="tone-pill sweep-pill">
+								<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+									<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+									<polyline points="17 6 23 6 23 12"/>
+								</svg>
+							</span>
+							<span class="tone-name" id="run-sweep-text">Auto Frequency Sweep (10s)</span>
 						</button>
 					</div>
 
@@ -165,14 +166,37 @@
 						<input type="range" id="freq-slider" min="20" max="20000" step="1" value="1000" class="freq-slider" aria-label="Frequency Slider" />
 					</div>
 
-					<!-- PRESET PILLS (Symmetrical 6-column grid) -->
-					<div class="freq-presets-grid">
-						<button class="freq-pill" data-hz="20" type="button"><span class="pill-hz mono">20 Hz</span><span class="pill-tag">Sub</span></button>
-						<button class="freq-pill" data-hz="60" type="button"><span class="pill-hz mono">60 Hz</span><span class="pill-tag">Bass</span></button>
-						<button class="freq-pill" data-hz="250" type="button"><span class="pill-hz mono">250 Hz</span><span class="pill-tag">Mid</span></button>
-						<button class="freq-pill" data-hz="1000" type="button"><span class="pill-hz mono">1 kHz</span><span class="pill-tag">Ref</span></button>
-						<button class="freq-pill" data-hz="8000" type="button"><span class="pill-hz mono">8 kHz</span><span class="pill-tag">Pres</span></button>
-						<button class="freq-pill" data-hz="16000" type="button"><span class="pill-hz mono">16 kHz</span><span class="pill-tag">Treble</span></button>
+					<!-- PRESET BUTTONS (Symmetrical 2x3 Grid matching Section 1) -->
+					<div class="tone-buttons-grid">
+						<button class="tone-btn freq-btn" data-hz="20" type="button">
+							<span class="tone-pill mono">20 Hz</span>
+							<span class="tone-name">Sub-Bass</span>
+						</button>
+
+						<button class="tone-btn freq-btn" data-hz="60" type="button">
+							<span class="tone-pill mono">60 Hz</span>
+							<span class="tone-name">Bass</span>
+						</button>
+
+						<button class="tone-btn freq-btn" data-hz="250" type="button">
+							<span class="tone-pill mono">250 Hz</span>
+							<span class="tone-name">Midrange</span>
+						</button>
+
+						<button class="tone-btn freq-btn active" data-hz="1000" type="button">
+							<span class="tone-pill mono">1 kHz</span>
+							<span class="tone-name">Reference</span>
+						</button>
+
+						<button class="tone-btn freq-btn" data-hz="8000" type="button">
+							<span class="tone-pill mono">8 kHz</span>
+							<span class="tone-name">Presence</span>
+						</button>
+
+						<button class="tone-btn freq-btn" data-hz="16000" type="button">
+							<span class="tone-pill mono">16 kHz</span>
+							<span class="tone-name">Treble</span>
+						</button>
 					</div>
 				</div>
 			</div>
@@ -225,8 +249,9 @@
 		const runSweepBtn = document.getElementById('run-sweep-btn');
 		const runSweepText = document.getElementById('run-sweep-text');
 
-		const freqPills = document.querySelectorAll('.freq-pill');
-		const noisePills = document.querySelectorAll('.noise-pill');
+		const freqBtns = document.querySelectorAll('.freq-btn');
+		const btnNoisePink = document.getElementById('btn-noise-pink');
+		const btnNoiseWhite = document.getElementById('btn-noise-white');
 
 		const heroCanvas = document.getElementById('audio-hero-canvas') as HTMLCanvasElement;
 		const heroCtx = heroCanvas?.getContext('2d');
@@ -436,10 +461,8 @@
 
 			activeMode = 'none';
 			document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
-			document.querySelectorAll('.freq-pill').forEach(p => p.classList.remove('active'));
-			document.querySelectorAll('.noise-pill').forEach(p => p.classList.remove('active'));
 			if (runSweepBtn) runSweepBtn.classList.remove('active');
-			if (runSweepText) runSweepText.textContent = 'Auto Sweep (10s)';
+			if (runSweepText) runSweepText.textContent = 'Auto Frequency Sweep (10s)';
 
 			updateHudOverlay();
 		}
@@ -468,18 +491,19 @@
 				if (activeMode === 'tone' && currentOsc && audioCtx) {
 					currentOsc.frequency.setTargetAtTime(hz, audioCtx.currentTime, 0.02);
 				}
-				freqPills.forEach((p) => {
+				freqBtns.forEach((p) => {
 					const pillHz = parseInt(p.getAttribute('data-hz') || '0', 10);
 					p.classList.toggle('active', pillHz === hz);
 				});
-				noisePills.forEach(p => p.classList.remove('active'));
+				btnNoisePink?.classList.remove('active');
+				btnNoiseWhite?.classList.remove('active');
 			});
 		}
 
-		// Preset Frequency Pills (Clicking immediately plays or toggles off if active)
-		freqPills.forEach((pill) => {
-			pill.addEventListener('click', () => {
-				const targetHz = parseInt(pill.getAttribute('data-hz') || '1000', 10);
+		// Preset Frequency Buttons (Clicking immediately plays or toggles off if active)
+		freqBtns.forEach((btn) => {
+			btn.addEventListener('click', () => {
+				const targetHz = parseInt(btn.getAttribute('data-hz') || '1000', 10);
 
 				// If this preset is already actively playing, clicking it pauses/stops audio
 				if (activeMode === 'tone' && currentToneHz === targetHz) {
@@ -500,22 +524,25 @@
 			});
 		});
 
-		// Preset Noise Pills (Clicking immediately plays or toggles off if active)
-		noisePills.forEach((pill) => {
-			pill.addEventListener('click', () => {
-				const noiseType = (pill.getAttribute('data-noise') as 'pink' | 'white') || 'pink';
+		// Broadband Noise Buttons (Clicking immediately plays or toggles off if active)
+		btnNoisePink?.addEventListener('click', () => {
+			if (activeMode === 'noise' && activeNoiseType === 'pink') {
+				stopAllAudio();
+				return;
+			}
+			activeSignal = 'pink';
+			activeNoiseType = 'pink';
+			startNoiseGenerator('pink');
+		});
 
-				// If this noise is currently playing, clicking it pauses/stops audio
-				if (activeMode === 'noise' && activeNoiseType === noiseType) {
-					stopAllAudio();
-					return;
-				}
-
-				activeSignal = noiseType;
-				activeNoiseType = noiseType;
-
-				startNoiseGenerator(noiseType);
-			});
+		btnNoiseWhite?.addEventListener('click', () => {
+			if (activeMode === 'noise' && activeNoiseType === 'white') {
+				stopAllAudio();
+				return;
+			}
+			activeSignal = 'white';
+			activeNoiseType = 'white';
+			startNoiseGenerator('white');
 		});
 
 		// Start Sine Tone Generator
@@ -533,7 +560,7 @@
 			osc.start();
 			currentOsc = osc;
 
-			freqPills.forEach((p) => {
+			freqBtns.forEach((p) => {
 				const hz = parseInt(p.getAttribute('data-hz') || '0', 10);
 				p.classList.toggle('active', hz === currentToneHz);
 			});
@@ -642,9 +669,8 @@
 			noiseSource.start();
 			noiseNode = noiseSource;
 
-			noisePills.forEach(p => {
-				p.classList.toggle('active', p.getAttribute('data-noise') === activeNoiseType);
-			});
+			btnNoisePink?.classList.toggle('active', activeNoiseType === 'pink');
+			btnNoiseWhite?.classList.toggle('active', activeNoiseType === 'white');
 			updateHudOverlay();
 		}
 
@@ -777,7 +803,7 @@
 			if (meterCanvas) {
 				const rect = meterCanvas.getBoundingClientRect();
 				const targetW = Math.round((rect.width || 600) * dpr);
-				const targetH = Math.round((rect.height || 52) * dpr);
+				const targetH = Math.round((rect.height || 58) * dpr);
 				if (meterCanvas.width !== targetW || meterCanvas.height !== targetH) {
 					meterCanvas.width = targetW;
 					meterCanvas.height = targetH;
@@ -1404,15 +1430,17 @@
 
 			// Horizontal Layout Dimensions
 			const labelW = Math.round(18 * dpr);
-			const readoutW = Math.round(52 * dpr);
+			const readoutW = Math.round(54 * dpr);
 			const trackX0 = labelW + Math.round(6 * dpr);
 			const trackX1 = w - readoutW - Math.round(4 * dpr);
 			const trackW = Math.max(10, trackX1 - trackX0);
 
 			const barH = Math.round(7 * dpr);
 			const row1Y = Math.round(7 * dpr);
-			const row2Y = Math.round(20 * dpr);
-			const scaleY = Math.round(34 * dpr);
+			const row2Y = Math.round(19 * dpr);
+			const tickTopY = Math.round(31 * dpr);
+			const tickBottomY = Math.round(36 * dpr);
+			const textY = Math.round(39 * dpr);
 
 			// Helper: dB to X coordinate
 			const dbToX = (val: number) => {
@@ -1430,7 +1458,7 @@
 			grad.addColorStop(1.0, '#ef4444');   // Red (0 dB)
 
 			// ROW 1: LEFT CHANNEL (L)
-			meterCtx.font = `bold ${Math.round(10 * dpr)}px sans-serif`;
+			meterCtx.font = `bold ${Math.round(10.5 * dpr)}px sans-serif`;
 			meterCtx.textAlign = 'center';
 			meterCtx.textBaseline = 'middle';
 			meterCtx.fillStyle = '#38bdf8';
@@ -1455,13 +1483,13 @@
 
 			// Numeric dB readout
 			meterCtx.textAlign = 'right';
-			meterCtx.font = `bold ${Math.round(9 * dpr)}px monospace`;
-			meterCtx.fillStyle = smoothL > -55 ? '#38bdf8' : 'rgba(255, 255, 255, 0.3)';
+			meterCtx.font = `bold ${Math.round(9.5 * dpr)}px monospace`;
+			meterCtx.fillStyle = smoothL > -55 ? '#38bdf8' : 'rgba(255, 255, 255, 0.45)';
 			const numL = smoothL <= -58 ? '-∞' : `${Math.round(smoothL)} dB`;
 			meterCtx.fillText(numL, w - Math.round(4 * dpr), row1Y + barH / 2);
 
 			// ROW 2: RIGHT CHANNEL (R)
-			meterCtx.font = `bold ${Math.round(10 * dpr)}px sans-serif`;
+			meterCtx.font = `bold ${Math.round(10.5 * dpr)}px sans-serif`;
 			meterCtx.textAlign = 'center';
 			meterCtx.fillStyle = '#f59e0b';
 			meterCtx.fillText('R', Math.round(9 * dpr), row2Y + barH / 2);
@@ -1485,28 +1513,37 @@
 
 			// Numeric dB readout
 			meterCtx.textAlign = 'right';
-			meterCtx.font = `bold ${Math.round(9 * dpr)}px monospace`;
-			meterCtx.fillStyle = smoothR > -55 ? '#f59e0b' : 'rgba(255, 255, 255, 0.3)';
+			meterCtx.font = `bold ${Math.round(9.5 * dpr)}px monospace`;
+			meterCtx.fillStyle = smoothR > -55 ? '#f59e0b' : 'rgba(255, 255, 255, 0.45)';
 			const numR = smoothR <= -58 ? '-∞' : `${Math.round(smoothR)} dB`;
 			meterCtx.fillText(numR, w - Math.round(4 * dpr), row2Y + barH / 2);
 
 			// SCALE TICKS & DB LABELS (Bottom Row)
-			const marks = [-60, -48, -36, -24, -18, -12, -6, -3, 0];
-			meterCtx.font = `${Math.round(7.5 * dpr)}px monospace`;
+			const isNarrow = trackW < 300 * dpr;
+			const marks = isNarrow
+				? [-60, -36, -24, -12, -6, 0]
+				: [-60, -48, -36, -24, -18, -12, -6, -3, 0];
+
+			meterCtx.font = `bold ${Math.round(9.5 * dpr)}px monospace`;
 			meterCtx.textAlign = 'center';
 			meterCtx.textBaseline = 'top';
 
 			marks.forEach((m) => {
 				const x = Math.round(dbToX(m));
-				meterCtx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+				const isZero = m === 0;
+				const isNeg3 = m === -3;
+				const isNeg6 = m === -6;
+
+				meterCtx.strokeStyle = isZero ? '#ef4444' : (isNeg3 ? '#f97316' : (isNeg6 ? '#eab308' : 'rgba(255, 255, 255, 0.45)'));
+				meterCtx.lineWidth = Math.max(1, Math.round(1.5 * dpr));
 				meterCtx.beginPath();
-				meterCtx.moveTo(x, scaleY - Math.round(4 * dpr));
-				meterCtx.lineTo(x, scaleY);
+				meterCtx.moveTo(x, tickTopY);
+				meterCtx.lineTo(x, tickBottomY);
 				meterCtx.stroke();
 
-				meterCtx.fillStyle = m >= -3 ? 'rgba(239, 68, 68, 0.85)' : (m >= -6 ? 'rgba(234, 179, 8, 0.85)' : 'rgba(255, 255, 255, 0.35)');
-				const label = m === 0 ? '0' : (m === -60 ? '-∞' : `${m}`);
-				meterCtx.fillText(label, x, scaleY + Math.round(2 * dpr));
+				meterCtx.fillStyle = isZero ? '#ef4444' : (isNeg3 ? '#f97316' : (isNeg6 ? '#eab308' : 'rgba(255, 255, 255, 0.8)'));
+				const label = isZero ? '0' : (m === -60 ? '-∞' : `${m}`);
+				meterCtx.fillText(label, x, textY);
 			});
 		}
 
@@ -1795,7 +1832,7 @@
 	.stereo-meter-box {
 		position: relative;
 		width: 100%;
-		height: 52px;
+		height: 58px;
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
 		overflow: hidden;
@@ -2051,11 +2088,56 @@
 		border-radius: 4px;
 		flex-shrink: 0;
 		line-height: 1.2;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	:global(html[data-theme="dark"]) .tone-pill {
+		background: rgba(255, 255, 255, 0.1);
+		color: #ffffff;
+	}
+
+	.tone-pill.cyan {
+		background: rgba(56, 189, 248, 0.18);
+		color: #38bdf8;
+	}
+
+	.tone-pill.amber {
+		background: rgba(245, 158, 11, 0.18);
+		color: #f59e0b;
+	}
+
+	.tone-pill.green {
+		background: rgba(34, 197, 94, 0.18);
+		color: #22c55e;
 	}
 
 	.tone-pill.warn {
-		background: rgba(239, 68, 68, 0.2);
+		background: rgba(239, 68, 68, 0.18);
 		color: #ef4444;
+	}
+
+	.tone-pill.pink {
+		background: rgba(236, 72, 153, 0.18);
+		color: #ec4899;
+	}
+
+	.tone-pill.white {
+		background: rgba(255, 255, 255, 0.2);
+		color: #ffffff;
+	}
+
+	:global(html[data-theme="light"]) .tone-pill.white {
+		background: rgba(0, 0, 0, 0.08);
+		color: rgb(var(--black));
+		border: 1px solid rgba(0, 0, 0, 0.15);
+	}
+
+	.tone-pill.sweep-pill {
+		background: rgba(var(--accent-rgb), 0.18);
+		color: var(--accent);
+		padding: 3px 6px;
 	}
 
 	.tone-name {
@@ -2075,43 +2157,15 @@
 	/* SWEEP ACTIONS */
 	.sweep-actions-row {
 		display: flex;
-		gap: 0.5em;
+		width: 100%;
 	}
 
 	.sweep-btn {
-		flex: 1;
-		display: inline-flex;
+		width: 100%;
+		display: flex;
 		align-items: center;
-		justify-content: center;
-		gap: 0.45em;
-		background: var(--bg-card);
-		border: 1px solid var(--border-color);
-		border-radius: 7px;
-		padding: 0.55em 0.75em;
-		min-height: 38px;
-		white-space: nowrap;
-		font-family: inherit;
-		font-size: 0.8em;
-		font-weight: 700;
-		color: rgb(var(--black));
-		cursor: pointer;
-		transition: all 0.15s ease;
-	}
-
-	:global(html[data-theme="dark"]) .sweep-btn {
-		background: #18181b;
-	}
-
-	.sweep-btn:hover {
-		border-color: var(--accent);
-		color: var(--accent);
-		transform: translateY(-1px);
-	}
-
-	.sweep-btn.active {
-		background: var(--accent);
-		color: #ffffff;
-		border-color: var(--accent);
+		gap: 0.6em;
+		box-sizing: border-box;
 	}
 
 	/* SLIDER ROW */
@@ -2145,119 +2199,6 @@
 		cursor: pointer;
 	}
 
-	/* PRESET PILLS */
-	.freq-presets-grid {
-		display: grid;
-		grid-template-columns: repeat(6, 1fr);
-		gap: 0.35em;
-	}
-
-	.freq-pill {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		background: rgba(148, 163, 184, 0.08);
-		border: 1px solid var(--border-color);
-		border-radius: 5px;
-		padding: 0.4em 0.2em;
-		cursor: pointer;
-		transition: all 0.15s ease;
-	}
-
-	.freq-pill .pill-hz {
-		font-size: 0.8em;
-		font-weight: 700;
-		color: rgb(var(--gray-dark));
-		line-height: 1.15;
-	}
-
-	.freq-pill .pill-tag {
-		font-size: 0.68em;
-		font-weight: 600;
-		color: rgb(var(--gray));
-		margin-top: 0.1em;
-	}
-
-	.freq-pill:hover {
-		border-color: var(--accent);
-		background: rgba(var(--accent-rgb), 0.08);
-	}
-
-	.freq-pill:hover .pill-hz,
-	.freq-pill:hover .pill-tag {
-		color: var(--accent);
-	}
-
-	.freq-pill.active {
-		background: var(--accent);
-		border-color: var(--accent);
-	}
-
-	.freq-pill.active .pill-hz,
-	.freq-pill.active .pill-tag {
-		color: #ffffff;
-	}
-
-	/* BROADBAND NOISE PRESETS (UNDER FREQUENCY PRESETS) */
-	.noise-presets-grid {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.35em;
-	}
-
-	.noise-pill {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		background: rgba(148, 163, 184, 0.08);
-		border: 1px solid var(--border-color);
-		border-radius: 5px;
-		padding: 0.45em 0.3em;
-		cursor: pointer;
-		transition: all 0.15s ease;
-		font-family: inherit;
-	}
-
-	:global(html[data-theme="dark"]) .noise-pill {
-		background: rgba(255, 255, 255, 0.03);
-	}
-
-	.noise-pill .pill-hz {
-		font-size: 0.8em;
-		font-weight: 700;
-		color: rgb(var(--gray-dark));
-		line-height: 1.15;
-	}
-
-	.noise-pill .pill-tag {
-		font-size: 0.68em;
-		font-weight: 600;
-		color: rgb(var(--gray));
-		margin-top: 0.1em;
-	}
-
-	.noise-pill:hover {
-		border-color: var(--accent);
-		background: rgba(var(--accent-rgb), 0.08);
-	}
-
-	.noise-pill:hover .pill-hz,
-	.noise-pill:hover .pill-tag {
-		color: var(--accent);
-	}
-
-	.noise-pill.active {
-		background: var(--accent);
-		border-color: var(--accent);
-	}
-
-	.noise-pill.active .pill-hz,
-	.noise-pill.active .pill-tag {
-		color: #ffffff;
-	}
-
 	.mono {
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 	}
@@ -2279,9 +2220,6 @@
 			max-width: none;
 		}
 		.tone-buttons-grid {
-			grid-template-columns: 1fr;
-		}
-		.noise-presets-grid {
 			grid-template-columns: 1fr;
 		}
 	}

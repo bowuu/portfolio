@@ -28,9 +28,9 @@
 		Test DAC hardware latency, channel separation, 180&deg; wiring phase, 20 Hz&ndash;20 kHz frequency response, and acoustic noise calibration.
 	</p>
 
-	<!-- TWO-COLUMN WORKBENCH (HERO VISUALIZER ON LEFT / TOP ON MOBILE, CONTROLS ON RIGHT) -->
+	<!-- TWO-COLUMN WORKBENCH (HERO VISUALIZER ON LEFT, CONTROLS ON RIGHT) -->
 	<div class="audio-workbench-grid">
-		<!-- COLUMN 1: UNIFIED HERO VISUALIZER -->
+		<!-- COLUMN 1: UNIFIED HERO VISUALIZER & DUAL CHANNEL METER -->
 		<div class="audio-col hero-visualizer-col">
 			<div class="col-head">
 				<div class="col-head-left">
@@ -47,46 +47,39 @@
 				</div>
 			</div>
 
-			<!-- HERO CANVAS CONTAINER -->
-			<div class="hero-canvas-box" id="hero-canvas-box">
-				<canvas id="audio-hero-canvas" width="600" height="320"></canvas>
+			<!-- VISUALIZER STAGE (CANVAS + VERTICAL DUAL VU METER) -->
+			<div class="visualizer-stage">
+				<!-- HERO CANVAS CONTAINER -->
+				<div class="hero-canvas-box" id="hero-canvas-box">
+					<canvas id="audio-hero-canvas" width="540" height="380"></canvas>
 
-				<!-- FLOATING HUD OVERLAY BADGE -->
-				<div class="hero-hud-overlay" id="hero-hud-overlay">
-					<div class="hud-badge-wrap" id="hud-badge-wrap">
-						<span id="hero-hud-main" class="hud-main-text mono">Standby</span>
-						<span class="hud-sep">&bull;</span>
-						<span id="hero-hud-sub" class="hud-sub-text">Select Test Below</span>
-					</div>
-				</div>
-
-				<!-- TIME-DOMAIN WAVEFORM HUD / PHASE BAR (Active in waveform mode) -->
-				<div class="waveform-hud-bar" id="waveform-hud-bar">
-					<div class="trace-legend">
-						<span class="legend-dot cyan"></span><span class="legend-label">Left</span>
-						<span class="legend-dot amber"></span><span class="legend-label">Right</span>
-					</div>
-					<div class="phase-meter-wrap" title="Phase Correlation (-1.0 Inverted to +1.0 In-Phase)">
-						<span class="phase-meter-tag mono">-1.0</span>
-						<div class="phase-meter-track">
-							<div class="phase-meter-center"></div>
-							<div class="phase-meter-fill" id="phase-meter-fill"></div>
+					<!-- FLOATING HUD OVERLAY BADGE -->
+					<div class="hero-hud-overlay" id="hero-hud-overlay">
+						<div class="hud-badge-wrap" id="hud-badge-wrap">
+							<span id="hero-hud-main" class="hud-main-text mono">Standby</span>
+							<span class="hud-sep">&bull;</span>
+							<span id="hero-hud-sub" class="hud-sub-text">Select Test</span>
 						</div>
-						<span class="phase-meter-tag mono">+1.0</span>
-						<span class="phase-val mono" id="phase-val-text">+1.00</span>
+					</div>
+
+					<!-- TIME-DOMAIN PHASE CORRELATION BAR (Active in waveform mode) -->
+					<div class="waveform-hud-bar" id="waveform-hud-bar">
+						<div class="phase-meter-wrap" title="Phase Correlation (-1.0 Inverted to +1.0 In-Phase)">
+							<span class="phase-meter-title">Phase Correlation:</span>
+							<span class="phase-meter-tag mono">-1.0</span>
+							<div class="phase-meter-track">
+								<div class="phase-meter-center"></div>
+								<div class="phase-meter-fill" id="phase-meter-fill"></div>
+							</div>
+							<span class="phase-meter-tag mono">+1.0</span>
+							<span class="phase-val mono" id="phase-val-text">+1.00</span>
+						</div>
 					</div>
 				</div>
-			</div>
 
-			<!-- BOTTOM TELEMETRY BAR -->
-			<div class="visualizer-footer-bar">
-				<div class="telemetry-pill">
-					<span class="telemetry-label">Engine:</span>
-					<span class="telemetry-value mono" id="audio-engine-info">Web Audio &bull; 48 kHz &bull; 2ch Stereo</span>
-				</div>
-				<div class="telemetry-pill">
-					<span class="telemetry-label">Ceiling:</span>
-					<span class="telemetry-value mono">-18 dBFS Soft Knee</span>
+				<!-- DEDICATED STEREO PEAK / VU METER (L & R SEPARATE CHANNELS) -->
+				<div class="stereo-meter-box" id="stereo-meter-box" title="Stereo Peak / VU Meter (Left & Right Channels in dBFS)">
+					<canvas id="audio-meter-canvas" width="56" height="380"></canvas>
 				</div>
 			</div>
 		</div>
@@ -129,80 +122,74 @@
 				</div>
 			</div>
 
-			<!-- SECTION 2: TONE GENERATOR & FREQUENCY SWEEPER -->
+			<!-- SECTION 2: TONE & BROADBAND NOISE GENERATOR -->
 			<div class="control-group">
 				<div class="group-header">
 					<div class="group-header-left">
 						<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="group-icon">
 							<path d="M2 12h4l3 8 4-16 3 8h6"/>
 						</svg>
-						<span class="group-title">Tone Generator &amp; Sweeper</span>
+						<span class="group-title">Tone &amp; Noise Generator</span>
 					</div>
-					<span class="group-badge">Pure Sine</span>
+					<span class="group-badge">Sine &bull; Pink &bull; White</span>
 				</div>
 
-				<!-- SWEEP ACTIONS -->
-				<div class="sweep-actions-row">
-					<button id="toggle-tone-btn" class="sweep-btn" type="button">
-						<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" id="toggle-tone-icon">
-							<polygon points="5 3 19 12 5 21 5 3"/>
-						</svg>
-						<span id="toggle-tone-text">Play Tone</span>
-					</button>
+				<!-- SINE TONE & SWEEPER SECTION -->
+				<div class="tone-controls-section">
+					<!-- SWEEP ACTIONS -->
+					<div class="sweep-actions-row">
+						<button id="toggle-tone-btn" class="sweep-btn" type="button">
+							<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" id="toggle-tone-icon">
+								<polygon points="5 3 19 12 5 21 5 3"/>
+							</svg>
+							<span id="toggle-tone-text">Play Tone</span>
+						</button>
 
-					<button id="run-sweep-btn" class="sweep-btn sweep-auto-btn" type="button">
-						<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-							<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-							<polyline points="17 6 23 6 23 12"/>
-						</svg>
-						<span id="run-sweep-text">Auto Sweep (10s)</span>
-					</button>
-				</div>
-
-				<!-- SCRUB SLIDER -->
-				<div class="slider-row">
-					<div class="slider-header-info">
-						<span class="slider-hint">Frequency Scrub</span>
-						<span class="slider-hz-val mono" id="slider-hz-display">1,000 Hz</span>
+						<button id="run-sweep-btn" class="sweep-btn sweep-auto-btn" type="button">
+							<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+								<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+								<polyline points="17 6 23 6 23 12"/>
+							</svg>
+							<span id="run-sweep-text">Auto Sweep (10s)</span>
+						</button>
 					</div>
-					<input type="range" id="freq-slider" min="20" max="20000" step="1" value="1000" class="freq-slider" aria-label="Frequency Slider" />
-				</div>
 
-				<!-- PRESET PILLS (Symmetrical 6-column grid) -->
-				<div class="freq-presets-grid">
-					<button class="freq-pill" data-hz="20" type="button"><span class="pill-hz mono">20 Hz</span><span class="pill-tag">Sub</span></button>
-					<button class="freq-pill" data-hz="60" type="button"><span class="pill-hz mono">60 Hz</span><span class="pill-tag">Bass</span></button>
-					<button class="freq-pill" data-hz="250" type="button"><span class="pill-hz mono">250 Hz</span><span class="pill-tag">Mid</span></button>
-					<button class="freq-pill active" data-hz="1000" type="button"><span class="pill-hz mono">1 kHz</span><span class="pill-tag">Ref</span></button>
-					<button class="freq-pill" data-hz="8000" type="button"><span class="pill-hz mono">8 kHz</span><span class="pill-tag">Pres</span></button>
-					<button class="freq-pill" data-hz="16000" type="button"><span class="pill-hz mono">16 kHz</span><span class="pill-tag">Treble</span></button>
-				</div>
-			</div>
-
-			<!-- SECTION 3: BROADBAND NOISE GENERATOR -->
-			<div class="control-group noise-group">
-				<div class="group-header">
-					<div class="group-header-left">
-						<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="group-icon">
-							<path d="M4 12v3m4-6v9m4-12v15m4-9v6m4-4v2"/>
-						</svg>
-						<span class="group-title">Broadband Noise</span>
+					<!-- SCRUB SLIDER -->
+					<div class="slider-row">
+						<div class="slider-header-info">
+							<span class="slider-hint">Sine Frequency Scrub</span>
+							<span class="slider-hz-val mono" id="slider-hz-display">1,000 Hz</span>
+						</div>
+						<input type="range" id="freq-slider" min="20" max="20000" step="1" value="1000" class="freq-slider" aria-label="Frequency Slider" />
 					</div>
-					<div class="noise-segmented-control" role="group" aria-label="Noise Type">
-						<button class="noise-seg-btn active" data-noise="pink" type="button">Pink (1/f)</button>
-						<button class="noise-seg-btn" data-noise="white" type="button">White</button>
+
+					<!-- PRESET PILLS (Symmetrical 6-column grid) -->
+					<div class="freq-presets-grid">
+						<button class="freq-pill" data-hz="20" type="button"><span class="pill-hz mono">20 Hz</span><span class="pill-tag">Sub</span></button>
+						<button class="freq-pill" data-hz="60" type="button"><span class="pill-hz mono">60 Hz</span><span class="pill-tag">Bass</span></button>
+						<button class="freq-pill" data-hz="250" type="button"><span class="pill-hz mono">250 Hz</span><span class="pill-tag">Mid</span></button>
+						<button class="freq-pill active" data-hz="1000" type="button"><span class="pill-hz mono">1 kHz</span><span class="pill-tag">Ref</span></button>
+						<button class="freq-pill" data-hz="8000" type="button"><span class="pill-hz mono">8 kHz</span><span class="pill-tag">Pres</span></button>
+						<button class="freq-pill" data-hz="16000" type="button"><span class="pill-hz mono">16 kHz</span><span class="pill-tag">Treble</span></button>
 					</div>
 				</div>
 
-				<div class="noise-action-row">
-					<button id="toggle-noise-btn" class="sweep-btn noise-btn" type="button">
-						<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" id="toggle-noise-icon">
-							<polygon points="5 3 19 12 5 21 5 3"/>
-						</svg>
-						<span id="toggle-noise-text">Play Noise</span>
-					</button>
-					<div class="noise-desc-pill">
-						<span id="noise-desc-text">Pink: Equal energy per octave (-3 dB/oct). Room EQ calibration.</span>
+				<!-- BROADBAND NOISE SUB-SECTION (SEAMLESSLY INTEGRATED) -->
+				<div class="noise-inline-section">
+					<div class="noise-inline-row">
+						<div class="noise-inline-left">
+							<span class="noise-inline-label">Noise:</span>
+							<div class="noise-segmented-control" role="group" aria-label="Noise Type">
+								<button class="noise-seg-btn active" data-noise="pink" type="button">Pink (1/f)</button>
+								<button class="noise-seg-btn" data-noise="white" type="button">White</button>
+							</div>
+						</div>
+						<button id="toggle-noise-btn" class="sweep-btn noise-inline-btn" type="button">
+							<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" id="toggle-noise-icon">
+								<polygon points="5 3 19 12 5 21 5 3"/>
+							</svg>
+							<span id="toggle-noise-text">Play Noise</span>
+						</button>
 					</div>
 				</div>
 			</div>
@@ -219,8 +206,6 @@
 
 		let currentOsc: OscillatorNode | null = null;
 		let noiseNode: AudioNode | null = null;
-		let leftGain: GainNode | null = null;
-		let rightGain: GainNode | null = null;
 
 		let activeHeroMode: 'waveform' | 'spectrum' | 'spectrogram' = 'waveform';
 		let activeMode: 'none' | 'left' | 'right' | 'inphase' | 'outphase' | 'tone' | 'sweep' | 'noise' = 'none';
@@ -228,6 +213,14 @@
 		let currentToneHz = 1000;
 		let isSweeping = false;
 		let sweepRafId: number | null = null;
+
+		// VU Meter Ballistics State
+		let smoothL = -60;
+		let smoothR = -60;
+		let peakHoldL = -60;
+		let peakHoldR = -60;
+		let peakHoldTimeL = 0;
+		let peakHoldTimeR = 0;
 
 		// UI references
 		const modeWaveformBtn = document.getElementById('btn-hero-waveform');
@@ -242,7 +235,6 @@
 		const heroHudSub = document.getElementById('hero-hud-sub');
 		const phaseMeterFill = document.getElementById('phase-meter-fill');
 		const phaseValText = document.getElementById('phase-val-text');
-		const audioEngineInfo = document.getElementById('audio-engine-info');
 
 		const sliderHzDisplay = document.getElementById('slider-hz-display');
 		const freqSlider = document.getElementById('freq-slider') as HTMLInputElement;
@@ -254,11 +246,12 @@
 		const noiseBtns = document.querySelectorAll('.noise-seg-btn');
 		const toggleNoiseBtn = document.getElementById('toggle-noise-btn');
 		const toggleNoiseText = document.getElementById('toggle-noise-text');
-		const noiseDescText = document.getElementById('noise-desc-text');
 
 		const heroCanvas = document.getElementById('audio-hero-canvas') as HTMLCanvasElement;
-		const heroCanvasBox = document.getElementById('hero-canvas-box');
 		const heroCtx = heroCanvas?.getContext('2d');
+
+		const meterCanvas = document.getElementById('audio-meter-canvas') as HTMLCanvasElement;
+		const meterCtx = meterCanvas?.getContext('2d');
 
 		let splitter: ChannelSplitterNode | null = null;
 		let analyserLeft: AnalyserNode | null = null;
@@ -294,7 +287,7 @@
 				masterGain.connect(compressor);
 				compressor.connect(audioCtx.destination);
 
-				// Real Stereo & Phase Vector Split (Left / Right split for oscilloscope)
+				// Real Stereo & Phase Vector Split (Left / Right split for oscilloscope & VU meter)
 				splitter = audioCtx.createChannelSplitter(2);
 				analyserLeft = audioCtx.createAnalyser();
 				analyserRight = audioCtx.createAnalyser();
@@ -313,10 +306,6 @@
 				fftAnalyser.maxDecibels = -10;
 
 				audioBus.connect(fftAnalyser);
-
-				if (audioEngineInfo) {
-					audioEngineInfo.textContent = `Web Audio • ${Math.round(audioCtx.sampleRate / 1000)} kHz • 2ch Stereo`;
-				}
 			}
 
 			if (audioCtx.state === 'suspended') {
@@ -386,7 +375,7 @@
 
 			if (activeMode === 'none') {
 				heroHudMain.textContent = 'Standby';
-				heroHudSub.textContent = 'Select Test Below';
+				heroHudSub.textContent = 'Select Test';
 				return;
 			}
 
@@ -607,14 +596,6 @@
 				btn.classList.add('active');
 				activeNoiseType = (btn.getAttribute('data-noise') as any) || 'pink';
 
-				if (noiseDescText) {
-					if (activeNoiseType === 'pink') {
-						noiseDescText.textContent = 'Pink: Equal energy per octave (-3 dB/oct). Room EQ calibration.';
-					} else {
-						noiseDescText.textContent = 'White: Flat power spectral density (20 Hz–20 kHz). Pure hiss.';
-					}
-				}
-
 				if (activeMode === 'noise') {
 					startNoiseGenerator();
 				}
@@ -706,7 +687,7 @@
 			updateHudOverlay();
 
 			const buf = await loadVoiceBuffer(mode);
-			if (activeMode !== mode) return; // Mode changed or stopped while fetching
+			if (activeMode !== mode) return;
 
 			function playVoiceClip() {
 				if (activeMode !== mode || !masterGain) return;
@@ -800,23 +781,32 @@
 		document.getElementById('btn-tone-outphase')?.addEventListener('click', () => playPolarityTone('outphase'));
 
 		// Responsive canvas resizing (DPR Retina scaling)
-		function resizeCanvas() {
+		function resizeCanvases() {
 			const dpr = Math.min(window.devicePixelRatio || 1, 2);
 			if (heroCanvas) {
 				const rect = heroCanvas.getBoundingClientRect();
-				const targetW = Math.round((rect.width || 600) * dpr);
-				const targetH = Math.round((rect.height || 320) * dpr);
+				const targetW = Math.round((rect.width || 540) * dpr);
+				const targetH = Math.round((rect.height || 380) * dpr);
 				if (heroCanvas.width !== targetW || heroCanvas.height !== targetH) {
 					heroCanvas.width = targetW;
 					heroCanvas.height = targetH;
 				}
 			}
+			if (meterCanvas) {
+				const rect = meterCanvas.getBoundingClientRect();
+				const targetW = Math.round((rect.width || 56) * dpr);
+				const targetH = Math.round((rect.height || 380) * dpr);
+				if (meterCanvas.width !== targetW || meterCanvas.height !== targetH) {
+					meterCanvas.width = targetW;
+					meterCanvas.height = targetH;
+				}
+			}
 		}
-		resizeCanvas();
-		window.addEventListener('resize', resizeCanvas, { passive: true });
+		resizeCanvases();
+		window.addEventListener('resize', resizeCanvases, { passive: true });
 
 		// -------------------------------------------------------------
-		// VISUALIZER 1: DUAL-TRACE WAVEFORM OSCILLOSCOPE & PHASE METER
+		// VISUALIZER 1: DUAL-TRACE WAVEFORM OSCILLOSCOPE
 		// -------------------------------------------------------------
 		function renderWaveformScope() {
 			if (!heroCtx || !heroCanvas) return;
@@ -862,7 +852,7 @@
 
 			if (!analyserLeft || !analyserRight) {
 				// Standby resting zero baselines
-				heroCtx.strokeStyle = 'rgba(56, 189, 248, 0.35)'; // Left Cyan
+				heroCtx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
 				heroCtx.beginPath();
 				heroCtx.moveTo(0, cy);
 				heroCtx.lineTo(w, cy);
@@ -918,7 +908,6 @@
 					phaseMeterFill.style.background = '#f59e0b';
 				} else {
 					phaseValText.textContent = (correlation >= 0 ? '+' : '') + correlation.toFixed(2);
-					// Map [-1.0 .. +1.0] to [0% .. 100%]
 					const pct = Math.round(((correlation + 1) / 2) * 100);
 					phaseMeterFill.style.width = `${pct}%`;
 					if (correlation > 0.65) {
@@ -1353,6 +1342,165 @@
 			}
 		}
 
+		// -------------------------------------------------------------
+		// DEDICATED STEREO PEAK / VU METER (L & R DUAL CHANNEL)
+		// -------------------------------------------------------------
+		function renderStereoMeter() {
+			if (!meterCtx || !meterCanvas) return;
+			const w = meterCanvas.width;
+			const h = meterCanvas.height;
+			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+			meterCtx.clearRect(0, 0, w, h);
+			meterCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
+			meterCtx.fillRect(0, 0, w, h);
+
+			const now = performance.now();
+			let currentPeakL = 0;
+			let currentPeakR = 0;
+
+			if (analyserLeft && analyserRight && activeMode !== 'none') {
+				const bufLen = analyserLeft.fftSize;
+				const timeL = new Float32Array(bufLen);
+				const timeR = new Float32Array(bufLen);
+				analyserLeft.getFloatTimeDomainData(timeL);
+				analyserRight.getFloatTimeDomainData(timeR);
+
+				for (let i = 0; i < bufLen; i++) {
+					const absL = Math.abs(timeL[i]);
+					const absR = Math.abs(timeR[i]);
+					if (absL > currentPeakL) currentPeakL = absL;
+					if (absR > currentPeakR) currentPeakR = absR;
+				}
+			}
+
+			// Instantaneous dBFS (clamped to [-60 dBFS .. 0 dBFS])
+			const dbL = currentPeakL > 0.0005 ? Math.max(-60, 20 * Math.log10(currentPeakL)) : -60;
+			const dbR = currentPeakR > 0.0005 ? Math.max(-60, 20 * Math.log10(currentPeakR)) : -60;
+
+			// Smooth meter ballistics (attack instant, release gentle decay ~1.2 dB/frame)
+			if (dbL >= smoothL) smoothL = dbL;
+			else smoothL = Math.max(-60, smoothL - 1.25);
+
+			if (dbR >= smoothR) smoothR = dbR;
+			else smoothR = Math.max(-60, smoothR - 1.25);
+
+			// Peak Hold indicator logic (hold 800ms, then drop with gravity)
+			if (dbL >= peakHoldL) {
+				peakHoldL = dbL;
+				peakHoldTimeL = now;
+			} else if (now - peakHoldTimeL > 750) {
+				peakHoldL = Math.max(-60, peakHoldL - 0.7);
+			}
+
+			if (dbR >= peakHoldR) {
+				peakHoldR = dbR;
+				peakHoldTimeR = now;
+			} else if (now - peakHoldTimeR > 750) {
+				peakHoldR = Math.max(-60, peakHoldR - 0.7);
+			}
+
+			// Scale boundaries
+			const topPad = Math.round(22 * (h / 380));
+			const bottomPad = Math.round(20 * (h / 380));
+			const trackH = Math.max(10, h - topPad - bottomPad);
+			const trackBottom = h - bottomPad;
+
+			// Header Labels (L in Cyan #38bdf8, R in Amber #f59e0b)
+			meterCtx.font = `bold ${Math.max(9, Math.round(10 * (w / 56)))}px sans-serif`;
+			meterCtx.textAlign = 'center';
+			meterCtx.fillStyle = '#38bdf8';
+			meterCtx.fillText('L', Math.round(w * 0.22), topPad - 7);
+
+			meterCtx.fillStyle = '#f59e0b';
+			meterCtx.fillText('R', Math.round(w * 0.48), topPad - 7);
+
+			meterCtx.font = `bold ${Math.max(8, Math.round(9 * (w / 56)))}px monospace`;
+			meterCtx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+			meterCtx.fillText('dB', Math.round(w * 0.82), topPad - 7);
+
+			// Geometry of L and R bar columns
+			const barW = Math.max(4, Math.round(w * 0.18));
+			const barL_X = Math.round(w * 0.13);
+			const barR_X = Math.round(w * 0.39);
+
+			// Track background grooves
+			meterCtx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+			meterCtx.fillRect(barL_X, topPad, barW, trackH);
+			meterCtx.fillRect(barR_X, topPad, barW, trackH);
+
+			// Shared gradient for active meter bars: Green (-60dB to -6dB) -> Yellow (-6dB to -3dB) -> Red (-3dB to 0dB)
+			const grad = meterCtx.createLinearGradient(0, trackBottom, 0, topPad);
+			grad.addColorStop(0.0, '#15803d');   // Dark green at bottom (-60 dB)
+			grad.addColorStop(0.65, '#22c55e');  // Vibrant green
+			grad.addColorStop(0.88, '#eab308');  // Yellow (-6 dB)
+			grad.addColorStop(0.95, '#f97316');  // Amber (-3 dB)
+			grad.addColorStop(1.0, '#ef4444');   // Red (0 dB)
+
+			// Helper: dB to Y position
+			const dbToY = (val: number) => {
+				const clamped = Math.max(-60, Math.min(0, val));
+				const norm = (clamped + 60) / 60;
+				return trackBottom - norm * trackH;
+			};
+
+			// Fill Left Active Bar
+			const barH_L = ((smoothL + 60) / 60) * trackH;
+			if (barH_L > 0) {
+				meterCtx.fillStyle = grad;
+				meterCtx.fillRect(barL_X, trackBottom - barH_L, barW, barH_L);
+			}
+
+			// Fill Right Active Bar
+			const barH_R = ((smoothR + 60) / 60) * trackH;
+			if (barH_R > 0) {
+				meterCtx.fillStyle = grad;
+				meterCtx.fillRect(barR_X, trackBottom - barH_R, barW, barH_R);
+			}
+
+			// Draw Peak Hold Ticks (White needle line)
+			if (peakHoldL > -58) {
+				meterCtx.fillStyle = '#ffffff';
+				meterCtx.fillRect(barL_X, Math.round(dbToY(peakHoldL)), barW, 1.5);
+			}
+			if (peakHoldR > -58) {
+				meterCtx.fillStyle = '#ffffff';
+				meterCtx.fillRect(barR_X, Math.round(dbToY(peakHoldR)), barW, 1.5);
+			}
+
+			// Scale Ticks & dB Markings (0, -3, -6, -12, -18, -24, -36, -48)
+			const marks = [0, -3, -6, -12, -18, -24, -36, -48];
+			meterCtx.font = `${Math.max(7, Math.round(8 * (w / 56)))}px monospace`;
+			meterCtx.textAlign = 'left';
+			meterCtx.textBaseline = 'middle';
+
+			marks.forEach((m) => {
+				const y = Math.round(dbToY(m));
+				// Subtle tick mark
+				meterCtx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+				meterCtx.beginPath();
+				meterCtx.moveTo(Math.round(w * 0.60), y);
+				meterCtx.lineTo(Math.round(w * 0.68), y);
+				meterCtx.stroke();
+
+				// Label
+				meterCtx.fillStyle = m >= -3 ? 'rgba(239, 68, 68, 0.85)' : (m >= -6 ? 'rgba(234, 179, 8, 0.85)' : 'rgba(255, 255, 255, 0.4)');
+				meterCtx.fillText(`${m === 0 ? '0' : m}`, Math.round(w * 0.71), y);
+			});
+
+			// Bottom Numeric Readout (live peak level or -inf)
+			meterCtx.textBaseline = 'alphabetic';
+			meterCtx.textAlign = 'center';
+			meterCtx.font = `bold ${Math.max(8, Math.round(8.5 * (w / 56)))}px monospace`;
+			meterCtx.fillStyle = smoothL > -55 ? '#38bdf8' : 'rgba(255, 255, 255, 0.3)';
+			const numL = smoothL <= -58 ? '-∞' : `${Math.round(smoothL)}`;
+			meterCtx.fillText(numL, Math.round(w * 0.22), h - 5);
+
+			meterCtx.fillStyle = smoothR > -55 ? '#f59e0b' : 'rgba(255, 255, 255, 0.3)';
+			const numR = smoothR <= -58 ? '-∞' : `${Math.round(smoothR)}`;
+			meterCtx.fillText(numR, Math.round(w * 0.48), h - 5);
+		}
+
 		// Main visualizer animation loop
 		let isAudioVisible = false;
 		let rafVisualizerId: number | null = null;
@@ -1369,6 +1517,10 @@
 			} else {
 				renderSpectrogramScope();
 			}
+
+			// Render real-time stereo VU meter
+			renderStereoMeter();
+
 			rafVisualizerId = requestAnimationFrame(renderActiveVisualizer);
 		}
 
@@ -1484,7 +1636,7 @@
 	/* TWO-COLUMN WORKBENCH GRID */
 	.audio-workbench-grid {
 		display: grid;
-		grid-template-columns: 1.08fr 0.92fr;
+		grid-template-columns: 1.15fr 0.85fr;
 		gap: 1.25em;
 		align-items: stretch;
 	}
@@ -1588,26 +1740,53 @@
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 	}
 
-	/* HERO CANVAS BOX */
-	.hero-canvas-box {
-		position: relative;
+	/* VISUALIZER STAGE (CANVAS + VERTICAL DUAL METER) */
+	.visualizer-stage {
+		display: flex;
+		gap: 0.6em;
 		width: 100%;
-		height: 320px;
-		border: 1px solid var(--border-color);
-		border-radius: 8px;
-		overflow: hidden;
-		background: #09090b;
-		margin-bottom: 0.75em;
+		height: 380px;
+		flex: 1;
 		box-sizing: border-box;
 	}
 
 	@media (max-width: 860px) {
-		.hero-canvas-box {
-			height: 220px;
+		.visualizer-stage {
+			height: 240px;
 		}
 	}
 
+	.hero-canvas-box {
+		position: relative;
+		flex: 1;
+		height: 100%;
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		overflow: hidden;
+		background: #09090b;
+		box-sizing: border-box;
+	}
+
 	#audio-hero-canvas {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	/* STEREO PEAK / VU METER BOX */
+	.stereo-meter-box {
+		position: relative;
+		width: 56px;
+		height: 100%;
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		overflow: hidden;
+		background: #09090b;
+		box-sizing: border-box;
+		flex-shrink: 0;
+	}
+
+	#audio-meter-canvas {
 		display: block;
 		width: 100%;
 		height: 100%;
@@ -1661,16 +1840,15 @@
 		text-overflow: ellipsis;
 	}
 
-	/* WAVEFORM HUD BAR (PHASE METER + TRACE LEGEND) */
+	/* WAVEFORM HUD BAR (PHASE CORRELATION METER) */
 	.waveform-hud-bar {
 		position: absolute;
 		bottom: 8px;
 		left: 8px;
 		right: 8px;
 		display: flex;
-		justify-content: space-between;
+		justify-content: center;
 		align-items: center;
-		gap: 0.8em;
 		background: rgba(0, 0, 0, 0.65);
 		backdrop-filter: blur(6px);
 		border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1680,41 +1858,19 @@
 		z-index: 2;
 	}
 
-	.trace-legend {
-		display: flex;
-		align-items: center;
-		gap: 0.5em;
-	}
-
-	.legend-dot {
-		display: inline-block;
-		width: 7px;
-		height: 7px;
-		border-radius: 50%;
-	}
-
-	.legend-dot.cyan {
-		background: #38bdf8;
-		box-shadow: 0 0 6px #38bdf8;
-	}
-
-	.legend-dot.amber {
-		background: #f59e0b;
-		box-shadow: 0 0 6px #f59e0b;
-		margin-left: 0.3em;
-	}
-
-	.legend-label {
-		font-size: 0.72em;
-		font-weight: 700;
-		color: rgba(255, 255, 255, 0.85);
-	}
-
 	.phase-meter-wrap {
 		display: flex;
 		align-items: center;
-		gap: 0.45em;
-		flex-shrink: 0;
+		gap: 0.55em;
+		width: 100%;
+		justify-content: center;
+	}
+
+	.phase-meter-title {
+		font-size: 0.72em;
+		font-weight: 700;
+		color: rgba(255, 255, 255, 0.75);
+		white-space: nowrap;
 	}
 
 	.phase-meter-tag {
@@ -1725,7 +1881,8 @@
 
 	.phase-meter-track {
 		position: relative;
-		width: clamp(60px, 12vw, 100px);
+		flex: 1;
+		max-width: 180px;
 		height: 6px;
 		background: rgba(255, 255, 255, 0.1);
 		border-radius: 3px;
@@ -1757,41 +1914,6 @@
 		color: #ffffff;
 		min-width: 40px;
 		text-align: right;
-	}
-
-	/* VISUALIZER FOOTER BAR */
-	.visualizer-footer-bar {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.6em;
-		flex-wrap: wrap;
-		margin-top: auto;
-	}
-
-	.telemetry-pill {
-		display: flex;
-		align-items: center;
-		gap: 0.35em;
-		background: rgba(148, 163, 184, 0.08);
-		border: 1px solid var(--border-color);
-		border-radius: 6px;
-		padding: 3px 7px;
-		font-size: 0.72em;
-	}
-
-	:global(html[data-theme="dark"]) .telemetry-pill {
-		background: rgba(255, 255, 255, 0.03);
-	}
-
-	.telemetry-label {
-		font-weight: 700;
-		color: rgb(var(--gray));
-	}
-
-	.telemetry-value {
-		font-weight: 600;
-		color: rgb(var(--gray-dark));
 	}
 
 	/* CONTROLS COLUMN */
@@ -1910,6 +2032,13 @@
 		font-weight: 700;
 		color: rgb(var(--black));
 		line-height: 1.2;
+	}
+
+	/* TONE CONTROLS SECTION */
+	.tone-controls-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.65em;
 	}
 
 	/* SWEEP ACTIONS */
@@ -2039,9 +2168,31 @@
 		color: #ffffff;
 	}
 
-	/* NOISE GENERATOR */
-	.noise-group {
-		margin-top: auto;
+	/* BROADBAND NOISE SUB-SECTION (INLINE) */
+	.noise-inline-section {
+		border-top: 1px solid var(--border-color);
+		padding-top: 0.65em;
+		margin-top: 0.15em;
+	}
+
+	.noise-inline-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.6em;
+		flex-wrap: wrap;
+	}
+
+	.noise-inline-left {
+		display: flex;
+		align-items: center;
+		gap: 0.5em;
+	}
+
+	.noise-inline-label {
+		font-size: 0.74em;
+		font-weight: 700;
+		color: rgb(var(--gray));
 	}
 
 	.noise-segmented-control {
@@ -2066,7 +2217,7 @@
 		font-family: inherit;
 		font-size: 0.74em;
 		font-weight: 700;
-		padding: 0 7px;
+		padding: 0 8px;
 		height: 21px;
 		border-radius: 4px;
 		cursor: pointer;
@@ -2088,47 +2239,18 @@
 		color: #ffffff;
 	}
 
-	.noise-action-row {
-		display: flex;
-		gap: 0.6em;
-		align-items: center;
-	}
-
-	.noise-btn {
-		flex: 0 0 120px;
-	}
-
-	.noise-desc-pill {
-		flex: 1;
-		background: rgba(148, 163, 184, 0.08);
-		border: 1px solid var(--border-color);
-		border-radius: 6px;
-		padding: 0.45em 0.65em;
-		font-size: 0.72em;
-		line-height: 1.35;
-		color: rgb(var(--gray-dark));
-	}
-
-	:global(html[data-theme="dark"]) .noise-desc-pill {
-		background: rgba(255, 255, 255, 0.03);
+	.noise-inline-btn {
+		flex: 0 0 auto;
+		min-width: 105px;
+		min-height: 31px;
+		padding: 0.4em 0.8em;
 	}
 
 	.mono {
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 	}
 
-	@media (max-width: 480px) {
-		.noise-action-row {
-			flex-direction: column;
-			align-items: stretch;
-		}
-		.noise-btn {
-			width: 100%;
-			flex: auto;
-		}
-	}
-
-	@media (max-width: 360px) {
+	@media (max-width: 380px) {
 		.card-header-wrap {
 			flex-wrap: wrap;
 		}
@@ -2146,6 +2268,19 @@
 		}
 		.tone-buttons-grid {
 			grid-template-columns: 1fr;
+		}
+		.noise-inline-row {
+			flex-direction: column;
+			align-items: stretch;
+		}
+		.noise-inline-left {
+			justify-content: space-between;
+		}
+		.noise-inline-btn {
+			width: 100%;
+		}
+		.stereo-meter-box {
+			width: 48px;
 		}
 	}
 </style>

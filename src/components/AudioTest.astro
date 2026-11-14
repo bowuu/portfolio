@@ -2698,12 +2698,12 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.4em;
-		background: rgba(255, 255, 255, 0.06);
-		border: 1px solid rgba(255, 255, 255, 0.14);
-		color: rgb(var(--gray-light));
+		gap: 0.45em;
+		background: var(--bg-card);
+		border: 1px solid var(--border-color);
+		color: rgb(var(--black));
 		border-radius: 6px;
-		padding: 0.35em 0.7em;
+		padding: 0.35em 0.75em;
 		min-height: 32px;
 		font-family: inherit;
 		font-size: 0.8em;
@@ -2713,32 +2713,34 @@
 		flex-shrink: 0;
 	}
 
-	:global([data-theme='light']) .slider-play-btn {
-		background: rgba(0, 0, 0, 0.05);
-		border-color: rgba(0, 0, 0, 0.12);
-		color: #1e293b;
+	:global(html[data-theme="dark"]) .slider-play-btn {
+		background: #18181b;
+		border-color: rgba(255, 255, 255, 0.15);
+		color: #f4f4f5;
 	}
 
 	.slider-play-btn:hover {
-		background: rgba(234, 88, 12, 0.15);
-		border-color: rgba(234, 88, 12, 0.4);
-		color: #ea580c;
+		border-color: var(--accent);
+		color: var(--accent);
+		transform: translateY(-1px);
 	}
 
 	.slider-play-btn.active {
-		background: #ea580c;
-		border-color: #c2410c;
-		color: #ffffff;
+		background: #ea580c !important;
+		border-color: #c2410c !important;
+		color: #ffffff !important;
 		box-shadow: 0 0 10px rgba(234, 88, 12, 0.4);
 	}
 
 	.slider-play-btn.active:hover {
-		background: #c2410c;
-		border-color: #9a3412;
+		background: #c2410c !important;
+		border-color: #9a3412 !important;
+		color: #ffffff !important;
 	}
 
 	.slider-play-btn .play-icon {
 		flex-shrink: 0;
+		fill: currentColor;
 	}
 
 	.freq-slider {

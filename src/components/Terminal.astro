@@ -14,12 +14,12 @@
 					<line x1="12" y1="19" x2="20" y2="19"></line>
 				</svg>
 				<button class="wm-btn wm-fx active" id="term-blur-btn" type="button" title="Toggle background blur ('blur')" aria-label="Toggle background blur">
-					<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor">
-						<path d="M8 2 C8 2 3.6 7.4 3.6 10.6 A4.4 4.4 0 0 0 12.4 10.6 C12.4 7.4 8 2 8 2 Z"/>
+					<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+						<path d="M8 1.5 C8 1.5 3.5 6.8 3.5 10.5 A4.5 4.5 0 0 0 12.5 10.5 C12.5 6.8 8 1.5 8 1.5 Z"/>
 					</svg>
 				</button>
 				<button class="wm-btn wm-fx active" id="term-trans-btn" type="button" title="Toggle terminal transparency ('transparency')" aria-label="Toggle terminal transparency">
-					<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor">
+					<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor">
 						<defs>
 							<clipPath id="term-trans-clip">
 								<rect x="2" y="2" width="12" height="12" rx="2.5"></rect>
@@ -34,9 +34,9 @@
 						</g>
 					</svg>
 				</button>
-				<button class="wm-btn wm-fx" id="term-clear-btn" type="button" title="Clear terminal screen ('clear')" aria-label="Clear terminal screen">
-					<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor">
-						<path fill-rule="evenodd" clip-rule="evenodd" d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM6.28 5.22a.75.75 0 0 0-1.06 1.06L6.94 8 5.22 9.72a.75.75 0 1 0 1.06 1.06L8 9.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L9.06 8l1.72-1.72a.75.75 0 0 0-1.06-1.06L8 6.94 6.28 5.22z"/>
+				<button class="wm-btn wm-fx active" id="term-clear-btn" type="button" title="Clear terminal screen ('clear')" aria-label="Clear terminal screen">
+					<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+						<path fill-rule="evenodd" clip-rule="evenodd" d="M6 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1h3.25a.75.75 0 0 1 0 1.5H12.5v7.75A1.75 1.75 0 0 1 10.75 15h-5.5A1.75 1.75 0 0 1 3.5 13.25V4.5H2.75a.75.75 0 0 1 0-1.5H6V2zm1.25.5v.5h1.5V2.5h-1.5zM5 4.5v8.75c0 .138.112.25.25.25h5.5a.25.25 0 0 0 .25-.25V4.5H5zM6.75 6.5a.75.75 0 0 1 .75.75v4a.75.75 0 0 1-1.5 0v-4a.75.75 0 0 1 .75-.75zm3.25.75a.75.75 0 0 0-1.5 0v4a.75.75 0 0 0 1.5 0v-4z"/>
 					</svg>
 				</button>
 			</div>
@@ -845,43 +845,45 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-col">Core System &amp; Navigation</span> <span class="term-col">Description</span>
   <span class="term-dim">------------------------ ------------------------------------------------------------</span>
   <span class="term-hl">about</span>                    Hardware engineering background &amp; focus
-  <span class="term-hl">skills</span>                   Silicon validation, Linux &amp; 3D CAD platforms
-  <span class="term-hl">projects</span>                 Featured engineering projects &amp; 3D models
-  <span class="term-hl">tests</span>                    Navigate to hardware &amp; network test suites (#lab)
-  <span class="term-hl">network</span>                  Anycast edge throughput benchmark (#benchmark)
-  <span class="term-hl">mouse</span>                    Mouse polling &amp; latency lab (#input-lab)
-  <span class="term-hl">keyboard</span>                 104-key switch matrix lab (#keyboard-lab)
+  <span class="term-hl">blur</span> [on|off]            Toggle background blur filter
   <span class="term-hl">cad</span> [spin|grid|slice]    3D CAD viewer controls &amp; slicer (#cad-viewer)
+  <span class="term-hl">clear</span>                    Clear terminal screen output
+  <span class="term-hl">date</span>                     Display current UTC timestamp
   <span class="term-hl">debug</span>                    Navigate to client hardware &amp; telemetry (#debug)
+  <span class="term-hl">exit</span>                     Close terminal session window (or Esc)
+  <span class="term-hl">keyboard</span>                 104-key switch matrix lab (#keyboard-lab)
+  <span class="term-hl">man</span> [cmd]                Reference manual page for shell commands
+  <span class="term-hl">mouse</span>                    Mouse polling &amp; latency lab (#input-lab)
+  <span class="term-hl">network</span>                  Anycast edge throughput benchmark (#benchmark)
+  <span class="term-hl">projects</span>                 Featured engineering projects &amp; 3D models
+  <span class="term-hl">skills</span>                   Silicon validation, Linux &amp; 3D CAD platforms
+  <span class="term-hl">tests</span>                    Navigate to hardware &amp; network test suites (#lab)
   <span class="term-hl">theme</span> [mode]             Obsidian Dark / Clean Light toggle
   <span class="term-hl">transparency</span> [on|off]    Toggle terminal acrylic glass transparency
-  <span class="term-hl">blur</span> [on|off]            Toggle background blur filter
   <span class="term-hl">visitor</span>                  Query anonymous Cloudflare D1 visitor counter
   <span class="term-hl">whoami</span>                   Display client session &amp; Anycast edge telemetry
-  <span class="term-hl">man</span> [cmd]                Reference manual page for shell commands
-  <span class="term-hl">date</span> / <span class="term-hl">clear</span> / <span class="term-hl">exit</span>      Standard shell session utilities
 
   <span class="term-col">Filesystem &amp; Source VFS</span>  <span class="term-col">Description</span>
   <span class="term-dim">------------------------ ------------------------------------------------------------</span>
-  <span class="term-hl">pwd</span>                      Print current working directory path
-  <span class="term-hl">cd</span> [dir]                 Change directory (supports ~, .., -)
-  <span class="term-hl">ls</span> [flags] [path]        List repository files &amp; dirs (-l, -a, -h)
-  <span class="term-hl">tree</span> [-L depth] [dir]    Visual ASCII directory tree diagram
   <span class="term-hl">cat</span> [file]               Inspect repository source code file
-  <span class="term-hl">head</span> / <span class="term-hl">tail</span> [-n] [file] Output first / last lines of file (e.g. head -n 25)
+  <span class="term-hl">cd</span> [dir]                 Change directory (supports ~, .., -)
   <span class="term-hl">grep</span> [pattern] [file]    Search file contents with highlighted matches
+  <span class="term-hl">head</span> / <span class="term-hl">tail</span> [-n] [file] Output first / last lines of file (e.g. head -n 25)
+  <span class="term-hl">ls</span> [flags] [path]        List repository files &amp; dirs (-l, -a, -h)
+  <span class="term-hl">pwd</span>                      Print current working directory path
+  <span class="term-hl">tree</span> [-L depth] [dir]    Visual ASCII directory tree diagram
 
   <span class="term-col">Hardware Diagnostics</span>     <span class="term-col">Description</span>
   <span class="term-dim">------------------------ ------------------------------------------------------------</span>
-  <span class="term-hl">neofetch</span>                 Silicon validation bench summary &amp; die specs
   <span class="term-hl">bringup</span> [-f]             Automated ATE silicon bringup sequence
-  <span class="term-hl">uboot</span> / <span class="term-hl">boot</span>             Universal Bootloader (SPL, DRAM, FDT &amp; kernel)
   <span class="term-hl">dmesg</span>                    Simulated silicon bringup &amp; ATE ring buffer
-  <span class="term-hl">wafer</span>                    300mm wafer die sort map &amp; bin yield report
-  <span class="term-hl">sensors</span>                  Thermal junction probes, PMIC voltages &amp; power
   <span class="term-hl">gcode</span>                    3D printer telemetry &amp; bed mesh leveling report
+  <span class="term-hl">neofetch</span>                 Silicon validation bench summary &amp; die specs
+  <span class="term-hl">sensors</span>                  Thermal junction probes, PMIC voltages &amp; power
+  <span class="term-hl">uboot</span> / <span class="term-hl">boot</span>             Universal Bootloader (SPL, DRAM, FDT &amp; kernel)
   <span class="term-hl">uname</span> [-a]               Kernel platform architecture &amp; release flags
   <span class="term-hl">uptime</span>                   Current session runtime &amp; load average
+  <span class="term-hl">wafer</span>                    300mm wafer die sort map &amp; bin yield report
 
   <span class="term-col">Hardware Lab Extras</span>      <span class="term-col">Description</span>
   <span class="term-dim">------------------------ ------------------------------------------------------------</span>
@@ -1879,23 +1881,32 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 
 	.wm-fx {
 		width: 22px;
-		height: 20px;
+		height: 22px;
 		border-radius: 4px;
-		border: 1px solid rgba(248, 113, 113, 0.26);
-		background: rgba(248, 113, 113, 0.08);
-		color: rgba(248, 113, 113, 0.75);
+		border: 1px solid rgba(248, 113, 113, 0.45);
+		background: rgba(248, 113, 113, 0.18);
+		color: #f87171;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		box-sizing: border-box;
 		transition: all 0.15s ease;
 	}
 
 	.wm-fx svg {
+		display: block;
+		margin: 0 auto;
+		flex-shrink: 0;
 		transition: transform 0.15s ease;
 	}
 
-	.wm-fx.active {
-		color: #f87171;
-		background: rgba(248, 113, 113, 0.18);
-		border-color: rgba(248, 113, 113, 0.45);
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+	.wm-fx:not(.active) {
+		color: rgba(248, 113, 113, 0.70);
+		background: rgba(248, 113, 113, 0.08);
+		border-color: rgba(248, 113, 113, 0.24);
+		box-shadow: none;
 	}
 
 	.wm-fx:hover {

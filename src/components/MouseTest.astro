@@ -477,11 +477,11 @@
 
 					if (reactionTimeVal) reactionTimeVal.textContent = `${reactionDelta}`;
 
-					let rating = 'Nominal';
-					if (reactionDelta < 185) rating = 'Ultra-Fast';
-					else if (reactionDelta < 225) rating = 'Fast';
-					else if (reactionDelta < 275) rating = 'Nominal';
-					else rating = 'Extended';
+					let rating = 'Average';
+					if (reactionDelta < 185) rating = 'Fast';
+					else if (reactionDelta < 225) rating = 'Good';
+					else if (reactionDelta < 275) rating = 'Average';
+					else rating = 'Slow';
 
 					if (pollReflexBox) pollReflexBox.className = 'poll-reflex-box result';
 					if (reactionHeadline) reactionHeadline.textContent = `${reactionDelta} ms (${rating})`;

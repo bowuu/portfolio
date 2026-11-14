@@ -15,7 +15,7 @@
 		</h2>
 
 		<div class="header-actions">
-			<button id="kb-sound-btn" class="telemetry-btn" type="button" title="Toggle mechanical switch audio acoustics (Off / Blue / Red / Model M)">
+			<button id="kb-sound-btn" class="telemetry-btn" type="button" title="Toggle switch sound (On / Off)">
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
 					<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
 					<path id="kb-sound-waves" d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" class="hidden"></path>
@@ -344,6 +344,159 @@
 </section>
 
 <script>
+	// -------------------------------------------------------------
+	// CHERRY MX RED LINEAR SWITCH ACOUSTIC SYNTHESIZER (MODAL SYNTHESIS)
+	// -------------------------------------------------------------
+	class KeyboardSoundEngine {
+		private ctx: AudioContext | null = null;
+		public isEnabled: boolean = false;
+		private masterFilter: BiquadFilterNode | null = null;
+		private masterCompressor: DynamicsCompressorNode | null = null;
+		private masterGain: GainNode | null = null;
+
+		constructor() {
+			this.isEnabled = false;
+		}
+
+		private init() {
+			if (!this.ctx) {
+				const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+				if (AudioCtx) {
+					this.ctx = new AudioCtx();
+
+					// Acoustic chassis damping: roll off ultrasonic harshness above 8 kHz
+					this.masterFilter = this.ctx.createBiquadFilter();
+					this.masterFilter.type = 'lowpass';
+					this.masterFilter.frequency.setValueAtTime(8000, this.ctx.currentTime);
+					this.masterFilter.Q.setValueAtTime(0.7, this.ctx.currentTime);
+
+					// Dynamic compressor: prevents digital clipping & harsh distortion when typing fast / NKRO
+					this.masterCompressor = this.ctx.createDynamicsCompressor();
+					this.masterCompressor.threshold.setValueAtTime(-14, this.ctx.currentTime);
+					this.masterCompressor.knee.setValueAtTime(24, this.ctx.currentTime);
+					this.masterCompressor.ratio.setValueAtTime(5, this.ctx.currentTime);
+					this.masterCompressor.attack.setValueAtTime(0.002, this.ctx.currentTime);
+					this.masterCompressor.release.setValueAtTime(0.05, this.ctx.currentTime);
+
+					this.masterGain = this.ctx.createGain();
+					this.masterGain.gain.setValueAtTime(0.85, this.ctx.currentTime);
+
+					this.masterFilter.connect(this.masterCompressor);
+					this.masterCompressor.connect(this.masterGain);
+					this.masterGain.connect(this.ctx.destination);
+				}
+			}
+			if (this.ctx && this.ctx.state === 'suspended') {
+				this.ctx.resume().catch(() => {});
+			}
+		}
+
+		public setEnabled(enabled: boolean) {
+			this.isEnabled = enabled;
+			if (enabled) this.init();
+		}
+
+		public play(code?: string) {
+			if (!this.isEnabled) return;
+			this.init();
+			if (!this.ctx) return;
+
+			const t = this.ctx.currentTime;
+			const isSpace = code === 'Space';
+			const isEnter = code === 'Enter';
+			const isBack = code === 'Backspace';
+			const isShift = code === 'ShiftLeft' || code === 'ShiftRight';
+			const isBig = isEnter || isBack || isShift;
+
+			// Per-key physical acoustic modeling & humanized micro-variance (±2.5% pitch, ±4% gain)
+			const jitter = 0.975 + Math.random() * 0.05;
+			const gainJitter = 0.96 + Math.random() * 0.08;
+			const pitchMod = (isSpace ? 0.62 : isBig ? 0.82 : 1.0) * jitter;
+
+			// LINEAR RED (Cherry MX Red / Smooth POM Stem Bottom-Out / Deep "Thock"):
+			// 1. Initial sharp plastic contact transient (< 2ms)
+			const contactFreq = (isSpace ? 1100 : isBig ? 1350 : 1650) * pitchMod;
+			this.playPlasticClack(t, contactFreq, 2.4, 0.004, 0.25 * gainJitter);
+
+			// 2. Primary keycap Helmholtz cavity resonance (solid deep "thock")
+			const cavityFreq = (isSpace ? 210 : isBig ? 340 : 440) * pitchMod;
+			const cavityDur = isSpace ? 0.040 : isBig ? 0.030 : 0.024;
+			this.playPlasticClack(t, cavityFreq, 3.0, cavityDur, 0.32 * gainJitter);
+
+			// 3. Low-frequency plate / housing bottom-out thud (warm acoustic body, no artificial pitch sweep)
+			const plateFreq = (isSpace ? 140 : isBig ? 180 : 230) * pitchMod;
+			this.playBodyThump(t, plateFreq, 2.0, cavityDur * 1.25, 0.36 * gainJitter);
+
+			if (isSpace) {
+				// Spacebar hollow air resonance & wire stabilizer tick
+				this.playBodyThump(t + 0.002, 95, 1.8, 0.048, 0.28 * gainJitter);
+				this.playPlasticClack(t + 0.001, 2400, 3.8, 0.004, 0.10 * gainJitter);
+			}
+		}
+
+		private playPlasticClack(time: number, freq: number, Q: number, dur: number, vol: number) {
+			if (!this.ctx) return;
+			const sampleRate = this.ctx.sampleRate;
+			const bufferSize = Math.max(32, Math.floor(sampleRate * Math.min(dur, 0.03)));
+			const buffer = this.ctx.createBuffer(1, bufferSize, sampleRate);
+			const data = buffer.getChannelData(0);
+			for (let i = 0; i < bufferSize; i++) {
+				data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.22));
+			}
+
+			const source = this.ctx.createBufferSource();
+			source.buffer = buffer;
+
+			const filter = this.ctx.createBiquadFilter();
+			filter.type = 'bandpass';
+			filter.frequency.setValueAtTime(Math.max(40, Math.min(18000, freq)), time);
+			filter.Q.setValueAtTime(Q, time);
+
+			const gain = this.ctx.createGain();
+			gain.gain.setValueAtTime(vol, time);
+			gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+
+			source.connect(filter);
+			filter.connect(gain);
+			gain.connect(this.masterFilter || this.ctx.destination);
+
+			source.start(time);
+			source.stop(time + dur);
+		}
+
+		private playBodyThump(time: number, freq: number, Q: number, dur: number, vol: number) {
+			if (!this.ctx) return;
+			const sampleRate = this.ctx.sampleRate;
+			const bufferSize = Math.max(64, Math.floor(sampleRate * Math.min(dur, 0.05)));
+			const buffer = this.ctx.createBuffer(1, bufferSize, sampleRate);
+			const data = buffer.getChannelData(0);
+			for (let i = 0; i < bufferSize; i++) {
+				data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.28));
+			}
+
+			const source = this.ctx.createBufferSource();
+			source.buffer = buffer;
+
+			const filter = this.ctx.createBiquadFilter();
+			filter.type = 'lowpass';
+			filter.frequency.setValueAtTime(Math.max(50, Math.min(900, freq)), time);
+			filter.Q.setValueAtTime(Q, time);
+
+			const gain = this.ctx.createGain();
+			gain.gain.setValueAtTime(vol, time);
+			gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+
+			source.connect(filter);
+			filter.connect(gain);
+			gain.connect(this.masterFilter || this.ctx.destination);
+
+			source.start(time);
+			source.stop(time + dur);
+		}
+	}
+
+	const soundEngine = new KeyboardSoundEngine();
+
 	function initKeyboardLab() {
 		const container = document.getElementById('kb-container');
 		const detailsEl = document.getElementById('kb-details') as HTMLDetailsElement | null;
@@ -432,9 +585,9 @@
 			const now = performance.now();
 			const code = e.code || e.key;
 
-			// Procedural mechanical switch acoustics
+			// Procedural Cherry MX Red linear switch acoustics
 			if (!e.repeat) {
-				(window as any).__playSwitchSound?.(code);
+				soundEngine.play(code);
 			}
 
 			// Intercept space/tab/arrows if container or mobile input is focused to avoid page jumping
@@ -550,7 +703,7 @@
 
 			keyEl.addEventListener('pointerdown', (e) => {
 				e.preventDefault();
-				(window as any).__playSwitchSound?.(code);
+				soundEngine.play(code);
 				activeKeys.add(code);
 				testedKeys.add(code);
 				keyEl.classList.add('key-pressed', 'key-tested');
@@ -584,56 +737,40 @@
 		window.addEventListener('keyup', handleKeyUp);
 		if (resetBtn) resetBtn.addEventListener('click', resetMatrix);
 
-		// Switch Sound UI Controls & Sync
+		// Switch Sound UI Controls (Cherry MX Red: On / Off)
 		const soundBtn = document.getElementById('kb-sound-btn');
 		const soundLabel = document.getElementById('kb-sound-label');
 		const soundWaves = document.getElementById('kb-sound-waves');
 		const soundMute1 = document.getElementById('kb-sound-mute-1');
 		const soundMute2 = document.getElementById('kb-sound-mute-2');
 
-		function updateSoundUI(profile: string) {
+		function updateSoundUI(on: boolean) {
 			if (!soundLabel) return;
-			const labels: Record<string, string> = {
-				off: 'Sound: Off',
-				blue: 'Sound: Blue',
-				red: 'Sound: Red',
-				modelm: 'Sound: Model M'
-			};
-			soundLabel.textContent = labels[profile] || 'Sound: Off';
-			if (profile === 'off') {
-				soundWaves?.classList.add('hidden');
-				soundMute1?.classList.remove('hidden');
-				soundMute2?.classList.remove('hidden');
-				soundBtn?.classList.remove('active-sound');
-			} else {
+			soundLabel.textContent = on ? 'Sound: On' : 'Sound: Off';
+			if (on) {
 				soundWaves?.classList.remove('hidden');
 				soundMute1?.classList.add('hidden');
 				soundMute2?.classList.add('hidden');
 				soundBtn?.classList.add('active-sound');
+			} else {
+				soundWaves?.classList.add('hidden');
+				soundMute1?.classList.remove('hidden');
+				soundMute2?.classList.remove('hidden');
+				soundBtn?.classList.remove('active-sound');
 			}
 		}
 
-		const initialProfile = (window as any).__getSwitchSound?.() || 'off';
-		updateSoundUI(initialProfile);
-
-		window.addEventListener('switch-sound-changed', ((e: CustomEvent) => {
-			if (e.detail?.profile) {
-				updateSoundUI(e.detail.profile);
-			}
-		}) as EventListener);
+		updateSoundUI(soundEngine.isEnabled);
 
 		if (soundBtn) {
-			soundBtn.addEventListener('click', () => {
-				const current = (window as any).__getSwitchSound?.() || 'off';
-				const order = ['off', 'blue', 'red', 'modelm'];
-				const nextIndex = (order.indexOf(current) + 1) % order.length;
-				const nextProfile = order[nextIndex];
-				(window as any).__setSwitchSound?.(nextProfile);
-				updateSoundUI(nextProfile);
-				if (nextProfile !== 'off') {
-					(window as any).__playSwitchSound?.('KeyA');
+			soundBtn.onclick = () => {
+				const nextState = !soundEngine.isEnabled;
+				soundEngine.setEnabled(nextState);
+				updateSoundUI(nextState);
+				if (nextState) {
+					soundEngine.play('KeyA');
 				}
-			});
+			};
 		}
 	}
 

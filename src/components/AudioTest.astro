@@ -1154,6 +1154,11 @@
 			const w = heroCanvas.width;
 			const h = heroCanvas.height;
 			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+			const dpr = Math.min(window.devicePixelRatio || 1, 2);
+			const bottomY = Math.round(h - 22 * dpr);
+			const labelY = Math.round(h - 6 * dpr);
+			const topPad = Math.round(14 * dpr);
+			const plotH = bottomY - topPad;
 
 			heroCtx.clearRect(0, 0, w, h);
 			heroCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
@@ -1169,8 +1174,6 @@
 				const clamped = Math.max(minFreq, Math.min(maxFreq, hz));
 				return ((Math.log10(clamped) - logMin) / logRange) * w;
 			};
-
-			const bottomY = h - 20;
 
 			// Horizontal divider above bottom gutter
 			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)';
@@ -1194,26 +1197,25 @@
 			heroCtx.setLineDash([]);
 
 			// Frequency labels matching Spectrogram (20 Hz, 100 Hz, 1 kHz, 10 kHz, 20 kHz)
-			const dpr = Math.min(window.devicePixelRatio || 1, 2);
 			const fontSize = Math.round(9.5 * dpr);
 			heroCtx.font = `${fontSize}px monospace`;
 			heroCtx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.55)';
 
 			heroCtx.textAlign = 'left';
-			heroCtx.fillText('20 Hz', 6 * dpr, h - 5 * dpr);
+			heroCtx.fillText('20 Hz', 6 * dpr, labelY);
 
 			heroCtx.textAlign = 'center';
-			heroCtx.fillText('100 Hz', freqToX(100), h - 5 * dpr);
-			heroCtx.fillText('1 kHz', freqToX(1000), h - 5 * dpr);
+			heroCtx.fillText('100 Hz', freqToX(100), labelY);
+			heroCtx.fillText('1 kHz', freqToX(1000), labelY);
 
 			heroCtx.textAlign = 'right';
-			heroCtx.fillText('10 kHz', freqToX(10000) - 4 * dpr, h - 5 * dpr);
-			heroCtx.fillText('20 kHz', w - 6 * dpr, h - 5 * dpr);
+			heroCtx.fillText('10 kHz', freqToX(10000) - 4 * dpr, labelY);
+			heroCtx.fillText('20 kHz', w - 6 * dpr, labelY);
 
 			// Horizontal dB guide lines
 			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.05)';
 			[0.25, 0.5, 0.75].forEach(ratio => {
-				const y = bottomY - ratio * (bottomY - 14);
+				const y = bottomY - ratio * plotH;
 				heroCtx.beginPath();
 				heroCtx.moveTo(0, y);
 				heroCtx.lineTo(w, y);
@@ -1263,7 +1265,7 @@
 				}
 
 				const norm = Math.min(1.0, Math.pow(val / 255, 0.78) * 1.25);
-				const y = bottomY - norm * (bottomY - 14);
+				const y = bottomY - norm * plotH;
 				yPoints.push(y);
 			}
 
@@ -1323,7 +1325,8 @@
 			const w = heroCanvas.width;
 			const h = heroCanvas.height;
 			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-			const bottomY = h - 20;
+			const dpr = Math.min(window.devicePixelRatio || 1, 2);
+			const bottomY = Math.round(h - 22 * dpr);
 			const waterfallH = Math.max(1, bottomY);
 
 			if (currentThemeIsDark !== isDark) {
@@ -1478,7 +1481,9 @@
 			const w = heroCanvas.width;
 			const h = heroCanvas.height;
 			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-			const bottomY = h - 20;
+			const dpr = Math.min(window.devicePixelRatio || 1, 2);
+			const bottomY = Math.round(h - 22 * dpr);
+			const labelY = Math.round(h - 6 * dpr);
 
 			// Clear and fill canvas background
 			heroCtx.clearRect(0, 0, w, h);
@@ -1520,21 +1525,20 @@
 			heroCtx.setLineDash([]);
 
 			// Frequency labels matching Frequency Generator (20 Hz, 100 Hz, 1 kHz, 10 kHz, 20 kHz)
-			const dpr = Math.min(window.devicePixelRatio || 1, 2);
 			const fontSize = Math.round(9.5 * dpr);
 			heroCtx.font = `${fontSize}px monospace`;
 			heroCtx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.55)';
 
 			heroCtx.textAlign = 'left';
-			heroCtx.fillText('20 Hz', 6 * dpr, h - 5 * dpr);
+			heroCtx.fillText('20 Hz', 6 * dpr, labelY);
 
 			heroCtx.textAlign = 'center';
-			heroCtx.fillText('100 Hz', freqToX(100), h - 5 * dpr);
-			heroCtx.fillText('1 kHz', freqToX(1000), h - 5 * dpr);
+			heroCtx.fillText('100 Hz', freqToX(100), labelY);
+			heroCtx.fillText('1 kHz', freqToX(1000), labelY);
 
 			heroCtx.textAlign = 'right';
-			heroCtx.fillText('10 kHz', freqToX(10000) - 4 * dpr, h - 5 * dpr);
-			heroCtx.fillText('20 kHz', w - 6 * dpr, h - 5 * dpr);
+			heroCtx.fillText('10 kHz', freqToX(10000) - 4 * dpr, labelY);
+			heroCtx.fillText('20 kHz', w - 6 * dpr, labelY);
 
 			// Tuning target cursor
 			if (activeMode === 'tone' || activeMode === 'sweep') {

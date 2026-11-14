@@ -30,23 +30,6 @@
 	<!-- MOTION CONTROLS TOOLBAR -->
 	<div class="motion-toolbar">
 		<div class="toolbar-group toolbar-left">
-			<button id="toggle-display-btn" class="telemetry-btn" type="button" title="Start display motion benchmark">
-				<svg id="toggle-display-icon-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="hidden">
-					<rect x="5" y="5" width="14" height="14" rx="2"/>
-				</svg>
-				<svg id="toggle-display-icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-					<polygon points="5 3 19 12 5 21 5 3"/>
-				</svg>
-				<span id="toggle-display-text">Start</span>
-			</button>
-
-			<div class="segmented-control" role="group" aria-label="Motion Trajectory">
-				<button class="seg-btn active" data-trajectory="wrap" type="button" title="Continuous pursuit tracking (wrap-around)">Wrap</button>
-				<button class="seg-btn" data-trajectory="bounce" type="button" title="Bidirectional rebound (ping-pong)">Bounce</button>
-			</div>
-		</div>
-
-		<div class="toolbar-group toolbar-right">
 			<div class="segmented-control" role="group" aria-label="Motion Speed">
 				<button class="seg-btn" data-speed="240" type="button" title="240 pixels per second">240 px/s</button>
 				<button class="seg-btn active" data-speed="480" type="button" title="480 pixels per second (Standard)">480 px/s</button>
@@ -58,6 +41,23 @@
 				<button class="seg-btn" data-pattern="bars" type="button" title="Pursuit Bars">Bars</button>
 				<button class="seg-btn" data-pattern="checker" type="button" title="Checkerboard">Checker</button>
 			</div>
+
+			<div class="segmented-control" role="group" aria-label="Motion Trajectory">
+				<button class="seg-btn active" data-trajectory="wrap" type="button" title="Continuous pursuit tracking (wrap-around)">Wrap</button>
+				<button class="seg-btn" data-trajectory="bounce" type="button" title="Bidirectional rebound (ping-pong)">Bounce</button>
+			</div>
+		</div>
+
+		<div class="toolbar-group toolbar-right">
+			<button id="toggle-display-btn" class="telemetry-btn" type="button" title="Start display motion benchmark">
+				<svg id="toggle-display-icon-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="hidden">
+					<rect x="5" y="5" width="14" height="14" rx="2"/>
+				</svg>
+				<svg id="toggle-display-icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+					<polygon points="5 3 19 12 5 21 5 3"/>
+				</svg>
+				<span id="toggle-display-text">Start</span>
+			</button>
 		</div>
 	</div>
 

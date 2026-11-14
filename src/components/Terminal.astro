@@ -14,12 +14,12 @@
 					<line x1="12" y1="19" x2="20" y2="19"></line>
 				</svg>
 				<button class="wm-btn wm-fx active" id="term-blur-btn" type="button" title="Toggle background blur ('blur')" aria-label="Toggle background blur">
-					<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-						<path d="M8 1.75 C8 1.75 3.2 7.2 3.2 10.8 A4.8 4.8 0 0 0 12.8 10.8 C12.8 7.2 8 1.75 8 1.75 Z" fill="currentColor" fill-opacity="0.88"></path>
+					<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor">
+						<path d="M8 2 C8 2 3.6 7.4 3.6 10.6 A4.4 4.4 0 0 0 12.4 10.6 C12.4 7.4 8 2 8 2 Z"/>
 					</svg>
 				</button>
 				<button class="wm-btn wm-fx active" id="term-trans-btn" type="button" title="Toggle terminal transparency ('transparency')" aria-label="Toggle terminal transparency">
-					<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor">
+					<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor">
 						<defs>
 							<clipPath id="term-trans-clip">
 								<rect x="2" y="2" width="12" height="12" rx="2.5"></rect>
@@ -35,9 +35,8 @@
 					</svg>
 				</button>
 				<button class="wm-btn wm-fx" id="term-clear-btn" type="button" title="Clear terminal screen ('clear')" aria-label="Clear terminal screen">
-					<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-						<path d="M2.5 13.5h11M10.75 2.75a1.5 1.5 0 0 1 2.12 2.12l-6.37 6.38H3.75v-2.75l6.38-6.37z" />
-						<line x1="8.5" y1="5" x2="11.5" y2="8" />
+					<svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor">
+						<path fill-rule="evenodd" clip-rule="evenodd" d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM6.28 5.22a.75.75 0 0 0-1.06 1.06L6.94 8 5.22 9.72a.75.75 0 1 0 1.06 1.06L8 9.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L9.06 8l1.72-1.72a.75.75 0 0 0-1.06-1.06L8 6.94 6.28 5.22z"/>
 					</svg>
 				</button>
 			</div>
@@ -1882,9 +1881,9 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 		width: 22px;
 		height: 20px;
 		border-radius: 4px;
-		border: 1px solid rgba(245, 158, 11, 0.25);
-		background: rgba(245, 158, 11, 0.08);
-		color: rgba(245, 158, 11, 0.70);
+		border: 1px solid rgba(248, 113, 113, 0.26);
+		background: rgba(248, 113, 113, 0.08);
+		color: rgba(248, 113, 113, 0.75);
 		transition: all 0.15s ease;
 	}
 
@@ -1893,16 +1892,16 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 	}
 
 	.wm-fx.active {
-		color: #fbbf24;
-		background: rgba(245, 158, 11, 0.20);
-		border-color: rgba(245, 158, 11, 0.48);
+		color: #f87171;
+		background: rgba(248, 113, 113, 0.18);
+		border-color: rgba(248, 113, 113, 0.45);
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 	}
 
 	.wm-fx:hover {
-		color: #fef08a;
-		background: rgba(245, 158, 11, 0.25);
-		border-color: rgba(245, 158, 11, 0.55);
+		color: #fca5a5;
+		background: rgba(248, 113, 113, 0.25);
+		border-color: rgba(248, 113, 113, 0.58);
 	}
 
 	.wm-fx:hover svg {
@@ -1911,8 +1910,8 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 
 	.wm-fx.active:hover {
 		color: #ffffff;
-		background: rgba(245, 158, 11, 0.32);
-		border-color: rgba(245, 158, 11, 0.68);
+		background: rgba(248, 113, 113, 0.32);
+		border-color: rgba(248, 113, 113, 0.72);
 	}
 
 	.wm-fx:active {

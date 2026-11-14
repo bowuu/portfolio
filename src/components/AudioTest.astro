@@ -47,11 +47,11 @@
 				</div>
 			</div>
 
-			<!-- VISUALIZER STAGE (CANVAS + VERTICAL DUAL VU METER) -->
+			<!-- VISUALIZER STAGE (CANVAS + HORIZONTAL STEREO VU METER DIRECTLY UNDER) -->
 			<div class="visualizer-stage">
 				<!-- HERO CANVAS CONTAINER -->
 				<div class="hero-canvas-box" id="hero-canvas-box">
-					<canvas id="audio-hero-canvas" width="540" height="380"></canvas>
+					<canvas id="audio-hero-canvas" width="600" height="310"></canvas>
 
 					<!-- FLOATING HUD OVERLAY BADGE -->
 					<div class="hero-hud-overlay" id="hero-hud-overlay">
@@ -65,7 +65,7 @@
 					<!-- TIME-DOMAIN PHASE CORRELATION BAR (Active in waveform mode) -->
 					<div class="waveform-hud-bar" id="waveform-hud-bar">
 						<div class="phase-meter-wrap" title="Phase Correlation (-1.0 Inverted to +1.0 In-Phase)">
-							<span class="phase-meter-title">Phase Correlation:</span>
+							<span class="phase-meter-title">Phase:</span>
 							<span class="phase-meter-tag mono">-1.0</span>
 							<div class="phase-meter-track">
 								<div class="phase-meter-center"></div>
@@ -77,9 +77,9 @@
 					</div>
 				</div>
 
-				<!-- DEDICATED STEREO PEAK / VU METER (L & R SEPARATE CHANNELS) -->
+				<!-- DEDICATED HORIZONTAL STEREO PEAK / VU METER (FULL HORIZONTAL WIDTH) -->
 				<div class="stereo-meter-box" id="stereo-meter-box" title="Stereo Peak / VU Meter (Left & Right Channels in dBFS)">
-					<canvas id="audio-meter-canvas" width="56" height="380"></canvas>
+					<canvas id="audio-meter-canvas" width="600" height="52"></canvas>
 				</div>
 			</div>
 		</div>
@@ -369,7 +369,7 @@
 			}
 		}
 
-		// Update HUD text banner
+		// Update HUD text banner (Streamlined to prevent text wrapping on narrow mobile screens)
 		function updateHudOverlay() {
 			if (!heroHudMain || !heroHudSub) return;
 
@@ -380,43 +380,43 @@
 			}
 
 			if (activeMode === 'left') {
-				heroHudMain.textContent = 'Left Channel Only';
-				heroHudSub.textContent = 'Panned 100% Left';
+				heroHudMain.textContent = 'Left Channel';
+				heroHudSub.textContent = '100% Left';
 			} else if (activeMode === 'right') {
-				heroHudMain.textContent = 'Right Channel Only';
-				heroHudSub.textContent = 'Panned 100% Right';
+				heroHudMain.textContent = 'Right Channel';
+				heroHudSub.textContent = '100% Right';
 			} else if (activeMode === 'inphase') {
-				heroHudMain.textContent = 'Center Channel (0°)';
-				heroHudSub.textContent = 'In-Phase Phantom Center';
+				heroHudMain.textContent = 'Center (0°)';
+				heroHudSub.textContent = 'In-Phase';
 			} else if (activeMode === 'outphase') {
 				heroHudMain.textContent = 'Out-of-Phase (180°)';
-				heroHudSub.textContent = 'Polarity Inverted Cancellation';
+				heroHudSub.textContent = 'Inverted Polarity';
 			} else if (activeMode === 'tone') {
 				heroHudMain.textContent = `${Math.round(currentToneHz).toLocaleString()} Hz`;
 				heroHudSub.textContent = getBandTag(currentToneHz);
 			} else if (activeMode === 'sweep') {
 				heroHudMain.textContent = `${Math.round(currentToneHz).toLocaleString()} Hz`;
-				heroHudSub.textContent = 'Logarithmic Sweep (20 Hz → 20 kHz)';
+				heroHudSub.textContent = 'Auto Sweep';
 			} else if (activeMode === 'noise') {
 				if (activeNoiseType === 'pink') {
-					heroHudMain.textContent = 'Pink Noise (1/f)';
-					heroHudSub.textContent = 'Equal Energy Per Octave (-3 dB/oct)';
+					heroHudMain.textContent = 'Pink (1/f)';
+					heroHudSub.textContent = 'Equal Energy/Oct';
 				} else {
 					heroHudMain.textContent = 'White Noise';
-					heroHudSub.textContent = 'Flat Power Spectral Density';
+					heroHudSub.textContent = 'Flat PSD';
 				}
 			}
 		}
 
 		function getBandTag(hz: number): string {
-			if (hz < 60) return 'Sub-Bass (Feel more than hear)';
-			if (hz < 250) return 'Bass / Punch';
-			if (hz < 500) return 'Low-Mid / Warmth';
-			if (hz < 2000) return 'Midrange (Vocal Fundamental)';
-			if (hz < 4000) return 'High-Mid / Clarinet / Attack';
-			if (hz < 8000) return 'Presence / Sibilance';
-			if (hz < 14000) return 'Brilliance / Air';
-			return 'Ultra-High Treble (Hearing Limit)';
+			if (hz < 60) return 'Sub-Bass';
+			if (hz < 250) return 'Bass';
+			if (hz < 500) return 'Low-Mid';
+			if (hz < 2000) return 'Midrange';
+			if (hz < 4000) return 'High-Mid';
+			if (hz < 8000) return 'Presence';
+			if (hz < 14000) return 'Brilliance';
+			return 'Ultra-Treble';
 		}
 
 		// Stop All Active Audio
@@ -785,8 +785,8 @@
 			const dpr = Math.min(window.devicePixelRatio || 1, 2);
 			if (heroCanvas) {
 				const rect = heroCanvas.getBoundingClientRect();
-				const targetW = Math.round((rect.width || 540) * dpr);
-				const targetH = Math.round((rect.height || 380) * dpr);
+				const targetW = Math.round((rect.width || 600) * dpr);
+				const targetH = Math.round((rect.height || 310) * dpr);
 				if (heroCanvas.width !== targetW || heroCanvas.height !== targetH) {
 					heroCanvas.width = targetW;
 					heroCanvas.height = targetH;
@@ -794,8 +794,8 @@
 			}
 			if (meterCanvas) {
 				const rect = meterCanvas.getBoundingClientRect();
-				const targetW = Math.round((rect.width || 56) * dpr);
-				const targetH = Math.round((rect.height || 380) * dpr);
+				const targetW = Math.round((rect.width || 600) * dpr);
+				const targetH = Math.round((rect.height || 52) * dpr);
 				if (meterCanvas.width !== targetW || meterCanvas.height !== targetH) {
 					meterCanvas.width = targetW;
 					meterCanvas.height = targetH;
@@ -911,11 +911,11 @@
 					const pct = Math.round(((correlation + 1) / 2) * 100);
 					phaseMeterFill.style.width = `${pct}%`;
 					if (correlation > 0.65) {
-						phaseMeterFill.style.background = '#22c55e'; // In-Phase (Green)
+						phaseMeterFill.style.background = '#22c55e';
 					} else if (correlation < -0.65) {
-						phaseMeterFill.style.background = '#ef4444'; // Out-of-Phase (Red)
+						phaseMeterFill.style.background = '#ef4444';
 					} else {
-						phaseMeterFill.style.background = '#f97316'; // Stereo Spread (Orange)
+						phaseMeterFill.style.background = '#f97316';
 					}
 				}
 			}
@@ -1030,20 +1030,21 @@
 			heroCtx.setLineDash([]);
 
 			// Frequency labels matching Spectrogram (20 Hz, 100 Hz, 1 kHz, 10 kHz, 20 kHz)
-			const fontSize = Math.max(10, Math.round(11 * (w / 600)));
+			const dpr = Math.min(window.devicePixelRatio || 1, 2);
+			const fontSize = Math.round(9.5 * dpr);
 			heroCtx.font = `${fontSize}px monospace`;
 			heroCtx.fillStyle = 'rgba(255, 255, 255, 0.35)';
 
 			heroCtx.textAlign = 'left';
-			heroCtx.fillText('20 Hz', 6, h - 5);
+			heroCtx.fillText('20 Hz', 6 * dpr, h - 5 * dpr);
 
 			heroCtx.textAlign = 'center';
-			heroCtx.fillText('100 Hz', freqToX(100), h - 5);
-			heroCtx.fillText('1 kHz', freqToX(1000), h - 5);
+			heroCtx.fillText('100 Hz', freqToX(100), h - 5 * dpr);
+			heroCtx.fillText('1 kHz', freqToX(1000), h - 5 * dpr);
 
 			heroCtx.textAlign = 'right';
-			heroCtx.fillText('10 kHz', freqToX(10000) - 4, h - 5);
-			heroCtx.fillText('20 kHz', w - 6, h - 5);
+			heroCtx.fillText('10 kHz', freqToX(10000) - 4 * dpr, h - 5 * dpr);
+			heroCtx.fillText('20 kHz', w - 6 * dpr, h - 5 * dpr);
 
 			// Horizontal dB guide lines
 			heroCtx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
@@ -1313,20 +1314,21 @@
 			heroCtx.setLineDash([]);
 
 			// Frequency labels matching Frequency Generator (20 Hz, 100 Hz, 1 kHz, 10 kHz, 20 kHz)
-			const fontSize = Math.max(10, Math.round(11 * (w / 600)));
+			const dpr = Math.min(window.devicePixelRatio || 1, 2);
+			const fontSize = Math.round(9.5 * dpr);
 			heroCtx.font = `${fontSize}px monospace`;
 			heroCtx.fillStyle = 'rgba(255, 255, 255, 0.35)';
 
 			heroCtx.textAlign = 'left';
-			heroCtx.fillText('20 Hz', 6, h - 5);
+			heroCtx.fillText('20 Hz', 6 * dpr, h - 5 * dpr);
 
 			heroCtx.textAlign = 'center';
-			heroCtx.fillText('100 Hz', freqToX(100), h - 5);
-			heroCtx.fillText('1 kHz', freqToX(1000), h - 5);
+			heroCtx.fillText('100 Hz', freqToX(100), h - 5 * dpr);
+			heroCtx.fillText('1 kHz', freqToX(1000), h - 5 * dpr);
 
 			heroCtx.textAlign = 'right';
-			heroCtx.fillText('10 kHz', freqToX(10000) - 4, h - 5);
-			heroCtx.fillText('20 kHz', w - 6, h - 5);
+			heroCtx.fillText('10 kHz', freqToX(10000) - 4 * dpr, h - 5 * dpr);
+			heroCtx.fillText('20 kHz', w - 6 * dpr, h - 5 * dpr);
 
 			// Tuning target cursor
 			if (activeMode === 'tone' || activeMode === 'sweep') {
@@ -1343,13 +1345,14 @@
 		}
 
 		// -------------------------------------------------------------
-		// DEDICATED STEREO PEAK / VU METER (L & R DUAL CHANNEL)
+		// DEDICATED HORIZONTAL STEREO PEAK / VU METER (FULL WIDTH)
 		// -------------------------------------------------------------
 		function renderStereoMeter() {
 			if (!meterCtx || !meterCanvas) return;
 			const w = meterCanvas.width;
 			const h = meterCanvas.height;
 			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+			const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
 			meterCtx.clearRect(0, 0, w, h);
 			meterCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
@@ -1378,127 +1381,134 @@
 			const dbL = currentPeakL > 0.0005 ? Math.max(-60, 20 * Math.log10(currentPeakL)) : -60;
 			const dbR = currentPeakR > 0.0005 ? Math.max(-60, 20 * Math.log10(currentPeakR)) : -60;
 
-			// Smooth meter ballistics (attack instant, release gentle decay ~1.2 dB/frame)
+			// Smooth meter ballistics (instant attack, smooth release decay ~1.25 dB/frame)
 			if (dbL >= smoothL) smoothL = dbL;
 			else smoothL = Math.max(-60, smoothL - 1.25);
 
 			if (dbR >= smoothR) smoothR = dbR;
 			else smoothR = Math.max(-60, smoothR - 1.25);
 
-			// Peak Hold indicator logic (hold 800ms, then drop with gravity)
+			// Peak Hold needle logic (hold 750ms, then drop with gravity)
 			if (dbL >= peakHoldL) {
 				peakHoldL = dbL;
 				peakHoldTimeL = now;
 			} else if (now - peakHoldTimeL > 750) {
-				peakHoldL = Math.max(-60, peakHoldL - 0.7);
+				peakHoldL = Math.max(-60, peakHoldL - 0.75);
 			}
 
 			if (dbR >= peakHoldR) {
 				peakHoldR = dbR;
 				peakHoldTimeR = now;
 			} else if (now - peakHoldTimeR > 750) {
-				peakHoldR = Math.max(-60, peakHoldR - 0.7);
+				peakHoldR = Math.max(-60, peakHoldR - 0.75);
 			}
 
-			// Scale boundaries
-			const topPad = Math.round(22 * (h / 380));
-			const bottomPad = Math.round(20 * (h / 380));
-			const trackH = Math.max(10, h - topPad - bottomPad);
-			const trackBottom = h - bottomPad;
+			// Horizontal Layout Dimensions
+			const labelW = Math.round(18 * dpr);
+			const readoutW = Math.round(52 * dpr);
+			const trackX0 = labelW + Math.round(6 * dpr);
+			const trackX1 = w - readoutW - Math.round(4 * dpr);
+			const trackW = Math.max(10, trackX1 - trackX0);
 
-			// Header Labels (L in Cyan #38bdf8, R in Amber #f59e0b)
-			meterCtx.font = `bold ${Math.max(9, Math.round(10 * (w / 56)))}px sans-serif`;
-			meterCtx.textAlign = 'center';
-			meterCtx.fillStyle = '#38bdf8';
-			meterCtx.fillText('L', Math.round(w * 0.22), topPad - 7);
+			const barH = Math.round(7 * dpr);
+			const row1Y = Math.round(7 * dpr);
+			const row2Y = Math.round(20 * dpr);
+			const scaleY = Math.round(34 * dpr);
 
-			meterCtx.fillStyle = '#f59e0b';
-			meterCtx.fillText('R', Math.round(w * 0.48), topPad - 7);
+			// Helper: dB to X coordinate
+			const dbToX = (val: number) => {
+				const clamped = Math.max(-60, Math.min(0, val));
+				const norm = (clamped + 60) / 60;
+				return trackX0 + norm * trackW;
+			};
 
-			meterCtx.font = `bold ${Math.max(8, Math.round(9 * (w / 56)))}px monospace`;
-			meterCtx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-			meterCtx.fillText('dB', Math.round(w * 0.82), topPad - 7);
-
-			// Geometry of L and R bar columns
-			const barW = Math.max(4, Math.round(w * 0.18));
-			const barL_X = Math.round(w * 0.13);
-			const barR_X = Math.round(w * 0.39);
-
-			// Track background grooves
-			meterCtx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-			meterCtx.fillRect(barL_X, topPad, barW, trackH);
-			meterCtx.fillRect(barR_X, topPad, barW, trackH);
-
-			// Shared gradient for active meter bars: Green (-60dB to -6dB) -> Yellow (-6dB to -3dB) -> Red (-3dB to 0dB)
-			const grad = meterCtx.createLinearGradient(0, trackBottom, 0, topPad);
-			grad.addColorStop(0.0, '#15803d');   // Dark green at bottom (-60 dB)
-			grad.addColorStop(0.65, '#22c55e');  // Vibrant green
+			// Horizontal Gradient for active meter bars (Green -> Yellow -> Red)
+			const grad = meterCtx.createLinearGradient(trackX0, 0, trackX1, 0);
+			grad.addColorStop(0.0, '#15803d');   // Dark green (-60 dB)
+			grad.addColorStop(0.65, '#22c55e');  // Vibrant green (-20 dB)
 			grad.addColorStop(0.88, '#eab308');  // Yellow (-6 dB)
 			grad.addColorStop(0.95, '#f97316');  // Amber (-3 dB)
 			grad.addColorStop(1.0, '#ef4444');   // Red (0 dB)
 
-			// Helper: dB to Y position
-			const dbToY = (val: number) => {
-				const clamped = Math.max(-60, Math.min(0, val));
-				const norm = (clamped + 60) / 60;
-				return trackBottom - norm * trackH;
-			};
+			// ROW 1: LEFT CHANNEL (L)
+			meterCtx.font = `bold ${Math.round(10 * dpr)}px sans-serif`;
+			meterCtx.textAlign = 'center';
+			meterCtx.textBaseline = 'middle';
+			meterCtx.fillStyle = '#38bdf8';
+			meterCtx.fillText('L', Math.round(9 * dpr), row1Y + barH / 2);
 
-			// Fill Left Active Bar
-			const barH_L = ((smoothL + 60) / 60) * trackH;
-			if (barH_L > 0) {
+			// Track background
+			meterCtx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+			meterCtx.fillRect(trackX0, row1Y, trackW, barH);
+
+			// Active bar fill
+			const fillW_L = ((smoothL + 60) / 60) * trackW;
+			if (fillW_L > 0) {
 				meterCtx.fillStyle = grad;
-				meterCtx.fillRect(barL_X, trackBottom - barH_L, barW, barH_L);
+				meterCtx.fillRect(trackX0, row1Y, fillW_L, barH);
 			}
 
-			// Fill Right Active Bar
-			const barH_R = ((smoothR + 60) / 60) * trackH;
-			if (barH_R > 0) {
-				meterCtx.fillStyle = grad;
-				meterCtx.fillRect(barR_X, trackBottom - barH_R, barW, barH_R);
-			}
-
-			// Draw Peak Hold Ticks (White needle line)
+			// Peak Hold Needle
 			if (peakHoldL > -58) {
 				meterCtx.fillStyle = '#ffffff';
-				meterCtx.fillRect(barL_X, Math.round(dbToY(peakHoldL)), barW, 1.5);
+				meterCtx.fillRect(Math.round(dbToX(peakHoldL)), row1Y, Math.round(1.5 * dpr), barH);
 			}
+
+			// Numeric dB readout
+			meterCtx.textAlign = 'right';
+			meterCtx.font = `bold ${Math.round(9 * dpr)}px monospace`;
+			meterCtx.fillStyle = smoothL > -55 ? '#38bdf8' : 'rgba(255, 255, 255, 0.3)';
+			const numL = smoothL <= -58 ? '-∞' : `${Math.round(smoothL)} dB`;
+			meterCtx.fillText(numL, w - Math.round(4 * dpr), row1Y + barH / 2);
+
+			// ROW 2: RIGHT CHANNEL (R)
+			meterCtx.font = `bold ${Math.round(10 * dpr)}px sans-serif`;
+			meterCtx.textAlign = 'center';
+			meterCtx.fillStyle = '#f59e0b';
+			meterCtx.fillText('R', Math.round(9 * dpr), row2Y + barH / 2);
+
+			// Track background
+			meterCtx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+			meterCtx.fillRect(trackX0, row2Y, trackW, barH);
+
+			// Active bar fill
+			const fillW_R = ((smoothR + 60) / 60) * trackW;
+			if (fillW_R > 0) {
+				meterCtx.fillStyle = grad;
+				meterCtx.fillRect(trackX0, row2Y, fillW_R, barH);
+			}
+
+			// Peak Hold Needle
 			if (peakHoldR > -58) {
 				meterCtx.fillStyle = '#ffffff';
-				meterCtx.fillRect(barR_X, Math.round(dbToY(peakHoldR)), barW, 1.5);
+				meterCtx.fillRect(Math.round(dbToX(peakHoldR)), row2Y, Math.round(1.5 * dpr), barH);
 			}
 
-			// Scale Ticks & dB Markings (0, -3, -6, -12, -18, -24, -36, -48)
-			const marks = [0, -3, -6, -12, -18, -24, -36, -48];
-			meterCtx.font = `${Math.max(7, Math.round(8 * (w / 56)))}px monospace`;
-			meterCtx.textAlign = 'left';
-			meterCtx.textBaseline = 'middle';
+			// Numeric dB readout
+			meterCtx.textAlign = 'right';
+			meterCtx.font = `bold ${Math.round(9 * dpr)}px monospace`;
+			meterCtx.fillStyle = smoothR > -55 ? '#f59e0b' : 'rgba(255, 255, 255, 0.3)';
+			const numR = smoothR <= -58 ? '-∞' : `${Math.round(smoothR)} dB`;
+			meterCtx.fillText(numR, w - Math.round(4 * dpr), row2Y + barH / 2);
+
+			// SCALE TICKS & DB LABELS (Bottom Row)
+			const marks = [-60, -48, -36, -24, -18, -12, -6, -3, 0];
+			meterCtx.font = `${Math.round(7.5 * dpr)}px monospace`;
+			meterCtx.textAlign = 'center';
+			meterCtx.textBaseline = 'top';
 
 			marks.forEach((m) => {
-				const y = Math.round(dbToY(m));
-				// Subtle tick mark
-				meterCtx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+				const x = Math.round(dbToX(m));
+				meterCtx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
 				meterCtx.beginPath();
-				meterCtx.moveTo(Math.round(w * 0.60), y);
-				meterCtx.lineTo(Math.round(w * 0.68), y);
+				meterCtx.moveTo(x, scaleY - Math.round(4 * dpr));
+				meterCtx.lineTo(x, scaleY);
 				meterCtx.stroke();
 
-				// Label
-				meterCtx.fillStyle = m >= -3 ? 'rgba(239, 68, 68, 0.85)' : (m >= -6 ? 'rgba(234, 179, 8, 0.85)' : 'rgba(255, 255, 255, 0.4)');
-				meterCtx.fillText(`${m === 0 ? '0' : m}`, Math.round(w * 0.71), y);
+				meterCtx.fillStyle = m >= -3 ? 'rgba(239, 68, 68, 0.85)' : (m >= -6 ? 'rgba(234, 179, 8, 0.85)' : 'rgba(255, 255, 255, 0.35)');
+				const label = m === 0 ? '0' : (m === -60 ? '-∞' : `${m}`);
+				meterCtx.fillText(label, x, scaleY + Math.round(2 * dpr));
 			});
-
-			// Bottom Numeric Readout (live peak level or -inf)
-			meterCtx.textBaseline = 'alphabetic';
-			meterCtx.textAlign = 'center';
-			meterCtx.font = `bold ${Math.max(8, Math.round(8.5 * (w / 56)))}px monospace`;
-			meterCtx.fillStyle = smoothL > -55 ? '#38bdf8' : 'rgba(255, 255, 255, 0.3)';
-			const numL = smoothL <= -58 ? '-∞' : `${Math.round(smoothL)}`;
-			meterCtx.fillText(numL, Math.round(w * 0.22), h - 5);
-
-			meterCtx.fillStyle = smoothR > -55 ? '#f59e0b' : 'rgba(255, 255, 255, 0.3)';
-			const numR = smoothR <= -58 ? '-∞' : `${Math.round(smoothR)}`;
-			meterCtx.fillText(numR, Math.round(w * 0.48), h - 5);
 		}
 
 		// Main visualizer animation loop
@@ -1518,7 +1528,7 @@
 				renderSpectrogramScope();
 			}
 
-			// Render real-time stereo VU meter
+			// Render horizontal stereo VU meter
 			renderStereoMeter();
 
 			rafVisualizerId = requestAnimationFrame(renderActiveVisualizer);
@@ -1740,31 +1750,31 @@
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 	}
 
-	/* VISUALIZER STAGE (CANVAS + VERTICAL DUAL METER) */
+	/* VISUALIZER STAGE (CANVAS + HORIZONTAL STEREO VU METER) */
 	.visualizer-stage {
 		display: flex;
+		flex-direction: column;
 		gap: 0.6em;
 		width: 100%;
-		height: 380px;
 		flex: 1;
 		box-sizing: border-box;
 	}
 
-	@media (max-width: 860px) {
-		.visualizer-stage {
-			height: 240px;
-		}
-	}
-
 	.hero-canvas-box {
 		position: relative;
-		flex: 1;
-		height: 100%;
+		width: 100%;
+		height: 310px;
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
 		overflow: hidden;
 		background: #09090b;
 		box-sizing: border-box;
+	}
+
+	@media (max-width: 860px) {
+		.hero-canvas-box {
+			height: 215px;
+		}
 	}
 
 	#audio-hero-canvas {
@@ -1773,11 +1783,11 @@
 		height: 100%;
 	}
 
-	/* STEREO PEAK / VU METER BOX */
+	/* HORIZONTAL STEREO PEAK / VU METER BOX */
 	.stereo-meter-box {
 		position: relative;
-		width: 56px;
-		height: 100%;
+		width: 100%;
+		height: 52px;
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
 		overflow: hidden;
@@ -1805,25 +1815,29 @@
 	}
 
 	.hud-badge-wrap {
-		font-size: 0.74em;
+		font-size: clamp(0.72em, 2vw, 0.76em);
 		font-weight: 600;
 		color: rgba(255, 255, 255, 0.92);
-		background: rgba(0, 0, 0, 0.7);
+		background: rgba(0, 0, 0, 0.75);
 		backdrop-filter: blur(6px);
 		border: 1px solid rgba(255, 255, 255, 0.1);
-		padding: 4px 9px;
+		padding: 3px 8px;
 		border-radius: 6px;
 		display: inline-flex;
-		align-items: baseline;
-		gap: 0.45em;
+		align-items: center;
+		gap: 0.4em;
 		max-width: calc(100% - 16px);
+		white-space: nowrap;
+		height: 27px;
+		box-sizing: border-box;
 	}
 
 	.hud-main-text {
-		font-size: 1.15em;
+		font-size: 1.05em;
 		font-weight: 800;
 		color: #ffffff;
 		line-height: 1;
+		white-space: nowrap;
 	}
 
 	.hud-sep {
@@ -1849,21 +1863,25 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		background: rgba(0, 0, 0, 0.65);
+		background: rgba(0, 0, 0, 0.7);
 		backdrop-filter: blur(6px);
 		border: 1px solid rgba(255, 255, 255, 0.08);
 		border-radius: 6px;
-		padding: 4px 10px;
+		padding: 3px 10px;
 		pointer-events: none;
 		z-index: 2;
+		white-space: nowrap;
+		height: 26px;
+		box-sizing: border-box;
 	}
 
 	.phase-meter-wrap {
 		display: flex;
 		align-items: center;
-		gap: 0.55em;
+		gap: 0.45em;
 		width: 100%;
 		justify-content: center;
+		white-space: nowrap;
 	}
 
 	.phase-meter-title {
@@ -1871,18 +1889,21 @@
 		font-weight: 700;
 		color: rgba(255, 255, 255, 0.75);
 		white-space: nowrap;
+		flex-shrink: 0;
 	}
 
 	.phase-meter-tag {
 		font-size: 0.68em;
 		font-weight: 700;
 		color: rgba(255, 255, 255, 0.4);
+		flex-shrink: 0;
 	}
 
 	.phase-meter-track {
 		position: relative;
 		flex: 1;
-		max-width: 180px;
+		max-width: 160px;
+		min-width: 50px;
 		height: 6px;
 		background: rgba(255, 255, 255, 0.1);
 		border-radius: 3px;
@@ -1912,8 +1933,10 @@
 		font-size: 0.72em;
 		font-weight: 800;
 		color: #ffffff;
-		min-width: 40px;
+		min-width: 36px;
 		text-align: right;
+		white-space: nowrap;
+		flex-shrink: 0;
 	}
 
 	/* CONTROLS COLUMN */
@@ -2278,9 +2301,6 @@
 		}
 		.noise-inline-btn {
 			width: 100%;
-		}
-		.stereo-meter-box {
-			width: 48px;
 		}
 	}
 </style>

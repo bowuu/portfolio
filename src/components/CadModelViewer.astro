@@ -221,12 +221,45 @@
 		scene.add(underLight);
 
 		// Build Plate Grid
-		const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-		const gridPrimary = isDark ? 0x334155 : 0xcbd5e1;
-		const gridSecondary = isDark ? 0x1e293b : 0xe2e8f0;
-		const grid = new THREE.GridHelper(80, 20, gridPrimary, gridSecondary);
+		let isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+		function getGridColors(dark: boolean) {
+			return {
+				primary: dark ? 0x64748b : 0x94a3b8,
+				secondary: dark ? 0x384556 : 0xd8dee9
+			};
+		}
+		let { primary: gridPrimary, secondary: gridSecondary } = getGridColors(isDark);
+		let grid = new THREE.GridHelper(80, 20, gridPrimary, gridSecondary);
 		grid.position.y = -18;
 		scene.add(grid);
+
+		function updateGridTheme(dark: boolean) {
+			const colors = getGridColors(dark);
+			const prevY = grid.position.y;
+			const prevVis = grid.visible;
+			scene.remove(grid);
+			grid.geometry.dispose();
+			if (Array.isArray(grid.material)) {
+				grid.material.forEach(m => m.dispose());
+			} else {
+				grid.material.dispose();
+			}
+			grid = new THREE.GridHelper(80, 20, colors.primary, colors.secondary);
+			grid.position.y = prevY;
+			grid.visible = prevVis;
+			scene.add(grid);
+		}
+
+		const cadThemeObserver = new MutationObserver((mutations) => {
+			for (const mutation of mutations) {
+				if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+					const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+					updateGridTheme(dark);
+					break;
+				}
+			}
+		});
+		cadThemeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 		// Slicer Toolpath Plane & Group
 		const slicePlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 1000);
@@ -611,6 +644,7 @@
 
 		// Cleanup handle for HMR / page changes
 		(canvas as any).__cleanup = () => {
+			cadThemeObserver.disconnect();
 			cancelAnimationFrame(animationFrameId);
 			window.removeEventListener('resize', resize);
 			renderer.dispose();

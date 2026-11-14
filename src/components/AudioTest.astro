@@ -168,7 +168,7 @@
 					<div class="freq-buttons-grid">
 						<button class="tone-btn freq-btn" data-hz="20" type="button">
 							<span class="tone-pill mono">20 Hz</span>
-							<span class="tone-name">Sub-Bass</span>
+							<span class="tone-name">Sub</span>
 						</button>
 
 						<button class="tone-btn freq-btn" data-hz="60" type="button">
@@ -178,17 +178,17 @@
 
 						<button class="tone-btn freq-btn" data-hz="250" type="button">
 							<span class="tone-pill mono">250 Hz</span>
-							<span class="tone-name">Midrange</span>
+							<span class="tone-name">Mid</span>
 						</button>
 
 						<button class="tone-btn freq-btn active" data-hz="1000" type="button">
 							<span class="tone-pill mono">1 kHz</span>
-							<span class="tone-name">Reference</span>
+							<span class="tone-name">Ref</span>
 						</button>
 
 						<button class="tone-btn freq-btn" data-hz="8000" type="button">
 							<span class="tone-pill mono">8 kHz</span>
-							<span class="tone-name">Presence</span>
+							<span class="tone-name">Pres</span>
 						</button>
 
 						<button class="tone-btn freq-btn" data-hz="16000" type="button">
@@ -929,7 +929,7 @@
 					} else if (correlation < -0.65) {
 						phaseMeterFill.style.background = '#ef4444';
 					} else {
-						phaseMeterFill.style.background = '#f97316';
+						phaseMeterFill.style.background = '#ea580c';
 					}
 				}
 			}
@@ -1524,7 +1524,7 @@
 				meterCtx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(0, 0, 0, 0.4)';
 				meterCtx.fillText('−∞', w - Math.round(5 * dpr), row1Center);
 			} else {
-				meterCtx.font = `bold ${Math.round(9.5 * dpr)}px monospace`;
+				meterCtx.font = `bold ${Math.round(11 * dpr)}px monospace`;
 				meterCtx.fillStyle = isDark ? '#38bdf8' : '#0284c7';
 				meterCtx.fillText(`${Math.round(smoothL)} dB`, w - Math.round(5 * dpr), row1Center);
 			}
@@ -1561,7 +1561,7 @@
 				meterCtx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(0, 0, 0, 0.4)';
 				meterCtx.fillText('−∞', w - Math.round(5 * dpr), row2Center);
 			} else {
-				meterCtx.font = `bold ${Math.round(9.5 * dpr)}px monospace`;
+				meterCtx.font = `bold ${Math.round(11 * dpr)}px monospace`;
 				meterCtx.fillStyle = isDark ? '#f59e0b' : '#d97706';
 				meterCtx.fillText(`${Math.round(smoothR)} dB`, w - Math.round(5 * dpr), row2Center);
 			}
@@ -2300,8 +2300,8 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.6em;
-		background: #f97316;
-		border: 1px solid #ea580c;
+		background: #ea580c;
+		border: 1px solid #c2410c;
 		color: #ffffff;
 		border-radius: 8px;
 		padding: 0.65em 1em;
@@ -2311,21 +2311,21 @@
 		font-weight: 700;
 		cursor: pointer;
 		transition: all 0.15s ease;
-		box-shadow: 0 1px 3px rgba(249, 115, 22, 0.25);
+		box-shadow: 0 1px 3px rgba(234, 88, 12, 0.25);
 		box-sizing: border-box;
 	}
 
 	.sweep-btn:hover {
-		background: #ea580c;
-		border-color: #c2410c;
+		background: #c2410c;
+		border-color: #9a3412;
 		transform: translateY(-1px);
-		box-shadow: 0 3px 8px rgba(234, 88, 12, 0.35);
+		box-shadow: 0 3px 8px rgba(194, 65, 12, 0.35);
 	}
 
 	.sweep-btn.active {
-		background: #c2410c;
-		border-color: #9a3412;
-		box-shadow: 0 0 12px rgba(249, 115, 22, 0.5);
+		background: #9a3412;
+		border-color: #7c2d12;
+		box-shadow: 0 0 12px rgba(234, 88, 12, 0.5);
 	}
 
 	.sweep-icon {
@@ -2378,13 +2378,13 @@
 	}
 
 	.freq-buttons-grid .tone-pill {
-		font-size: 0.72em;
-		padding: 1.5px 4px;
+		font-size: 0.80em;
+		padding: 2px 5px;
 		flex-shrink: 0;
 	}
 
 	.freq-buttons-grid .tone-name {
-		font-size: 0.74em;
+		font-size: 0.82em;
 		font-weight: 700;
 		letter-spacing: -0.015em;
 		line-height: 1.1;

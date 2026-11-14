@@ -18,9 +18,9 @@
 }
 
 html[data-theme="dark"] {
-  --accent: #f97316;
-  --accent-dark: #ea580c;
-  --accent-rgb: 249, 115, 22;
+  --accent: #ea580c;
+  --accent-dark: #c2410c;
+  --accent-rgb: 234, 88, 12;
   --black: 250, 250, 250;
   --gray: 161, 161, 170;
   --gray-light: 39, 39, 42;

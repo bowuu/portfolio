@@ -14,6 +14,13 @@
 		</h2>
 
 		<div class="header-actions">
+			<button id="open-pixel-checker-btn" class="telemetry-btn" type="button" title="Open Fullscreen Dead / Stuck Pixel Checker">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+				</svg>
+				<span>Pixel Checker</span>
+			</button>
+
 			<div class="segmented-control" role="group" aria-label="Motion Speed">
 				<button class="seg-btn" data-speed="240" type="button" title="240 pixels per second">240 px/s</button>
 				<button class="seg-btn active" data-speed="480" type="button" title="480 pixels per second (Standard)">480 px/s</button>
@@ -26,21 +33,14 @@
 				<button class="seg-btn" data-pattern="checker" type="button" title="Checkerboard">Checker</button>
 			</div>
 
-			<button id="toggle-display-btn" class="telemetry-btn" type="button" title="Stop or start display motion benchmark">
-				<svg id="toggle-display-icon-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+			<button id="toggle-display-btn" class="telemetry-btn" type="button" title="Start display motion benchmark">
+				<svg id="toggle-display-icon-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="hidden">
 					<rect x="5" y="5" width="14" height="14" rx="2"/>
 				</svg>
-				<svg id="toggle-display-icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="hidden">
+				<svg id="toggle-display-icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
 					<polygon points="5 3 19 12 5 21 5 3"/>
 				</svg>
-				<span id="toggle-display-text">Stop</span>
-			</button>
-
-			<button id="open-pixel-checker-btn" class="telemetry-btn" type="button" title="Open Fullscreen Dead / Stuck Pixel Checker">
-				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-					<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-				</svg>
-				<span>Pixel Checker</span>
+				<span id="toggle-display-text">Start</span>
 			</button>
 		</div>
 	</div>
@@ -57,12 +57,12 @@
 	<!-- VSYNC & HARDWARE TIMING HUD -->
 	<div class="display-telemetry-hud">
 		<div class="hud-item">
-			<span class="hud-label">Rendering Cadence</span>
+			<span class="hud-label">Frame Rate</span>
 			<div class="hud-val-wrap">
-				<span id="display-fps" class="hud-val mono">--</span>
-				<span class="hud-unit">FPS</span>
+				<span id="display-fps" class="hud-val mono">Stopped</span>
+				<span id="display-fps-unit" class="hud-unit hidden">FPS</span>
 			</div>
-			<span id="display-frame-time" class="hud-sub mono">-- ms / frame</span>
+			<span id="display-frame-time" class="hud-sub mono">Motion stopped</span>
 		</div>
 
 		<div class="hud-item">
@@ -121,13 +121,15 @@
 
 		let speedPxPerSec = 480;
 		let patternType: 'chip' | 'bars' | 'checker' = 'chip';
-		let posX = 0;
+		const initDpr = window.devicePixelRatio || 1;
+		let posX = Math.round((canvas.width / initDpr) / 2);
 		let lastTimestamp = 0;
 		let rafId: number | null = null;
 		let isVisible = false;
-		let isMotionRunning = true;
+		let isMotionRunning = false;
 
 		const fpsEl = document.getElementById('display-fps');
+		const fpsUnitEl = document.getElementById('display-fps-unit');
 		const frameTimeEl = document.getElementById('display-frame-time');
 		const jitterEl = document.getElementById('display-jitter');
 		const droppedEl = document.getElementById('display-dropped');
@@ -163,6 +165,9 @@
 			if (canvas.width !== targetW || canvas.height !== targetH) {
 				canvas.width = targetW;
 				canvas.height = targetH;
+				if (!isMotionRunning) {
+					drawFrame();
+				}
 			}
 		}
 		resizeCanvas();
@@ -276,6 +281,51 @@
 			ctx.restore();
 		}
 
+		// Render canvas background, grid, track, and active pattern
+		function drawFrame() {
+			if (!ctx) return;
+			const dpr = window.devicePixelRatio || 1;
+			const w = canvas.width;
+			const h = canvas.height;
+			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+			ctx.clearRect(0, 0, w, h);
+
+			// Background track
+			ctx.fillStyle = isDark ? '#09090b' : '#f1f5f9';
+			ctx.fillRect(0, 0, w, h);
+
+			// Grid guide lines
+			ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+			ctx.lineWidth = 1;
+			const gridSpacing = 40 * dpr;
+			for (let gx = 0; gx < w; gx += gridSpacing) {
+				ctx.beginPath();
+				ctx.moveTo(gx, 0);
+				ctx.lineTo(gx, h);
+				ctx.stroke();
+			}
+
+			// Center tracking line
+			ctx.strokeStyle = isDark ? 'rgba(234, 88, 12, 0.25)' : 'rgba(234, 88, 12, 0.2)';
+			ctx.beginPath();
+			ctx.moveTo(0, h / 2);
+			ctx.lineTo(w, h / 2);
+			ctx.stroke();
+
+			// Render active pattern (snap to integer device pixels for razor-sharp rasterization)
+			const renderX = Math.round(posX * dpr);
+			const renderY = Math.round(h / 2);
+
+			if (patternType === 'chip') {
+				drawSiliconChip(renderX, renderY, dpr, isDark);
+			} else if (patternType === 'bars') {
+				drawPursuitBars(renderX, w, h, isDark);
+			} else if (patternType === 'checker') {
+				drawCheckerboard(renderX, w, h, isDark);
+			}
+		}
+
 		function renderLoop(timestamp: number) {
 			if (!isVisible) {
 				rafId = null;
@@ -303,47 +353,7 @@
 				}
 			}
 
-			// Render canvas background & track
-			const dpr = window.devicePixelRatio || 1;
-			const w = canvas.width;
-			const h = canvas.height;
-			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-
-			ctx.clearRect(0, 0, w, h);
-
-			// Background track
-			ctx.fillStyle = isDark ? '#09090b' : '#f1f5f9';
-			ctx.fillRect(0, 0, w, h);
-
-			// Grid guide lines
-			ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
-			ctx.lineWidth = 1;
-			const gridSpacing = 40 * dpr;
-			for (let gx = 0; gx < w; gx += gridSpacing) {
-				ctx.beginPath();
-				ctx.moveTo(gx, 0);
-				ctx.lineTo(gx, h);
-				ctx.stroke();
-			}
-
-			// Center tracking line
-			ctx.strokeStyle = isDark ? 'rgba(249, 115, 22, 0.25)' : 'rgba(234, 88, 12, 0.2)';
-			ctx.beginPath();
-			ctx.moveTo(0, h / 2);
-			ctx.lineTo(w, h / 2);
-			ctx.stroke();
-
-			// Render active pattern (snap to integer device pixels for razor-sharp rasterization)
-			const renderX = Math.round(posX * dpr);
-			const renderY = Math.round(h / 2);
-
-			if (patternType === 'chip') {
-				drawSiliconChip(renderX, renderY, dpr, isDark);
-			} else if (patternType === 'bars') {
-				drawPursuitBars(renderX, w, h, isDark);
-			} else if (patternType === 'checker') {
-				drawCheckerboard(renderX, w, h, isDark);
-			}
+			drawFrame();
 
 			// Update HUD metrics ~5 times a second
 			if (timestamp - lastFpsUpdate > 200 && frameTimes.length > 5) {
@@ -355,6 +365,7 @@
 				const variance = frameTimes.reduce((acc, val) => acc + Math.abs(val - avgDelta), 0) / frameTimes.length;
 
 				if (fpsEl) fpsEl.textContent = String(currentFps);
+				if (fpsUnitEl) fpsUnitEl.classList.remove('hidden');
 				if (frameTimeEl) frameTimeEl.textContent = `${avgDelta.toFixed(2)} ms / frame`;
 				if (jitterEl) jitterEl.textContent = `±${variance.toFixed(2)}`;
 				if (droppedEl) droppedEl.textContent = `${droppedFrames} dropped`;
@@ -363,6 +374,22 @@
 			rafId = requestAnimationFrame(renderLoop);
 		}
 
+		// Initial static frame render (since stopped by default)
+		drawFrame();
+
+		// Lightweight MutationObserver to instantly redraw canvas when theme swaps while stopped
+		const themeObserver = new MutationObserver((mutations) => {
+			for (const mutation of mutations) {
+				if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+					if (!isMotionRunning) {
+						drawFrame();
+					}
+					break;
+				}
+			}
+		});
+		themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
 		// IntersectionObserver to sleep when out of viewport
 		const observer = new IntersectionObserver((entries) => {
 			entries.forEach((entry) => {
@@ -370,6 +397,8 @@
 				if (isVisible && isMotionRunning && !rafId) {
 					lastTimestamp = performance.now();
 					rafId = requestAnimationFrame(renderLoop);
+				} else if (isVisible && !isMotionRunning) {
+					drawFrame();
 				}
 			});
 		}, { threshold: 0.05 });
@@ -392,13 +421,16 @@
 				toggleDisplayPlayIcon?.classList.remove('hidden');
 				if (toggleDisplayText) toggleDisplayText.textContent = 'Start';
 				toggleDisplayBtn.setAttribute('title', 'Start display motion benchmark');
-				if (fpsEl) fpsEl.textContent = 'Paused';
-				if (frameTimeEl) frameTimeEl.textContent = 'Motion paused';
+				if (fpsEl) fpsEl.textContent = 'Stopped';
+				if (fpsUnitEl) fpsUnitEl.classList.add('hidden');
+				if (frameTimeEl) frameTimeEl.textContent = 'Motion stopped';
+				drawFrame();
 			} else {
 				toggleDisplayStopIcon?.classList.remove('hidden');
 				toggleDisplayPlayIcon?.classList.add('hidden');
 				if (toggleDisplayText) toggleDisplayText.textContent = 'Stop';
 				toggleDisplayBtn.setAttribute('title', 'Stop display motion benchmark');
+				if (fpsUnitEl) fpsUnitEl.classList.remove('hidden');
 				lastTimestamp = performance.now();
 				rafId = requestAnimationFrame(renderLoop);
 			}
@@ -422,6 +454,9 @@
 				patternBtns.forEach(b => b.classList.remove('active'));
 				btn.classList.add('active');
 				patternType = (btn.getAttribute('data-pattern') as any) || 'chip';
+				if (!isMotionRunning) {
+					drawFrame();
+				}
 			});
 		});
 

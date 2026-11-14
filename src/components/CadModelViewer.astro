@@ -180,7 +180,9 @@
 
 		let isViewerInitialized = false;
 		let isViewerVisible = false;
-		let animationFrameId: number;
+		let isPausedByEasterEgg = false;
+		let animationFrameId: number | null = null;
+		let startAnimationLoop: (() => void) | null = null;
 		let sceneCleanup: (() => void) | null = null;
 		let triggerCentrifugeExternal: ((active?: boolean) => void) | null = null;
 		let toggleGridExternal: (() => void) | null = null;
@@ -219,6 +221,9 @@
 		controls.minDistance = 15;
 		controls.maxDistance = 220;
 		controls.maxPolarAngle = Math.PI - 0.02; // Full orbital freedom to inspect underside
+		controls.addEventListener('change', () => {
+			renderer.render(scene, camera);
+		});
 
 		// Lighting
 		const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
@@ -522,6 +527,11 @@
 				downloadBtn.download = activeMeta.file;
 				downloadBtn.title = `Download ${activeMeta.name} (${activeMeta.file})`;
 			}
+
+			renderer.render(scene, camera);
+			if (startAnimationLoop) {
+				startAnimationLoop();
+			}
 		}
 
 		async function loadModel(id: string) {
@@ -605,22 +615,36 @@
 		});
 
 		// Render animation loop with external physics sleep support
-		let isPausedByEasterEgg = false;
+		startAnimationLoop = () => {
+			if (isViewerVisible && !isPausedByEasterEgg) {
+				if (animationFrameId !== null) {
+					cancelAnimationFrame(animationFrameId);
+				}
+				animationFrameId = requestAnimationFrame(animate);
+			}
+		};
+
 		window.addEventListener('pause-cad-render', () => {
 			isPausedByEasterEgg = true;
+			if (animationFrameId !== null) {
+				cancelAnimationFrame(animationFrameId);
+				animationFrameId = null;
+			}
 		});
 		window.addEventListener('resume-cad-render', () => {
 			if (isPausedByEasterEgg) {
 				isPausedByEasterEgg = false;
-				if (isViewerVisible) {
-					cancelAnimationFrame(animationFrameId);
-					animationFrameId = requestAnimationFrame(animate);
+				if (startAnimationLoop) {
+					startAnimationLoop();
 				}
 			}
 		});
 
 		function animate() {
-			if (!isViewerVisible || isPausedByEasterEgg) return;
+			if (!isViewerVisible || isPausedByEasterEgg) {
+				animationFrameId = null;
+				return;
+			}
 			animationFrameId = requestAnimationFrame(animate);
 			controls.update();
 
@@ -664,14 +688,16 @@
 			renderer.render(scene, camera);
 		}
 
-		if (isViewerVisible && !isPausedByEasterEgg) {
-			cancelAnimationFrame(animationFrameId);
-			animationFrameId = requestAnimationFrame(animate);
+		if (startAnimationLoop) {
+			startAnimationLoop();
 		}
 
 		sceneCleanup = () => {
 			cadThemeObserver.disconnect();
-			cancelAnimationFrame(animationFrameId);
+			if (animationFrameId !== null) {
+				cancelAnimationFrame(animationFrameId);
+				animationFrameId = null;
+			}
 			window.removeEventListener('resize', resize);
 			renderer.dispose();
 			controls.dispose();
@@ -684,10 +710,12 @@
 		if (isViewerVisible) {
 			if (!isViewerInitialized) {
 				startCadScene();
-			} else if (!isPausedByEasterEgg) {
-				cancelAnimationFrame(animationFrameId);
-				animationFrameId = requestAnimationFrame(animate);
+			} else if (startAnimationLoop) {
+				startAnimationLoop();
 			}
+		} else if (animationFrameId !== null) {
+			cancelAnimationFrame(animationFrameId);
+			animationFrameId = null;
 		}
 	}, { rootMargin: '300px' });
 	viewerObserver.observe(viewerContainer);
@@ -695,7 +723,10 @@
 	// Cleanup handle for HMR / page changes
 	(canvas as any).__cleanup = () => {
 		viewerObserver.disconnect();
-		cancelAnimationFrame(animationFrameId);
+		if (animationFrameId !== null) {
+			cancelAnimationFrame(animationFrameId);
+			animationFrameId = null;
+		}
 		if (sceneCleanup) sceneCleanup();
 	};
 }

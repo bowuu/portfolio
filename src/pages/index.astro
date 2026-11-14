@@ -25,16 +25,21 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 			<!-- HERO / ABOUT -->
 			<section class="hero" id="about">
 				<div class="avatar-wrap" id="hero-avatar-wrap">
-					<img 
-						src="/dog.jpg" 
-						alt="Dog mascot" 
-						title="Chief Morale Officer 🐾" 
-						class="avatar-img" 
-						id="hero-avatar-img"
-						width="144" 
-						height="144" 
-						loading="eager" 
-					/>
+					<picture class="avatar-picture">
+						<source srcset="/dog.webp" type="image/webp" />
+						<img 
+							src="/dog.jpg" 
+							alt="Dog mascot" 
+							title="Chief Morale Officer 🐾" 
+							class="avatar-img" 
+							id="hero-avatar-img"
+							width="144" 
+							height="144" 
+							loading="eager" 
+							fetchpriority="high"
+							decoding="async"
+						/>
+					</picture>
 				</div>
 				<h1 class="name">Bo Wu</h1>
 				<p class="role-title">Hardware Engineer</p>
@@ -181,6 +186,9 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		display: flex;
 		justify-content: center;
 		margin-bottom: 1.25em;
+	}
+	.avatar-picture {
+		display: contents;
 	}
 	.avatar-img {
 		width: clamp(120px, 16vw, 144px);

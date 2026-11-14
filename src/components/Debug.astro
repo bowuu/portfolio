@@ -1706,8 +1706,16 @@
 		}
 	});
 
-	initTelemetry();
-	document.addEventListener('astro:page-load', initTelemetry);
+	function scheduleTelemetry() {
+		if ('requestIdleCallback' in window) {
+			(window as any).requestIdleCallback(() => initTelemetry(), { timeout: 2000 });
+		} else {
+			setTimeout(initTelemetry, 250);
+		}
+	}
+
+	scheduleTelemetry();
+	document.addEventListener('astro:page-load', scheduleTelemetry);
 </script>
 
 <style>

@@ -146,20 +146,12 @@
 				<div class="tone-controls-section">
 					<!-- SWEEP ACTIONS -->
 					<div class="sweep-actions-row">
-						<button id="run-sweep-btn" class="sweep-btn" type="button" title="Run 10-second exponential logarithmic frequency sweep (20 Hz–20,000 Hz)">
-							<div class="sweep-btn-left">
-								<div class="sweep-icon-box" id="sweep-icon-box">
-									<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" class="sweep-icon">
-										<path d="M2 18l6-6 4 4 10-10"/>
-										<polyline points="16 6 22 6 22 12"/>
-									</svg>
-								</div>
-								<div class="sweep-info">
-									<span class="sweep-title" id="run-sweep-text">Auto Frequency Sweep</span>
-									<span class="sweep-desc" id="run-sweep-desc">10s Exponential (20 Hz &rarr; 20 kHz)</span>
-								</div>
-							</div>
-							<span class="sweep-duration-badge mono" id="sweep-badge">10s</span>
+						<button id="run-sweep-btn" class="sweep-btn" type="button" title="Run 10-second frequency sweep (20 Hz–20,000 Hz)">
+							<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" class="sweep-icon">
+								<path d="M2 18l6-6 4 4 10-10"/>
+								<polyline points="16 6 22 6 22 12"/>
+							</svg>
+							<span id="run-sweep-text">Auto Frequency Sweep (10s)</span>
 						</button>
 					</div>
 
@@ -468,11 +460,7 @@
 			activeMode = 'none';
 			document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
 			if (runSweepBtn) runSweepBtn.classList.remove('active');
-			if (runSweepText) runSweepText.textContent = 'Auto Frequency Sweep';
-			const runSweepDesc = document.getElementById('run-sweep-desc');
-			if (runSweepDesc) runSweepDesc.textContent = '10s Exponential (20 Hz → 20 kHz)';
-			const sweepBadge = document.getElementById('sweep-badge');
-			if (sweepBadge) sweepBadge.textContent = '10s';
+			if (runSweepText) runSweepText.textContent = 'Auto Frequency Sweep (10s)';
 
 			updateHudOverlay();
 		}
@@ -600,10 +588,6 @@
 
 			if (runSweepBtn) runSweepBtn.classList.add('active');
 			if (runSweepText) runSweepText.textContent = 'Stop Frequency Sweep';
-			const runSweepDesc = document.getElementById('run-sweep-desc');
-			if (runSweepDesc) runSweepDesc.textContent = 'Sweeping active... Click to pause';
-			const sweepBadge = document.getElementById('sweep-badge');
-			if (sweepBadge) sweepBadge.textContent = 'LIVE';
 			updateHudOverlay();
 
 			const sweepStart = performance.now();
@@ -846,11 +830,11 @@
 			const cy = h / 2;
 
 			heroCtx.clearRect(0, 0, w, h);
-			heroCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
+			heroCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
 			heroCtx.fillRect(0, 0, w, h);
 
 			// Oscilloscope Grid Divisions
-			heroCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)';
 			heroCtx.lineWidth = 1;
 
 			// Horizontal division lines (±1.0, ±0.5, 0 baseline)
@@ -874,7 +858,7 @@
 			}
 
 			// Center baseline (0V reference)
-			heroCtx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.18)';
 			heroCtx.beginPath();
 			heroCtx.moveTo(0, cy);
 			heroCtx.lineTo(w, cy);
@@ -882,7 +866,7 @@
 
 			if (!analyserLeft || !analyserRight) {
 				// Standby resting zero baselines
-				heroCtx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+				heroCtx.strokeStyle = isDark ? 'rgba(56, 189, 248, 0.35)' : 'rgba(2, 132, 199, 0.35)';
 				heroCtx.beginPath();
 				heroCtx.moveTo(0, cy);
 				heroCtx.lineTo(w, cy);
@@ -975,11 +959,11 @@
 			const ampHeight = (h / 2) * 0.82;
 			const stepX = w / (displayLen - 1);
 
-			// Render Left Channel Waveform (Cyan #38bdf8)
+			// Render Left Channel Waveform (Cyan #38bdf8 in dark, Sky-Blue #0284c7 in light)
 			heroCtx.save();
-			heroCtx.strokeStyle = '#38bdf8';
+			heroCtx.strokeStyle = isDark ? '#38bdf8' : '#0284c7';
 			heroCtx.lineWidth = 2.0;
-			heroCtx.shadowColor = 'rgba(56, 189, 248, 0.5)';
+			heroCtx.shadowColor = isDark ? 'rgba(56, 189, 248, 0.5)' : 'rgba(2, 132, 199, 0.25)';
 			heroCtx.shadowBlur = 4;
 			heroCtx.beginPath();
 			for (let i = 0; i < displayLen; i++) {
@@ -993,11 +977,11 @@
 			heroCtx.stroke();
 			heroCtx.restore();
 
-			// Render Right Channel Waveform (Amber #f59e0b)
+			// Render Right Channel Waveform (Amber #f59e0b in dark, Deep Amber #d97706 in light)
 			heroCtx.save();
-			heroCtx.strokeStyle = '#f59e0b';
+			heroCtx.strokeStyle = isDark ? '#f59e0b' : '#d97706';
 			heroCtx.lineWidth = 2.0;
-			heroCtx.shadowColor = 'rgba(245, 158, 11, 0.5)';
+			heroCtx.shadowColor = isDark ? 'rgba(245, 158, 11, 0.5)' : 'rgba(217, 119, 6, 0.25)';
 			heroCtx.shadowBlur = 4;
 			heroCtx.beginPath();
 			for (let i = 0; i < displayLen; i++) {
@@ -1022,7 +1006,7 @@
 			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
 			heroCtx.clearRect(0, 0, w, h);
-			heroCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
+			heroCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
 			heroCtx.fillRect(0, 0, w, h);
 
 			const minFreq = 20;
@@ -1039,7 +1023,7 @@
 			const bottomY = h - 20;
 
 			// Horizontal divider above bottom gutter
-			heroCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)';
 			heroCtx.lineWidth = 1;
 			heroCtx.beginPath();
 			heroCtx.moveTo(0, bottomY);
@@ -1047,7 +1031,7 @@
 			heroCtx.stroke();
 
 			// Landmark grid lines: 100 Hz, 1 kHz, 10 kHz
-			heroCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.1)';
 			heroCtx.lineWidth = 1;
 			heroCtx.setLineDash([2, 4]);
 			[100, 1000, 10000].forEach((hz) => {
@@ -1063,7 +1047,7 @@
 			const dpr = Math.min(window.devicePixelRatio || 1, 2);
 			const fontSize = Math.round(9.5 * dpr);
 			heroCtx.font = `${fontSize}px monospace`;
-			heroCtx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+			heroCtx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.55)';
 
 			heroCtx.textAlign = 'left';
 			heroCtx.fillText('20 Hz', 6 * dpr, h - 5 * dpr);
@@ -1077,7 +1061,7 @@
 			heroCtx.fillText('20 kHz', w - 6 * dpr, h - 5 * dpr);
 
 			// Horizontal dB guide lines
-			heroCtx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.05)';
 			[0.25, 0.5, 0.75].forEach(ratio => {
 				const y = bottomY - ratio * (bottomY - 14);
 				heroCtx.beginPath();
@@ -1088,7 +1072,7 @@
 
 			if (!fftAnalyser || !audioCtx) {
 				// Flat baseline
-				heroCtx.strokeStyle = 'rgba(249, 115, 22, 0.25)';
+				heroCtx.strokeStyle = isDark ? 'rgba(249, 115, 22, 0.25)' : 'rgba(234, 88, 12, 0.3)';
 				heroCtx.beginPath();
 				heroCtx.moveTo(0, bottomY);
 				heroCtx.lineTo(w, bottomY);
@@ -1143,17 +1127,17 @@
 			heroCtx.closePath();
 
 			const grad = heroCtx.createLinearGradient(0, 0, 0, bottomY);
-			grad.addColorStop(0, 'rgba(249, 115, 22, 0.55)');
-			grad.addColorStop(0.65, 'rgba(249, 115, 22, 0.2)');
-			grad.addColorStop(1, 'rgba(249, 115, 22, 0.02)');
+			grad.addColorStop(0, isDark ? 'rgba(249, 115, 22, 0.55)' : 'rgba(249, 115, 22, 0.35)');
+			grad.addColorStop(0.65, isDark ? 'rgba(249, 115, 22, 0.2)' : 'rgba(249, 115, 22, 0.12)');
+			grad.addColorStop(1, isDark ? 'rgba(249, 115, 22, 0.02)' : 'rgba(249, 115, 22, 0.01)');
 			heroCtx.fillStyle = grad;
 			heroCtx.fill();
 
 			// Curve stroke with orange glow
-			heroCtx.strokeStyle = '#f97316';
+			heroCtx.strokeStyle = isDark ? '#f97316' : '#ea580c';
 			heroCtx.lineWidth = 2.0;
-			heroCtx.shadowColor = '#f97316';
-			heroCtx.shadowBlur = 6;
+			heroCtx.shadowColor = isDark ? '#f97316' : 'rgba(234, 88, 12, 0.3)';
+			heroCtx.shadowBlur = isDark ? 6 : 2;
 			heroCtx.beginPath();
 			for (let i = 0, x = 0; x <= w; x += stepPx, i++) {
 				if (x === 0) heroCtx.moveTo(x, yPoints[i]);
@@ -1165,7 +1149,7 @@
 			// Tuning target frequency marker
 			if (activeMode === 'tone' || activeMode === 'sweep') {
 				const targetX = freqToX(currentToneHz);
-				heroCtx.strokeStyle = 'rgba(249, 115, 22, 0.45)';
+				heroCtx.strokeStyle = isDark ? 'rgba(249, 115, 22, 0.45)' : 'rgba(234, 88, 12, 0.5)';
 				heroCtx.lineWidth = 1;
 				heroCtx.setLineDash([2, 2]);
 				heroCtx.beginPath();
@@ -1182,6 +1166,7 @@
 		let specHistoryCanvas: HTMLCanvasElement | null = null;
 		let specHistoryCtx: CanvasRenderingContext2D | null = null;
 		let lastSpecTime = 0;
+		let currentThemeIsDark = true;
 
 		function updateSpectrogramBuffer() {
 			if (!heroCanvas) return;
@@ -1191,13 +1176,21 @@
 			const bottomY = h - 20;
 			const waterfallH = Math.max(1, bottomY);
 
+			if (currentThemeIsDark !== isDark) {
+				currentThemeIsDark = isDark;
+				if (specHistoryCtx && specHistoryCanvas) {
+					specHistoryCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
+					specHistoryCtx.fillRect(0, 0, specHistoryCanvas.width, specHistoryCanvas.height);
+				}
+			}
+
 			if (!specHistoryCanvas || specHistoryCanvas.width !== w || specHistoryCanvas.height !== waterfallH) {
 				specHistoryCanvas = document.createElement('canvas');
 				specHistoryCanvas.width = w;
 				specHistoryCanvas.height = waterfallH;
 				specHistoryCtx = specHistoryCanvas.getContext('2d', { willReadFrequently: true });
 				if (specHistoryCtx) {
-					specHistoryCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
+					specHistoryCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
 					specHistoryCtx.fillRect(0, 0, w, waterfallH);
 				}
 			}
@@ -1219,7 +1212,7 @@
 				);
 
 				// Blank new top row
-				specHistoryCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
+				specHistoryCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
 				specHistoryCtx.fillRect(0, 0, w, scrollSpeed);
 
 				if (fftAnalyser && audioCtx) {
@@ -1263,32 +1256,56 @@
 
 						const val = Math.min(255, Math.pow(rawVal / 255, 0.85) * 260);
 
-						let r = isDark ? 9 : 12;
-						let g = isDark ? 9 : 10;
-						let b = isDark ? 11 : 9;
+						let r = isDark ? 9 : 248;
+						let g = isDark ? 9 : 250;
+						let b = isDark ? 11 : 252;
 						let a = 255;
 
 						if (val > 8) {
-							if (val < 65) {
-								const t = val / 65;
-								r = Math.round(12 + t * 95);
-								g = Math.round(12 + t * 25);
-								b = Math.round(25 + t * 50);
-							} else if (val < 145) {
-								const t = (val - 65) / 80;
-								r = Math.round(107 + t * 142);
-								g = Math.round(37 + t * 78);
-								b = Math.round(75 - t * 53);
-							} else if (val < 215) {
-								const t = (val - 145) / 70;
-								r = Math.round(249 + t * 2);
-								g = Math.round(115 + t * 76);
-								b = Math.round(22 + t * 14);
+							if (isDark) {
+								if (val < 65) {
+									const t = val / 65;
+									r = Math.round(12 + t * 95);
+									g = Math.round(12 + t * 25);
+									b = Math.round(25 + t * 50);
+								} else if (val < 145) {
+									const t = (val - 65) / 80;
+									r = Math.round(107 + t * 142);
+									g = Math.round(37 + t * 78);
+									b = Math.round(75 - t * 53);
+								} else if (val < 215) {
+									const t = (val - 145) / 70;
+									r = Math.round(249 + t * 2);
+									g = Math.round(115 + t * 76);
+									b = Math.round(22 + t * 14);
+								} else {
+									const t = (val - 215) / 40;
+									r = Math.round(251 + t * 4);
+									g = Math.round(191 + t * 64);
+									b = Math.round(36 + t * 219);
+								}
 							} else {
-								const t = (val - 215) / 40;
-								r = Math.round(251 + t * 4);
-								g = Math.round(191 + t * 64);
-								b = Math.round(36 + t * 219);
+								if (val < 65) {
+									const t = val / 65;
+									r = Math.round(248 - t * 80);
+									g = Math.round(250 - t * 70);
+									b = Math.round(252 - t * 40);
+								} else if (val < 145) {
+									const t = (val - 65) / 80;
+									r = Math.round(168 + t * 67);
+									g = Math.round(180 - t * 50);
+									b = Math.round(212 - t * 180);
+								} else if (val < 215) {
+									const t = (val - 145) / 70;
+									r = Math.round(235 - t * 15);
+									g = Math.round(130 - t * 92);
+									b = Math.round(32 + t * 6);
+								} else {
+									const t = (val - 215) / 40;
+									r = Math.round(220 - t * 80);
+									g = Math.round(38 - t * 20);
+									b = Math.round(38 - t * 18);
+								}
 							}
 						}
 
@@ -1315,7 +1332,7 @@
 
 			// Clear and fill canvas background
 			heroCtx.clearRect(0, 0, w, h);
-			heroCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
+			heroCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
 			heroCtx.fillRect(0, 0, w, h);
 
 			// Blit waterfall history
@@ -1332,7 +1349,7 @@
 			};
 
 			// Horizontal divider above bottom gutter
-			heroCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)';
 			heroCtx.lineWidth = 1;
 			heroCtx.beginPath();
 			heroCtx.moveTo(0, bottomY);
@@ -1340,7 +1357,7 @@
 			heroCtx.stroke();
 
 			// Vertical grid lines (100 Hz, 1 kHz, 10 kHz)
-			heroCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.1)';
 			heroCtx.lineWidth = 1;
 			heroCtx.setLineDash([2, 4]);
 			[100, 1000, 10000].forEach((hz) => {
@@ -1356,7 +1373,7 @@
 			const dpr = Math.min(window.devicePixelRatio || 1, 2);
 			const fontSize = Math.round(9.5 * dpr);
 			heroCtx.font = `${fontSize}px monospace`;
-			heroCtx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+			heroCtx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.55)';
 
 			heroCtx.textAlign = 'left';
 			heroCtx.fillText('20 Hz', 6 * dpr, h - 5 * dpr);
@@ -1372,7 +1389,7 @@
 			// Tuning target cursor
 			if (activeMode === 'tone' || activeMode === 'sweep') {
 				const targetX = freqToX(currentToneHz);
-				heroCtx.strokeStyle = 'rgba(249, 115, 22, 0.45)';
+				heroCtx.strokeStyle = isDark ? 'rgba(249, 115, 22, 0.45)' : 'rgba(234, 88, 12, 0.5)';
 				heroCtx.lineWidth = 1;
 				heroCtx.setLineDash([2, 2]);
 				heroCtx.beginPath();
@@ -1394,7 +1411,7 @@
 			const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
 			meterCtx.clearRect(0, 0, w, h);
-			meterCtx.fillStyle = isDark ? '#09090b' : '#0c0a09';
+			meterCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
 			meterCtx.fillRect(0, 0, w, h);
 
 			const now = performance.now();
@@ -1479,11 +1496,11 @@
 			meterCtx.font = `bold ${Math.round(11 * dpr)}px sans-serif`;
 			meterCtx.textAlign = 'left';
 			meterCtx.textBaseline = 'middle';
-			meterCtx.fillStyle = '#38bdf8';
+			meterCtx.fillStyle = isDark ? '#38bdf8' : '#0284c7';
 			meterCtx.fillText('L', labelX, row1Center);
 
 			// Track background
-			meterCtx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+			meterCtx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
 			meterCtx.fillRect(trackX0, row1Y, trackW, barH);
 
 			// Active bar fill
@@ -1495,7 +1512,7 @@
 
 			// Peak Hold Needle
 			if (peakHoldL > -58) {
-				meterCtx.fillStyle = '#ffffff';
+				meterCtx.fillStyle = isDark ? '#ffffff' : '#0f172a';
 				meterCtx.fillRect(Math.round(dbToX(peakHoldL)), row1Y, Math.round(1.5 * dpr), barH);
 			}
 
@@ -1503,12 +1520,12 @@
 			meterCtx.textAlign = 'right';
 			meterCtx.textBaseline = 'middle';
 			if (smoothL <= -58) {
-				meterCtx.font = `bold ${Math.round(13 * dpr)}px sans-serif`;
-				meterCtx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+				meterCtx.font = `bold ${Math.round(16 * dpr)}px sans-serif`;
+				meterCtx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(0, 0, 0, 0.4)';
 				meterCtx.fillText('−∞', w - Math.round(5 * dpr), row1Center);
 			} else {
 				meterCtx.font = `bold ${Math.round(9.5 * dpr)}px monospace`;
-				meterCtx.fillStyle = '#38bdf8';
+				meterCtx.fillStyle = isDark ? '#38bdf8' : '#0284c7';
 				meterCtx.fillText(`${Math.round(smoothL)} dB`, w - Math.round(5 * dpr), row1Center);
 			}
 
@@ -1516,11 +1533,11 @@
 			meterCtx.font = `bold ${Math.round(11 * dpr)}px sans-serif`;
 			meterCtx.textAlign = 'left';
 			meterCtx.textBaseline = 'middle';
-			meterCtx.fillStyle = '#f59e0b';
+			meterCtx.fillStyle = isDark ? '#f59e0b' : '#d97706';
 			meterCtx.fillText('R', labelX, row2Center);
 
 			// Track background
-			meterCtx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+			meterCtx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
 			meterCtx.fillRect(trackX0, row2Y, trackW, barH);
 
 			// Active bar fill
@@ -1532,7 +1549,7 @@
 
 			// Peak Hold Needle
 			if (peakHoldR > -58) {
-				meterCtx.fillStyle = '#ffffff';
+				meterCtx.fillStyle = isDark ? '#ffffff' : '#0f172a';
 				meterCtx.fillRect(Math.round(dbToX(peakHoldR)), row2Y, Math.round(1.5 * dpr), barH);
 			}
 
@@ -1540,12 +1557,12 @@
 			meterCtx.textAlign = 'right';
 			meterCtx.textBaseline = 'middle';
 			if (smoothR <= -58) {
-				meterCtx.font = `bold ${Math.round(13 * dpr)}px sans-serif`;
-				meterCtx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+				meterCtx.font = `bold ${Math.round(16 * dpr)}px sans-serif`;
+				meterCtx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(0, 0, 0, 0.4)';
 				meterCtx.fillText('−∞', w - Math.round(5 * dpr), row2Center);
 			} else {
 				meterCtx.font = `bold ${Math.round(9.5 * dpr)}px monospace`;
-				meterCtx.fillStyle = '#f59e0b';
+				meterCtx.fillStyle = isDark ? '#f59e0b' : '#d97706';
 				meterCtx.fillText(`${Math.round(smoothR)} dB`, w - Math.round(5 * dpr), row2Center);
 			}
 
@@ -1556,7 +1573,6 @@
 				: [-60, -48, -36, -24, -18, -12, -6, -3, 0];
 
 			meterCtx.textAlign = 'center';
-			meterCtx.textBaseline = 'top';
 
 			marks.forEach((m) => {
 				const x = Math.round(dbToX(m));
@@ -1565,20 +1581,22 @@
 				const isNeg6 = m === -6;
 				const isNegInf = m === -60;
 
-				meterCtx.strokeStyle = isZero ? '#ef4444' : (isNeg3 ? '#f97316' : (isNeg6 ? '#eab308' : 'rgba(255, 255, 255, 0.45)'));
+				meterCtx.strokeStyle = isZero ? '#ef4444' : (isNeg3 ? '#f97316' : (isNeg6 ? (isDark ? '#eab308' : '#ca8a04') : (isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(0, 0, 0, 0.25)')));
 				meterCtx.lineWidth = Math.max(1, Math.round(1.5 * dpr));
 				meterCtx.beginPath();
 				meterCtx.moveTo(x, tickTopY);
 				meterCtx.lineTo(x, tickBottomY);
 				meterCtx.stroke();
 
-				meterCtx.fillStyle = isZero ? '#ef4444' : (isNeg3 ? '#f97316' : (isNeg6 ? '#eab308' : 'rgba(255, 255, 255, 0.8)'));
+				meterCtx.fillStyle = isZero ? '#ef4444' : (isNeg3 ? '#f97316' : (isNeg6 ? (isDark ? '#eab308' : '#ca8a04') : (isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)')));
 
 				if (isNegInf) {
-					meterCtx.font = `bold ${Math.round(12.5 * dpr)}px sans-serif`;
-					meterCtx.fillText('−∞', x, textY - Math.round(1.5 * dpr));
+					meterCtx.font = `bold ${Math.round(15.5 * dpr)}px sans-serif`;
+					meterCtx.textBaseline = 'middle';
+					meterCtx.fillText('−∞', x, textY + Math.round(4 * dpr));
 				} else {
 					meterCtx.font = `bold ${Math.round(9.5 * dpr)}px monospace`;
+					meterCtx.textBaseline = 'top';
 					const label = isZero ? '0' : `${m}`;
 					meterCtx.fillText(label, x, textY);
 				}
@@ -1852,6 +1870,10 @@
 		box-sizing: border-box;
 	}
 
+	:global(html[data-theme="light"]) .hero-canvas-box {
+		background: #f8fafc;
+	}
+
 	@media (max-width: 860px) {
 		.hero-canvas-box {
 			flex: none;
@@ -1877,6 +1899,10 @@
 		background: #09090b;
 		box-sizing: border-box;
 		flex-shrink: 0;
+	}
+
+	:global(html[data-theme="light"]) .stereo-meter-box {
+		background: #f8fafc;
 	}
 
 	#audio-meter-canvas {
@@ -1915,6 +1941,13 @@
 		box-sizing: border-box;
 	}
 
+	:global(html[data-theme="light"]) .hud-badge-wrap {
+		background: rgba(255, 255, 255, 0.92);
+		border: 1px solid rgba(0, 0, 0, 0.12);
+		color: #09090b;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	}
+
 	.hud-main-text {
 		font-size: 1.05em;
 		font-weight: 800;
@@ -1923,9 +1956,17 @@
 		white-space: nowrap;
 	}
 
+	:global(html[data-theme="light"]) .hud-main-text {
+		color: #09090b;
+	}
+
 	.hud-sep {
 		color: rgba(255, 255, 255, 0.35);
 		font-size: 0.85em;
+	}
+
+	:global(html[data-theme="light"]) .hud-sep {
+		color: rgba(0, 0, 0, 0.3);
 	}
 
 	.hud-sub-text {
@@ -1958,6 +1999,12 @@
 		box-sizing: border-box;
 	}
 
+	:global(html[data-theme="light"]) .waveform-hud-bar {
+		background: rgba(255, 255, 255, 0.92);
+		border: 1px solid rgba(0, 0, 0, 0.12);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	}
+
 	.phase-meter-wrap {
 		display: flex;
 		align-items: center;
@@ -1975,11 +2022,19 @@
 		flex-shrink: 0;
 	}
 
+	:global(html[data-theme="light"]) .phase-meter-title {
+		color: rgba(0, 0, 0, 0.75);
+	}
+
 	.phase-meter-tag {
 		font-size: 0.68em;
 		font-weight: 700;
 		color: rgba(255, 255, 255, 0.4);
 		flex-shrink: 0;
+	}
+
+	:global(html[data-theme="light"]) .phase-meter-tag {
+		color: rgba(0, 0, 0, 0.45);
 	}
 
 	.phase-meter-track {
@@ -1993,6 +2048,10 @@
 		overflow: hidden;
 	}
 
+	:global(html[data-theme="light"]) .phase-meter-track {
+		background: rgba(0, 0, 0, 0.1);
+	}
+
 	.phase-meter-center {
 		position: absolute;
 		left: 50%;
@@ -2002,6 +2061,10 @@
 		background: rgba(255, 255, 255, 0.4);
 		transform: translateX(-50%);
 		z-index: 2;
+	}
+
+	:global(html[data-theme="light"]) .phase-meter-center {
+		background: rgba(0, 0, 0, 0.4);
 	}
 
 	.phase-meter-fill {
@@ -2020,6 +2083,10 @@
 		text-align: right;
 		white-space: nowrap;
 		flex-shrink: 0;
+	}
+
+	:global(html[data-theme="light"]) .phase-val {
+		color: #09090b;
 	}
 
 	/* CONTROLS COLUMN */
@@ -2085,6 +2152,22 @@
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 0.5em;
+	}
+
+	.tone-buttons-grid .tone-pill {
+		width: 28px;
+		height: 22px;
+		padding: 0 !important;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		box-sizing: border-box;
+		text-align: center;
+	}
+
+	.tone-buttons-grid .tone-pill.warn,
+	.tone-buttons-grid .tone-pill.green {
+		width: 36px;
 	}
 
 	.tone-btn {
@@ -2164,15 +2247,16 @@
 	.tone-pill.white {
 		background: #ffffff !important;
 		color: #09090b !important;
-		font-weight: 900 !important;
-		box-shadow: 0 0 10px rgba(255, 255, 255, 0.45);
+		font-size: 0.74em !important;
+		font-weight: 800 !important;
+		box-shadow: 0 0 4px rgba(255, 255, 255, 0.3) !important;
 	}
 
 	:global(html[data-theme="light"]) .tone-pill.white {
 		background: #ffffff !important;
 		color: #09090b !important;
-		border: 1.5px solid #09090b;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+		border: 1.5px solid rgba(0, 0, 0, 0.35) !important;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
 	}
 
 	.tone-pill.mono {
@@ -2212,124 +2296,40 @@
 
 	.sweep-btn {
 		width: 100%;
-		display: flex;
+		display: inline-flex;
 		align-items: center;
-		justify-content: space-between;
-		gap: 0.8em;
-		background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(148, 163, 184, 0.05) 100%);
-		border: 1px solid rgba(249, 115, 22, 0.35);
+		justify-content: center;
+		gap: 0.6em;
+		background: #f97316;
+		border: 1px solid #ea580c;
+		color: #ffffff;
 		border-radius: 8px;
-		padding: 0.65em 0.85em;
-		min-height: 48px;
+		padding: 0.65em 1em;
+		min-height: 42px;
+		font-family: inherit;
+		font-size: 0.86em;
+		font-weight: 700;
 		cursor: pointer;
-		transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+		transition: all 0.15s ease;
+		box-shadow: 0 1px 3px rgba(249, 115, 22, 0.25);
 		box-sizing: border-box;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-	}
-
-	:global(html[data-theme="dark"]) .sweep-btn {
-		background: linear-gradient(135deg, rgba(249, 115, 22, 0.12) 0%, rgba(24, 24, 27, 0.85) 100%);
-		border: 1px solid rgba(249, 115, 22, 0.35);
 	}
 
 	.sweep-btn:hover {
-		border-color: var(--accent);
-		background: linear-gradient(135deg, rgba(249, 115, 22, 0.18) 0%, rgba(24, 24, 27, 0.95) 100%);
-		box-shadow: 0 0 14px rgba(249, 115, 22, 0.25);
+		background: #ea580c;
+		border-color: #c2410c;
 		transform: translateY(-1px);
+		box-shadow: 0 3px 8px rgba(234, 88, 12, 0.35);
 	}
 
 	.sweep-btn.active {
-		background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-		border-color: #f97316;
-		box-shadow: 0 0 20px rgba(249, 115, 22, 0.45);
+		background: #c2410c;
+		border-color: #9a3412;
+		box-shadow: 0 0 12px rgba(249, 115, 22, 0.5);
 	}
 
-	.sweep-btn-left {
-		display: flex;
-		align-items: center;
-		gap: 0.7em;
-		min-width: 0;
-	}
-
-	.sweep-icon-box {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		border-radius: 6px;
-		background: rgba(249, 115, 22, 0.18);
-		color: var(--accent);
+	.sweep-icon {
 		flex-shrink: 0;
-		transition: all 0.2s ease;
-	}
-
-	.sweep-btn:hover .sweep-icon-box {
-		background: rgba(249, 115, 22, 0.3);
-		transform: scale(1.05);
-	}
-
-	.sweep-btn.active .sweep-icon-box {
-		background: rgba(255, 255, 255, 0.25);
-		color: #ffffff;
-	}
-
-	.sweep-info {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		min-width: 0;
-	}
-
-	.sweep-title {
-		font-size: 0.86em;
-		font-weight: 700;
-		color: rgb(var(--black));
-		line-height: 1.2;
-	}
-
-	:global(html[data-theme="dark"]) .sweep-title {
-		color: #ffffff;
-	}
-
-	.sweep-btn.active .sweep-title {
-		color: #ffffff;
-	}
-
-	.sweep-desc {
-		font-size: 0.7em;
-		font-weight: 500;
-		color: rgb(var(--gray));
-		line-height: 1.2;
-		margin-top: 1px;
-	}
-
-	.sweep-btn.active .sweep-desc {
-		color: rgba(255, 255, 255, 0.85);
-	}
-
-	.sweep-duration-badge {
-		font-size: 0.72em;
-		font-weight: 700;
-		background: rgba(148, 163, 184, 0.15);
-		color: rgb(var(--gray-dark));
-		padding: 2px 7px;
-		border-radius: 4px;
-		flex-shrink: 0;
-		border: 1px solid var(--border-color);
-	}
-
-	:global(html[data-theme="dark"]) .sweep-duration-badge {
-		background: rgba(255, 255, 255, 0.08);
-		color: rgba(255, 255, 255, 0.85);
-		border-color: rgba(255, 255, 255, 0.12);
-	}
-
-	.sweep-btn.active .sweep-duration-badge {
-		background: rgba(255, 255, 255, 0.25);
-		color: #ffffff;
-		border-color: rgba(255, 255, 255, 0.4);
 	}
 
 	/* SLIDER ROW */
@@ -2367,22 +2367,27 @@
 	.freq-buttons-grid {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
-		gap: 0.5em;
+		gap: 0.35em;
 	}
 
 	.freq-buttons-grid .tone-btn {
-		padding: 0.55em 0.5em;
-		gap: 0.45em;
-		min-height: 40px;
+		padding: 0.4em 0.3em;
+		gap: 0.3em;
+		min-height: 38px;
+		justify-content: center;
 	}
 
 	.freq-buttons-grid .tone-pill {
-		font-size: 0.76em;
-		padding: 2px 5px;
+		font-size: 0.72em;
+		padding: 1.5px 4px;
+		flex-shrink: 0;
 	}
 
 	.freq-buttons-grid .tone-name {
-		font-size: 0.8em;
+		font-size: 0.74em;
+		font-weight: 700;
+		letter-spacing: -0.015em;
+		line-height: 1.1;
 		white-space: nowrap;
 	}
 

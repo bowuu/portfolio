@@ -253,6 +253,22 @@
 		let peakHoldTimeL = 0;
 		let peakHoldTimeR = 0;
 
+		// Spectrogram History Buffer State
+		let specHistoryCanvas: HTMLCanvasElement | null = null;
+		let specHistoryCtx: CanvasRenderingContext2D | null = null;
+		let lastSpecTime = 0;
+		let currentThemeIsDark = true;
+
+		// Visualizer Animation Loop State
+		let isAudioVisible = false;
+		let rafVisualizerId: number | null = null;
+
+		function ensureVisualizerRunning() {
+			if (isAudioVisible && !rafVisualizerId) {
+				rafVisualizerId = requestAnimationFrame(renderActiveVisualizer);
+			}
+		}
+
 		// UI references
 		const modeWaveformBtn = document.getElementById('btn-hero-waveform');
 		const modeSpectrumBtn = document.getElementById('btn-hero-spectrum');
@@ -402,8 +418,8 @@
 			}
 
 			updateHudOverlay();
-			if (!rafVisualizerId && isAudioVisible) {
-				renderActiveVisualizer();
+			if (!rafVisualizerId) {
+				renderActiveVisualizer(true);
 			}
 		}
 
@@ -628,6 +644,7 @@
 			if (runSweepText) runSweepText.textContent = 'Auto Frequency Sweep (10s)';
 
 			updateHudOverlay();
+			ensureVisualizerRunning();
 		}
 
 		// Frequency UI updates
@@ -642,6 +659,7 @@
 				freqSlider.setAttribute('aria-valuetext', `${Math.round(hz).toLocaleString()} Hz`);
 			}
 			updateHudOverlay();
+			ensureVisualizerRunning();
 		}
 
 		// Slider Scrub
@@ -945,42 +963,6 @@
 		document.getElementById('btn-tone-right')?.addEventListener('click', () => playPolarityTone('right'));
 		document.getElementById('btn-tone-inphase')?.addEventListener('click', () => playPolarityTone('inphase'));
 		document.getElementById('btn-tone-outphase')?.addEventListener('click', () => playPolarityTone('outphase'));
-
-		// Responsive canvas resizing (DPR Retina scaling)
-		function resizeCanvases() {
-			const dpr = Math.min(window.devicePixelRatio || 1, 2);
-			if (heroCanvas) {
-				const rect = heroCanvas.getBoundingClientRect();
-				const targetW = Math.round((rect.width || 600) * dpr);
-				const targetH = Math.round((rect.height || 310) * dpr);
-				if (heroCanvas.width !== targetW || heroCanvas.height !== targetH) {
-					heroCanvas.width = targetW;
-					heroCanvas.height = targetH;
-				}
-			}
-			if (meterCanvas) {
-				const rect = meterCanvas.getBoundingClientRect();
-				const targetW = Math.round((rect.width || 600) * dpr);
-				const targetH = Math.round((rect.height || 58) * dpr);
-				if (meterCanvas.width !== targetW || meterCanvas.height !== targetH) {
-					meterCanvas.width = targetW;
-					meterCanvas.height = targetH;
-				}
-			}
-			if (!rafVisualizerId && isAudioVisible) {
-				renderActiveVisualizer();
-			}
-		}
-		resizeCanvases();
-		window.addEventListener('resize', resizeCanvases, { passive: true });
-
-		const heroBox = document.getElementById('hero-canvas-box');
-		if (heroBox && window.ResizeObserver) {
-			const ro = new ResizeObserver(() => {
-				resizeCanvases();
-			});
-			ro.observe(heroBox);
-		}
 
 		// -------------------------------------------------------------
 		// VISUALIZER 1: DUAL-TRACE WAVEFORM OSCILLOSCOPE
@@ -1328,11 +1310,6 @@
 		// -------------------------------------------------------------
 		// VISUALIZER 3: 2D SPECTROGRAM WATERFALL (DOWNWARD HEATMAP)
 		// -------------------------------------------------------------
-		let specHistoryCanvas: HTMLCanvasElement | null = null;
-		let specHistoryCtx: CanvasRenderingContext2D | null = null;
-		let lastSpecTime = 0;
-		let currentThemeIsDark = true;
-
 		function updateSpectrogramBuffer() {
 			if (!heroCanvas) return;
 			const w = heroCanvas.width;
@@ -1771,17 +1748,9 @@
 		}
 
 		// Main visualizer animation loop
-		let isAudioVisible = false;
-		let rafVisualizerId: number | null = null;
-
-		function ensureVisualizerRunning() {
-			if (isAudioVisible && !rafVisualizerId) {
-				rafVisualizerId = requestAnimationFrame(renderActiveVisualizer);
-			}
-		}
-
-		function renderActiveVisualizer() {
-			if (!isAudioVisible) {
+		function renderActiveVisualizer(force?: boolean | number) {
+			const shouldRender = isAudioVisible || force === true;
+			if (!shouldRender) {
 				rafVisualizerId = null;
 				return;
 			}
@@ -1806,16 +1775,52 @@
 			const isDecaying = smoothL > -59.5 || smoothR > -59.5;
 			const isProducing = activeMode !== 'none' || isSweeping || !!micStream;
 
-			if (isProducing || isDecaying) {
+			if ((isProducing || isDecaying) && isAudioVisible) {
 				rafVisualizerId = requestAnimationFrame(renderActiveVisualizer);
 			} else {
 				rafVisualizerId = null;
 			}
 		}
 
+		// Responsive canvas resizing (DPR Retina scaling)
+		function resizeCanvases() {
+			const dpr = Math.min(window.devicePixelRatio || 1, 2);
+			if (heroCanvas) {
+				const rect = heroCanvas.getBoundingClientRect();
+				const targetW = Math.round((rect.width || 600) * dpr);
+				const targetH = Math.round((rect.height || 310) * dpr);
+				if (heroCanvas.width !== targetW || heroCanvas.height !== targetH) {
+					heroCanvas.width = targetW;
+					heroCanvas.height = targetH;
+				}
+			}
+			if (meterCanvas) {
+				const rect = meterCanvas.getBoundingClientRect();
+				const targetW = Math.round((rect.width || 600) * dpr);
+				const targetH = Math.round((rect.height || 58) * dpr);
+				if (meterCanvas.width !== targetW || meterCanvas.height !== targetH) {
+					meterCanvas.width = targetW;
+					meterCanvas.height = targetH;
+				}
+			}
+			if (!rafVisualizerId) {
+				renderActiveVisualizer(true);
+			}
+		}
+		resizeCanvases();
+		window.addEventListener('resize', resizeCanvases, { passive: true });
+
+		const heroBox = document.getElementById('hero-canvas-box');
+		if (heroBox && window.ResizeObserver) {
+			const ro = new ResizeObserver(() => {
+				resizeCanvases();
+			});
+			ro.observe(heroBox);
+		}
+
 		// 0% CPU consumption when off-screen or idle
 		const cardEl = document.getElementById('audio-lab');
-		if (cardEl) {
+		if (cardEl && window.IntersectionObserver) {
 			const obs = new IntersectionObserver((entries) => {
 				entries.forEach((e) => {
 					isAudioVisible = e.isIntersecting;
@@ -1839,9 +1844,10 @@
 		const themeObserver = new MutationObserver((mutations) => {
 			for (const mutation of mutations) {
 				if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
-					if (!rafVisualizerId && isAudioVisible) {
-						renderActiveVisualizer();
+					if (!rafVisualizerId) {
+						renderActiveVisualizer(true);
 					}
+					break;
 				}
 			}
 		});

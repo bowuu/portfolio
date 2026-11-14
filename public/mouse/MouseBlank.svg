@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 750" width="100%" height="100%">
+  <defs>
+    <filter id="dropShadow" x="-10%" y="-10%" width="125%" height="125%">
+      <feDropShadow dx="0" dy="16" stdDeviation="14" flood-color="#000000" flood-opacity="0.18" />
+    </filter>
+
+    <style>
+      .part-outline { stroke: #232529; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+      .interactive:hover { filter: brightness(1.12); cursor: pointer; }
+    </style>
+  </defs>
+
+  <!-- ==================== MOUSE SHELL ==================== -->
+  <g id="mouse-shell" filter="url(#dropShadow)">
+    <path id="palm-shell" class="part-outline" fill="#797d87" d="M 426,298
+         C 488,272 548,265 600,269
+         C 700,276 785,332 822,412
+         C 832,434 830,454 812,470
+         C 755,512 605,562 442,618
+         C 375,640 315,622 255,570
+         C 236,554 226,545 220,538
+         L 500,324
+         Z" />
+  </g>
+
+  <!-- ==================== 1. RIGHT BUTTON (RMB) ==================== -->
+  <g id="right-button" class="interactive">
+    <title>Right Button (Button 2)</title>
+    <path class="part-outline" fill="#8c919b" d="M 426,298
+         C 355,328 275,380 218,435
+         C 182,470 184,512 220,538
+         C 305,468 408,390 500,324
+         C 480,310 455,300 426,298 Z" />
+  </g>
+
+  <!-- ==================== 2. LEFT BUTTON (LMB) ==================== -->
+  <g id="left-button" class="interactive">
+    <title>Left Button (Button 1)</title>
+    <path class="part-outline" fill="#8c919b" d="M 220,538
+         C 256,564 306,575 352,578
+         C 372,580 388,572 406,558
+         L 522,464
+         C 548,443 554,418 546,390
+         C 538,362 522,339 500,324
+         C 408,390 305,468 220,538 Z" />
+  </g>
+
+  <!-- ==================== 3. SCROLL WHEEL (MIDDLE BUTTON) ==================== -->
+  <g id="scroll-wheel" class="interactive">
+    <title>Scroll Wheel / Middle Button (Button 3)</title>
+    <!-- 3D Wheel Profile Straddling the Center Dividing Line -->
+    <path class="part-outline" fill="#464952" d="M 286,474
+         C 298,408 356,374 408,404
+         C 374,430 338,457 302,485
+         Z" />
+    <!-- 3D Perspective-Aligned Tread Ridges -->
+    <g stroke="#7d828c" stroke-width="2.5" stroke-linecap="round">
+      <line x1="297.4" y1="452.5" x2="311.4" y2="460.3" />
+      <line x1="306.3" y1="435.2" x2="320.4" y2="443.8" />
+      <line x1="317.6" y1="420.7" x2="331.5" y2="430.1" />
+      <line x1="330.9" y1="409.5" x2="344.4" y2="419.5" />
+      <line x1="345.9" y1="401.7" x2="358.7" y2="412.1" />
+      <line x1="362.1" y1="397.5" x2="373.9" y2="408.0" />
+      <line x1="379.2" y1="397.5" x2="389.7" y2="407.6" />
+    </g>
+  </g>
+
+  <!-- ==================== 4. FORWARD BUTTON (EXTRA-LARGE SIDE FRONT) ==================== -->
+  <g id="forward-button" class="interactive">
+    <title>Forward Button (Button 5)</title>
+    <path class="part-outline" fill="#70757e" d="M 496,500
+         C 532,474 574,448 610,430
+         C 622,424 630,435 628,454
+         C 626,470 620,480 608,487
+         C 572,507 534,532 504,554
+         C 491,563 482,551 484,532
+         C 485,517 489,506 496,500 Z" />
+  </g>
+
+  <!-- ==================== 5. BACK BUTTON (EXTRA-LARGE SIDE REAR) ==================== -->
+  <g id="back-button" class="interactive">
+    <title>Back Button (Button 4)</title>
+    <path class="part-outline" fill="#70757e" d="M 644,414
+         C 678,397 716,383 750,373
+         C 762,369 770,380 767,399
+         C 764,415 757,424 745,429
+         C 713,441 680,455 652,469
+         C 640,475 633,463 635,444
+         C 636,430 639,419 644,414 Z" />
+  </g>
+</svg>

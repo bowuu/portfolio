@@ -97,54 +97,97 @@
 			<!-- INTERACTIVE MOUSE HARDWARE TEST ZONE -->
 			<div class="mouse-hardware-zone" id="mouse-btn-zone" tabindex="0">
 				<div class="mouse-device-wrap">
-					<!-- ERGONOMIC MOUSE CHASSIS -->
-					<div class="mouse-chassis">
-						<!-- INTEGRATED THUMB BUTTONS (LEFT FLANK) -->
-						<div class="mouse-thumb-wing">
-							<div class="mouse-btn mouse-btn-thumb thumb-fwd" id="btn-thumb2">
-								<span>Fwd</span>
-							</div>
-							<div class="mouse-btn mouse-btn-thumb thumb-back" id="btn-thumb1">
-								<span>Back</span>
-							</div>
-						</div>
+					<svg class="mouse-svg" viewBox="150 240 700 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Interactive 5-Button Mouse Hardware Tester">
+						<defs>
+							<filter id="mouseDropShadow" x="-10%" y="-10%" width="125%" height="125%">
+								<feDropShadow dx="0" dy="16" stdDeviation="14" flood-color="#000000" flood-opacity="0.35" />
+							</filter>
+						</defs>
 
-						<!-- MAIN MOUSE SHELL -->
-						<div class="mouse-body">
-							<!-- TOP PRIMARY BUTTONS -->
-							<div class="mouse-top-buttons">
-								<!-- LEFT MOUSE BUTTON (LMB) -->
-								<div class="mouse-btn mouse-btn-main mouse-btn-left" id="btn-lmb">
-									<span class="mb-label">LMB</span>
-								</div>
+						<!-- ==================== MOUSE SHELL (PALM REST) ==================== -->
+						<g id="mouse-shell" class="mouse-shell-group" filter="url(#mouseDropShadow)">
+							<path id="palm-shell" class="part-outline palm-part" fill="#797d87" d="M 426,298
+								 C 488,272 548,265 600,269
+								 C 700,276 785,332 822,412
+								 C 832,434 830,454 812,470
+								 C 755,512 605,562 442,618
+								 C 375,640 315,622 255,570
+								 C 236,554 226,545 220,538
+								 L 500,324
+								 Z" />
+						</g>
 
-								<!-- SCROLL WHEEL & MMB -->
-								<div class="mouse-wheel-wrap">
-									<div class="mouse-btn mouse-btn-wheel" id="btn-wheel">
-										<span class="wheel-notch up" id="notch-up">
-											<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-												<polyline points="18 15 12 9 6 15"></polyline>
-											</svg>
-										</span>
-										<span class="wheel-center"></span>
-										<span class="wheel-notch down" id="notch-down">
-											<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-												<polyline points="6 9 12 15 18 9"></polyline>
-											</svg>
-										</span>
-									</div>
-								</div>
+						<!-- ==================== 1. RIGHT BUTTON (RMB - Button 2) ==================== -->
+						<g id="btn-rmb" class="interactive mouse-btn btn-rmb-group" role="button" aria-label="Right Mouse Button (RMB)">
+							<title>Right Button (RMB)</title>
+							<path class="part-outline btn-surface" fill="#8c919b" d="M 426,298
+								 C 355,328 275,380 218,435
+								 C 182,470 184,512 220,538
+								 C 305,468 408,390 500,324
+								 C 480,310 455,300 426,298 Z" />
+							<text class="mouse-btn-label" x="290" y="415">RMB</text>
+						</g>
 
-								<!-- RIGHT MOUSE BUTTON (RMB) -->
-								<div class="mouse-btn mouse-btn-main mouse-btn-right" id="btn-rmb">
-									<span class="mb-label">RMB</span>
-								</div>
-							</div>
+						<!-- ==================== 2. LEFT BUTTON (LMB - Button 0) ==================== -->
+						<g id="btn-lmb" class="interactive mouse-btn btn-lmb-group" role="button" aria-label="Left Mouse Button (LMB)">
+							<title>Left Button (LMB)</title>
+							<path class="part-outline btn-surface" fill="#8c919b" d="M 220,538
+								 C 256,564 306,575 352,578
+								 C 372,580 388,572 406,558
+								 L 522,464
+								 C 548,443 554,418 546,390
+								 C 538,362 522,339 500,324
+								 C 408,390 305,468 220,538 Z" />
+							<text class="mouse-btn-label" x="420" y="495">LMB</text>
+						</g>
 
-							<!-- CLEAN PALM REST (SMOOTH SATIN FINISH) -->
-							<div class="mouse-palm"></div>
-						</div>
-					</div>
+						<!-- ==================== 3. SCROLL WHEEL & MMB (Button 1) ==================== -->
+						<g id="btn-wheel" class="interactive mouse-btn btn-wheel-group" role="button" aria-label="Scroll Wheel and Middle Button (MMB)">
+							<title>Scroll Wheel / Middle Button (MMB)</title>
+							<path class="part-outline wheel-surface" fill="#464952" d="M 286,474
+								 C 298,408 356,374 408,404
+								 C 374,430 338,457 302,485
+								 Z" />
+							<g class="wheel-treads" stroke="#7d828c" stroke-width="2.5" stroke-linecap="round">
+								<line x1="297.4" y1="452.5" x2="311.4" y2="460.3" />
+								<line x1="306.3" y1="435.2" x2="320.4" y2="443.8" />
+								<line x1="317.6" y1="420.7" x2="331.5" y2="430.1" />
+								<line x1="330.9" y1="409.5" x2="344.4" y2="419.5" />
+								<line x1="345.9" y1="401.7" x2="358.7" y2="412.1" />
+								<line x1="362.1" y1="397.5" x2="373.9" y2="408.0" />
+								<line x1="379.2" y1="397.5" x2="389.7" y2="407.6" />
+							</g>
+							<!-- Up / Down Scroll Direction Notches -->
+							<polyline id="notch-up" class="wheel-notch notch-up" points="380,404 390,394 400,402" fill="none" stroke="#cbd5e1" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+							<polyline id="notch-down" class="wheel-notch notch-down" points="295,466 287,476 297,482" fill="none" stroke="#cbd5e1" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+						</g>
+
+						<!-- ==================== 4. FORWARD BUTTON (Fwd - Button 4) ==================== -->
+						<g id="btn-thumb2" class="interactive mouse-btn btn-thumb2-group" role="button" aria-label="Forward Button (Fwd)">
+							<title>Forward Button (Fwd)</title>
+							<path class="part-outline btn-surface" fill="#70757e" d="M 496,500
+								 C 532,474 574,448 610,430
+								 C 622,424 630,435 628,454
+								 C 626,470 620,480 608,487
+								 C 572,507 534,532 504,554
+								 C 491,563 482,551 484,532
+								 C 485,517 489,506 496,500 Z" />
+							<text class="mouse-btn-label thumb-label" x="555" y="492">Fwd</text>
+						</g>
+
+						<!-- ==================== 5. BACK BUTTON (Back - Button 3) ==================== -->
+						<g id="btn-thumb1" class="interactive mouse-btn btn-thumb1-group" role="button" aria-label="Back Button (Back)">
+							<title>Back Button (Back)</title>
+							<path class="part-outline btn-surface" fill="#70757e" d="M 644,414
+								 C 678,397 716,383 750,373
+								 C 762,369 770,380 767,399
+								 C 764,415 757,424 745,429
+								 C 713,441 680,455 652,469
+								 C 640,475 633,463 635,444
+								 C 636,430 639,419 644,414 Z" />
+							<text class="mouse-btn-label thumb-label" x="696" y="420">Back</text>
+						</g>
+					</svg>
 				</div>
 			</div>
 
@@ -502,11 +545,11 @@
 		const mouseChatterEl = document.getElementById('mouse-chatter-status');
 		const mouseChatterSubEl = document.getElementById('mouse-chatter-sub');
 
-		const lmbEl = document.getElementById('btn-lmb');
-		const rmbEl = document.getElementById('btn-rmb');
-		const wheelEl = document.getElementById('btn-wheel');
-		const thumb1El = document.getElementById('btn-thumb1');
-		const thumb2El = document.getElementById('btn-thumb2');
+		const lmbEl = document.getElementById('btn-lmb') || document.getElementById('left-button');
+		const rmbEl = document.getElementById('btn-rmb') || document.getElementById('right-button');
+		const wheelEl = document.getElementById('btn-wheel') || document.getElementById('scroll-wheel');
+		const thumb1El = document.getElementById('btn-thumb1') || document.getElementById('back-button');
+		const thumb2El = document.getElementById('btn-thumb2') || document.getElementById('forward-button');
 		const notchUpEl = document.getElementById('notch-up');
 		const notchDownEl = document.getElementById('notch-down');
 
@@ -516,10 +559,10 @@
 		let mouseChatterCount = 0;
 		let wheelTimer: any = null;
 
-		const activeTimers = new Map<HTMLElement, any>();
+		const activeTimers = new Map<HTMLElement | SVGElement, any>();
 		const isButtonDown = new Map<number, boolean>();
 
-		function activateButton(el: HTMLElement | null, btnId: number) {
+		function activateButton(el: HTMLElement | SVGElement | null, btnId: number) {
 			if (!el) return;
 			isButtonDown.set(btnId, true);
 			el.classList.add('btn-active');
@@ -530,7 +573,7 @@
 			}
 		}
 
-		function deactivateButton(el: HTMLElement | null, btnId: number) {
+		function deactivateButton(el: HTMLElement | SVGElement | null, btnId: number) {
 			if (!el) return;
 			isButtonDown.set(btnId, false);
 			const existing = activeTimers.get(el);
@@ -546,18 +589,18 @@
 			activeTimers.set(el, timer);
 		}
 
-		function getButtonInfo(btn: number, target?: HTMLElement | null): { name: string; el: HTMLElement | null; id: number } {
+		function getButtonInfo(btn: number, target?: HTMLElement | SVGElement | null): { name: string; el: HTMLElement | SVGElement | null; id: number } {
 			// Check if clicking directly on a specific visual button element
 			if (target) {
-				const thumb1 = target.closest('#btn-thumb1');
+				const thumb1 = target.closest('#btn-thumb1, #back-button') as HTMLElement | SVGElement | null;
 				if (thumb1) return { name: 'Back', el: thumb1El, id: 3 };
-				const thumb2 = target.closest('#btn-thumb2');
+				const thumb2 = target.closest('#btn-thumb2, #forward-button') as HTMLElement | SVGElement | null;
 				if (thumb2) return { name: 'Fwd', el: thumb2El, id: 4 };
-				const wheel = target.closest('#btn-wheel');
+				const wheel = target.closest('#btn-wheel, #scroll-wheel') as HTMLElement | SVGElement | null;
 				if (wheel && btn === 0) return { name: 'MMB', el: wheelEl, id: 1 };
-				const rmb = target.closest('#btn-rmb');
+				const rmb = target.closest('#btn-rmb, #right-button') as HTMLElement | SVGElement | null;
 				if (rmb && btn === 0) return { name: 'RMB', el: rmbEl, id: 2 };
-				const lmb = target.closest('#btn-lmb');
+				const lmb = target.closest('#btn-lmb, #left-button') as HTMLElement | SVGElement | null;
 				if (lmb && btn === 0) return { name: 'LMB', el: lmbEl, id: 0 };
 			}
 
@@ -573,7 +616,7 @@
 
 		function onPointerDown(e: MouseEvent | PointerEvent) {
 			e.preventDefault();
-			const info = getButtonInfo(e.button, e.target as HTMLElement | null);
+			const info = getButtonInfo(e.button, e.target as HTMLElement | SVGElement | null);
 			const now = performance.now();
 
 			// Double-click chatter detection (<30ms between successive clicks of same button)
@@ -606,7 +649,7 @@
 
 		function onPointerUp(e: MouseEvent | PointerEvent) {
 			e.preventDefault();
-			const info = getButtonInfo(e.button, e.target as HTMLElement | null);
+			const info = getButtonInfo(e.button, e.target as HTMLElement | SVGElement | null);
 			deactivateButton(info.el, info.id);
 		}
 		function onWheel(e: WheelEvent) {
@@ -647,7 +690,7 @@
 
 		// Ensure all buttons deactivate even if mouseup occurs outside btnZone or window blurs
 		window.addEventListener('mouseup', (e: MouseEvent) => {
-			const info = getButtonInfo(e.button, e.target as HTMLElement | null);
+			const info = getButtonInfo(e.button, e.target as HTMLElement | SVGElement | null);
 			deactivateButton(info.el, info.id);
 		});
 		window.addEventListener('blur', () => {
@@ -1005,249 +1048,95 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
+		width: 100%;
+		height: 100%;
 	}
 
-	.mouse-chassis {
-		display: flex;
-		align-items: center;
-		position: relative;
-		height: 122px;
+	.mouse-svg {
+		width: 100%;
+		height: 100%;
+		max-height: 132px;
+		display: block;
+		user-select: none;
+		-webkit-user-select: none;
+		touch-action: none;
 	}
 
-	/* Contoured Left Thumb Buttons */
-	.mouse-thumb-wing {
-		position: absolute;
-		left: -27px;
-		top: 40px;
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-		z-index: 4;
+	.part-outline {
+		stroke: #232529;
+		stroke-width: 3.5;
+		stroke-linejoin: round;
+		stroke-linecap: round;
+		transition: fill 0.12s ease, stroke 0.12s ease, filter 0.12s ease;
+	}
+	:global(html[data-theme="dark"]) .part-outline {
+		stroke: #16181f;
 	}
 
-	.mouse-btn-thumb {
-		width: 28px;
-		height: 23px;
-		background: #ffffff;
-		border: 1.5px solid var(--border-color);
-		border-right: none;
-		border-radius: 7px 0 0 7px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 0.62em;
-		font-weight: 700;
-		letter-spacing: 0.02em;
-		color: #0f172a;
+	.interactive {
 		cursor: pointer;
 		user-select: none;
 		-webkit-user-select: none;
 		touch-action: none;
-		transition: background-color 0.12s ease;
-		box-shadow: -2px 1px 5px rgba(0, 0, 0, 0.06);
-		box-sizing: border-box;
+		outline: none;
 	}
-	:global(html[data-theme="dark"]) .mouse-btn-thumb {
-		background: #2c3142;
-		border-color: rgba(255, 255, 255, 0.18);
-		color: #ffffff;
-		box-shadow: -2px 1px 6px rgba(0, 0, 0, 0.35);
-	}
-	/* Hover should NOT light up outline */
-	.mouse-btn-thumb:hover {
-		background: #f8fafc;
-	}
-	:global(html[data-theme="dark"]) .mouse-btn-thumb:hover {
-		background: #373d52;
+	.interactive:hover .btn-surface,
+	.interactive:hover .wheel-surface {
+		filter: brightness(1.15);
 	}
 
-	/* Ergonomic Mouse Body Shell - no border or overflow:hidden so full button perimeters light up */
-	.mouse-body {
-		width: 76px;
-		height: 122px;
-		display: flex;
-		flex-direction: column;
-		position: relative;
-		z-index: 1;
-		filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.08));
-	}
-	:global(html[data-theme="dark"]) .mouse-body {
-		filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.45));
-	}
-
-	.mouse-top-buttons {
-		display: flex;
-		height: 56px;
-		position: relative;
-		z-index: 2;
-	}
-
-	.mouse-btn-main {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 0.68em;
-		font-weight: 700;
-		color: #0f172a;
-		cursor: pointer;
-		transition: background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
-		background: #ffffff;
+	.mouse-btn-label {
+		font-family: Atkinson Hyperlegible, system-ui, -apple-system, sans-serif;
+		font-size: 26px;
+		font-weight: 800;
+		letter-spacing: 0.04em;
+		fill: #ffffff;
+		text-anchor: middle;
+		dominant-baseline: central;
+		pointer-events: none;
 		user-select: none;
 		-webkit-user-select: none;
-		touch-action: none;
-		box-sizing: border-box;
-		position: relative;
-		border: 1.5px solid var(--border-color);
-	}
-	:global(html[data-theme="dark"]) .mouse-btn-main {
-		color: #ffffff;
-		background: #2c3142;
-		border-color: rgba(255, 255, 255, 0.18);
-	}
-	.mouse-btn-left {
-		border-top-left-radius: 22px;
-		margin-right: -1.5px;
-		z-index: 1;
-	}
-	.mouse-btn-right {
-		border-top-right-radius: 22px;
-		margin-left: -1.5px;
-		z-index: 1;
+		filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7));
+		transition: fill 0.1s ease, font-weight 0.1s ease;
 	}
 
-	.mouse-wheel-wrap {
-		width: 20px;
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: #ffffff;
-		border-top: 1.5px solid var(--border-color);
-		border-bottom: 1.5px solid var(--border-color);
-		box-sizing: border-box;
-		position: relative;
-		z-index: 0;
-	}
-	:global(html[data-theme="dark"]) .mouse-wheel-wrap {
-		background: #2c3142;
-		border-top-color: rgba(255, 255, 255, 0.18);
-		border-bottom-color: rgba(255, 255, 255, 0.18);
-	}
-
-	.mouse-btn-wheel {
-		width: 16px;
-		height: 42px;
-		border-radius: 8px;
-		border: 1.5px solid var(--border-color);
-		background: #ffffff;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: space-between;
-		padding: 2px 0;
-		cursor: pointer;
-		transition: all 0.08s ease;
-		box-sizing: border-box;
-		position: relative;
-		z-index: 1;
-	}
-	:global(html[data-theme="dark"]) .mouse-btn-wheel {
-		background: #1d212d;
-		border-color: rgba(255, 255, 255, 0.18);
-	}
-
-	.wheel-notch {
-		width: 14px;
-		height: 12px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border-radius: 3px;
-		color: rgb(var(--gray));
-		transition: all 0.12s ease;
-		box-sizing: border-box;
-	}
-	:global(html[data-theme="dark"]) .wheel-notch {
-		color: rgba(255, 255, 255, 0.4);
-	}
-
-	.wheel-center {
-		width: 4px;
-		height: 5px;
-		border-radius: 2px;
-		background: var(--border-color);
-	}
-	:global(html[data-theme="dark"]) .wheel-center {
-		background: rgba(255, 255, 255, 0.25);
-	}
-
-	.mouse-palm {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: #ffffff;
-		border: 1.5px solid var(--border-color);
-		border-top: none;
-		border-radius: 0 0 30px 30px;
-		margin-top: -1.5px;
-		box-sizing: border-box;
-		position: relative;
-		z-index: 1;
-	}
-	:global(html[data-theme="dark"]) .mouse-palm {
-		background: #2c3142;
-		border-color: rgba(255, 255, 255, 0.18);
+	.thumb-label {
+		font-size: 21px;
+		font-weight: 700;
 	}
 
 	/* BUTTON ACTIVE STATES (EXACT PARITY WITH 104-KEY KEYBOARD LAB) */
-	.mouse-btn.btn-active {
-		background: var(--accent) !important;
-		color: #ffffff !important;
-		border-color: #d95b00 !important;
-		border-width: 1.5px !important;
-		border-style: solid !important;
-		box-shadow: 0 0 10px rgba(255, 107, 0, 0.6) !important;
+	.mouse-btn.btn-active .btn-surface,
+	.mouse-btn.btn-active .wheel-surface,
+	.mouse-btn.btn-active .part-outline {
+		fill: var(--accent) !important;
+		stroke: #d95b00 !important;
+		filter: drop-shadow(0 0 12px rgba(255, 107, 0, 0.8)) !important;
 		transition: none !important;
-		z-index: 3 !important;
 	}
-	.mouse-btn.btn-active .mb-label,
-	.mouse-btn.btn-active span {
-		color: #ffffff !important;
-		font-weight: 800;
+	.mouse-btn.btn-active .mouse-btn-label {
+		fill: #ffffff !important;
+		font-weight: 800 !important;
+		filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.8)) !important;
 	}
-	:global(html[data-theme="dark"]) .mouse-btn.btn-active {
-		background: var(--accent) !important;
-		border-color: #d95b00 !important;
-		box-shadow: 0 0 10px rgba(255, 107, 0, 0.6) !important;
-	}
-
-	/* Thumb buttons keep border-right: none when active */
-	.mouse-btn-thumb.btn-active {
-		border-right: none !important;
+	.mouse-btn.btn-active .wheel-treads line {
+		stroke: #ffffff !important;
 	}
 
 	/* SCROLL NOTCH ACTIVE STATE (MATCHING KEYBOARD ACTIVE GLOW & ACCENT) */
-	.notch-active {
-		background: var(--accent) !important;
-		color: #ffffff !important;
-		box-shadow: 0 0 10px rgba(255, 107, 0, 0.6) !important;
-		border-radius: 3px;
+	.wheel-notch {
+		transition: stroke 0.08s ease, filter 0.08s ease, transform 0.08s ease;
 	}
-	:global(html[data-theme="dark"]) .notch-active {
-		background: var(--accent) !important;
-		box-shadow: 0 0 10px rgba(255, 107, 0, 0.6) !important;
-	}
-	.notch-active svg {
-		stroke: #ffffff !important;
-		stroke-width: 3.5 !important;
+	.wheel-notch.notch-active {
+		stroke: var(--accent) !important;
+		stroke-width: 4.5 !important;
+		filter: drop-shadow(0 0 8px rgba(255, 107, 0, 0.9)) !important;
 	}
 	#notch-up.notch-active {
-		transform: translateY(-2px) scale(1.15);
+		transform: translateY(-2px);
 	}
 	#notch-down.notch-active {
-		transform: translateY(2px) scale(1.15);
+		transform: translateY(2px);
 	}
 
 	.metrics-row {

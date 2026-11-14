@@ -1,0 +1,44 @@
+Generate a clean, minimalist SVG of a 5-button wireless mouse in a 3/4 front-left perspective using only solid flat colors (no gradients).
+
+1. Canvas & Styling:
+- Set viewBox="0 0 1000 750", width="100%", height="100%".
+- Include a drop shadow filter (#dropShadow: dx=0, dy=16, stdDeviation=14, flood-color=#000000, flood-opacity=0.18).
+- CSS classes:
+  .part-outline { stroke: #232529; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+  .interactive:hover { filter: brightness(1.12); cursor: pointer; }
+- Omit front LEDs, USB ports, and extra body contour lines.
+
+2. Color Palette (Solid Hex Only):
+- Base Shell (#mouse-shell): fill="#797d87"
+- Left & Right Buttons (#left-button, #right-button): fill="#8c919b"
+- Enlarged Side Thumb Buttons (#forward-button, #back-button): fill="#70757e"
+- Scroll Wheel Body (#scroll-wheel): fill="#464952"
+- Scroll Wheel Tread Ridges: stroke="#7d828c", stroke-width="2.5", stroke-linecap="round"
+
+3. Component Structure & Exact Path Geometry:
+Wrap each control in its own semantic <g> group with class="interactive" and a <title> tag, ordered from back to front:
+
+- Base Shell (<g id="mouse-shell" filter="url(#dropShadow)">):
+  <path id="palm-shell" class="part-outline" fill="#797d87" d="M 426,298 C 488,272 548,265 600,269 C 700,276 785,332 822,412 C 832,434 830,454 812,470 C 755,512 605,562 442,618 C 375,640 315,622 255,570 C 236,554 226,545 220,538 L 500,324 Z" />
+
+- Right Button (<g id="right-button" class="interactive">):
+  <path class="part-outline" fill="#8c919b" d="M 426,298 C 355,328 275,380 218,435 C 182,470 184,512 220,538 C 305,468 408,390 500,324 C 480,310 455,300 426,298 Z" />
+
+- Left Button (<g id="left-button" class="interactive">):
+  Meets the right button along the single shared seam (220,538 to 500,324).
+  <path class="part-outline" fill="#8c919b" d="M 220,538 C 256,564 306,575 352,578 C 372,580 388,572 406,558 L 522,464 C 548,443 554,418 546,390 C 538,362 522,339 500,324 C 408,390 305,468 220,538 Z" />
+
+- Scroll Wheel (<g id="scroll-wheel" class="interactive">):
+  Straddles the dividing line between the left and right buttons.
+  Wheel body: <path class="part-outline" fill="#464952" d="M 286,474 C 298,408 356,374 408,404 C 374,430 338,457 302,485 Z" />
+  7 perspective-aligned tread lines:
+  (297.4,452.5 to 311.4,460.3), (306.3,435.2 to 320.4,443.8), (317.6,420.7 to 331.5,430.1), (330.9,409.5 to 344.4,419.5), (345.9,401.7 to 358.7,412.1), (362.1,397.5 to 373.9,408.0), (379.2,397.5 to 389.7,407.6).
+
+- Forward Button (<g id="forward-button" class="interactive">):
+  <path class="part-outline" fill="#70757e" d="M 496,500 C 532,474 574,448 610,430 C 622,424 630,435 628,454 C 626,470 620,480 608,487 C 572,507 534,532 504,554 C 491,563 482,551 484,532 C 485,517 489,506 496,500 Z" />
+
+- Back Button (<g id="back-button" class="interactive">):
+  <path class="part-outline" fill="#70757e" d="M 644,414 C 678,397 716,383 750,373 C 762,369 770,380 767,399 C 764,415 757,424 745,429 C 713,441 680,455 652,469 C 640,475 633,463 635,444 C 636,430 639,419 644,414 Z" />
+
+4. Optional Callout Labels (<g id="labels">):
+If requested with labels, add dashed cyan pointer lines (stroke: #00d2ff, stroke-dasharray: 4 3), anchor dots (r="4.5"), and dark rounded label boxes (fill: #18191c, stroke: #00d2ff, rx: 6) with white sans-serif text pointing to Right Button (285,395), Scroll Wheel (344,410), Left Button (415,475), Forward Button (556,492), and Back Button (700,420). Output only valid SVG code.

@@ -26,14 +26,14 @@
 				<button class="seg-btn" data-pattern="checker" type="button" title="Checkerboard">Checker</button>
 			</div>
 
-			<button id="toggle-display-btn" class="telemetry-btn" type="button" title="Stop or resume display motion benchmark">
+			<button id="toggle-display-btn" class="telemetry-btn" type="button" title="Stop or start display motion benchmark">
 				<svg id="toggle-display-icon-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
 					<rect x="5" y="5" width="14" height="14" rx="2"/>
 				</svg>
 				<svg id="toggle-display-icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="hidden">
 					<polygon points="5 3 19 12 5 21 5 3"/>
 				</svg>
-				<span id="toggle-display-text">Stop Motion</span>
+				<span id="toggle-display-text">Stop</span>
 			</button>
 
 			<button id="open-pixel-checker-btn" class="telemetry-btn" type="button" title="Open Fullscreen Dead / Stuck Pixel Checker">
@@ -390,14 +390,14 @@
 				}
 				toggleDisplayStopIcon?.classList.add('hidden');
 				toggleDisplayPlayIcon?.classList.remove('hidden');
-				if (toggleDisplayText) toggleDisplayText.textContent = 'Resume Motion';
-				toggleDisplayBtn.setAttribute('title', 'Resume display motion benchmark');
+				if (toggleDisplayText) toggleDisplayText.textContent = 'Start';
+				toggleDisplayBtn.setAttribute('title', 'Start display motion benchmark');
 				if (fpsEl) fpsEl.textContent = 'Paused';
 				if (frameTimeEl) frameTimeEl.textContent = 'Motion paused';
 			} else {
 				toggleDisplayStopIcon?.classList.remove('hidden');
 				toggleDisplayPlayIcon?.classList.add('hidden');
-				if (toggleDisplayText) toggleDisplayText.textContent = 'Stop Motion';
+				if (toggleDisplayText) toggleDisplayText.textContent = 'Stop';
 				toggleDisplayBtn.setAttribute('title', 'Stop display motion benchmark');
 				lastTimestamp = performance.now();
 				rafId = requestAnimationFrame(renderLoop);
@@ -596,16 +596,16 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.45em;
-		background: rgba(148, 163, 184, 0.12);
-		border: 1px solid var(--border-color);
-		color: rgb(var(--gray-dark));
-		padding: 0 10px;
+		gap: 0.5em;
+		background: rgba(148, 163, 184, 0.18);
+		border: 1px solid rgba(148, 163, 184, 0.35);
+		color: rgb(var(--black));
+		padding: 0 11px;
 		height: 31px;
 		border-radius: 8px;
 		font-family: inherit;
 		font-size: 0.78em;
-		font-weight: 600;
+		font-weight: 700;
 		cursor: pointer;
 		transition: all 0.15s ease;
 		line-height: 1;
@@ -614,14 +614,28 @@
 	}
 
 	:global(html[data-theme="dark"]) .telemetry-btn {
-		background: rgba(255, 255, 255, 0.05);
-		color: rgba(255, 255, 255, 0.85);
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid rgba(255, 255, 255, 0.16);
+		color: #ffffff;
 	}
 
 	.telemetry-btn:hover {
 		border-color: var(--accent);
 		color: var(--accent);
-		background: rgba(var(--accent-rgb), 0.08);
+		background: rgba(var(--accent-rgb), 0.12);
+		transform: translateY(-1px);
+	}
+
+	#toggle-display-icon-stop {
+		color: rgba(239, 68, 68, 0.85);
+	}
+
+	#toggle-display-icon-play {
+		color: #22c55e;
+	}
+
+	#open-pixel-checker-btn svg {
+		color: var(--accent);
 	}
 
 	.benchmark-desc {

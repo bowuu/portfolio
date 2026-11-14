@@ -142,7 +142,7 @@
 							<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" id="toggle-tone-icon">
 								<polygon points="5 3 19 12 5 21 5 3"/>
 							</svg>
-							<span id="toggle-tone-text">Play Tone</span>
+							<span id="toggle-tone-text">Play</span>
 						</button>
 
 						<button id="run-sweep-btn" class="sweep-btn sweep-auto-btn" type="button">
@@ -172,23 +172,16 @@
 						<button class="freq-pill" data-hz="8000" type="button"><span class="pill-hz mono">8 kHz</span><span class="pill-tag">Pres</span></button>
 						<button class="freq-pill" data-hz="16000" type="button"><span class="pill-hz mono">16 kHz</span><span class="pill-tag">Treble</span></button>
 					</div>
-				</div>
 
-				<!-- BROADBAND NOISE SUB-SECTION (SEAMLESSLY INTEGRATED) -->
-				<div class="noise-inline-section">
-					<div class="noise-inline-row">
-						<div class="noise-inline-left">
-							<span class="noise-inline-label">Noise:</span>
-							<div class="noise-segmented-control" role="group" aria-label="Noise Type">
-								<button class="noise-seg-btn active" data-noise="pink" type="button">Pink (1/f)</button>
-								<button class="noise-seg-btn" data-noise="white" type="button">White</button>
-							</div>
-						</div>
-						<button id="toggle-noise-btn" class="sweep-btn noise-inline-btn" type="button">
-							<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" id="toggle-noise-icon">
-								<polygon points="5 3 19 12 5 21 5 3"/>
-							</svg>
-							<span id="toggle-noise-text">Play Noise</span>
+					<!-- BROADBAND NOISE PRESETS (Directly under frequency presets) -->
+					<div class="noise-presets-grid">
+						<button class="noise-pill" data-noise="pink" type="button">
+							<span class="pill-hz">Pink Noise</span>
+							<span class="pill-tag">1/f Equal Energy</span>
+						</button>
+						<button class="noise-pill" data-noise="white" type="button">
+							<span class="pill-hz">White Noise</span>
+							<span class="pill-tag">Flat PSD (20 Hz–20 kHz)</span>
 						</button>
 					</div>
 				</div>
@@ -207,6 +200,7 @@
 		let currentOsc: OscillatorNode | null = null;
 		let noiseNode: AudioNode | null = null;
 
+		let activeSignal: 'sine' | 'pink' | 'white' = 'sine';
 		let activeHeroMode: 'waveform' | 'spectrum' | 'spectrogram' = 'waveform';
 		let activeMode: 'none' | 'left' | 'right' | 'inphase' | 'outphase' | 'tone' | 'sweep' | 'noise' = 'none';
 		let activeNoiseType: 'pink' | 'white' = 'pink';
@@ -240,12 +234,24 @@
 		const freqSlider = document.getElementById('freq-slider') as HTMLInputElement;
 		const toggleToneBtn = document.getElementById('toggle-tone-btn');
 		const toggleToneText = document.getElementById('toggle-tone-text');
+		const toggleToneIcon = document.getElementById('toggle-tone-icon');
 		const runSweepBtn = document.getElementById('run-sweep-btn');
 		const runSweepText = document.getElementById('run-sweep-text');
 
-		const noiseBtns = document.querySelectorAll('.noise-seg-btn');
-		const toggleNoiseBtn = document.getElementById('toggle-noise-btn');
-		const toggleNoiseText = document.getElementById('toggle-noise-text');
+		const freqPills = document.querySelectorAll('.freq-pill');
+		const noisePills = document.querySelectorAll('.noise-pill');
+
+		function setPlayButtonState(isPlaying: boolean) {
+			if (toggleToneBtn) toggleToneBtn.classList.toggle('active', isPlaying);
+			if (toggleToneText) toggleToneText.textContent = isPlaying ? 'Pause' : 'Play';
+			if (toggleToneIcon) {
+				if (isPlaying) {
+					toggleToneIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+				} else {
+					toggleToneIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+				}
+			}
+		}
 
 		const heroCanvas = document.getElementById('audio-hero-canvas') as HTMLCanvasElement;
 		const heroCtx = heroCanvas?.getContext('2d');
@@ -455,12 +461,9 @@
 
 			activeMode = 'none';
 			document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
-			if (toggleToneBtn) toggleToneBtn.classList.remove('active');
-			if (toggleToneText) toggleToneText.textContent = 'Play Tone';
+			setPlayButtonState(false);
 			if (runSweepBtn) runSweepBtn.classList.remove('active');
 			if (runSweepText) runSweepText.textContent = 'Auto Sweep (10s)';
-			if (toggleNoiseBtn) toggleNoiseBtn.classList.remove('active');
-			if (toggleNoiseText) toggleNoiseText.textContent = 'Play Noise';
 
 			updateHudOverlay();
 		}
@@ -484,20 +487,26 @@
 				const scale = (sliderVal - 20) / (20000 - 20);
 				const hz = Math.round(Math.exp(minLog + scale * (maxLog - minLog)));
 
+				activeSignal = 'sine';
 				updateFrequencyUI(hz);
-				if (currentOsc && audioCtx) {
+				if (activeMode === 'tone' && currentOsc && audioCtx) {
 					currentOsc.frequency.setTargetAtTime(hz, audioCtx.currentTime, 0.02);
+				} else if (activeMode === 'noise') {
+					startToneGenerator();
 				}
-				document.querySelectorAll('.freq-pill').forEach(p => p.classList.remove('active'));
+				freqPills.forEach(p => p.classList.remove('active'));
+				noisePills.forEach(p => p.classList.remove('active'));
 			});
 		}
 
 		// Preset Frequency Pills
-		const freqPills = document.querySelectorAll('.freq-pill');
 		freqPills.forEach((pill) => {
 			pill.addEventListener('click', () => {
 				freqPills.forEach(p => p.classList.remove('active'));
+				noisePills.forEach(p => p.classList.remove('active'));
 				pill.classList.add('active');
+
+				activeSignal = 'sine';
 				const targetHz = parseInt(pill.getAttribute('data-hz') || '1000', 10);
 				updateFrequencyUI(targetHz);
 
@@ -507,9 +516,33 @@
 				const scale = (Math.log(targetHz) - minLog) / (maxLog - minLog);
 				if (freqSlider) freqSlider.value = String(Math.round(20 + scale * (20000 - 20)));
 
-				if (currentOsc && audioCtx) {
+				if (activeMode === 'tone' && currentOsc && audioCtx) {
 					currentOsc.frequency.setTargetAtTime(targetHz, audioCtx.currentTime, 0.02);
+				} else if (activeMode === 'noise') {
+					startToneGenerator();
 				}
+			});
+		});
+
+		// Preset Noise Pills (Pink & White under frequency presets)
+		noisePills.forEach((pill) => {
+			pill.addEventListener('click', () => {
+				const noiseType = (pill.getAttribute('data-noise') as 'pink' | 'white') || 'pink';
+
+				// If this noise is currently playing, clicking it pauses
+				if (activeMode === 'noise' && activeNoiseType === noiseType) {
+					stopAllAudio();
+					return;
+				}
+
+				activeSignal = noiseType;
+				activeNoiseType = noiseType;
+
+				freqPills.forEach(p => p.classList.remove('active'));
+				noisePills.forEach(p => p.classList.remove('active'));
+				pill.classList.add('active');
+
+				startNoiseGenerator(noiseType);
 			});
 		});
 
@@ -518,6 +551,7 @@
 			const ctx = getAudioContext();
 			stopAllAudio();
 			activeMode = 'tone';
+			activeSignal = 'sine';
 
 			const osc = ctx.createOscillator();
 			osc.type = 'sine';
@@ -526,17 +560,20 @@
 			osc.start();
 			currentOsc = osc;
 
-			if (toggleToneBtn) toggleToneBtn.classList.add('active');
-			if (toggleToneText) toggleToneText.textContent = 'Pause Tone';
+			setPlayButtonState(true);
 			updateHudOverlay();
 		}
 
 		if (toggleToneBtn) {
 			toggleToneBtn.addEventListener('click', () => {
-				if (activeMode === 'tone') {
+				if (activeMode === 'tone' || activeMode === 'noise') {
 					stopAllAudio();
 				} else {
-					startToneGenerator();
+					if (activeSignal === 'pink' || activeSignal === 'white') {
+						startNoiseGenerator(activeSignal);
+					} else {
+						startToneGenerator();
+					}
 				}
 			});
 		}
@@ -551,6 +588,7 @@
 			stopAllAudio();
 			isSweeping = true;
 			activeMode = 'sweep';
+			activeSignal = 'sine';
 
 			const osc = ctx.createOscillator();
 			osc.type = 'sine';
@@ -590,19 +628,9 @@
 		if (runSweepBtn) runSweepBtn.addEventListener('click', runAutoSweep);
 
 		// BROADBAND NOISE GENERATOR (Pink / White)
-		noiseBtns.forEach((btn) => {
-			btn.addEventListener('click', () => {
-				noiseBtns.forEach(b => b.classList.remove('active'));
-				btn.classList.add('active');
-				activeNoiseType = (btn.getAttribute('data-noise') as any) || 'pink';
-
-				if (activeMode === 'noise') {
-					startNoiseGenerator();
-				}
-			});
-		});
-
-		function startNoiseGenerator() {
+		function startNoiseGenerator(noiseType?: 'pink' | 'white') {
+			if (noiseType) activeNoiseType = noiseType;
+			activeSignal = activeNoiseType;
 			const ctx = getAudioContext();
 			stopAllAudio();
 			activeMode = 'noise';
@@ -651,19 +679,8 @@
 			noiseSource.start();
 			noiseNode = noiseSource;
 
-			if (toggleNoiseBtn) toggleNoiseBtn.classList.add('active');
-			if (toggleNoiseText) toggleNoiseText.textContent = 'Stop Noise';
+			setPlayButtonState(true);
 			updateHudOverlay();
-		}
-
-		if (toggleNoiseBtn) {
-			toggleNoiseBtn.addEventListener('click', () => {
-				if (activeMode === 'noise') {
-					stopAllAudio();
-				} else {
-					startNoiseGenerator();
-				}
-			});
 		}
 
 		// CHANNEL ISOLATION & POLARITY TESTS
@@ -804,6 +821,14 @@
 		}
 		resizeCanvases();
 		window.addEventListener('resize', resizeCanvases, { passive: true });
+
+		const heroBox = document.getElementById('hero-canvas-box');
+		if (heroBox && window.ResizeObserver) {
+			const ro = new ResizeObserver(() => {
+				resizeCanvases();
+			});
+			ro.observe(heroBox);
+		}
 
 		// -------------------------------------------------------------
 		// VISUALIZER 1: DUAL-TRACE WAVEFORM OSCILLOSCOPE
@@ -1763,7 +1788,8 @@
 	.hero-canvas-box {
 		position: relative;
 		width: 100%;
-		height: 310px;
+		flex: 1;
+		min-height: 280px;
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
 		overflow: hidden;
@@ -1773,7 +1799,9 @@
 
 	@media (max-width: 860px) {
 		.hero-canvas-box {
-			height: 215px;
+			flex: none;
+			height: 220px;
+			min-height: 220px;
 		}
 	}
 
@@ -2191,82 +2219,63 @@
 		color: #ffffff;
 	}
 
-	/* BROADBAND NOISE SUB-SECTION (INLINE) */
-	.noise-inline-section {
-		border-top: 1px solid var(--border-color);
-		padding-top: 0.65em;
-		margin-top: 0.15em;
+	/* BROADBAND NOISE PRESETS (UNDER FREQUENCY PRESETS) */
+	.noise-presets-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.35em;
 	}
 
-	.noise-inline-row {
+	.noise-pill {
 		display: flex;
-		justify-content: space-between;
+		flex-direction: column;
 		align-items: center;
-		gap: 0.6em;
-		flex-wrap: wrap;
-	}
-
-	.noise-inline-left {
-		display: flex;
-		align-items: center;
-		gap: 0.5em;
-	}
-
-	.noise-inline-label {
-		font-size: 0.74em;
-		font-weight: 700;
-		color: rgb(var(--gray));
-	}
-
-	.noise-segmented-control {
-		display: inline-flex;
-		align-items: center;
-		background: rgba(148, 163, 184, 0.12);
-		border-radius: 6px;
-		padding: 2px;
+		justify-content: center;
+		background: rgba(148, 163, 184, 0.08);
 		border: 1px solid var(--border-color);
-		height: 27px;
-		box-sizing: border-box;
-	}
-
-	:global(html[data-theme="dark"]) .noise-segmented-control {
-		background: rgba(255, 255, 255, 0.05);
-	}
-
-	.noise-seg-btn {
-		background: transparent;
-		border: none;
-		color: rgb(var(--gray));
-		font-family: inherit;
-		font-size: 0.74em;
-		font-weight: 700;
-		padding: 0 8px;
-		height: 21px;
-		border-radius: 4px;
+		border-radius: 5px;
+		padding: 0.45em 0.3em;
 		cursor: pointer;
 		transition: all 0.15s ease;
-		line-height: 1;
-		white-space: nowrap;
+		font-family: inherit;
 	}
 
-	.noise-seg-btn:hover:not(.active) {
-		color: rgb(var(--black));
+	:global(html[data-theme="dark"]) .noise-pill {
+		background: rgba(255, 255, 255, 0.03);
 	}
 
-	:global(html[data-theme="dark"]) .noise-seg-btn:hover:not(.active) {
-		color: #ffffff;
+	.noise-pill .pill-hz {
+		font-size: 0.8em;
+		font-weight: 700;
+		color: rgb(var(--gray-dark));
+		line-height: 1.15;
 	}
 
-	.noise-seg-btn.active {
+	.noise-pill .pill-tag {
+		font-size: 0.68em;
+		font-weight: 600;
+		color: rgb(var(--gray));
+		margin-top: 0.1em;
+	}
+
+	.noise-pill:hover {
+		border-color: var(--accent);
+		background: rgba(var(--accent-rgb), 0.08);
+	}
+
+	.noise-pill:hover .pill-hz,
+	.noise-pill:hover .pill-tag {
+		color: var(--accent);
+	}
+
+	.noise-pill.active {
 		background: var(--accent);
-		color: #ffffff;
+		border-color: var(--accent);
 	}
 
-	.noise-inline-btn {
-		flex: 0 0 auto;
-		min-width: 105px;
-		min-height: 31px;
-		padding: 0.4em 0.8em;
+	.noise-pill.active .pill-hz,
+	.noise-pill.active .pill-tag {
+		color: #ffffff;
 	}
 
 	.mono {
@@ -2292,15 +2301,8 @@
 		.tone-buttons-grid {
 			grid-template-columns: 1fr;
 		}
-		.noise-inline-row {
-			flex-direction: column;
-			align-items: stretch;
-		}
-		.noise-inline-left {
-			justify-content: space-between;
-		}
-		.noise-inline-btn {
-			width: 100%;
+		.noise-presets-grid {
+			grid-template-columns: 1fr;
 		}
 	}
 </style>

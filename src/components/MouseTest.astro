@@ -125,7 +125,7 @@
 								 C 182,470 184,512 220,538
 								 C 305,468 408,390 500,324
 								 C 480,310 455,300 426,298 Z" />
-							<text class="mouse-btn-label" font-size="24" x="340" y="367" transform="rotate(-29, 340, 367)">Right</text>
+							<text class="mouse-btn-label" font-size="24" x="318" y="388" transform="rotate(-34, 318, 388)">Right</text>
 						</g>
 
 						<!-- ==================== 2. LEFT BUTTON (Left - Button 0) ==================== -->
@@ -138,7 +138,7 @@
 								 C 548,443 554,418 546,390
 								 C 538,362 522,339 500,324
 								 C 408,390 305,468 220,538 Z" />
-							<text class="mouse-btn-label" font-size="25" x="420" y="462" transform="rotate(-25, 420, 462)">Left</text>
+							<text class="mouse-btn-label" font-size="25" x="418" y="460" transform="rotate(-31, 418, 460)">Left</text>
 						</g>
 
 						<!-- ==================== 3. SCROLL WHEEL & MMB (Button 1) ==================== -->
@@ -157,9 +157,9 @@
 								<line x1="362.1" y1="397.5" x2="373.9" y2="408.0" />
 								<line x1="379.2" y1="397.5" x2="389.7" y2="407.6" />
 							</g>
-							<!-- Up / Down Scroll Direction Notches: Up = Forward roll toward front nose, Down = Backward roll toward rear palm -->
-							<polyline id="notch-up" class="wheel-notch notch-up" points="288,460 282,473 295,475" fill="none" stroke="#cbd5e1" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
-							<polyline id="notch-down" class="wheel-notch notch-down" points="395,407 400,394 387,392" fill="none" stroke="#cbd5e1" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+							<!-- Up / Down Scroll Direction Solid Triangles: Up = Forward roll toward front nose, Down = Backward roll toward rear palm -->
+							<polygon id="notch-up" class="wheel-notch notch-up" points="288,470 295.2,456.1 303.4,467.4" fill="#ffffff" stroke="#1e293b" stroke-width="1.5" stroke-linejoin="round" />
+							<polygon id="notch-down" class="wheel-notch notch-down" points="398,398 390.8,411.9 382.6,400.6" fill="#ffffff" stroke="#1e293b" stroke-width="1.5" stroke-linejoin="round" />
 						</g>
 
 						<!-- ==================== 4. FORWARD BUTTON (Forward - Button 4) ==================== -->
@@ -1125,12 +1125,13 @@
 
 	/* SCROLL NOTCH ACTIVE STATE (MATCHING KEYBOARD ACTIVE GLOW & ACCENT) */
 	.wheel-notch {
-		transition: stroke 0.08s ease, filter 0.08s ease, transform 0.08s ease;
+		filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.75));
+		transition: fill 0.08s ease, stroke 0.08s ease, filter 0.08s ease, transform 0.08s ease;
 	}
 	.wheel-notch.notch-active {
-		stroke: var(--accent) !important;
-		stroke-width: 4.5 !important;
-		filter: drop-shadow(0 0 8px rgba(255, 107, 0, 0.9)) !important;
+		fill: var(--accent) !important;
+		stroke: #d95b00 !important;
+		filter: drop-shadow(0 0 10px rgba(255, 107, 0, 0.95)) !important;
 	}
 	#notch-up.notch-active {
 		transform: translate(-2px, 2px);

@@ -2042,12 +2042,12 @@
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
 		overflow: hidden;
-		background: #09090b;
+		background: #f8fafc;
 		box-sizing: border-box;
 	}
 
-	:global(html[data-theme="light"]) .hero-canvas-box {
-		background: #f8fafc;
+	:global(html[data-theme="dark"]) .hero-canvas-box {
+		background: #09090b;
 	}
 
 	@media (max-width: 860px) {
@@ -2072,13 +2072,13 @@
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
 		overflow: hidden;
-		background: #09090b;
+		background: #f8fafc;
 		box-sizing: border-box;
 		flex-shrink: 0;
 	}
 
-	:global(html[data-theme="light"]) .stereo-meter-box {
-		background: #f8fafc;
+	:global(html[data-theme="dark"]) .stereo-meter-box {
+		background: #09090b;
 	}
 
 	#audio-meter-canvas {
@@ -2096,10 +2096,11 @@
 	.hud-badge-wrap {
 		font-size: clamp(0.72em, 2vw, 0.76em);
 		font-weight: 600;
-		color: rgba(255, 255, 255, 0.92);
-		background: rgba(148, 163, 184, 0.12);
+		color: #09090b;
+		background: rgba(0, 0, 0, 0.05);
 		backdrop-filter: blur(6px);
-		border: 1px solid var(--border-color);
+		border: 1px solid rgba(0, 0, 0, 0.12);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 		padding: 3px 9px;
 		border-radius: 6px;
 		display: inline-flex;
@@ -2113,34 +2114,29 @@
 	:global(html[data-theme="dark"]) .hud-badge-wrap {
 		background: rgba(255, 255, 255, 0.06);
 		border: 1px solid rgba(255, 255, 255, 0.12);
-	}
-
-	:global(html[data-theme="light"]) .hud-badge-wrap {
-		background: rgba(0, 0, 0, 0.05);
-		border: 1px solid rgba(0, 0, 0, 0.12);
-		color: #09090b;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+		color: rgba(255, 255, 255, 0.92);
+		box-shadow: none;
 	}
 
 	.hud-main-text {
 		font-size: 1.05em;
 		font-weight: 800;
-		color: #ffffff;
+		color: #09090b;
 		line-height: 1;
 		white-space: nowrap;
 	}
 
-	:global(html[data-theme="light"]) .hud-main-text {
-		color: #09090b;
+	:global(html[data-theme="dark"]) .hud-main-text {
+		color: #ffffff;
 	}
 
 	.hud-sep {
-		color: rgba(255, 255, 255, 0.35);
+		color: rgba(0, 0, 0, 0.35);
 		font-size: 0.85em;
 	}
 
-	:global(html[data-theme="light"]) .hud-sep {
-		color: rgba(0, 0, 0, 0.3);
+	:global(html[data-theme="dark"]) .hud-sep {
+		color: rgba(255, 255, 255, 0.35);
 	}
 
 	.hud-sub-text {
@@ -2161,9 +2157,10 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		background: rgba(0, 0, 0, 0.7);
+		background: rgba(255, 255, 255, 0.92);
 		backdrop-filter: blur(6px);
-		border: 1px solid rgba(255, 255, 255, 0.08);
+		border: 1px solid rgba(0, 0, 0, 0.12);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 		border-radius: 6px;
 		padding: 3px 10px;
 		pointer-events: none;
@@ -2173,10 +2170,10 @@
 		box-sizing: border-box;
 	}
 
-	:global(html[data-theme="light"]) .waveform-hud-bar {
-		background: rgba(255, 255, 255, 0.92);
-		border: 1px solid rgba(0, 0, 0, 0.12);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	:global(html[data-theme="dark"]) .waveform-hud-bar {
+		background: rgba(0, 0, 0, 0.7);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		box-shadow: none;
 	}
 
 	.phase-meter-wrap {
@@ -2191,24 +2188,24 @@
 	.phase-meter-title {
 		font-size: 0.72em;
 		font-weight: 700;
-		color: rgba(255, 255, 255, 0.75);
+		color: rgba(0, 0, 0, 0.75);
 		white-space: nowrap;
 		flex-shrink: 0;
 	}
 
-	:global(html[data-theme="light"]) .phase-meter-title {
-		color: rgba(0, 0, 0, 0.75);
+	:global(html[data-theme="dark"]) .phase-meter-title {
+		color: rgba(255, 255, 255, 0.75);
 	}
 
 	.phase-meter-tag {
 		font-size: 0.68em;
 		font-weight: 700;
-		color: rgba(255, 255, 255, 0.4);
+		color: rgba(0, 0, 0, 0.45);
 		flex-shrink: 0;
 	}
 
-	:global(html[data-theme="light"]) .phase-meter-tag {
-		color: rgba(0, 0, 0, 0.45);
+	:global(html[data-theme="dark"]) .phase-meter-tag {
+		color: rgba(255, 255, 255, 0.4);
 	}
 
 	.phase-meter-track {
@@ -2217,13 +2214,13 @@
 		max-width: 160px;
 		min-width: 50px;
 		height: 6px;
-		background: rgba(255, 255, 255, 0.1);
+		background: rgba(0, 0, 0, 0.1);
 		border-radius: 3px;
 		overflow: hidden;
 	}
 
-	:global(html[data-theme="light"]) .phase-meter-track {
-		background: rgba(0, 0, 0, 0.1);
+	:global(html[data-theme="dark"]) .phase-meter-track {
+		background: rgba(255, 255, 255, 0.1);
 	}
 
 	.phase-meter-center {
@@ -2232,13 +2229,13 @@
 		top: 0;
 		bottom: 0;
 		width: 1.5px;
-		background: rgba(255, 255, 255, 0.4);
+		background: rgba(0, 0, 0, 0.4);
 		transform: translateX(-50%);
 		z-index: 2;
 	}
 
-	:global(html[data-theme="light"]) .phase-meter-center {
-		background: rgba(0, 0, 0, 0.4);
+	:global(html[data-theme="dark"]) .phase-meter-center {
+		background: rgba(255, 255, 255, 0.4);
 	}
 
 	.phase-meter-fill {
@@ -2252,11 +2249,15 @@
 	.phase-val {
 		font-size: 0.72em;
 		font-weight: 800;
-		color: #ffffff;
+		color: #09090b;
 		min-width: 36px;
 		text-align: right;
 		white-space: nowrap;
 		flex-shrink: 0;
+	}
+
+	:global(html[data-theme="dark"]) .phase-val {
+		color: #ffffff;
 	}
 
 	:global(html[data-theme="light"]) .phase-val {
@@ -2419,16 +2420,16 @@
 	}
 
 	.tone-pill.white {
-		background: rgba(255, 255, 255, 0.15) !important;
-		color: #ffffff !important;
-		border: 1px solid rgba(255, 255, 255, 0.2) !important;
-		box-shadow: none !important;
-	}
-
-	:global(html[data-theme="light"]) .tone-pill.white {
 		background: rgba(0, 0, 0, 0.08) !important;
 		color: rgb(var(--black)) !important;
 		border: 1px solid rgba(0, 0, 0, 0.15) !important;
+		box-shadow: none !important;
+	}
+
+	:global(html[data-theme="dark"]) .tone-pill.white {
+		background: rgba(255, 255, 255, 0.15) !important;
+		color: #ffffff !important;
+		border: 1px solid rgba(255, 255, 255, 0.2) !important;
 		box-shadow: none !important;
 	}
 

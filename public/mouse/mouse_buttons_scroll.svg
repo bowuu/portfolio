@@ -18,20 +18,20 @@
 			 Z" />
 	</g>
 
-	<!-- ==================== 1. RIGHT BUTTON (RMB - Button 2) ==================== -->
-	<g id="btn-rmb" class="interactive mouse-btn btn-rmb-group" role="button" aria-label="Right Mouse Button (RMB)">
-		<title>Right Button (RMB)</title>
+	<!-- ==================== 1. RIGHT BUTTON (Right - Button 2) ==================== -->
+	<g id="btn-rmb" class="interactive mouse-btn btn-rmb-group" role="button" aria-label="Right Mouse Button (Right)">
+		<title>Right Button</title>
 		<path class="part-outline btn-surface" fill="#8c919b" d="M 426,298
 			 C 355,328 275,380 218,435
 			 C 182,470 184,512 220,538
 			 C 305,468 408,390 500,324
 			 C 480,310 455,300 426,298 Z" />
-		<text class="mouse-btn-label" x="290" y="415">RMB</text>
+		<text class="mouse-btn-label" font-size="24" x="375" y="348" transform="rotate(-26, 375, 348)">Right</text>
 	</g>
 
-	<!-- ==================== 2. LEFT BUTTON (LMB - Button 0) ==================== -->
-	<g id="btn-lmb" class="interactive mouse-btn btn-lmb-group" role="button" aria-label="Left Mouse Button (LMB)">
-		<title>Left Button (LMB)</title>
+	<!-- ==================== 2. LEFT BUTTON (Left - Button 0) ==================== -->
+	<g id="btn-lmb" class="interactive mouse-btn btn-lmb-group" role="button" aria-label="Left Mouse Button (Left)">
+		<title>Left Button</title>
 		<path class="part-outline btn-surface" fill="#8c919b" d="M 220,538
 			 C 256,564 306,575 352,578
 			 C 372,580 388,572 406,558
@@ -39,12 +39,12 @@
 			 C 548,443 554,418 546,390
 			 C 538,362 522,339 500,324
 			 C 408,390 305,468 220,538 Z" />
-		<text class="mouse-btn-label" x="420" y="495">LMB</text>
+		<text class="mouse-btn-label" font-size="25" x="425" y="490" transform="rotate(-16, 425, 490)">Left</text>
 	</g>
 
 	<!-- ==================== 3. SCROLL WHEEL & MMB (Button 1) ==================== -->
-	<g id="btn-wheel" class="interactive mouse-btn btn-wheel-group" role="button" aria-label="Scroll Wheel and Middle Button (MMB)">
-		<title>Scroll Wheel / Middle Button (MMB)</title>
+	<g id="btn-wheel" class="interactive mouse-btn btn-wheel-group" role="button" aria-label="Scroll Wheel and Middle Button (Wheel)">
+		<title>Scroll Wheel / Middle Button (Wheel)</title>
 		<path class="part-outline wheel-surface" fill="#464952" d="M 286,474
 			 C 298,408 356,374 408,404
 			 C 374,430 338,457 302,485
@@ -58,14 +58,14 @@
 			<line x1="362.1" y1="397.5" x2="373.9" y2="408.0" />
 			<line x1="379.2" y1="397.5" x2="389.7" y2="407.6" />
 		</g>
-		<!-- Up / Down Scroll Direction Notches -->
-		<polyline id="notch-up" class="wheel-notch notch-up" points="380,404 390,394 400,402" fill="none" stroke="#cbd5e1" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
-		<polyline id="notch-down" class="wheel-notch notch-down" points="295,466 287,476 297,482" fill="none" stroke="#cbd5e1" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+		<!-- Up / Down Scroll Direction Notches: Up = Forward roll toward front nose, Down = Backward roll toward rear palm -->
+		<polyline id="notch-up" class="wheel-notch notch-up" points="288,460 282,473 295,475" fill="none" stroke="#cbd5e1" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+		<polyline id="notch-down" class="wheel-notch notch-down" points="395,407 400,394 387,392" fill="none" stroke="#cbd5e1" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
 	</g>
 
-	<!-- ==================== 4. FORWARD BUTTON (Fwd - Button 4) ==================== -->
-	<g id="btn-thumb2" class="interactive mouse-btn btn-thumb2-group" role="button" aria-label="Forward Button (Fwd)">
-		<title>Forward Button (Fwd)</title>
+	<!-- ==================== 4. FORWARD BUTTON (Forward - Button 4) ==================== -->
+	<g id="btn-thumb2" class="interactive mouse-btn btn-thumb2-group" role="button" aria-label="Forward Button (Forward)">
+		<title>Forward Button</title>
 		<path class="part-outline btn-surface" fill="#70757e" d="M 496,500
 			 C 532,474 574,448 610,430
 			 C 622,424 630,435 628,454
@@ -73,12 +73,12 @@
 			 C 572,507 534,532 504,554
 			 C 491,563 482,551 484,532
 			 C 485,517 489,506 496,500 Z" />
-		<text class="mouse-btn-label thumb-label" x="555" y="492">Fwd</text>
+		<text class="mouse-btn-label thumb-label" font-size="18" x="555" y="492" transform="rotate(-31, 555, 492)">Forward</text>
 	</g>
 
 	<!-- ==================== 5. BACK BUTTON (Back - Button 3) ==================== -->
 	<g id="btn-thumb1" class="interactive mouse-btn btn-thumb1-group" role="button" aria-label="Back Button (Back)">
-		<title>Back Button (Back)</title>
+		<title>Back Button</title>
 		<path class="part-outline btn-surface" fill="#70757e" d="M 644,414
 			 C 678,397 716,383 750,373
 			 C 762,369 770,380 767,399
@@ -86,6 +86,6 @@
 			 C 713,441 680,455 652,469
 			 C 640,475 633,463 635,444
 			 C 636,430 639,419 644,414 Z" />
-		<text class="mouse-btn-label thumb-label" x="696" y="420">Back</text>
+		<text class="mouse-btn-label thumb-label" font-size="20" x="698" y="420" transform="rotate(-21, 698, 420)">Back</text>
 	</g>
 </svg>

@@ -63,12 +63,12 @@
 					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="col-icon">
 						<path d="M2 12h4l3 8 4-16 3 8h6"/>
 					</svg>
-					<span class="col-title">Live Visualizer</span>
+					<span class="col-title">Visualizer</span>
 				</div>
 				<!-- MODE SWITCHER -->
 				<div class="segmented-control" role="group" aria-label="Hero Visualizer Mode">
-					<button class="seg-btn active" id="btn-hero-waveform" data-hero-mode="waveform" type="button">Waveform</button>
-					<button class="seg-btn" id="btn-hero-spectrum" data-hero-mode="spectrum" type="button">Spectrum</button>
+					<button class="seg-btn" id="btn-hero-waveform" data-hero-mode="waveform" type="button">Waveform</button>
+					<button class="seg-btn active" id="btn-hero-spectrum" data-hero-mode="spectrum" type="button">Spectrum</button>
 					<button class="seg-btn" id="btn-hero-spectrogram" data-hero-mode="spectrogram" type="button">Spectrogram</button>
 				</div>
 			</div>
@@ -80,7 +80,7 @@
 					<canvas id="audio-hero-canvas" width="600" height="310"></canvas>
 
 					<!-- TIME-DOMAIN PHASE CORRELATION BAR (Active in waveform mode) -->
-					<div class="waveform-hud-bar" id="waveform-hud-bar">
+					<div class="waveform-hud-bar" id="waveform-hud-bar" style="display: none;">
 						<div class="phase-meter-wrap" title="Phase Correlation (-1.0 Inverted to +1.0 In-Phase)">
 							<span class="phase-meter-title">Phase:</span>
 							<span class="phase-meter-tag mono">-1.0</span>
@@ -238,7 +238,7 @@
 		let noiseNode: AudioNode | null = null;
 
 		let activeSignal: 'sine' | 'pink' | 'white' = 'sine';
-		let activeHeroMode: 'waveform' | 'spectrum' | 'spectrogram' = 'waveform';
+		let activeHeroMode: 'waveform' | 'spectrum' | 'spectrogram' = 'spectrum';
 		let activeMode: 'none' | 'left' | 'right' | 'inphase' | 'outphase' | 'tone' | 'sweep' | 'noise' = 'none';
 		let activeNoiseType: 'pink' | 'white' = 'pink';
 		let currentToneHz = 1000;

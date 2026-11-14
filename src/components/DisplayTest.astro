@@ -97,8 +97,8 @@
 		<div class="pixel-hud" id="pixel-hud">
 			<div class="pixel-hud-pill">
 				<span id="pixel-color-name">Black (Stuck Pixel Check)</span>
-				<span class="hud-sep">&bull;</span>
-				<span class="hud-hint">Click / Space to cycle &bull; Esc to exit</span>
+				<span class="hud-sep">▪</span>
+				<span class="hud-hint">Click / Space to cycle ▪ Esc to exit</span>
 			</div>
 			<button id="close-pixel-btn" class="pixel-close-btn" type="button" aria-label="Exit Pixel Checker">
 				<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -150,7 +150,7 @@
 		}
 		if (depthTagEl) {
 			const gamut = isRec2020 ? 'Rec.2020' : (isP3 ? 'Display P3' : 'sRGB');
-			depthTagEl.textContent = `${depth}-bit color • ${gamut}`;
+			depthTagEl.textContent = `${depth}-bit color ▪ ${gamut}`;
 		}
 
 		// Responsive canvas sizing

@@ -18,8 +18,8 @@
 					<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
 					<path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
 				</svg>
-				<input type="range" id="audio-volume-slider" min="0" max="1" step="0.05" value="0.35" class="vol-slider" aria-label="Output Volume" />
-				<span id="audio-vol-text" class="vol-text mono">35%</span>
+				<input type="range" id="audio-volume-slider" min="0" max="1" step="0.05" value="0.5" class="vol-slider" aria-label="Output Volume" />
+				<span id="audio-vol-text" class="vol-text mono">50%</span>
 			</div>
 		</div>
 	</div>
@@ -57,7 +57,7 @@
 					<div class="hero-hud-overlay" id="hero-hud-overlay">
 						<div class="hud-badge-wrap" id="hud-badge-wrap">
 							<span id="hero-hud-main" class="hud-main-text mono">Standby</span>
-							<span class="hud-sep">&bull;</span>
+							<span class="hud-sep">▪</span>
 							<span id="hero-hud-sub" class="hud-sub-text">Select Test</span>
 						</div>
 					</div>
@@ -86,7 +86,7 @@
 
 		<!-- COLUMN 2: HARDWARE TEST CONTROLS -->
 		<div class="audio-col controls-col">
-			<!-- SECTION 1: STEREO & POLARITY ISOLATION -->
+			<!-- SECTION 1: STEREO, POLARITY & NOISE -->
 			<div class="control-group">
 				<div class="group-header">
 					<div class="group-header-left">
@@ -94,9 +94,8 @@
 							<circle cx="12" cy="12" r="10"/>
 							<line x1="12" y1="2" x2="12" y2="22"/>
 						</svg>
-						<span class="group-title">Stereo &amp; Polarity Isolation</span>
+						<span class="group-title">Stereo ▪ Polarity ▪ Noise</span>
 					</div>
-					<span class="group-badge">Voice + Tone</span>
 				</div>
 
 				<div class="tone-buttons-grid">
@@ -120,31 +119,34 @@
 						<span class="tone-name">Out-of-Phase</span>
 					</button>
 				</div>
+
+				<div class="noise-presets-grid">
+					<button class="noise-pill" id="btn-noise-pink" data-noise="pink" type="button">
+						<span class="pill-hz">Pink Noise</span>
+						<span class="pill-tag">1/f Equal Energy</span>
+					</button>
+					<button class="noise-pill" id="btn-noise-white" data-noise="white" type="button">
+						<span class="pill-hz">White Noise</span>
+						<span class="pill-tag">Flat PSD (20 Hz–20 kHz)</span>
+					</button>
+				</div>
 			</div>
 
-			<!-- SECTION 2: TONE & BROADBAND NOISE GENERATOR -->
+			<!-- SECTION 2: TONE GENERATOR & SWEEPER -->
 			<div class="control-group">
 				<div class="group-header">
 					<div class="group-header-left">
 						<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="group-icon">
 							<path d="M2 12h4l3 8 4-16 3 8h6"/>
 						</svg>
-						<span class="group-title">Tone &amp; Noise Generator</span>
+						<span class="group-title">Tone Generator &amp; Sweeper</span>
 					</div>
-					<span class="group-badge">Sine &bull; Pink &bull; White</span>
 				</div>
 
 				<!-- SINE TONE & SWEEPER SECTION -->
 				<div class="tone-controls-section">
 					<!-- SWEEP ACTIONS -->
 					<div class="sweep-actions-row">
-						<button id="toggle-tone-btn" class="sweep-btn" type="button">
-							<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" id="toggle-tone-icon">
-								<polygon points="5 3 19 12 5 21 5 3"/>
-							</svg>
-							<span id="toggle-tone-text">Play</span>
-						</button>
-
 						<button id="run-sweep-btn" class="sweep-btn sweep-auto-btn" type="button">
 							<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
 								<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
@@ -168,21 +170,9 @@
 						<button class="freq-pill" data-hz="20" type="button"><span class="pill-hz mono">20 Hz</span><span class="pill-tag">Sub</span></button>
 						<button class="freq-pill" data-hz="60" type="button"><span class="pill-hz mono">60 Hz</span><span class="pill-tag">Bass</span></button>
 						<button class="freq-pill" data-hz="250" type="button"><span class="pill-hz mono">250 Hz</span><span class="pill-tag">Mid</span></button>
-						<button class="freq-pill active" data-hz="1000" type="button"><span class="pill-hz mono">1 kHz</span><span class="pill-tag">Ref</span></button>
+						<button class="freq-pill" data-hz="1000" type="button"><span class="pill-hz mono">1 kHz</span><span class="pill-tag">Ref</span></button>
 						<button class="freq-pill" data-hz="8000" type="button"><span class="pill-hz mono">8 kHz</span><span class="pill-tag">Pres</span></button>
 						<button class="freq-pill" data-hz="16000" type="button"><span class="pill-hz mono">16 kHz</span><span class="pill-tag">Treble</span></button>
-					</div>
-
-					<!-- BROADBAND NOISE PRESETS (Directly under frequency presets) -->
-					<div class="noise-presets-grid">
-						<button class="noise-pill" data-noise="pink" type="button">
-							<span class="pill-hz">Pink Noise</span>
-							<span class="pill-tag">1/f Equal Energy</span>
-						</button>
-						<button class="noise-pill" data-noise="white" type="button">
-							<span class="pill-hz">White Noise</span>
-							<span class="pill-tag">Flat PSD (20 Hz–20 kHz)</span>
-						</button>
 					</div>
 				</div>
 			</div>
@@ -232,26 +222,11 @@
 
 		const sliderHzDisplay = document.getElementById('slider-hz-display');
 		const freqSlider = document.getElementById('freq-slider') as HTMLInputElement;
-		const toggleToneBtn = document.getElementById('toggle-tone-btn');
-		const toggleToneText = document.getElementById('toggle-tone-text');
-		const toggleToneIcon = document.getElementById('toggle-tone-icon');
 		const runSweepBtn = document.getElementById('run-sweep-btn');
 		const runSweepText = document.getElementById('run-sweep-text');
 
 		const freqPills = document.querySelectorAll('.freq-pill');
 		const noisePills = document.querySelectorAll('.noise-pill');
-
-		function setPlayButtonState(isPlaying: boolean) {
-			if (toggleToneBtn) toggleToneBtn.classList.toggle('active', isPlaying);
-			if (toggleToneText) toggleToneText.textContent = isPlaying ? 'Pause' : 'Play';
-			if (toggleToneIcon) {
-				if (isPlaying) {
-					toggleToneIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
-				} else {
-					toggleToneIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
-				}
-			}
-		}
 
 		const heroCanvas = document.getElementById('audio-hero-canvas') as HTMLCanvasElement;
 		const heroCtx = heroCanvas?.getContext('2d');
@@ -286,7 +261,7 @@
 
 				// Master volume attenuation node for speakers / output
 				masterGain = audioCtx.createGain();
-				const initialVol = volSlider ? parseFloat(volSlider.value) : 0.35;
+				const initialVol = volSlider ? parseFloat(volSlider.value) : 0.5;
 				masterGain.gain.setValueAtTime(initialVol * 0.45, audioCtx.currentTime);
 
 				audioBus.connect(masterGain);
@@ -461,7 +436,8 @@
 
 			activeMode = 'none';
 			document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
-			setPlayButtonState(false);
+			document.querySelectorAll('.freq-pill').forEach(p => p.classList.remove('active'));
+			document.querySelectorAll('.noise-pill').forEach(p => p.classList.remove('active'));
 			if (runSweepBtn) runSweepBtn.classList.remove('active');
 			if (runSweepText) runSweepText.textContent = 'Auto Sweep (10s)';
 
@@ -491,23 +467,27 @@
 				updateFrequencyUI(hz);
 				if (activeMode === 'tone' && currentOsc && audioCtx) {
 					currentOsc.frequency.setTargetAtTime(hz, audioCtx.currentTime, 0.02);
-				} else if (activeMode === 'noise') {
-					startToneGenerator();
 				}
-				freqPills.forEach(p => p.classList.remove('active'));
+				freqPills.forEach((p) => {
+					const pillHz = parseInt(p.getAttribute('data-hz') || '0', 10);
+					p.classList.toggle('active', pillHz === hz);
+				});
 				noisePills.forEach(p => p.classList.remove('active'));
 			});
 		}
 
-		// Preset Frequency Pills
+		// Preset Frequency Pills (Clicking immediately plays or toggles off if active)
 		freqPills.forEach((pill) => {
 			pill.addEventListener('click', () => {
-				freqPills.forEach(p => p.classList.remove('active'));
-				noisePills.forEach(p => p.classList.remove('active'));
-				pill.classList.add('active');
+				const targetHz = parseInt(pill.getAttribute('data-hz') || '1000', 10);
+
+				// If this preset is already actively playing, clicking it pauses/stops audio
+				if (activeMode === 'tone' && currentToneHz === targetHz) {
+					stopAllAudio();
+					return;
+				}
 
 				activeSignal = 'sine';
-				const targetHz = parseInt(pill.getAttribute('data-hz') || '1000', 10);
 				updateFrequencyUI(targetHz);
 
 				// Reverse map to slider
@@ -516,20 +496,16 @@
 				const scale = (Math.log(targetHz) - minLog) / (maxLog - minLog);
 				if (freqSlider) freqSlider.value = String(Math.round(20 + scale * (20000 - 20)));
 
-				if (activeMode === 'tone' && currentOsc && audioCtx) {
-					currentOsc.frequency.setTargetAtTime(targetHz, audioCtx.currentTime, 0.02);
-				} else if (activeMode === 'noise') {
-					startToneGenerator();
-				}
+				startToneGenerator(targetHz);
 			});
 		});
 
-		// Preset Noise Pills (Pink & White under frequency presets)
+		// Preset Noise Pills (Clicking immediately plays or toggles off if active)
 		noisePills.forEach((pill) => {
 			pill.addEventListener('click', () => {
 				const noiseType = (pill.getAttribute('data-noise') as 'pink' | 'white') || 'pink';
 
-				// If this noise is currently playing, clicking it pauses
+				// If this noise is currently playing, clicking it pauses/stops audio
 				if (activeMode === 'noise' && activeNoiseType === noiseType) {
 					stopAllAudio();
 					return;
@@ -538,20 +514,17 @@
 				activeSignal = noiseType;
 				activeNoiseType = noiseType;
 
-				freqPills.forEach(p => p.classList.remove('active'));
-				noisePills.forEach(p => p.classList.remove('active'));
-				pill.classList.add('active');
-
 				startNoiseGenerator(noiseType);
 			});
 		});
 
-		// Play / Pause Sine Tone Generator
-		function startToneGenerator() {
+		// Start Sine Tone Generator
+		function startToneGenerator(targetHz?: number) {
 			const ctx = getAudioContext();
 			stopAllAudio();
 			activeMode = 'tone';
 			activeSignal = 'sine';
+			if (typeof targetHz === 'number') currentToneHz = targetHz;
 
 			const osc = ctx.createOscillator();
 			osc.type = 'sine';
@@ -560,22 +533,12 @@
 			osc.start();
 			currentOsc = osc;
 
-			setPlayButtonState(true);
-			updateHudOverlay();
-		}
-
-		if (toggleToneBtn) {
-			toggleToneBtn.addEventListener('click', () => {
-				if (activeMode === 'tone' || activeMode === 'noise') {
-					stopAllAudio();
-				} else {
-					if (activeSignal === 'pink' || activeSignal === 'white') {
-						startNoiseGenerator(activeSignal);
-					} else {
-						startToneGenerator();
-					}
-				}
+			freqPills.forEach((p) => {
+				const hz = parseInt(p.getAttribute('data-hz') || '0', 10);
+				p.classList.toggle('active', hz === currentToneHz);
 			});
+
+			updateHudOverlay();
 		}
 
 		// Auto Frequency Sweep (20Hz - 20,000Hz over 10 seconds)
@@ -679,7 +642,9 @@
 			noiseSource.start();
 			noiseNode = noiseSource;
 
-			setPlayButtonState(true);
+			noisePills.forEach(p => {
+				p.classList.toggle('active', p.getAttribute('data-noise') === activeNoiseType);
+			});
 			updateHudOverlay();
 		}
 
@@ -1178,8 +1143,8 @@
 		let specHistoryCtx: CanvasRenderingContext2D | null = null;
 		let lastSpecTime = 0;
 
-		function renderSpectrogramScope() {
-			if (!heroCtx || !heroCanvas) return;
+		function updateSpectrogramBuffer() {
+			if (!heroCanvas) return;
 			const w = heroCanvas.width;
 			const h = heroCanvas.height;
 			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -1197,7 +1162,7 @@
 				}
 			}
 
-			if (!specHistoryCtx) return;
+			if (!specHistoryCtx || !specHistoryCanvas) return;
 
 			const now = performance.now();
 			const dt = now - lastSpecTime;
@@ -1298,6 +1263,15 @@
 					specHistoryCtx.putImageData(imgData, 0, 0);
 				}
 			}
+		}
+
+		function renderSpectrogramScope() {
+			updateSpectrogramBuffer();
+			if (!heroCtx || !heroCanvas || !specHistoryCanvas) return;
+			const w = heroCanvas.width;
+			const h = heroCanvas.height;
+			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+			const bottomY = h - 20;
 
 			// Clear and fill canvas background
 			heroCtx.clearRect(0, 0, w, h);
@@ -1545,6 +1519,12 @@
 				rafVisualizerId = null;
 				return;
 			}
+
+			// Keep spectrogram waterfall recording continuously in background once audio is enabled
+			if (audioCtx) {
+				updateSpectrogramBuffer();
+			}
+
 			if (activeHeroMode === 'waveform') {
 				renderWaveformScope();
 			} else if (activeHeroMode === 'spectrum') {

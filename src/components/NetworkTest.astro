@@ -35,7 +35,7 @@
 				</span>
 			</div>
 			<span class="b-tile-sub">
-				<span id="speed-jitter">Jitter: -- ms</span> &bull; <span id="speed-loss-sub">0/16 lost</span>
+				<span id="speed-jitter">Jitter: -- ms</span> ▪ <span id="speed-loss-sub">0/16 lost</span>
 			</span>
 		</div>
 
@@ -530,7 +530,7 @@
 
 			if (progressBar) progressBar.style.width = '100%';
 			const targetSummary = detectedColo ? ` via Cloudflare ${detectedColo} Edge (${detectedCity})` : ' via Cloudflare Anycast';
-			const physicsSummary = distanceKm > 0 ? ` &bull; ~${distanceKm} km (fiber limit: ~${fiberRttMs} ms RTT)` : '';
+			const physicsSummary = distanceKm > 0 ? ` ▪ ~${distanceKm} km (fiber limit: ~${fiberRttMs} ms RTT)` : '';
 			if (statusText) statusText.innerHTML = `Test complete${targetSummary}${physicsSummary}.`;
 
 		} catch (err: any) {

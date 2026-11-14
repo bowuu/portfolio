@@ -628,7 +628,7 @@
 			}
 
 			if (scrollDeltaEl) scrollDeltaEl.textContent = dir;
-			if (scrollTotalEl) scrollTotalEl.textContent = `${delta > 0 ? '+' : ''}${delta}px • ${totalScrollTicks} ticks`;
+			if (scrollTotalEl) scrollTotalEl.textContent = `${delta > 0 ? '+' : ''}${delta}px ▪ ${totalScrollTicks} ticks`;
 
 			clearTimeout(wheelTimer);
 			wheelTimer = setTimeout(() => {

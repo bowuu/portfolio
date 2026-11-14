@@ -87,7 +87,7 @@
 					<path d="M7 16h10"/>
 				</svg>
 				<span class="kb-summary-title">104-key Tester</span>
-				<span class="kb-summary-tag" id="kb-summary-tag">&bull; 0 / 104 keys tested</span>
+				<span class="kb-summary-tag" id="kb-summary-tag">▪ 0 / 104 keys tested</span>
 			</div>
 			<span class="kb-summary-toggle">
 				<span class="kb-summary-toggle-label">Virtual Keyboard</span>
@@ -424,7 +424,7 @@
 				coveragePctEl.textContent = `${pct}% matrix verified`;
 			}
 			if (summaryTagEl) {
-				summaryTagEl.textContent = `• ${count} / ${totalKeys} keys tested (Peak NKRO: ${peakRollover})`;
+				summaryTagEl.textContent = `▪ ${count} / ${totalKeys} keys tested (Peak NKRO: ${peakRollover})`;
 			}
 		}
 
@@ -535,7 +535,7 @@
 			}
 			if (testedCountEl) testedCountEl.textContent = '0';
 			if (coveragePctEl) coveragePctEl.textContent = '0% matrix verified';
-			if (summaryTagEl) summaryTagEl.textContent = `• 0 / ${totalKeys} keys tested`;
+			if (summaryTagEl) summaryTagEl.textContent = `▪ 0 / ${totalKeys} keys tested`;
 			if (evCodeEl) evCodeEl.textContent = 'None';
 			if (evKeyEl) evKeyEl.textContent = '--';
 			if (evWhichEl) evWhichEl.textContent = '--';

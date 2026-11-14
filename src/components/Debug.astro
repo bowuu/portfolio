@@ -23,7 +23,7 @@
 					<path d="m9 12 2 2 4-4"/>
 				</svg>
 				<span class="privacy-title">Client-Side Privacy Notice</span>
-				<span class="privacy-tag">&bull; Zero device data logged</span>
+				<span class="privacy-tag">▪ Zero device data logged</span>
 			</div>
 			<span class="privacy-toggle">
 				<span class="privacy-toggle-label">Details</span>
@@ -255,7 +255,7 @@
 			<div class="map-applet-footer">
 				<div class="map-footer-info">
 					<span id="map-footer-loc" class="map-footer-loc">--</span>
-					<span class="map-footer-sep" aria-hidden="true">&bull;</span>
+					<span class="map-footer-sep" aria-hidden="true">▪</span>
 					<span class="map-footer-note">Approximate OpenStreetMap geolocation</span>
 				</div>
 				<a id="map-external-link" href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="map-ext-link" title="Open full map on openstreetmap.org">
@@ -304,7 +304,7 @@
 			<div class="map-applet-footer">
 				<div class="map-footer-info">
 					<span id="webgpu-footer-vendor" class="map-footer-loc">--</span>
-					<span class="map-footer-sep" aria-hidden="true">&bull;</span>
+					<span class="map-footer-sep" aria-hidden="true">▪</span>
 					<span class="map-footer-note">Client GPU Compute Hardware Capabilities</span>
 				</div>
 			</div>
@@ -744,7 +744,7 @@
 					openWebgpuBtn.title = 'Click to inspect WebGPU compute limits & hardware architecture';
 					openWebgpuBtn.onclick = () => {
 						if (!webgpuInfoCache) return;
-						if (webgpuBadge) webgpuBadge.textContent = `${webgpuInfoCache.backend} • WebGPU`;
+						if (webgpuBadge) webgpuBadge.textContent = `${webgpuInfoCache.backend} ▪ WebGPU`;
 						if (webgpuFooterVendor) {
 							webgpuFooterVendor.textContent = isFirefoxSpoofed
 								? `${webgpuInfoCache.description} (Firefox Anti-Fingerprint Profile)`
@@ -928,7 +928,7 @@
 				const displayHz = peakHz || baselineHz || 60;
 				const vrrTag = (displayHz > 60 || isAdaptiveVRR) ? ' (Adaptive VRR)' : '';
 				const { gamut, hdrTag } = getGamutAndHDR();
-				refreshEl.textContent = `${displayHz} Hz${vrrTag} • ${gamut} • ${hdrTag}`;
+				refreshEl.textContent = `${displayHz} Hz${vrrTag} ▪ ${gamut} ▪ ${hdrTag}`;
 			}
 
 			// Multi-rate clustering classifier: detects standard frequency buckets and identifies VRR
@@ -1277,7 +1277,7 @@
 					const ch = actx.destination.maxChannelCount || 2;
 					const chLabel = ch === 1 ? '1ch Mono' : ch === 2 ? '2ch Stereo' : `${ch}ch Surround`;
 					
-					audioEl.textContent = `${baseLatMs} ms buffer • ${rateKhz} kHz • ${chLabel}`;
+					audioEl.textContent = `${baseLatMs} ms buffer ▪ ${rateKhz} kHz ▪ ${chLabel}`;
 					audioEl.title = `Hardware DAC output: ${actx.sampleRate} Hz sample rate, ${chLabel} channel configuration, and ${baseLatMs} ms buffer latency via Web Audio API.`;
 					actx.close();
 				} else {
@@ -1377,7 +1377,7 @@
 				}
 
 				if (supported.length > 0) {
-					codecsEl.textContent = supported.join(' • ');
+					codecsEl.textContent = supported.join(' ▪ ');
 					codecsEl.title = 'Probed via MediaCapabilities (powerEfficient: true) and WebCodecs hardware ASIC decoder profiles.';
 				} else {
 					codecsEl.textContent = 'Software / CPU Decoding';
@@ -1468,7 +1468,7 @@
 				}
 
 				if (supported.length > 0) {
-					encoderEl.textContent = supported.join(' • ');
+					encoderEl.textContent = supported.join(' ▪ ');
 					encoderEl.title = 'Probed via MediaCapabilities (powerEfficient: true) and WebCodecs hardware ASIC encoder profiles.';
 				} else {
 					encoderEl.textContent = 'Software / CPU Encoding';
@@ -1549,7 +1549,7 @@
 					}
 
 					if (found.length > 0) {
-						drmEl.textContent = found.join(' • ');
+						drmEl.textContent = found.join(' ▪ ');
 						drmEl.title = 'Probed via Encrypted Media Extensions (navigator.requestMediaKeySystemAccess) for hardware & software CDM support. Click to re-probe.';
 					} else {
 						drmEl.textContent = 'Standard / Open Media';

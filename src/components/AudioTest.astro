@@ -4,15 +4,41 @@
 
 <section class="card audio-test-card" id="audio-lab">
 	<div class="card-header-wrap">
-		<h2 class="card-title">
-			<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
-				<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-				<path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
-			</svg>
-			Audio Test
-		</h2>
+		<div class="card-header-left">
+			<h2 class="card-title">
+				<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+					<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+					<path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+				</svg>
+				Audio Test
+			</h2>
+
+			<!-- Telemetry HUD Badge (Moved to card header to keep visualizer 100% unobstructed) -->
+			<div class="header-hud-badge" id="hero-hud-overlay">
+				<div class="hud-badge-wrap" id="hud-badge-wrap">
+					<span id="hero-hud-main" class="hud-main-text mono">Standby</span>
+					<span class="hud-sep">▪</span>
+					<span id="hero-hud-sub" class="hud-sub-text">Select Test</span>
+				</div>
+			</div>
+		</div>
 
 		<div class="header-actions">
+			<!-- VISUALIZER INPUT SOURCE SWITCHER (Mic | Sim | Both) -->
+			<div class="segmented-control source-control" role="group" aria-label="Audio Input Source">
+				<button class="seg-btn" id="btn-src-mic" data-src-mode="mic" type="button" title="Microphone Input (Live Capture)">
+					<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" class="source-mic-icon">
+						<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+						<path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+						<line x1="12" y1="19" x2="12" y2="23"/>
+						<line x1="8" y1="23" x2="16" y2="23"/>
+					</svg>
+					Mic
+				</button>
+				<button class="seg-btn active" id="btn-src-sim" data-src-mode="sim" type="button" title="Simulated Synthesizer & Tone Generator">Sim</button>
+				<button class="seg-btn" id="btn-src-both" data-src-mode="both" type="button" title="Combine Microphone & Simulated Audio">Both</button>
+			</div>
+
 			<div class="volume-control-wrap" title="Output Volume (Safe Ceiling -18 dBFS)">
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="vol-icon">
 					<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
@@ -52,15 +78,6 @@
 				<!-- HERO CANVAS CONTAINER -->
 				<div class="hero-canvas-box" id="hero-canvas-box">
 					<canvas id="audio-hero-canvas" width="600" height="310"></canvas>
-
-					<!-- FLOATING HUD OVERLAY BADGE -->
-					<div class="hero-hud-overlay" id="hero-hud-overlay">
-						<div class="hud-badge-wrap" id="hud-badge-wrap">
-							<span id="hero-hud-main" class="hud-main-text mono">Standby</span>
-							<span class="hud-sep">▪</span>
-							<span id="hero-hud-sub" class="hud-sub-text">Select Test</span>
-						</div>
-					</div>
 
 					<!-- TIME-DOMAIN PHASE CORRELATION BAR (Active in waveform mode) -->
 					<div class="waveform-hud-bar" id="waveform-hud-bar">
@@ -209,6 +226,14 @@
 		let masterGain: GainNode | null = null;
 		let compressor: DynamicsCompressorNode | null = null;
 
+		// Input Source & Visualizer Summing Routing (Mic / Simulated / Both)
+		let visualizerBus: GainNode | null = null;
+		let simVisualizerGain: GainNode | null = null;
+		let micVisualizerGain: GainNode | null = null;
+		let micStream: MediaStream | null = null;
+		let micSourceNode: MediaStreamAudioSourceNode | null = null;
+		let currentSourceMode: 'mic' | 'sim' | 'both' = 'sim';
+
 		let currentOsc: OscillatorNode | null = null;
 		let noiseNode: AudioNode | null = null;
 
@@ -233,6 +258,11 @@
 		const modeSpectrumBtn = document.getElementById('btn-hero-spectrum');
 		const modeSpectrogramBtn = document.getElementById('btn-hero-spectrogram');
 		const waveformHudBar = document.getElementById('waveform-hud-bar');
+
+		const btnSrcMic = document.getElementById('btn-src-mic');
+		const btnSrcSim = document.getElementById('btn-src-sim');
+		const btnSrcBoth = document.getElementById('btn-src-both');
+		const srcBtns = [btnSrcMic, btnSrcSim, btnSrcBoth];
 
 		const volSlider = document.getElementById('audio-volume-slider') as HTMLInputElement;
 		const volText = document.getElementById('audio-vol-text');
@@ -291,7 +321,7 @@
 				const AudioConstructor = window.AudioContext || (window as any).webkitAudioContext;
 				audioCtx = new AudioConstructor();
 
-				// Master compressor to prevent clipping / distortion
+				// Master compressor to prevent clipping / distortion on speakers
 				compressor = audioCtx.createDynamicsCompressor();
 				compressor.threshold.setValueAtTime(-12, audioCtx.currentTime);
 				compressor.knee.setValueAtTime(30, audioCtx.currentTime);
@@ -299,13 +329,13 @@
 				compressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
 				compressor.release.setValueAtTime(0.25, audioCtx.currentTime);
 
-				// Pre-attenuation Audio Bus (Unity Gain 0 dB) for unattenuated visualizer telemetry
+				// Pre-attenuation Audio Bus (Unity Gain 0 dB) for simulated audio output
 				audioBus = audioCtx.createGain();
 				audioBus.channelCount = 2;
 				audioBus.channelCountMode = 'explicit';
 				audioBus.channelInterpretation = 'speakers';
 
-				// Master volume attenuation node for speakers / output
+				// Master volume attenuation node for simulated audio speakers / output
 				masterGain = audioCtx.createGain();
 				const initialVol = volSlider ? parseFloat(volSlider.value) : 0.5;
 				masterGain.gain.setValueAtTime(initialVol * 0.45, audioCtx.currentTime);
@@ -314,6 +344,25 @@
 				masterGain.connect(compressor);
 				compressor.connect(audioCtx.destination);
 
+				// Dedicated Visualizer Bus: Sums simulated and/or microphone inputs
+				visualizerBus = audioCtx.createGain();
+				visualizerBus.channelCount = 2;
+				visualizerBus.channelCountMode = 'explicit';
+				visualizerBus.channelInterpretation = 'speakers';
+
+				simVisualizerGain = audioCtx.createGain();
+				simVisualizerGain.gain.setValueAtTime(currentSourceMode === 'mic' ? 0.0 : 1.0, audioCtx.currentTime);
+				audioBus.connect(simVisualizerGain);
+				simVisualizerGain.connect(visualizerBus);
+
+				micVisualizerGain = audioCtx.createGain();
+				micVisualizerGain.gain.setValueAtTime(currentSourceMode === 'sim' ? 0.0 : 1.0, audioCtx.currentTime);
+				micVisualizerGain.connect(visualizerBus);
+
+				if (micSourceNode) {
+					try { micSourceNode.connect(micVisualizerGain); } catch (_) {}
+				}
+
 				// Real Stereo & Phase Vector Split (Left / Right split for oscilloscope & VU meter)
 				splitter = audioCtx.createChannelSplitter(2);
 				analyserLeft = audioCtx.createAnalyser();
@@ -321,7 +370,7 @@
 				analyserLeft.fftSize = 2048;
 				analyserRight.fftSize = 2048;
 
-				audioBus.connect(splitter);
+				visualizerBus.connect(splitter);
 				splitter.connect(analyserLeft, 0);
 				splitter.connect(analyserRight, 1);
 
@@ -332,7 +381,7 @@
 				fftAnalyser.minDecibels = -80;
 				fftAnalyser.maxDecibels = -10;
 
-				audioBus.connect(fftAnalyser);
+				visualizerBus.connect(fftAnalyser);
 			}
 
 			if (audioCtx.state === 'suspended') {
@@ -396,40 +445,127 @@
 			}
 		}
 
-		// Update HUD text banner (Streamlined to prevent text wrapping on narrow mobile screens)
+		// Microphone and Visualizer Audio Source Management (Mic | Sim | Both)
+		async function enableMicrophone(): Promise<boolean> {
+			const ctx = getAudioContext();
+			if (micStream && micSourceNode) {
+				return true;
+			}
+			try {
+				if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+					alert('Microphone input is not supported in this browser.');
+					return false;
+				}
+				const stream = await navigator.mediaDevices.getUserMedia({
+					audio: {
+						echoCancellation: false,
+						noiseSuppression: false,
+						autoGainControl: false,
+					},
+				});
+				micStream = stream;
+				micSourceNode = ctx.createMediaStreamSource(stream);
+				if (micVisualizerGain) {
+					micSourceNode.connect(micVisualizerGain);
+				}
+				return true;
+			} catch (err: any) {
+				console.warn('Microphone access denied or error:', err);
+				if (heroHudMain && heroHudSub) {
+					heroHudMain.textContent = 'Mic Blocked';
+					heroHudSub.textContent = 'Permission Denied';
+				}
+				return false;
+			}
+		}
+
+		function stopMicrophone() {
+			if (micStream) {
+				micStream.getTracks().forEach((t) => t.stop());
+				micStream = null;
+			}
+			if (micSourceNode) {
+				try {
+					micSourceNode.disconnect();
+				} catch (_) {}
+				micSourceNode = null;
+			}
+		}
+
+		async function setSourceMode(mode: 'mic' | 'sim' | 'both') {
+			getAudioContext();
+			if (mode === 'mic' || mode === 'both') {
+				const ok = await enableMicrophone();
+				if (!ok) {
+					mode = 'sim';
+				}
+			} else {
+				stopMicrophone();
+			}
+
+			currentSourceMode = mode;
+
+			srcBtns.forEach((b) => {
+				if (!b) return;
+				const active = b.getAttribute('data-src-mode') === mode;
+				b.classList.toggle('active', active);
+			});
+
+			if (simVisualizerGain && micVisualizerGain && audioCtx) {
+				const now = audioCtx.currentTime;
+				simVisualizerGain.gain.setTargetAtTime(mode === 'mic' ? 0.0 : 1.0, now, 0.02);
+				micVisualizerGain.gain.setTargetAtTime(mode === 'sim' ? 0.0 : 1.0, now, 0.02);
+			}
+
+			updateHudOverlay();
+		}
+
+		btnSrcMic?.addEventListener('click', () => setSourceMode('mic'));
+		btnSrcSim?.addEventListener('click', () => setSourceMode('sim'));
+		btnSrcBoth?.addEventListener('click', () => setSourceMode('both'));
+
+		// Update HUD text banner
 		function updateHudOverlay() {
 			if (!heroHudMain || !heroHudSub) return;
 
+			if (currentSourceMode === 'mic') {
+				heroHudMain.textContent = 'Microphone';
+				heroHudSub.textContent = 'Live Capture';
+				return;
+			}
+
+			const prefix = currentSourceMode === 'both' ? 'Mic + ' : '';
+
 			if (activeMode === 'none') {
-				heroHudMain.textContent = 'Standby';
-				heroHudSub.textContent = 'Select Test';
+				heroHudMain.textContent = currentSourceMode === 'both' ? 'Mic Active' : 'Standby';
+				heroHudSub.textContent = currentSourceMode === 'both' ? 'Sim Ready' : 'Select Test';
 				return;
 			}
 
 			if (activeMode === 'left') {
-				heroHudMain.textContent = 'Left Channel';
+				heroHudMain.textContent = `${prefix}Left Channel`;
 				heroHudSub.textContent = '100% Left';
 			} else if (activeMode === 'right') {
-				heroHudMain.textContent = 'Right Channel';
+				heroHudMain.textContent = `${prefix}Right Channel`;
 				heroHudSub.textContent = '100% Right';
 			} else if (activeMode === 'inphase') {
-				heroHudMain.textContent = 'Center (0°)';
+				heroHudMain.textContent = `${prefix}Center (0°)`;
 				heroHudSub.textContent = 'In-Phase';
 			} else if (activeMode === 'outphase') {
-				heroHudMain.textContent = 'Out-of-Phase (180°)';
+				heroHudMain.textContent = `${prefix}Out-of-Phase (180°)`;
 				heroHudSub.textContent = 'Inverted Polarity';
 			} else if (activeMode === 'tone') {
-				heroHudMain.textContent = `${Math.round(currentToneHz).toLocaleString()} Hz`;
+				heroHudMain.textContent = `${prefix}${Math.round(currentToneHz).toLocaleString()} Hz`;
 				heroHudSub.textContent = getBandTag(currentToneHz);
 			} else if (activeMode === 'sweep') {
-				heroHudMain.textContent = `${Math.round(currentToneHz).toLocaleString()} Hz`;
+				heroHudMain.textContent = `${prefix}${Math.round(currentToneHz).toLocaleString()} Hz`;
 				heroHudSub.textContent = 'Auto Sweep';
 			} else if (activeMode === 'noise') {
 				if (activeNoiseType === 'pink') {
-					heroHudMain.textContent = 'Pink (1/f)';
+					heroHudMain.textContent = `${prefix}Pink (1/f)`;
 					heroHudSub.textContent = 'Equal Energy/Oct';
 				} else {
-					heroHudMain.textContent = 'White Noise';
+					heroHudMain.textContent = `${prefix}White Noise`;
 					heroHudSub.textContent = 'Flat PSD';
 				}
 			}
@@ -1662,6 +1798,11 @@
 			isAudioVisible = true;
 			rafVisualizerId = requestAnimationFrame(renderActiveVisualizer);
 		}
+
+		document.addEventListener('astro:before-swap', () => {
+			stopAllAudio();
+			stopMicrophone();
+		}, { once: true });
 	}
 
 	setupAudioTest();
@@ -1685,6 +1826,13 @@
 		border-bottom: 1.5px solid var(--border-color);
 	}
 
+	.card-header-left {
+		display: flex;
+		align-items: center;
+		gap: 0.75em;
+		flex-wrap: wrap;
+	}
+
 	.card-header-wrap .card-title {
 		font-size: clamp(1.2em, 2.5vw, 1.35em);
 		font-weight: 700;
@@ -1700,12 +1848,22 @@
 		flex-shrink: 0;
 	}
 
+	.header-hud-badge {
+		display: inline-flex;
+		align-items: center;
+	}
+
 	.header-actions {
 		display: flex;
 		align-items: center;
 		gap: 0.6em;
 		flex-shrink: 1;
 		min-width: 0;
+		flex-wrap: wrap;
+	}
+
+	.source-mic-icon {
+		margin-right: 2px;
 	}
 
 	.volume-control-wrap {
@@ -1925,41 +2083,39 @@
 		height: 100%;
 	}
 
-	/* FLOATING HUD BADGE */
-	.hero-hud-overlay {
-		position: absolute;
-		top: 8px;
-		left: 8px;
-		right: 8px;
-		display: flex;
-		justify-content: flex-start;
-		pointer-events: none;
-		z-index: 2;
+	/* CARD HEADER HUD BADGE */
+	.header-hud-badge {
+		display: inline-flex;
+		align-items: center;
 	}
 
 	.hud-badge-wrap {
 		font-size: clamp(0.72em, 2vw, 0.76em);
 		font-weight: 600;
 		color: rgba(255, 255, 255, 0.92);
-		background: rgba(0, 0, 0, 0.75);
+		background: rgba(148, 163, 184, 0.12);
 		backdrop-filter: blur(6px);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		padding: 3px 8px;
+		border: 1px solid var(--border-color);
+		padding: 3px 9px;
 		border-radius: 6px;
 		display: inline-flex;
 		align-items: center;
-		gap: 0.4em;
-		max-width: calc(100% - 16px);
+		gap: 0.45em;
 		white-space: nowrap;
 		height: 27px;
 		box-sizing: border-box;
 	}
 
+	:global(html[data-theme="dark"]) .hud-badge-wrap {
+		background: rgba(255, 255, 255, 0.06);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+	}
+
 	:global(html[data-theme="light"]) .hud-badge-wrap {
-		background: rgba(255, 255, 255, 0.92);
+		background: rgba(0, 0, 0, 0.05);
 		border: 1px solid rgba(0, 0, 0, 0.12);
 		color: #09090b;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 	}
 
 	.hud-main-text {
@@ -2259,18 +2415,17 @@
 	}
 
 	.tone-pill.white {
-		background: #ffffff !important;
-		color: #09090b !important;
-		font-size: 0.74em !important;
-		font-weight: 800 !important;
-		box-shadow: 0 0 4px rgba(255, 255, 255, 0.3) !important;
+		background: rgba(255, 255, 255, 0.15) !important;
+		color: #ffffff !important;
+		border: 1px solid rgba(255, 255, 255, 0.2) !important;
+		box-shadow: none !important;
 	}
 
 	:global(html[data-theme="light"]) .tone-pill.white {
-		background: #ffffff !important;
-		color: #09090b !important;
-		border: 1.5px solid rgba(0, 0, 0, 0.35) !important;
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+		background: rgba(0, 0, 0, 0.08) !important;
+		color: rgb(var(--black)) !important;
+		border: 1px solid rgba(0, 0, 0, 0.15) !important;
+		box-shadow: none !important;
 	}
 
 	.tone-pill.mono {

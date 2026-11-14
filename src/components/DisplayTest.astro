@@ -340,16 +340,32 @@
 			ctx.lineTo(w, h / 2);
 			ctx.stroke();
 
-			// Render active pattern (snap to integer device pixels for razor-sharp rasterization)
-			const renderX = Math.round(posX * dpr);
+			// Render active pattern helper
 			const renderY = Math.round(h / 2);
+			const canvasCSSWidth = w / dpr;
 
-			if (patternType === 'chip') {
-				drawSiliconChip(renderX, renderY, dpr, isDark);
-			} else if (patternType === 'bars') {
-				drawPursuitBars(renderX, h, dpr, isDark);
-			} else if (patternType === 'checker') {
-				drawCheckerboard(renderX, h, dpr, isDark);
+			function renderPatternAt(xCoord: number) {
+				const renderX = Math.round(xCoord * dpr);
+				if (patternType === 'chip') {
+					drawSiliconChip(renderX, renderY, dpr, isDark);
+				} else if (patternType === 'bars') {
+					drawPursuitBars(renderX, h, dpr, isDark);
+				} else if (patternType === 'checker') {
+					drawCheckerboard(renderX, h, dpr, isDark);
+				}
+			}
+
+			// Render primary pattern
+			renderPatternAt(posX);
+
+			// In Wrap mode, seamlessly wrap across boundaries if intersecting edges
+			if (motionTrajectory === 'wrap') {
+				const halfW = patternType === 'checker' ? 100 : (patternType === 'bars' ? 96 : 63);
+				if (posX - halfW < 0) {
+					renderPatternAt(posX + canvasCSSWidth);
+				} else if (posX + halfW > canvasCSSWidth) {
+					renderPatternAt(posX - canvasCSSWidth);
+				}
 			}
 		}
 
@@ -391,10 +407,12 @@
 						motionDir = 1;
 					}
 				} else {
-					// Continuous unidirectional pursuit (wrap-around)
+					// Continuous seamless toroidal wrap (modulo canvas width)
 					posX += speedPxPerSec * dtSec;
-					if (posX > canvasCSSWidth + 140) {
-						posX = -140;
+					if (posX >= canvasCSSWidth) {
+						posX = posX % canvasCSSWidth;
+					} else if (posX < 0) {
+						posX = (posX % canvasCSSWidth) + canvasCSSWidth;
 					}
 				}
 			}
@@ -501,6 +519,14 @@
 					} else if (posX > maxX) {
 						posX = maxX;
 						motionDir = -1;
+					}
+				} else {
+					const curDpr = window.devicePixelRatio || 1;
+					const canvasCSSWidth = canvas.width / curDpr;
+					if (posX >= canvasCSSWidth) {
+						posX = posX % canvasCSSWidth;
+					} else if (posX < 0) {
+						posX = (posX % canvasCSSWidth) + canvasCSSWidth;
 					}
 				}
 				if (!isMotionRunning) {

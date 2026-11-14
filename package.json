@@ -4,15 +4,15 @@
   "private": true,
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
-    "@astrojs/cloudflare": "12.6.0",
-    "@astrojs/sitemap": "3.4.1",
+    "@astrojs/cloudflare": "14.4.8",
+    "@astrojs/sitemap": "3.7.5",
     "@types/three": "^0.187.0",
-    "astro": "5.10.1",
+    "astro": "7.4.12",
     "three": "^0.187.0",
     "typescript": "5.8.3"
   },
   "devDependencies": {
-    "wrangler": "4.21.x"
+    "wrangler": "4.162.0"
   },
   "scripts": {
     "astro": "astro",

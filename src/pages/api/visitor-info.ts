@@ -10,7 +10,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
 	const ip = rawIp === '::1' || rawIp === '127.0.0.1' ? '127.0.0.1 (Localhost)' : rawIp;
 
 	// 2. Cloudflare Edge Geolocation & Network
-	const cf = (locals as any)?.runtime?.cf || (request as any)?.cf || {};
+	const cf = (request as any)?.cf || (locals as any)?.cfContext?.cf || {};
 	const city = cf.city || request.headers.get('cf-ipcity') || '';
 	const region = cf.region || cf.regionCode || request.headers.get('cf-region') || '';
 	const country = cf.country || request.headers.get('cf-ipcountry') || '';

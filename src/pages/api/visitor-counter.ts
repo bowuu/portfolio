@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { env } from 'cloudflare:workers';
 
 export const prerender = false;
 
@@ -10,6 +11,14 @@ const BASELINE_COUNT = 100;
 
 // Secret salt for one-way cryptographic hashing (rotates daily with the date)
 const SALT_SECRET = 'brob-salt-d1-850c6005';
+
+function getDB(locals: any): D1Database | undefined {
+	try {
+		return (env as any)?.DB || (locals as any)?.cfContext?.env?.DB;
+	} catch (_) {
+		return (locals as any)?.cfContext?.env?.DB;
+	}
+}
 
 function isLikelyBot(request: Request, cf: any): boolean {
 	const userAgent = request.headers.get('user-agent') || '';
@@ -71,7 +80,7 @@ async function ensureTables(db: D1Database): Promise<void> {
 
 // GET: Read current visitor count without incrementing
 export const GET: APIRoute = async ({ locals }) => {
-	const db = (locals as any)?.runtime?.env?.DB as D1Database | undefined;
+	const db = getDB(locals);
 
 	if (!db) {
 		return new Response(JSON.stringify({ count: BASELINE_COUNT, mode: 'local' }), {
@@ -109,7 +118,7 @@ export const GET: APIRoute = async ({ locals }) => {
 
 // POST: Increment visitor count after verified human interaction with daily salted hash deduplication
 export const POST: APIRoute = async ({ request, locals }) => {
-	const cf = (locals as any)?.runtime?.cf || (request as any)?.cf || {};
+	const cf = (request as any)?.cf || (locals as any)?.cfContext?.cf || {};
 
 	// 1. Filter bots and automated scrapers
 	if (isLikelyBot(request, cf)) {
@@ -119,7 +128,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		});
 	}
 
-	const db = (locals as any)?.runtime?.env?.DB as D1Database | undefined;
+	const db = getDB(locals);
 
 	if (!db) {
 		return new Response(JSON.stringify({ count: BASELINE_COUNT + 1, mode: 'local' }), {

@@ -27,11 +27,7 @@ process.env.PUBLIC_GIT_COMMIT_SHORT_HASH = gitCommitShortHash;
 export default defineConfig({
   site: "https://brob.uk",
   integrations: [sitemap()],
-  adapter: cloudflare({
-    platformProxy: {
-      enabled: true,
-    },
-  }),
+  adapter: cloudflare(),
   vite: {
     define: {
       "import.meta.env.PUBLIC_GIT_COMMIT_DATE": JSON.stringify(gitCommitDate),

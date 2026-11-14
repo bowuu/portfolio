@@ -18,7 +18,10 @@ if (status) {
 console.log('🚀 Pushing latest commit to origin main...');
 execSync('git push origin main', { stdio: 'inherit' });
 
-console.log('⚡ Deploying with Wrangler (executes fresh build automatically)...');
+console.log('⚡ Building fresh production artifacts...');
+execSync('npm run build', { stdio: 'inherit' });
+
+console.log('⚡ Deploying with Wrangler...');
 execSync('npx wrangler deploy', { stdio: 'inherit' });
 
 console.log('\n✅ Deployment successful! Live footer commit hash is 100% in sync with GitHub.');

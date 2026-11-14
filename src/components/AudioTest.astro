@@ -178,7 +178,15 @@
 							<span class="slider-hint">Sine Frequency Scrub</span>
 							<span class="slider-hz-val mono" id="slider-hz-display">1,000 Hz</span>
 						</div>
-						<input type="range" id="freq-slider" min="20" max="20000" step="1" value="11335" class="freq-slider" aria-label="Frequency Slider" aria-valuenow="1000" aria-valuetext="1,000 Hz" />
+						<div class="slider-input-wrap">
+							<button id="btn-play-tone" class="slider-play-btn" type="button" title="Play or Stop Sine Tone" aria-label="Play or Stop Sine Tone">
+								<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" class="play-icon" id="play-tone-icon">
+									<polygon points="6 4 20 12 6 20 6 4"/>
+								</svg>
+								<span id="tone-play-text">Play</span>
+							</button>
+							<input type="range" id="freq-slider" min="20" max="20000" step="1" value="11335" class="freq-slider" aria-label="Frequency Slider" aria-valuenow="1000" aria-valuetext="1,000 Hz" />
+						</div>
 					</div>
 
 					<!-- PRESET BUTTONS (Compact 3-Column Grid) -->
@@ -198,7 +206,7 @@
 							<span class="tone-name">Mid</span>
 						</button>
 
-						<button class="tone-btn freq-btn active" data-hz="1000" type="button">
+						<button class="tone-btn freq-btn" data-hz="1000" type="button">
 							<span class="tone-pill mono">1 kHz</span>
 							<span class="tone-name">Ref</span>
 						</button>
@@ -244,6 +252,7 @@
 		let currentToneHz = 1000;
 		let isSweeping = false;
 		let sweepRafId: number | null = null;
+		let spectrumDecayFactor = 0.0;
 
 		// VU Meter Ballistics State
 		let smoothL = -60;
@@ -290,6 +299,9 @@
 
 		const sliderHzDisplay = document.getElementById('slider-hz-display');
 		const freqSlider = document.getElementById('freq-slider') as HTMLInputElement;
+		const btnPlayTone = document.getElementById('btn-play-tone');
+		const tonePlayText = document.getElementById('tone-play-text');
+		const playToneIcon = document.getElementById('play-tone-icon');
 		const runSweepBtn = document.getElementById('run-sweep-btn');
 		const runSweepText = document.getElementById('run-sweep-text');
 
@@ -440,7 +452,6 @@
 
 		// Voice Audio Buffers for Spoken Tests
 		const voiceBufferCache: Record<string, AudioBuffer> = {};
-		let voiceLoopTimeout: number | null = null;
 		let currentSourceNode: AudioBufferSourceNode | null = null;
 
 		async function loadVoiceBuffer(mode: 'left' | 'right' | 'inphase' | 'outphase'): Promise<AudioBuffer | null> {
@@ -604,6 +615,17 @@
 			return 'Ultra-Treble';
 		}
 
+		function updateTonePlayButtonUI(isPlaying: boolean) {
+			if (!btnPlayTone) return;
+			btnPlayTone.classList.toggle('active', isPlaying);
+			if (tonePlayText) tonePlayText.textContent = isPlaying ? 'Stop' : 'Play';
+			if (playToneIcon) {
+				playToneIcon.innerHTML = isPlaying
+					? '<rect x="5" y="5" width="14" height="14" rx="2"/>'
+					: '<polygon points="6 4 20 12 6 20 6 4"/>';
+			}
+		}
+
 		// Stop All Active Audio
 		function stopAllAudio() {
 			if (sweepRafId) {
@@ -612,12 +634,9 @@
 			}
 			isSweeping = false;
 
-			if (voiceLoopTimeout) {
-				clearTimeout(voiceLoopTimeout);
-				voiceLoopTimeout = null;
-			}
 			if (currentSourceNode) {
 				try {
+					currentSourceNode.onended = null;
 					currentSourceNode.stop();
 					currentSourceNode.disconnect();
 				} catch (_) {}
@@ -640,6 +659,7 @@
 
 			activeMode = 'none';
 			document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
+			updateTonePlayButtonUI(false);
 			if (runSweepBtn) runSweepBtn.classList.remove('active');
 			if (runSweepText) runSweepText.textContent = 'Auto Frequency Sweep (10s)';
 
@@ -731,6 +751,9 @@
 			activeSignal = 'sine';
 			if (typeof targetHz === 'number') currentToneHz = targetHz;
 
+			spectrumDecayFactor = 1.0;
+			updateTonePlayButtonUI(true);
+
 			const osc = ctx.createOscillator();
 			osc.type = 'sine';
 			osc.frequency.setValueAtTime(currentToneHz, ctx.currentTime);
@@ -747,6 +770,16 @@
 			ensureVisualizerRunning();
 		}
 
+		btnPlayTone?.addEventListener('click', () => {
+			if (activeMode === 'tone') {
+				stopAllAudio();
+			} else {
+				activeSignal = 'sine';
+				updateFrequencyUI(currentToneHz, false);
+				startToneGenerator(currentToneHz);
+			}
+		});
+
 		// Auto Frequency Sweep (20Hz - 20,000Hz over 10 seconds)
 		function runAutoSweep() {
 			if (isSweeping) {
@@ -758,6 +791,7 @@
 			isSweeping = true;
 			activeMode = 'sweep';
 			activeSignal = 'sine';
+			spectrumDecayFactor = 1.0;
 
 			const osc = ctx.createOscillator();
 			osc.type = 'sine';
@@ -798,6 +832,7 @@
 			const ctx = getAudioContext();
 			stopAllAudio();
 			activeMode = 'noise';
+			spectrumDecayFactor = 1.0;
 
 			const bufferSize = ctx.sampleRate * 2;
 			const noiseBuffer = ctx.createBuffer(2, bufferSize, ctx.sampleRate);
@@ -859,6 +894,7 @@
 			const ctx = getAudioContext();
 			stopAllAudio();
 			activeMode = mode;
+			spectrumDecayFactor = 1.0;
 
 			const btnMap: Record<string, string> = {
 				left: 'btn-tone-left',
@@ -917,9 +953,7 @@
 
 					source.onended = () => {
 						if (activeMode === mode) {
-							voiceLoopTimeout = window.setTimeout(() => {
-								if (activeMode === mode) playVoiceClip();
-							}, 800);
+							playVoiceClip();
 						}
 					};
 				} else {
@@ -1009,13 +1043,19 @@
 			heroCtx.lineTo(w, cy);
 			heroCtx.stroke();
 
-			if (!analyserLeft || !analyserRight) {
+			const isProducingSound = activeMode !== 'none' || (currentSourceMode !== 'sim' && !!micStream);
+			if (!analyserLeft || !analyserRight || (!isProducingSound && spectrumDecayFactor === 0)) {
 				// Standby resting zero baselines
 				heroCtx.strokeStyle = isDark ? 'rgba(56, 189, 248, 0.35)' : 'rgba(2, 132, 199, 0.35)';
 				heroCtx.beginPath();
 				heroCtx.moveTo(0, cy);
 				heroCtx.lineTo(w, cy);
 				heroCtx.stroke();
+				if (phaseValText && phaseMeterFill) {
+					phaseValText.textContent = '+1.00';
+					phaseMeterFill.style.transform = 'scaleX(1)';
+					phaseMeterFill.style.background = '#22c55e';
+				}
 				return;
 			}
 
@@ -1227,6 +1267,27 @@
 				return;
 			}
 
+			// Handle sound production and smooth decay when stopped
+			const isProducingSound = activeMode !== 'none' || (currentSourceMode !== 'sim' && !!micStream);
+			if (isProducingSound) {
+				spectrumDecayFactor = 1.0;
+			} else {
+				spectrumDecayFactor *= 0.82;
+				if (spectrumDecayFactor < 0.005) {
+					spectrumDecayFactor = 0.0;
+				}
+			}
+
+			if (spectrumDecayFactor === 0.0) {
+				// Flat resting baseline
+				heroCtx.strokeStyle = isDark ? 'rgba(249, 115, 22, 0.25)' : 'rgba(234, 88, 12, 0.3)';
+				heroCtx.beginPath();
+				heroCtx.moveTo(0, bottomY);
+				heroCtx.lineTo(w, bottomY);
+				heroCtx.stroke();
+				return;
+			}
+
 			const binCount = fftAnalyser.frequencyBinCount;
 			const freqData = new Uint8Array(binCount);
 			fftAnalyser.getByteFrequencyData(freqData);
@@ -1259,6 +1320,7 @@
 					val = freqData[b0] * (1 - frac) + freqData[b1] * frac;
 				}
 
+				val *= spectrumDecayFactor;
 				const norm = Math.min(1.0, Math.pow(val / 255, 0.78) * 1.25);
 				const y = bottomY - norm * plotH;
 				yPoints.push(y);
@@ -1397,6 +1459,7 @@
 							rawVal = freqData[b0] * (1 - frac) + freqData[b1] * frac;
 						}
 
+						rawVal *= spectrumDecayFactor;
 						const val = Math.min(255, Math.pow(rawVal / 255, 0.85) * 260);
 
 						let r = isDark ? 9 : 248;
@@ -1771,8 +1834,8 @@
 			// Render horizontal stereo VU meter
 			renderStereoMeter();
 
-			// If audio is actively playing or VU meter ballistics are still decaying, keep animating
-			const isDecaying = smoothL > -59.5 || smoothR > -59.5;
+			// If audio is actively playing or VU meter / spectrum are still decaying, keep animating
+			const isDecaying = smoothL > -59.5 || smoothR > -59.5 || spectrumDecayFactor > 0;
 			const isProducing = activeMode !== 'none' || isSweeping || !!micStream;
 
 			if ((isProducing || isDecaying) && isAudioVisible) {
@@ -2625,7 +2688,61 @@
 		color: var(--accent);
 	}
 
+	.slider-input-wrap {
+		display: flex;
+		align-items: center;
+		gap: 0.55em;
+	}
+
+	.slider-play-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4em;
+		background: rgba(255, 255, 255, 0.06);
+		border: 1px solid rgba(255, 255, 255, 0.14);
+		color: rgb(var(--gray-light));
+		border-radius: 6px;
+		padding: 0.35em 0.7em;
+		min-height: 32px;
+		font-family: inherit;
+		font-size: 0.8em;
+		font-weight: 700;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		flex-shrink: 0;
+	}
+
+	:global([data-theme='light']) .slider-play-btn {
+		background: rgba(0, 0, 0, 0.05);
+		border-color: rgba(0, 0, 0, 0.12);
+		color: #1e293b;
+	}
+
+	.slider-play-btn:hover {
+		background: rgba(234, 88, 12, 0.15);
+		border-color: rgba(234, 88, 12, 0.4);
+		color: #ea580c;
+	}
+
+	.slider-play-btn.active {
+		background: #ea580c;
+		border-color: #c2410c;
+		color: #ffffff;
+		box-shadow: 0 0 10px rgba(234, 88, 12, 0.4);
+	}
+
+	.slider-play-btn.active:hover {
+		background: #c2410c;
+		border-color: #9a3412;
+	}
+
+	.slider-play-btn .play-icon {
+		flex-shrink: 0;
+	}
+
 	.freq-slider {
+		flex: 1;
 		width: 100%;
 		accent-color: var(--accent);
 		cursor: pointer;

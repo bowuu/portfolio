@@ -146,14 +146,20 @@
 				<div class="tone-controls-section">
 					<!-- SWEEP ACTIONS -->
 					<div class="sweep-actions-row">
-						<button id="run-sweep-btn" class="tone-btn sweep-btn" type="button">
-							<span class="tone-pill sweep-pill">
-								<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
-									<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-									<polyline points="17 6 23 6 23 12"/>
-								</svg>
-							</span>
-							<span class="tone-name" id="run-sweep-text">Auto Frequency Sweep (10s)</span>
+						<button id="run-sweep-btn" class="sweep-btn" type="button" title="Run 10-second exponential logarithmic frequency sweep (20 Hz–20,000 Hz)">
+							<div class="sweep-btn-left">
+								<div class="sweep-icon-box" id="sweep-icon-box">
+									<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" class="sweep-icon">
+										<path d="M2 18l6-6 4 4 10-10"/>
+										<polyline points="16 6 22 6 22 12"/>
+									</svg>
+								</div>
+								<div class="sweep-info">
+									<span class="sweep-title" id="run-sweep-text">Auto Frequency Sweep</span>
+									<span class="sweep-desc" id="run-sweep-desc">10s Exponential (20 Hz &rarr; 20 kHz)</span>
+								</div>
+							</div>
+							<span class="sweep-duration-badge mono" id="sweep-badge">10s</span>
 						</button>
 					</div>
 
@@ -166,8 +172,8 @@
 						<input type="range" id="freq-slider" min="20" max="20000" step="1" value="1000" class="freq-slider" aria-label="Frequency Slider" />
 					</div>
 
-					<!-- PRESET BUTTONS (Symmetrical 2x3 Grid matching Section 1) -->
-					<div class="tone-buttons-grid">
+					<!-- PRESET BUTTONS (Compact 3-Column Grid) -->
+					<div class="freq-buttons-grid">
 						<button class="tone-btn freq-btn" data-hz="20" type="button">
 							<span class="tone-pill mono">20 Hz</span>
 							<span class="tone-name">Sub-Bass</span>
@@ -462,7 +468,11 @@
 			activeMode = 'none';
 			document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
 			if (runSweepBtn) runSweepBtn.classList.remove('active');
-			if (runSweepText) runSweepText.textContent = 'Auto Frequency Sweep (10s)';
+			if (runSweepText) runSweepText.textContent = 'Auto Frequency Sweep';
+			const runSweepDesc = document.getElementById('run-sweep-desc');
+			if (runSweepDesc) runSweepDesc.textContent = '10s Exponential (20 Hz → 20 kHz)';
+			const sweepBadge = document.getElementById('sweep-badge');
+			if (sweepBadge) sweepBadge.textContent = '10s';
 
 			updateHudOverlay();
 		}
@@ -589,7 +599,11 @@
 			currentOsc = osc;
 
 			if (runSweepBtn) runSweepBtn.classList.add('active');
-			if (runSweepText) runSweepText.textContent = 'Stop Sweep';
+			if (runSweepText) runSweepText.textContent = 'Stop Frequency Sweep';
+			const runSweepDesc = document.getElementById('run-sweep-desc');
+			if (runSweepDesc) runSweepDesc.textContent = 'Sweeping active... Click to pause';
+			const sweepBadge = document.getElementById('sweep-badge');
+			if (sweepBadge) sweepBadge.textContent = 'LIVE';
 			updateHudOverlay();
 
 			const sweepStart = performance.now();
@@ -1442,6 +1456,10 @@
 			const tickBottomY = Math.round(36 * dpr);
 			const textY = Math.round(39 * dpr);
 
+			const row1Center = row1Y + barH / 2;
+			const row2Center = row2Y + barH / 2;
+			const labelX = Math.round(5 * dpr);
+
 			// Helper: dB to X coordinate
 			const dbToX = (val: number) => {
 				const clamped = Math.max(-60, Math.min(0, val));
@@ -1458,11 +1476,11 @@
 			grad.addColorStop(1.0, '#ef4444');   // Red (0 dB)
 
 			// ROW 1: LEFT CHANNEL (L)
-			meterCtx.font = `bold ${Math.round(10.5 * dpr)}px sans-serif`;
-			meterCtx.textAlign = 'center';
+			meterCtx.font = `bold ${Math.round(11 * dpr)}px sans-serif`;
+			meterCtx.textAlign = 'left';
 			meterCtx.textBaseline = 'middle';
 			meterCtx.fillStyle = '#38bdf8';
-			meterCtx.fillText('L', Math.round(9 * dpr), row1Y + barH / 2);
+			meterCtx.fillText('L', labelX, row1Center);
 
 			// Track background
 			meterCtx.fillStyle = 'rgba(255, 255, 255, 0.08)';
@@ -1481,18 +1499,25 @@
 				meterCtx.fillRect(Math.round(dbToX(peakHoldL)), row1Y, Math.round(1.5 * dpr), barH);
 			}
 
-			// Numeric dB readout
+			// Numeric dB readout for Left Channel
 			meterCtx.textAlign = 'right';
-			meterCtx.font = `bold ${Math.round(9.5 * dpr)}px monospace`;
-			meterCtx.fillStyle = smoothL > -55 ? '#38bdf8' : 'rgba(255, 255, 255, 0.45)';
-			const numL = smoothL <= -58 ? '-∞' : `${Math.round(smoothL)} dB`;
-			meterCtx.fillText(numL, w - Math.round(4 * dpr), row1Y + barH / 2);
+			meterCtx.textBaseline = 'middle';
+			if (smoothL <= -58) {
+				meterCtx.font = `bold ${Math.round(13 * dpr)}px sans-serif`;
+				meterCtx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+				meterCtx.fillText('−∞', w - Math.round(5 * dpr), row1Center);
+			} else {
+				meterCtx.font = `bold ${Math.round(9.5 * dpr)}px monospace`;
+				meterCtx.fillStyle = '#38bdf8';
+				meterCtx.fillText(`${Math.round(smoothL)} dB`, w - Math.round(5 * dpr), row1Center);
+			}
 
 			// ROW 2: RIGHT CHANNEL (R)
-			meterCtx.font = `bold ${Math.round(10.5 * dpr)}px sans-serif`;
-			meterCtx.textAlign = 'center';
+			meterCtx.font = `bold ${Math.round(11 * dpr)}px sans-serif`;
+			meterCtx.textAlign = 'left';
+			meterCtx.textBaseline = 'middle';
 			meterCtx.fillStyle = '#f59e0b';
-			meterCtx.fillText('R', Math.round(9 * dpr), row2Y + barH / 2);
+			meterCtx.fillText('R', labelX, row2Center);
 
 			// Track background
 			meterCtx.fillStyle = 'rgba(255, 255, 255, 0.08)';
@@ -1511,12 +1536,18 @@
 				meterCtx.fillRect(Math.round(dbToX(peakHoldR)), row2Y, Math.round(1.5 * dpr), barH);
 			}
 
-			// Numeric dB readout
+			// Numeric dB readout for Right Channel
 			meterCtx.textAlign = 'right';
-			meterCtx.font = `bold ${Math.round(9.5 * dpr)}px monospace`;
-			meterCtx.fillStyle = smoothR > -55 ? '#f59e0b' : 'rgba(255, 255, 255, 0.45)';
-			const numR = smoothR <= -58 ? '-∞' : `${Math.round(smoothR)} dB`;
-			meterCtx.fillText(numR, w - Math.round(4 * dpr), row2Y + barH / 2);
+			meterCtx.textBaseline = 'middle';
+			if (smoothR <= -58) {
+				meterCtx.font = `bold ${Math.round(13 * dpr)}px sans-serif`;
+				meterCtx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+				meterCtx.fillText('−∞', w - Math.round(5 * dpr), row2Center);
+			} else {
+				meterCtx.font = `bold ${Math.round(9.5 * dpr)}px monospace`;
+				meterCtx.fillStyle = '#f59e0b';
+				meterCtx.fillText(`${Math.round(smoothR)} dB`, w - Math.round(5 * dpr), row2Center);
+			}
 
 			// SCALE TICKS & DB LABELS (Bottom Row)
 			const isNarrow = trackW < 300 * dpr;
@@ -1524,7 +1555,6 @@
 				? [-60, -36, -24, -12, -6, 0]
 				: [-60, -48, -36, -24, -18, -12, -6, -3, 0];
 
-			meterCtx.font = `bold ${Math.round(9.5 * dpr)}px monospace`;
 			meterCtx.textAlign = 'center';
 			meterCtx.textBaseline = 'top';
 
@@ -1533,6 +1563,7 @@
 				const isZero = m === 0;
 				const isNeg3 = m === -3;
 				const isNeg6 = m === -6;
+				const isNegInf = m === -60;
 
 				meterCtx.strokeStyle = isZero ? '#ef4444' : (isNeg3 ? '#f97316' : (isNeg6 ? '#eab308' : 'rgba(255, 255, 255, 0.45)'));
 				meterCtx.lineWidth = Math.max(1, Math.round(1.5 * dpr));
@@ -1542,8 +1573,15 @@
 				meterCtx.stroke();
 
 				meterCtx.fillStyle = isZero ? '#ef4444' : (isNeg3 ? '#f97316' : (isNeg6 ? '#eab308' : 'rgba(255, 255, 255, 0.8)'));
-				const label = isZero ? '0' : (m === -60 ? '-∞' : `${m}`);
-				meterCtx.fillText(label, x, textY);
+
+				if (isNegInf) {
+					meterCtx.font = `bold ${Math.round(12.5 * dpr)}px sans-serif`;
+					meterCtx.fillText('−∞', x, textY - Math.round(1.5 * dpr));
+				} else {
+					meterCtx.font = `bold ${Math.round(9.5 * dpr)}px monospace`;
+					const label = isZero ? '0' : `${m}`;
+					meterCtx.fillText(label, x, textY);
+				}
 			});
 		}
 
@@ -2099,45 +2137,57 @@
 	}
 
 	.tone-pill.cyan {
-		background: rgba(56, 189, 248, 0.18);
-		color: #38bdf8;
+		background: rgba(56, 189, 248, 0.2) !important;
+		color: #38bdf8 !important;
 	}
 
 	.tone-pill.amber {
-		background: rgba(245, 158, 11, 0.18);
-		color: #f59e0b;
+		background: rgba(245, 158, 11, 0.2) !important;
+		color: #f59e0b !important;
 	}
 
 	.tone-pill.green {
-		background: rgba(34, 197, 94, 0.18);
-		color: #22c55e;
+		background: rgba(34, 197, 94, 0.2) !important;
+		color: #22c55e !important;
 	}
 
 	.tone-pill.warn {
-		background: rgba(239, 68, 68, 0.18);
-		color: #ef4444;
+		background: rgba(239, 68, 68, 0.2) !important;
+		color: #ef4444 !important;
 	}
 
 	.tone-pill.pink {
-		background: rgba(236, 72, 153, 0.18);
-		color: #ec4899;
+		background: rgba(236, 72, 153, 0.2) !important;
+		color: #ec4899 !important;
 	}
 
 	.tone-pill.white {
-		background: rgba(255, 255, 255, 0.2);
-		color: #ffffff;
+		background: #ffffff !important;
+		color: #09090b !important;
+		font-weight: 900 !important;
+		box-shadow: 0 0 10px rgba(255, 255, 255, 0.45);
 	}
 
 	:global(html[data-theme="light"]) .tone-pill.white {
-		background: rgba(0, 0, 0, 0.08);
-		color: rgb(var(--black));
-		border: 1px solid rgba(0, 0, 0, 0.15);
+		background: #ffffff !important;
+		color: #09090b !important;
+		border: 1.5px solid #09090b;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 	}
 
-	.tone-pill.sweep-pill {
-		background: rgba(var(--accent-rgb), 0.18);
-		color: var(--accent);
-		padding: 3px 6px;
+	.tone-pill.mono {
+		background: rgba(148, 163, 184, 0.15);
+		color: rgb(var(--gray-dark));
+	}
+
+	:global(html[data-theme="dark"]) .tone-pill.mono {
+		background: rgba(255, 255, 255, 0.08);
+		color: #ffffff;
+	}
+
+	.tone-btn.active .tone-pill.mono {
+		background: var(--accent) !important;
+		color: #ffffff !important;
 	}
 
 	.tone-name {
@@ -2151,7 +2201,7 @@
 	.tone-controls-section {
 		display: flex;
 		flex-direction: column;
-		gap: 0.65em;
+		gap: 0.7em;
 	}
 
 	/* SWEEP ACTIONS */
@@ -2164,8 +2214,122 @@
 		width: 100%;
 		display: flex;
 		align-items: center;
-		gap: 0.6em;
+		justify-content: space-between;
+		gap: 0.8em;
+		background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(148, 163, 184, 0.05) 100%);
+		border: 1px solid rgba(249, 115, 22, 0.35);
+		border-radius: 8px;
+		padding: 0.65em 0.85em;
+		min-height: 48px;
+		cursor: pointer;
+		transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 		box-sizing: border-box;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+	}
+
+	:global(html[data-theme="dark"]) .sweep-btn {
+		background: linear-gradient(135deg, rgba(249, 115, 22, 0.12) 0%, rgba(24, 24, 27, 0.85) 100%);
+		border: 1px solid rgba(249, 115, 22, 0.35);
+	}
+
+	.sweep-btn:hover {
+		border-color: var(--accent);
+		background: linear-gradient(135deg, rgba(249, 115, 22, 0.18) 0%, rgba(24, 24, 27, 0.95) 100%);
+		box-shadow: 0 0 14px rgba(249, 115, 22, 0.25);
+		transform: translateY(-1px);
+	}
+
+	.sweep-btn.active {
+		background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+		border-color: #f97316;
+		box-shadow: 0 0 20px rgba(249, 115, 22, 0.45);
+	}
+
+	.sweep-btn-left {
+		display: flex;
+		align-items: center;
+		gap: 0.7em;
+		min-width: 0;
+	}
+
+	.sweep-icon-box {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 6px;
+		background: rgba(249, 115, 22, 0.18);
+		color: var(--accent);
+		flex-shrink: 0;
+		transition: all 0.2s ease;
+	}
+
+	.sweep-btn:hover .sweep-icon-box {
+		background: rgba(249, 115, 22, 0.3);
+		transform: scale(1.05);
+	}
+
+	.sweep-btn.active .sweep-icon-box {
+		background: rgba(255, 255, 255, 0.25);
+		color: #ffffff;
+	}
+
+	.sweep-info {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		min-width: 0;
+	}
+
+	.sweep-title {
+		font-size: 0.86em;
+		font-weight: 700;
+		color: rgb(var(--black));
+		line-height: 1.2;
+	}
+
+	:global(html[data-theme="dark"]) .sweep-title {
+		color: #ffffff;
+	}
+
+	.sweep-btn.active .sweep-title {
+		color: #ffffff;
+	}
+
+	.sweep-desc {
+		font-size: 0.7em;
+		font-weight: 500;
+		color: rgb(var(--gray));
+		line-height: 1.2;
+		margin-top: 1px;
+	}
+
+	.sweep-btn.active .sweep-desc {
+		color: rgba(255, 255, 255, 0.85);
+	}
+
+	.sweep-duration-badge {
+		font-size: 0.72em;
+		font-weight: 700;
+		background: rgba(148, 163, 184, 0.15);
+		color: rgb(var(--gray-dark));
+		padding: 2px 7px;
+		border-radius: 4px;
+		flex-shrink: 0;
+		border: 1px solid var(--border-color);
+	}
+
+	:global(html[data-theme="dark"]) .sweep-duration-badge {
+		background: rgba(255, 255, 255, 0.08);
+		color: rgba(255, 255, 255, 0.85);
+		border-color: rgba(255, 255, 255, 0.12);
+	}
+
+	.sweep-btn.active .sweep-duration-badge {
+		background: rgba(255, 255, 255, 0.25);
+		color: #ffffff;
+		border-color: rgba(255, 255, 255, 0.4);
 	}
 
 	/* SLIDER ROW */
@@ -2197,6 +2361,41 @@
 		width: 100%;
 		accent-color: var(--accent);
 		cursor: pointer;
+	}
+
+	/* PRESET BUTTONS (Compact 3-Column Grid) */
+	.freq-buttons-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.5em;
+	}
+
+	.freq-buttons-grid .tone-btn {
+		padding: 0.55em 0.5em;
+		gap: 0.45em;
+		min-height: 40px;
+	}
+
+	.freq-buttons-grid .tone-pill {
+		font-size: 0.76em;
+		padding: 2px 5px;
+	}
+
+	.freq-buttons-grid .tone-name {
+		font-size: 0.8em;
+		white-space: nowrap;
+	}
+
+	@media (max-width: 600px) {
+		.freq-buttons-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	@media (max-width: 380px) {
+		.freq-buttons-grid {
+			grid-template-columns: 1fr;
+		}
 	}
 
 	.mono {

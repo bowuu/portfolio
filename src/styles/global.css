@@ -57,6 +57,7 @@ html[data-theme="dark"] {
 }
 
 html {
+  overflow-x: hidden;
   overflow-x: clip;
   width: 100%;
 }
@@ -71,10 +72,13 @@ body {
   background-color: var(--bg-page);
   word-wrap: break-word;
   overflow-wrap: break-word;
+  overflow-x: hidden;
   overflow-x: clip;
   color: rgb(var(--gray-dark));
   font-size: 18px;
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 

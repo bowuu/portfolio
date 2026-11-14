@@ -829,6 +829,7 @@
 		transform: translateX(-50%);
 		background: rgba(15, 23, 42, 0.88);
 		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
 		border: 1px solid #ea580c;
 		box-shadow: 0 0 16px rgba(234, 88, 12, 0.35);
 		color: #f8fafc;
@@ -854,6 +855,7 @@
 		transform: translateX(-50%);
 		background: rgba(15, 23, 42, 0.92);
 		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
 		border: 1px solid #0ea5e9;
 		box-shadow: 0 0 16px rgba(14, 165, 233, 0.35);
 		color: #f8fafc;
@@ -952,6 +954,7 @@
 		background: radial-gradient(circle at 50% 45%, rgba(var(--gray-light), 0.45) 0%, rgba(var(--gray-light), 0.05) 75%);
 		cursor: grab;
 		overflow: hidden;
+		touch-action: none;
 	}
 	.canvas-wrapper:active {
 		cursor: grabbing;
@@ -961,6 +964,7 @@
 		height: 100%;
 		display: block;
 		outline: none;
+		touch-action: none;
 	}
 
 	.cad-loading {
@@ -979,6 +983,7 @@
 		font-weight: 600;
 		color: rgb(var(--gray-dark));
 		backdrop-filter: blur(2px);
+		-webkit-backdrop-filter: blur(2px);
 		z-index: 5;
 	}
 	:global(html[data-theme="dark"]) .cad-loading {
@@ -1014,6 +1019,7 @@
 		padding: 0.25em 0.7em;
 		border-radius: 12px;
 		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
 		border: 1px solid var(--border-color);
 	}
 	:global(html[data-theme="dark"]) .cad-drag-hint {

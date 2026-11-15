@@ -103,52 +103,7 @@
 
 		<!-- COLUMN 2: HARDWARE TEST CONTROLS -->
 		<div class="audio-col controls-col">
-			<!-- SECTION 1: STEREO, POLARITY & NOISE -->
-			<div class="control-group">
-				<div class="group-header">
-					<div class="group-header-left">
-						<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="group-icon">
-							<circle cx="12" cy="12" r="10"/>
-							<line x1="12" y1="2" x2="12" y2="22"/>
-						</svg>
-						<span class="group-title">Stereo ▪ Polarity ▪ Noise</span>
-					</div>
-				</div>
-
-				<div class="tone-buttons-grid">
-					<button class="tone-btn" id="btn-tone-left" type="button">
-						<span class="tone-pill cyan">L</span>
-						<span class="tone-name">Left Channel</span>
-					</button>
-
-					<button class="tone-btn" id="btn-tone-right" type="button">
-						<span class="tone-pill amber">R</span>
-						<span class="tone-name">Right Channel</span>
-					</button>
-
-					<button class="tone-btn" id="btn-tone-inphase" type="button">
-						<span class="tone-pill green">0&deg;</span>
-						<span class="tone-name">Center Channel</span>
-					</button>
-
-					<button class="tone-btn" id="btn-tone-outphase" type="button">
-						<span class="tone-pill warn">180&deg;</span>
-						<span class="tone-name">Out-of-Phase</span>
-					</button>
-
-					<button class="tone-btn" id="btn-noise-pink" data-noise="pink" type="button">
-						<span class="tone-pill pink">P</span>
-						<span class="tone-name">Pink Noise</span>
-					</button>
-
-					<button class="tone-btn" id="btn-noise-white" data-noise="white" type="button">
-						<span class="tone-pill white">W</span>
-						<span class="tone-name">White Noise</span>
-					</button>
-				</div>
-			</div>
-
-			<!-- SECTION 2: TONE GENERATOR & SWEEPER -->
+			<!-- SECTION 1: TONE GENERATOR & SWEEPER -->
 			<div class="control-group">
 				<div class="group-header">
 					<div class="group-header-left">
@@ -221,6 +176,51 @@
 							<span class="tone-name">Treble</span>
 						</button>
 					</div>
+				</div>
+			</div>
+
+			<!-- SECTION 2: STEREO, POLARITY & NOISE -->
+			<div class="control-group">
+				<div class="group-header">
+					<div class="group-header-left">
+						<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="group-icon">
+							<circle cx="12" cy="12" r="10"/>
+							<line x1="12" y1="2" x2="12" y2="22"/>
+						</svg>
+						<span class="group-title">Stereo ▪ Polarity ▪ Noise</span>
+					</div>
+				</div>
+
+				<div class="tone-buttons-grid">
+					<button class="tone-btn" id="btn-tone-left" type="button">
+						<span class="tone-pill cyan">L</span>
+						<span class="tone-name">Left Channel</span>
+					</button>
+
+					<button class="tone-btn" id="btn-tone-right" type="button">
+						<span class="tone-pill amber">R</span>
+						<span class="tone-name">Right Channel</span>
+					</button>
+
+					<button class="tone-btn" id="btn-tone-inphase" type="button">
+						<span class="tone-pill green">0&deg;</span>
+						<span class="tone-name">Center Channel</span>
+					</button>
+
+					<button class="tone-btn" id="btn-tone-outphase" type="button">
+						<span class="tone-pill warn">180&deg;</span>
+						<span class="tone-name">Out-of-Phase</span>
+					</button>
+
+					<button class="tone-btn" id="btn-noise-pink" data-noise="pink" type="button">
+						<span class="tone-pill pink">P</span>
+						<span class="tone-name">Pink Noise</span>
+					</button>
+
+					<button class="tone-btn" id="btn-noise-white" data-noise="white" type="button">
+						<span class="tone-pill white">W</span>
+						<span class="tone-name">White Noise</span>
+					</button>
 				</div>
 			</div>
 		</div>

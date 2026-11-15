@@ -123,7 +123,7 @@
 			<div class="telemetry-item">
 				<div class="t-subhead-pill-wrap">
 					<button id="open-webgpu-btn" class="t-subhead-pill-btn" type="button" disabled title="View WebGPU compute limits & hardware architecture">
-						<span>Graphics Card (GPU)</span>
+						<span>Graphics (GPU)</span>
 						<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>
 					</button>
 				</div>
@@ -1217,6 +1217,7 @@
 			});
 
 			refreshEl.style.cursor = 'pointer';
+			refreshEl.classList.add('loc-clickable');
 			refreshEl.title = 'Refresh rate measured via requestAnimationFrame VSYNC timing. Gamut & HDR evaluated via CSS media queries. Click to re-probe.';
 			refreshEl.addEventListener('click', () => {
 				retestRefresh();
@@ -1992,7 +1993,7 @@
 		background: rgba(0, 0, 0, 0.015);
 		border: 1px solid var(--border-color);
 		border-radius: 10px;
-		padding: 0.9em 1.05em 1em 1.05em;
+		padding: 0.85em 0.95em 0.9em 0.95em;
 		margin-bottom: 0.95em;
 		transition: border-color 0.15s ease, background 0.15s ease;
 	}
@@ -2019,8 +2020,8 @@
 		text-transform: uppercase;
 		letter-spacing: 0.07em;
 		color: var(--accent);
-		margin-bottom: 0.65em;
-		padding-left: 0.45em;
+		margin-bottom: 0.6em;
+		padding-left: 0.4em;
 	}
 	.telemetry-group-header svg {
 		flex-shrink: 0;
@@ -2031,7 +2032,7 @@
 	.telemetry-grid {
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
-		gap: 0.55em 0.75em;
+		gap: 0.5em 0.65em;
 	}
 	.telemetry-item {
 		display: flex;
@@ -2039,18 +2040,20 @@
 		gap: 0.25em;
 		min-width: 0;
 		overflow: hidden;
-		padding: 0.45em 0.6em;
+		padding: 0.4em 0.55em;
 		border-radius: 7px;
 		border: 1px solid transparent;
-		transition: background 0.15s ease, border-color 0.15s ease;
+		transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 	}
 	.telemetry-item:hover {
-		background: rgba(0, 0, 0, 0.035);
-		border-color: rgba(var(--accent-rgb), 0.22);
+		background: rgba(0, 0, 0, 0.045);
+		border-color: rgba(var(--accent-rgb), 0.38);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 	}
 	:global(html[data-theme="dark"]) .telemetry-item:hover {
-		background: rgba(255, 255, 255, 0.035);
-		border-color: rgba(var(--accent-rgb), 0.25);
+		background: rgba(255, 255, 255, 0.05);
+		border-color: rgba(var(--accent-rgb), 0.42);
+		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
 	}
 	.t-label {
 		font-size: 0.76em;
@@ -2133,7 +2136,7 @@
 		border: 1px solid rgba(var(--accent-rgb), 0.35);
 		color: var(--accent);
 		border-radius: 999px;
-		padding: 0.08em 0.55em;
+		padding: 0.08em 0.5em;
 		font-size: 0.76em;
 		font-weight: 700;
 		text-transform: uppercase;
@@ -2142,6 +2145,7 @@
 		transition: all 0.15s ease;
 		line-height: 1.35;
 		font-family: inherit;
+		white-space: nowrap;
 	}
 	.t-subhead-pill-btn.interactive {
 		cursor: pointer;
@@ -2159,11 +2163,13 @@
 	.t-subhead-pill-btn.hidden {
 		display: none !important;
 	}
-	.loc-clickable {
+	.loc-clickable,
+	.clickable-val {
 		cursor: pointer;
 		transition: color 0.15s ease;
 	}
-	.loc-clickable:hover {
+	.loc-clickable:hover,
+	.clickable-val:hover {
 		color: var(--accent);
 	}
 

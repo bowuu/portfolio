@@ -567,6 +567,48 @@
 		});
 		mapThemeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
+		let isMapIframeLoaded = false;
+
+		function computeMapEmbedUrl(lat: number, lon: number): { embedUrl: string; fullUrl: string } {
+			const delta = 0.045; // ~5km radius bounding box
+			const minLon = (lon - delta).toFixed(5);
+			const minLat = (lat - delta).toFixed(5);
+			const maxLon = (lon + delta).toFixed(5);
+			const maxLat = (lat + delta).toFixed(5);
+			const embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${minLon}%2C${minLat}%2C${maxLon}%2C${maxLat}&layer=mapnik&marker=${lat.toFixed(5)}%2C${lon.toFixed(5)}`;
+			const fullUrl = `https://www.openstreetmap.org/?mlat=${lat.toFixed(5)}&mlon=${lon.toFixed(5)}#map=13/${lat.toFixed(5)}/${lon.toFixed(5)}`;
+			return { embedUrl, fullUrl };
+		}
+
+		function prewarmMapDns() {
+			if (document.querySelector('link[rel="dns-prefetch"][href*="openstreetmap.org"]')) return;
+			const prefetchDomains = ['https://www.openstreetmap.org', 'https://tile.openstreetmap.org'];
+			prefetchDomains.forEach((href) => {
+				const link = document.createElement('link');
+				link.rel = 'dns-prefetch';
+				link.href = href;
+				document.head.appendChild(link);
+			});
+		}
+
+		function prewarmMapIframe(lat: number, lon: number) {
+			const iframe = document.getElementById('map-applet-iframe') as HTMLIFrameElement | null;
+			const loader = document.getElementById('map-applet-loader');
+			if (!iframe) return;
+			const { embedUrl } = computeMapEmbedUrl(lat, lon);
+			if (iframe.src !== embedUrl) {
+				isMapIframeLoaded = false;
+				iframe.onload = () => {
+					isMapIframeLoaded = true;
+					if (loader) loader.style.display = 'none';
+				};
+				setTimeout(() => {
+					if (!isMapIframeLoaded && loader) loader.style.display = 'none';
+				}, 5000);
+				iframe.src = embedUrl;
+			}
+		}
+
 		function openMapApplet(lat: number, lon: number, locName: string) {
 			const modal = document.getElementById('map-applet-modal');
 			const iframe = document.getElementById('map-applet-iframe') as HTMLIFrameElement | null;
@@ -592,31 +634,25 @@
 			if (coordsEl) coordsEl.textContent = formattedCoords;
 			if (footerLocEl) footerLocEl.textContent = locName;
 
-			const delta = 0.045; // ~5km radius bounding box
-			const minLon = (lon - delta).toFixed(5);
-			const minLat = (lat - delta).toFixed(5);
-			const maxLon = (lon + delta).toFixed(5);
-			const maxLat = (lat + delta).toFixed(5);
-			const embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${minLon}%2C${minLat}%2C${maxLon}%2C${maxLat}&layer=mapnik&marker=${lat.toFixed(5)}%2C${lon.toFixed(5)}`;
-			const fullUrl = `https://www.openstreetmap.org/?mlat=${lat.toFixed(5)}&mlon=${lon.toFixed(5)}#map=13/${lat.toFixed(5)}/${lon.toFixed(5)}`;
+			const { embedUrl, fullUrl } = computeMapEmbedUrl(lat, lon);
 
 			if (extLink) extLink.href = fullUrl;
 
 			if (iframe.src !== embedUrl) {
 				if (loader) loader.style.display = 'flex';
-				let hasLoaded = false;
+				isMapIframeLoaded = false;
 				iframe.onload = () => {
-					hasLoaded = true;
+					isMapIframeLoaded = true;
 					if (loader) loader.style.display = 'none';
 				};
 				// Safety fallback: dismiss spinner after 5s if onload is delayed
 				setTimeout(() => {
-					if (!hasLoaded && loader) loader.style.display = 'none';
+					if (!isMapIframeLoaded && loader) loader.style.display = 'none';
 				}, 5000);
 				iframe.src = embedUrl;
 			} else {
-				// Already loaded with current coordinates, display immediately
-				if (loader) loader.style.display = 'none';
+				// Already loaded or prewarming with current coordinates
+				if (loader) loader.style.display = isMapIframeLoaded ? 'none' : 'flex';
 			}
 
 			modal.classList.remove('hidden');
@@ -1700,10 +1736,14 @@
 				const lat = parseFloat(data.latitude);
 				const lon = parseFloat(data.longitude);
 				if (!isNaN(lat) && !isNaN(lon) && (lat !== 0 || lon !== 0)) {
+					prewarmMapDns();
 					if (openMapBtn) {
 						(openMapBtn as HTMLButtonElement).disabled = false;
 						openMapBtn.classList.add('interactive');
 						openMapBtn.title = `View ${locString} on interactive OpenStreetMap`;
+						const prewarm = () => prewarmMapIframe(lat, lon);
+						openMapBtn.onmouseenter = prewarm;
+						openMapBtn.onpointerdown = prewarm;
 						openMapBtn.onclick = (e) => {
 							e.stopPropagation();
 							openMapApplet(lat, lon, locString);
@@ -2271,6 +2311,7 @@
 		height: clamp(340px, 58vh, 480px);
 		background: #0e0f12;
 		transition: background-color 0.25s ease;
+		contain: strict;
 	}
 	.map-applet-dialog[data-map-theme="light"] .map-applet-frame-wrap {
 		background: #e2e8f0;
@@ -2310,6 +2351,7 @@
 		height: 100%;
 		border: none;
 		display: block;
+		transform: translateZ(0);
 		transition: filter 0.25s ease;
 	}
 	.map-applet-dialog[data-map-theme="dark"] .map-applet-iframe {

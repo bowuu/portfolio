@@ -3719,6 +3719,13 @@
 		color: #ffffff;
 		cursor: pointer;
 		transition: all 0.15s ease;
+		box-sizing: border-box;
+		white-space: nowrap;
+	}
+	#thermal-tool-btn {
+		width: 236px;
+		min-width: 236px;
+		text-align: center;
 	}
 	.ee-hud-btn:hover {
 		background: var(--accent);
@@ -4385,11 +4392,23 @@
 		font-size: 0.92em;
 		display: inline-flex;
 		align-items: center;
+		justify-content: center;
 		gap: 0.35em;
 		transition: all 0.15s ease;
 		user-select: none;
 		-webkit-user-select: none;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		box-sizing: border-box;
+		white-space: nowrap;
+	}
+	#mult-speed-btn {
+		width: 106px;
+		min-width: 106px;
+	}
+	#mult-speed-text {
+		display: inline-block;
+		text-align: center;
+		min-width: 62px;
 	}
 	:global(.mult-speed-toggle:hover) {
 		background: rgba(34, 197, 94, 0.15);

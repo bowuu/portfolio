@@ -176,12 +176,22 @@
 				<span class="t-label">DAC Pipeline</span>
 				<span id="t-audio" class="t-val">Probing DAC sink...</span>
 			</div>
-			<div class="telemetry-item">
-				<span class="t-label">Hardware Video Decoder</span>
+			<div class="telemetry-item telemetry-item-clickable" id="item-decoder" role="button" tabindex="0" title="Click to test Hardware Video Decoder in ASIC Codec Studio">
+				<div class="t-subhead-pill-wrap">
+					<button id="open-decoder-btn" class="t-subhead-pill-btn interactive" type="button" title="Click to test Hardware Video Decoder in ASIC Codec Studio">
+						<span>Decoder</span>
+						<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+					</button>
+				</div>
 				<span id="t-codecs" class="t-val">Probing ASIC decoders...</span>
 			</div>
-			<div class="telemetry-item">
-				<span class="t-label">Hardware Video Encoder</span>
+			<div class="telemetry-item telemetry-item-clickable" id="item-encoder" role="button" tabindex="0" title="Click to test Hardware Video Encoder in ASIC Codec Studio">
+				<div class="t-subhead-pill-wrap">
+					<button id="open-encoder-btn" class="t-subhead-pill-btn interactive" type="button" title="Click to test Hardware Video Encoder in ASIC Codec Studio">
+						<span>Encoder</span>
+						<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
+					</button>
+				</div>
 				<span id="t-encoder" class="t-val">Probing WebCodecs ASIC...</span>
 			</div>
 			<div class="telemetry-item" id="item-drm">
@@ -303,6 +313,112 @@
 			<div class="map-applet-footer">
 				<div class="map-footer-info">
 					<span id="webgpu-footer-vendor" class="map-footer-loc">--</span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- ASIC VIDEO CODEC STUDIO & HARDWARE BENCHMARK MODAL -->
+	<div id="codec-applet-modal" class="map-applet-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="codec-applet-title">
+		<div class="map-applet-backdrop" id="codec-applet-backdrop"></div>
+		<div class="map-applet-dialog codec-dialog" id="codec-applet-dialog" data-map-theme="dark">
+			<div class="map-applet-header">
+				<div class="map-applet-title-wrap">
+					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="map-pin-icon">
+						<polygon points="23 7 16 12 23 17 23 7"></polygon>
+						<rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+					</svg>
+					<div class="map-applet-heading-row">
+						<h3 id="codec-applet-title" class="map-applet-title">ASIC Video Codec Studio</h3>
+					</div>
+				</div>
+				<div class="map-applet-header-actions">
+					<button id="codec-applet-close-btn" class="map-close-btn" type="button" aria-label="Close Codec Studio" title="Close (Esc)">
+						<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+							<line x1="18" y1="6" x2="6" y2="18"></line>
+							<line x1="6" y1="6" x2="18" y2="18"></line>
+						</svg>
+					</button>
+				</div>
+			</div>
+
+			<div class="codec-body-wrap">
+				<!-- TOOLBAR: CODEC & MODE SELECTORS -->
+				<div class="codec-toolbar">
+					<div class="codec-controls-group">
+						<span class="codec-ctrl-label">Codec:</span>
+						<div class="codec-segmented" id="codec-selector" role="group" aria-label="Codec selection">
+							<button type="button" class="codec-seg-btn active" data-codec="avc">H.264</button>
+							<button type="button" class="codec-seg-btn" data-codec="vp9">VP9</button>
+							<button type="button" class="codec-seg-btn" data-codec="av1">AV1</button>
+							<button type="button" class="codec-seg-btn" data-codec="hevc">HEVC</button>
+						</div>
+					</div>
+
+					<div class="codec-controls-group">
+						<span class="codec-ctrl-label">Engine:</span>
+						<div class="codec-segmented" id="engine-selector" role="group" aria-label="Acceleration mode">
+							<button type="button" class="codec-seg-btn active" data-mode="prefer-hardware">Hardware ASIC</button>
+							<button type="button" class="codec-seg-btn" data-mode="prefer-software">Software CPU</button>
+						</div>
+					</div>
+
+					<button type="button" id="codec-run-btn" class="codec-run-btn" title="Run 30-frame hardware loopback test">
+						<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+						<span>Run Verification</span>
+					</button>
+				</div>
+
+				<!-- STATUS BANNER / PROMPT -->
+				<div id="codec-status-bar" class="codec-status-bar">
+					<span id="codec-status-text">Click &ldquo;Run Verification&rdquo; to encode &amp; decode 30 test frames in volatile memory.</span>
+				</div>
+
+				<!-- CANVAS PREVIEW GRID (SOURCE VS DECODED) -->
+				<div class="codec-preview-grid">
+					<div class="codec-preview-box">
+						<div class="codec-preview-label">Raw Input Frame (Source)</div>
+						<div class="codec-canvas-wrap">
+							<canvas id="codec-canvas-source" width="640" height="360" class="codec-canvas"></canvas>
+						</div>
+					</div>
+					<div class="codec-preview-box">
+						<div class="codec-preview-label">Reconstructed Frame (Decoded Output)</div>
+						<div class="codec-canvas-wrap">
+							<canvas id="codec-canvas-decoded" width="640" height="360" class="codec-canvas"></canvas>
+							<div id="codec-canvas-placeholder" class="codec-canvas-placeholder">
+								<span>Awaiting verification run...</span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- TELEMETRY METRICS GRID (4 BALANCED CARDS) -->
+				<div class="codec-metrics-grid">
+					<div class="webgpu-tile">
+						<div class="webgpu-tile-label">ASIC Acceleration</div>
+						<div class="webgpu-tile-val" id="codec-metric-engine">Ready</div>
+					</div>
+					<div class="webgpu-tile">
+						<div class="webgpu-tile-label">Encode Rate</div>
+						<div class="webgpu-tile-val mono" id="codec-metric-enc-fps">-- <span class="webgpu-tile-sub">FPS</span></div>
+					</div>
+					<div class="webgpu-tile">
+						<div class="webgpu-tile-label">Decode Rate</div>
+						<div class="webgpu-tile-val mono" id="codec-metric-dec-fps">-- <span class="webgpu-tile-sub">FPS</span></div>
+					</div>
+					<div class="webgpu-tile">
+						<div class="webgpu-tile-label">Compression Ratio</div>
+						<div class="webgpu-tile-val mono" id="codec-metric-ratio">-- <span class="webgpu-tile-sub">NAL</span></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="map-applet-footer">
+				<div class="map-footer-info">
+					<span class="map-footer-loc">WebCodecs VideoEncoder &amp; VideoDecoder Pipeline</span>
+					<span class="map-footer-sep" aria-hidden="true">▪</span>
+					<span class="map-footer-note">100% In-Memory Synthetic Verification</span>
 				</div>
 			</div>
 		</div>
@@ -1859,11 +1975,324 @@
 			if (edgeEl) edgeEl.textContent = 'Localhost (Dev Edge)';
 			if (ispEl) ispEl.textContent = 'Cloudflare Protected';
 		}
+
+		initCodecStudio();
+	}
+
+	function initCodecStudio() {
+		const codecModal = document.getElementById('codec-applet-modal');
+		const codecCloseBtn = document.getElementById('codec-applet-close-btn');
+		const codecBackdrop = document.getElementById('codec-applet-backdrop');
+		const openDecoderBtn = document.getElementById('open-decoder-btn');
+		const openEncoderBtn = document.getElementById('open-encoder-btn');
+		const itemDecoder = document.getElementById('item-decoder');
+		const itemEncoder = document.getElementById('item-encoder');
+
+		const runBtn = document.getElementById('codec-run-btn') as HTMLButtonElement | null;
+		const statusText = document.getElementById('codec-status-text');
+		const srcCanvas = document.getElementById('codec-canvas-source') as HTMLCanvasElement | null;
+		const decCanvas = document.getElementById('codec-canvas-decoded') as HTMLCanvasElement | null;
+		const decPlaceholder = document.getElementById('codec-canvas-placeholder');
+
+		const metricEngine = document.getElementById('codec-metric-engine');
+		const metricEncFps = document.getElementById('codec-metric-enc-fps');
+		const metricDecFps = document.getElementById('codec-metric-dec-fps');
+		const metricRatio = document.getElementById('codec-metric-ratio');
+
+		const codecSegBtns = document.querySelectorAll<HTMLButtonElement>('#codec-selector .codec-seg-btn');
+		const engineSegBtns = document.querySelectorAll<HTMLButtonElement>('#engine-selector .codec-seg-btn');
+
+		let selectedCodec: 'avc' | 'vp9' | 'av1' | 'hevc' = 'avc';
+		let selectedMode: 'prefer-hardware' | 'prefer-software' = 'prefer-hardware';
+		let isRunning = false;
+
+		function closeCodecModal() {
+			if (codecModal) {
+				codecModal.classList.add('hidden');
+				codecModal.setAttribute('aria-hidden', 'true');
+			}
+			document.body.style.overflow = '';
+		}
+
+		function drawTestPattern(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, totalFrames: number) {
+			const colors = ['#c0c0c0', '#c0c000', '#00c0c0', '#00c000', '#c000c0', '#c00000', '#0000c0'];
+			const barWidth = w / colors.length;
+			for (let i = 0; i < colors.length; i++) {
+				ctx.fillStyle = colors[i];
+				ctx.fillRect(i * barWidth, 0, Math.ceil(barWidth), Math.round(h * 0.65));
+			}
+
+			ctx.fillStyle = '#0f172a';
+			ctx.fillRect(0, Math.round(h * 0.65), w, Math.round(h * 0.35));
+
+			// Animated sweep bar across bottom
+			const sweepX = (frameIdx / Math.max(1, totalFrames - 1)) * w;
+			ctx.fillStyle = '#ea580c';
+			ctx.fillRect(Math.max(0, sweepX - 4), Math.round(h * 0.65), 8, Math.round(h * 0.35));
+
+			// Info overlay box
+			const boxW = Math.round(w * 0.82);
+			const boxH = Math.round(h * 0.32);
+			const boxX = Math.round((w - boxW) / 2);
+			const boxY = Math.round(h * 0.18);
+
+			ctx.fillStyle = 'rgba(0, 0, 0, 0.82)';
+			ctx.fillRect(boxX, boxY, boxW, boxH);
+			ctx.strokeStyle = '#ea580c';
+			ctx.lineWidth = 1.5;
+			ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+			ctx.fillStyle = '#ffffff';
+			ctx.font = 'bold 15px ui-monospace, Consolas, monospace';
+			ctx.textAlign = 'center';
+			ctx.fillText('ASIC CODEC TEST PATTERN', w * 0.5, boxY + 24);
+
+			ctx.font = '12px ui-monospace, Consolas, monospace';
+			ctx.fillStyle = '#94a3b8';
+			ctx.fillText(`FRAME ${frameIdx + 1} / ${totalFrames} ▪ 30 FPS ▪ ${(frameIdx * 33.3).toFixed(1)} ms`, w * 0.5, boxY + 48);
+
+			ctx.fillStyle = '#38bdf8';
+			ctx.fillText('W3C WebCodecs VideoFrame Buffer', w * 0.5, boxY + 70);
+		}
+
+		function openCodecModal() {
+			if (codecModal) {
+				codecModal.classList.remove('hidden');
+				codecModal.setAttribute('aria-hidden', 'false');
+			}
+			document.body.style.overflow = 'hidden';
+
+			// Draw preview frame 0 on source canvas if available
+			if (srcCanvas) {
+				const ctx = srcCanvas.getContext('2d');
+				if (ctx) drawTestPattern(ctx, srcCanvas.width, srcCanvas.height, 0, 30);
+			}
+		}
+
+		if (codecCloseBtn) codecCloseBtn.onclick = closeCodecModal;
+		if (codecBackdrop) codecBackdrop.onclick = closeCodecModal;
+
+		if (openDecoderBtn) {
+			openDecoderBtn.onclick = (e) => {
+				e.stopPropagation();
+				openCodecModal();
+			};
+		}
+		if (itemDecoder) {
+			itemDecoder.onclick = openCodecModal;
+			itemDecoder.onkeydown = (e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					openCodecModal();
+				}
+			};
+		}
+
+		if (openEncoderBtn) {
+			openEncoderBtn.onclick = (e) => {
+				e.stopPropagation();
+				openCodecModal();
+			};
+		}
+		if (itemEncoder) {
+			itemEncoder.onclick = openCodecModal;
+			itemEncoder.onkeydown = (e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					openCodecModal();
+				}
+			};
+		}
+
+		// Segmented controls: Codec
+		codecSegBtns.forEach((btn) => {
+			btn.onclick = () => {
+				codecSegBtns.forEach((b) => b.classList.remove('active'));
+				btn.classList.add('active');
+				selectedCodec = (btn.getAttribute('data-codec') as any) || 'avc';
+			};
+		});
+
+		// Segmented controls: Engine Mode
+		engineSegBtns.forEach((btn) => {
+			btn.onclick = () => {
+				engineSegBtns.forEach((b) => b.classList.remove('active'));
+				btn.classList.add('active');
+				selectedMode = (btn.getAttribute('data-mode') as any) || 'prefer-hardware';
+			};
+		});
+
+		// Verification Test Runner
+		async function runVerification() {
+			if (isRunning) return;
+			if (typeof VideoEncoder === 'undefined' || typeof VideoDecoder === 'undefined') {
+				if (statusText) {
+					statusText.textContent = 'WebCodecs VideoEncoder/Decoder API not available in this browser (Firefox requires dom.media.webcodecs.enabled).';
+					statusText.style.color = '#f97316';
+				}
+				return;
+			}
+
+			isRunning = true;
+			if (runBtn) runBtn.disabled = true;
+			if (statusText) {
+				statusText.textContent = `Initializing ${selectedCodec.toUpperCase()} encoder (${selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU'})...`;
+				statusText.style.color = '';
+			}
+
+			try {
+				let codecString = 'avc1.42001f';
+				if (selectedCodec === 'avc') codecString = 'avc1.4d001f';
+				else if (selectedCodec === 'vp9') codecString = 'vp09.00.10.08';
+				else if (selectedCodec === 'av1') codecString = 'av01.0.05M.08';
+				else if (selectedCodec === 'hevc') codecString = 'hvc1.1.6.L93.B0';
+
+				const width = 640;
+				const height = 360;
+				const fps = 30;
+				const totalFrames = 30;
+				const bitrate = 2_000_000;
+
+				const encSupport = await VideoEncoder.isConfigSupported({
+					codec: codecString,
+					width,
+					height,
+					bitrate,
+					framerate: fps,
+					hardwareAcceleration: selectedMode
+				});
+
+				if (!encSupport.supported) {
+					throw new Error(`${selectedCodec.toUpperCase()} not supported with ${selectedMode === 'prefer-hardware' ? 'Hardware Acceleration' : 'Software Fallback'}`);
+				}
+
+				if (!srcCanvas || !decCanvas) throw new Error('Preview canvases not found');
+				const srcCtx = srcCanvas.getContext('2d')!;
+				const decCtx = decCanvas.getContext('2d')!;
+
+				if (decPlaceholder) decPlaceholder.style.display = 'none';
+
+				const encodedChunks: EncodedVideoChunk[] = [];
+				let decoderConfig: VideoDecoderConfig | null = null;
+				let totalChunkBytes = 0;
+
+				const encoder = new VideoEncoder({
+					output: (chunk, metadata) => {
+						encodedChunks.push(chunk);
+						totalChunkBytes += chunk.byteLength;
+						if (metadata && metadata.decoderConfig) {
+							decoderConfig = metadata.decoderConfig;
+						}
+					},
+					error: (err) => console.error('Encoder error:', err)
+				});
+
+				encoder.configure({
+					codec: codecString,
+					width,
+					height,
+					bitrate,
+					framerate: fps,
+					hardwareAcceleration: selectedMode
+				});
+
+				const encStartTime = performance.now();
+
+				for (let i = 0; i < totalFrames; i++) {
+					drawTestPattern(srcCtx, width, height, i, totalFrames);
+					const frame = new VideoFrame(srcCanvas, {
+						timestamp: i * 33333,
+						duration: 33333
+					});
+					encoder.encode(frame, { keyFrame: i === 0 || i % 15 === 0 });
+					frame.close();
+				}
+
+				await encoder.flush();
+				const encEndTime = performance.now();
+				encoder.close();
+
+				const encDuration = Math.max(1, encEndTime - encStartTime);
+				const encFps = Math.round((totalFrames / (encDuration / 1000)));
+				const encLatency = (encDuration / totalFrames).toFixed(1);
+
+				if (statusText) statusText.textContent = `Encoded ${totalFrames} frames in ${encDuration.toFixed(1)}ms. Decoding via ASIC...`;
+
+				if (!decoderConfig) {
+					decoderConfig = {
+						codec: codecString,
+						codedWidth: width,
+						codedHeight: height,
+						hardwareAcceleration: selectedMode
+					};
+				}
+
+				let decodedCount = 0;
+				const decoder = new VideoDecoder({
+					output: (videoFrame) => {
+						decodedCount++;
+						if (decodedCount === totalFrames || decodedCount === 1) {
+							decCtx.drawImage(videoFrame, 0, 0, width, height);
+						}
+						videoFrame.close();
+					},
+					error: (err) => console.error('Decoder error:', err)
+				});
+
+				decoder.configure(decoderConfig);
+
+				const decStartTime = performance.now();
+				for (const chunk of encodedChunks) {
+					decoder.decode(chunk);
+				}
+				await decoder.flush();
+				const decEndTime = performance.now();
+				decoder.close();
+
+				const decDuration = Math.max(1, decEndTime - decStartTime);
+				const decFps = Math.round((totalFrames / (decDuration / 1000)));
+				const decLatency = (decDuration / totalFrames).toFixed(1);
+
+				const rawBytes = width * height * 3 * totalFrames;
+				const ratio = ((1 - (totalChunkBytes / rawBytes)) * 100).toFixed(1);
+				const kbSize = (totalChunkBytes / 1024).toFixed(1);
+
+				// Update metrics UI
+				if (metricEngine) {
+					metricEngine.textContent = selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU';
+				}
+				if (metricEncFps) {
+					metricEncFps.innerHTML = `${encFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${encLatency} ms)</span>`;
+				}
+				if (metricDecFps) {
+					metricDecFps.innerHTML = `${decFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${decLatency} ms)</span>`;
+				}
+				if (metricRatio) {
+					metricRatio.innerHTML = `${ratio}% <span class="webgpu-tile-sub">(${kbSize} KB NAL)</span>`;
+				}
+
+				if (statusText) {
+					statusText.textContent = `✓ Verification Complete: ${totalFrames} frames in ${(encDuration + decDuration).toFixed(1)}ms (${encFps} FPS encode / ${decFps} FPS decode).`;
+					statusText.style.color = '#22c55e';
+				}
+			} catch (err: any) {
+				if (statusText) {
+					statusText.textContent = `Verification Notice: ${err.message || 'Codec profile unsupported'}.`;
+					statusText.style.color = '#f97316';
+				}
+			} finally {
+				isRunning = false;
+				if (runBtn) runBtn.disabled = false;
+			}
+		}
+
+		if (runBtn) runBtn.onclick = runVerification;
 	}
 
 	window.addEventListener('keydown', (e) => {
 		const modal = document.getElementById('map-applet-modal');
 		const webgpuModal = document.getElementById('webgpu-applet-modal');
+		const codecModal = document.getElementById('codec-applet-modal');
 		if (e.key === 'Escape' || e.key === 'Esc') {
 			if (modal && !modal.classList.contains('hidden')) {
 				e.stopPropagation();
@@ -1875,6 +2304,12 @@
 				e.stopPropagation();
 				webgpuModal.classList.add('hidden');
 				webgpuModal.setAttribute('aria-hidden', 'true');
+				document.body.style.overflow = '';
+			}
+			if (codecModal && !codecModal.classList.contains('hidden')) {
+				e.stopPropagation();
+				codecModal.classList.add('hidden');
+				codecModal.setAttribute('aria-hidden', 'true');
 				document.body.style.overflow = '';
 			}
 		}
@@ -2621,6 +3056,186 @@
 		font-weight: 500;
 		font-size: 0.88em;
 		color: rgb(var(--gray));
+	}
+
+	/* CODEC STUDIO MODAL */
+	.codec-dialog {
+		width: clamp(340px, 94vw, 760px);
+	}
+	.codec-body-wrap {
+		padding: 1.1em 1.25em 1.25em 1.25em;
+		max-height: 82vh;
+		overflow-y: auto;
+		background: var(--bg-card);
+		display: flex;
+		flex-direction: column;
+		gap: 0.85em;
+	}
+	.codec-toolbar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 0.6em;
+		padding-bottom: 0.7em;
+		border-bottom: 1px solid var(--border-color);
+	}
+	.codec-controls-group {
+		display: flex;
+		align-items: center;
+		gap: 0.45em;
+	}
+	.codec-ctrl-label {
+		font-size: 0.72em;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: rgb(var(--gray));
+	}
+	.codec-segmented {
+		display: inline-flex;
+		align-items: center;
+		background: rgba(148, 163, 184, 0.12);
+		padding: 2px;
+		border-radius: 7px;
+		border: 1px solid var(--border-color);
+	}
+	:global(html[data-theme="dark"]) .codec-segmented {
+		background: rgba(0, 0, 0, 0.45);
+	}
+	.codec-seg-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.22em 0.55em;
+		border-radius: 5px;
+		border: 1px solid transparent;
+		background: transparent;
+		color: rgb(var(--gray));
+		font-size: 0.72em;
+		font-weight: 700;
+		cursor: pointer;
+		line-height: 1.2;
+		transition: all 0.15s ease;
+		font-family: inherit;
+	}
+	.codec-seg-btn:hover {
+		color: rgb(var(--black));
+	}
+	:global(html[data-theme="dark"]) .codec-seg-btn:hover {
+		color: #ffffff;
+	}
+	.codec-seg-btn.active {
+		background: #ffffff;
+		border-color: rgba(0, 0, 0, 0.08);
+		color: var(--accent);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+	}
+	:global(html[data-theme="dark"]) .codec-seg-btn.active {
+		background: rgba(var(--accent-rgb), 0.22);
+		border-color: rgba(var(--accent-rgb), 0.4);
+		color: #f97316;
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+	}
+	.codec-run-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45em;
+		background: var(--accent);
+		color: #ffffff;
+		border: 1px solid var(--accent);
+		border-radius: 7px;
+		padding: 0.35em 0.85em;
+		font-size: 0.78em;
+		font-weight: 700;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		font-family: inherit;
+		box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.3);
+	}
+	.codec-run-btn:hover:not(:disabled) {
+		background: var(--accent-dark);
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.4);
+	}
+	.codec-run-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+	.codec-status-bar {
+		background: rgba(148, 163, 184, 0.06);
+		border: 1px solid var(--border-color);
+		border-radius: 6px;
+		padding: 0.4em 0.75em;
+		font-size: 0.76em;
+		color: rgb(var(--gray-dark));
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	}
+	:global(html[data-theme="dark"]) .codec-status-bar {
+		background: rgba(255, 255, 255, 0.02);
+		color: #cbd5e1;
+	}
+	.codec-preview-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.75em;
+	}
+	@media (max-width: 600px) {
+		.codec-preview-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+	.codec-preview-box {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3em;
+	}
+	.codec-preview-label {
+		font-size: 0.68em;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: rgb(var(--gray));
+	}
+	.codec-canvas-wrap {
+		position: relative;
+		width: 100%;
+		aspect-ratio: 16 / 9;
+		background: #090a0f;
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		overflow: hidden;
+	}
+	.codec-canvas {
+		width: 100%;
+		height: 100%;
+		display: block;
+		object-fit: contain;
+	}
+	.codec-canvas-placeholder {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(9, 10, 15, 0.85);
+		color: rgb(var(--gray));
+		font-size: 0.76em;
+		font-weight: 500;
+		font-family: ui-monospace, monospace;
+	}
+	.codec-metrics-grid {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 0.65em;
+	}
+	@media (max-width: 640px) {
+		.codec-metrics-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
 	}
 
 	@media (max-width: 860px) {

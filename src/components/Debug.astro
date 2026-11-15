@@ -1561,20 +1561,41 @@
 				}
 			};
 
+			let drmProbed = false;
+			const runDrmProbe = () => {
+				if (drmProbed) return;
+				drmProbed = true;
+				probeDRM();
+			};
+
 			drmEl.classList.add('loc-clickable');
 			drmEl.onclick = () => {
+				drmProbed = true;
 				drmEl.textContent = 'Probing CDM modules...';
 				probeDRM();
 			};
 
-			// Firefox prompts the user with a permission dialog on navigator.requestMediaKeySystemAccess;
-			// make DRM probe opt-in / click-to-probe on Firefox to avoid intrusive page-load prompts.
+			// Firefox prompts with an EME infobar if DRM is disabled;
+			// defer the DRM probe until the Media section scrolls into view via IntersectionObserver
+			// to avoid intrusive initial page-load prompts while still auto-loading when viewed.
 			const isFirefox = /Firefox/i.test(navigator.userAgent);
 			if (isFirefox) {
-				drmEl.textContent = 'Click to probe CDM';
-				drmEl.title = 'In Firefox, querying Widevine DRM triggers a browser permission dialog. Click to probe CDM.';
+				if ('IntersectionObserver' in window) {
+					const drmObserver = new IntersectionObserver((entries) => {
+						for (const entry of entries) {
+							if (entry.isIntersecting) {
+								drmObserver.disconnect();
+								runDrmProbe();
+								break;
+							}
+						}
+					}, { rootMargin: '200px' });
+					drmObserver.observe(drmEl);
+				} else {
+					window.addEventListener('scroll', runDrmProbe, { passive: true, once: true });
+				}
 			} else {
-				probeDRM();
+				runDrmProbe();
 			}
 		}
 

@@ -147,6 +147,7 @@
 		category: string;
 		desc: string;
 		dimensions: string;
+		binFile?: string;
 		jsonFile: string;
 		stepFile: string;
 		triangles: number;
@@ -162,9 +163,9 @@
 		bbox: { width: number; height: number; depth: number };
 		triangles: number;
 		vertices: number;
-		positions: number[];
-		normals: number[];
-		indices: number[];
+		positions: number[] | Float32Array;
+		normals?: number[] | Float32Array;
+		indices: number[] | Uint16Array | Uint32Array;
 	}
 
 	function initCadViewer() {
@@ -490,7 +491,11 @@
 			} else {
 				geometry.computeVertexNormals();
 			}
-			geometry.setIndex(data.indices);
+			if (data.indices instanceof Uint16Array || data.indices instanceof Uint32Array) {
+				geometry.setIndex(new THREE.BufferAttribute(data.indices, 1));
+			} else {
+				geometry.setIndex(data.indices);
+			}
 			geometry.computeBoundingBox();
 
 			currentMeshObj = new THREE.Mesh(geometry, material);
@@ -534,6 +539,61 @@
 			}
 		}
 
+		function decodeBinaryModel(buffer: ArrayBuffer): MeshPayload {
+			const dataView = new DataView(buffer);
+			const magic = String.fromCharCode(
+				dataView.getUint8(0),
+				dataView.getUint8(1),
+				dataView.getUint8(2),
+				dataView.getUint8(3)
+			);
+			if (magic !== 'CBIN') {
+				throw new Error('Invalid binary CAD model magic');
+			}
+
+			const headerLen = dataView.getUint32(4, true);
+			const pad = (4 - (headerLen % 4)) % 4;
+			const headerBytes = new Uint8Array(buffer, 8, headerLen);
+			const metaStr = new TextDecoder('utf-8').decode(headerBytes);
+			const meta = JSON.parse(metaStr);
+
+			let offset = 8 + headerLen + pad;
+			const posCount = dataView.getUint32(offset, true);
+			offset += 4;
+			const idxCount = dataView.getUint32(offset, true);
+			offset += 4;
+
+			const qPosView = new Uint16Array(buffer, offset, posCount);
+			offset += posCount * 2;
+			const idxView = new Uint16Array(buffer, offset, idxCount);
+
+			// Unquantize coordinates using bounds
+			const bounds = meta.bounds || { minX: 0, maxX: 1, minY: 0, maxY: 1, minZ: 0, maxZ: 1 };
+			const spanX = bounds.maxX - bounds.minX || 1;
+			const spanY = bounds.maxY - bounds.minY || 1;
+			const spanZ = bounds.maxZ - bounds.minZ || 1;
+
+			const positions = new Float32Array(posCount);
+			for (let i = 0; i < posCount; i += 3) {
+				positions[i] = bounds.minX + (qPosView[i] / 65535) * spanX;
+				positions[i + 1] = bounds.minY + (qPosView[i + 1] / 65535) * spanY;
+				positions[i + 2] = bounds.minZ + (qPosView[i + 2] / 65535) * spanZ;
+			}
+
+			return {
+				id: meta.id,
+				name: meta.name,
+				file: meta.file,
+				category: meta.category,
+				desc: meta.desc,
+				bbox: meta.bbox,
+				triangles: meta.triangles,
+				vertices: meta.vertices,
+				positions,
+				indices: idxView
+			};
+		}
+
 		async function loadModel(id: string) {
 			const meta = manifestMap[id];
 			if (loadingOverlay) loadingOverlay.classList.remove('hidden');
@@ -545,10 +605,21 @@
 			}
 
 			try {
-				const jsonUrl = meta ? meta.jsonFile : `/models/${id}.json`;
-				const res = await fetch(jsonUrl);
-				if (res.ok) {
-					const data: MeshPayload = await res.json();
+				const binUrl = meta?.binFile || `/models/${id}.bin`;
+				const binRes = await fetch(binUrl);
+				if (binRes.ok) {
+					const buf = await binRes.arrayBuffer();
+					const data = decodeBinaryModel(buf);
+					meshCache[id] = data;
+					applyModelData(data, meta);
+					return;
+				}
+
+				// Fallback to JSON if .bin is unavailable
+				const jsonUrl = meta?.jsonFile || `/models/${id}.json`;
+				const jsonRes = await fetch(jsonUrl);
+				if (jsonRes.ok) {
+					const data: MeshPayload = await jsonRes.json();
 					meshCache[id] = data;
 					applyModelData(data, meta);
 				}

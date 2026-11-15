@@ -21,7 +21,6 @@
     "check": "astro build && tsc && wrangler deploy --dry-run",
     "deploy": "node scripts/deploy.mjs",
     "dev": "astro dev",
-    "pack-models": "node scripts/pack-models.mjs",
     "preview": "astro build && wrangler dev"
   },
   "type": "module"

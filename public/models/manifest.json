@@ -9,8 +9,7 @@
     "jsonFile": "/models/be92u.json",
     "stepFile": "/models/BE92UMount.stp",
     "triangles": 12602,
-    "vertices": 9224,
-    "binFile": "/models/be92u.bin"
+    "vertices": 9224
   },
   {
     "id": "network-switch-stand",
@@ -22,8 +21,7 @@
     "jsonFile": "/models/network-switch-stand.json",
     "stepFile": "/models/NetworkSwitchStand.stp",
     "triangles": 7040,
-    "vertices": 5141,
-    "binFile": "/models/network-switch-stand.bin"
+    "vertices": 5141
   },
   {
     "id": "laptop-vertical-stand",
@@ -35,8 +33,7 @@
     "jsonFile": "/models/laptop-vertical-stand.json",
     "stepFile": "/models/LaptopDivider.stp",
     "triangles": 14988,
-    "vertices": 9781,
-    "binFile": "/models/laptop-vertical-stand.bin"
+    "vertices": 9781
   },
   {
     "id": "dual-keyboard-mount",
@@ -48,8 +45,7 @@
     "jsonFile": "/models/dual-keyboard-mount.json",
     "stepFile": "/models/K380_KZ450_Both.stp",
     "triangles": 5012,
-    "vertices": 4050,
-    "binFile": "/models/dual-keyboard-mount.bin"
+    "vertices": 4050
   },
   {
     "id": "ikea-tertial",
@@ -61,8 +57,7 @@
     "jsonFile": "/models/ikea-tertial.json",
     "stepFile": "/models/IkeaTertialMount.stp",
     "triangles": 12936,
-    "vertices": 8870,
-    "binFile": "/models/ikea-tertial.bin"
+    "vertices": 8870
   },
   {
     "id": "r70x-headband",
@@ -74,8 +69,7 @@
     "jsonFile": "/models/r70x-headband.json",
     "stepFile": "/models/R70XHeadbandJoiner.stp",
     "triangles": 11727,
-    "vertices": 7401,
-    "binFile": "/models/r70x-headband.bin"
+    "vertices": 7401
   },
   {
     "id": "lenovo-clock-stand",
@@ -87,8 +81,7 @@
     "jsonFile": "/models/lenovo-clock-stand.json",
     "stepFile": "/models/LenovoClockEssential.stp",
     "triangles": 840,
-    "vertices": 920,
-    "binFile": "/models/lenovo-clock-stand.bin"
+    "vertices": 920
   },
   {
     "id": "remote-mount",
@@ -100,8 +93,7 @@
     "jsonFile": "/models/remote-mount.json",
     "stepFile": "/models/RemoteMountImproved.stp",
     "triangles": 3024,
-    "vertices": 2396,
-    "binFile": "/models/remote-mount.bin"
+    "vertices": 2396
   },
   {
     "id": "brz-armrest",
@@ -113,8 +105,7 @@
     "jsonFile": "/models/brz-armrest.json",
     "stepFile": "/models/BRZArtwrestBlocker.stp",
     "triangles": 6354,
-    "vertices": 4763,
-    "binFile": "/models/brz-armrest.bin"
+    "vertices": 4763
   },
   {
     "id": "skil-battery",
@@ -126,8 +117,7 @@
     "jsonFile": "/models/skil-battery.json",
     "stepFile": "/models/Skil12VBatteryHolderMagnetBar.stp",
     "triangles": 5768,
-    "vertices": 4387,
-    "binFile": "/models/skil-battery.bin"
+    "vertices": 4387
   },
   {
     "id": "gilmour-handle",
@@ -139,7 +129,6 @@
     "jsonFile": "/models/gilmour-handle.json",
     "stepFile": "/models/Gilmour3PatternHandleFULL.stp",
     "triangles": 12740,
-    "vertices": 8074,
-    "binFile": "/models/gilmour-handle.bin"
+    "vertices": 8074
   }
 ]

@@ -319,7 +319,7 @@
 			ctx.clearRect(0, 0, w, h);
 
 			// Background track
-			ctx.fillStyle = isDark ? '#09090b' : '#f1f5f9';
+			ctx.fillStyle = isDark ? '#09090b' : '#f8fafc';
 			ctx.fillRect(0, 0, w, h);
 
 			// Grid guide lines
@@ -964,14 +964,28 @@
 
 	/* MOTION VIEWPORT */
 	.motion-viewport-wrap {
+		position: relative;
 		width: 100%;
-		border: 1px solid var(--border-color);
 		border-radius: 10px;
-		background: #09090b;
+		background: #f8fafc;
 		background-clip: padding-box;
 		overflow: hidden;
-		box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.25);
 		margin-bottom: 1.2em;
+		box-sizing: border-box;
+	}
+
+	:global(html[data-theme="dark"]) .motion-viewport-wrap {
+		background: #09090b;
+	}
+
+	.motion-viewport-wrap::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border: 1px solid var(--border-color);
+		border-radius: 10px;
+		pointer-events: none;
+		z-index: 2;
 	}
 
 	.motion-canvas {
@@ -980,8 +994,12 @@
 		height: 150px;
 		user-select: none;
 		-webkit-user-select: none;
-		background-color: #09090b;
+		background-color: #f8fafc;
 		border-radius: 10px;
+	}
+
+	:global(html[data-theme="dark"]) .motion-canvas {
+		background-color: #09090b;
 	}
 
 	/* HUD TILES */

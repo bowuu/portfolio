@@ -1987,19 +1987,27 @@
 		flex-shrink: 0;
 	}
 
-	/* SUBSECTIONS */
+	/* SUBSECTIONS (INSET PANELS) */
 	.telemetry-group {
-		margin-bottom: 1.5em;
-		padding-bottom: 1.4em;
-		border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
+		background: rgba(0, 0, 0, 0.015);
+		border: 1px solid var(--border-color);
+		border-radius: 10px;
+		padding: 0.9em 1.05em 1em 1.05em;
+		margin-bottom: 0.95em;
+		transition: border-color 0.15s ease, background 0.15s ease;
 	}
 	:global(html[data-theme="dark"]) .telemetry-group {
-		border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.02);
+		border-color: var(--border-color);
+	}
+	.telemetry-group:hover {
+		border-color: rgba(var(--accent-rgb), 0.25);
+	}
+	:global(html[data-theme="dark"]) .telemetry-group:hover {
+		border-color: rgba(var(--accent-rgb), 0.3);
 	}
 	.telemetry-group:last-child {
 		margin-bottom: 0;
-		padding-bottom: 0;
-		border-bottom: none;
 	}
 
 	.telemetry-group-header {
@@ -2011,7 +2019,8 @@
 		text-transform: uppercase;
 		letter-spacing: 0.07em;
 		color: var(--accent);
-		margin-bottom: 0.9em;
+		margin-bottom: 0.65em;
+		padding-left: 0.45em;
 	}
 	.telemetry-group-header svg {
 		flex-shrink: 0;
@@ -2022,7 +2031,7 @@
 	.telemetry-grid {
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
-		gap: 1.1em 1.25em;
+		gap: 0.55em 0.75em;
 	}
 	.telemetry-item {
 		display: flex;
@@ -2030,6 +2039,18 @@
 		gap: 0.25em;
 		min-width: 0;
 		overflow: hidden;
+		padding: 0.45em 0.6em;
+		border-radius: 7px;
+		border: 1px solid transparent;
+		transition: background 0.15s ease, border-color 0.15s ease;
+	}
+	.telemetry-item:hover {
+		background: rgba(0, 0, 0, 0.035);
+		border-color: rgba(var(--accent-rgb), 0.22);
+	}
+	:global(html[data-theme="dark"]) .telemetry-item:hover {
+		background: rgba(255, 255, 255, 0.035);
+		border-color: rgba(var(--accent-rgb), 0.25);
 	}
 	.t-label {
 		font-size: 0.76em;

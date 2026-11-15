@@ -622,6 +622,17 @@
 		box-sizing: border-box;
 		white-space: nowrap;
 	}
+	#run-speedtest-btn {
+		width: 110px;
+		min-width: 110px;
+		justify-content: center;
+		padding: 0 0.75em;
+	}
+	#speedtest-btn-text {
+		display: inline-block;
+		text-align: center;
+		min-width: 68px;
+	}
 	.benchmark-btn:hover:not(:disabled) {
 		background: #c2410c;
 		transform: translateY(-1px);
@@ -773,8 +784,10 @@
 			flex-direction: column;
 			align-items: flex-start;
 		}
+		#run-speedtest-btn,
 		.benchmark-btn {
 			width: 100%;
+			min-width: 0;
 			justify-content: center;
 		}
 		.benchmark-tiles {

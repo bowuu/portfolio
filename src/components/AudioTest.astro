@@ -267,6 +267,130 @@
 		let specHistoryCtx: CanvasRenderingContext2D | null = null;
 		let lastSpecTime = 0;
 		let currentThemeIsDark = true;
+		let cachedFftData: Uint8Array | null = null;
+		let specRowImgData: ImageData | null = null;
+		let specRowData32: Uint32Array | null = null;
+
+		// Little-endian packed 32-bit RGBA color LUTs (0..255 byte frequency values)
+		const isLittleEndian = new Uint8Array(new Uint32Array([0x12345678]).buffer)[0] === 0x78;
+		function packRgba(r: number, g: number, b: number, a: number): number {
+			return isLittleEndian
+				? ((a << 24) | (b << 16) | (g << 8) | r) >>> 0
+				: ((r << 24) | (g << 16) | (b << 8) | a) >>> 0;
+		}
+
+		function buildColorLut(isDark: boolean): Uint32Array {
+			const lut = new Uint32Array(256);
+			for (let rawVal = 0; rawVal < 256; rawVal++) {
+				const val = Math.min(255, Math.pow(rawVal / 255, 0.85) * 260);
+				let r = isDark ? 9 : 248;
+				let g = isDark ? 9 : 250;
+				let b = isDark ? 11 : 252;
+				const a = 255;
+
+				if (val > 8) {
+					if (isDark) {
+						if (val < 65) {
+							const t = val / 65;
+							r = Math.round(12 + t * 95);
+							g = Math.round(12 + t * 25);
+							b = Math.round(25 + t * 50);
+						} else if (val < 145) {
+							const t = (val - 65) / 80;
+							r = Math.round(107 + t * 142);
+							g = Math.round(37 + t * 78);
+							b = Math.round(75 - t * 53);
+						} else if (val < 215) {
+							const t = (val - 145) / 70;
+							r = Math.round(249 + t * 2);
+							g = Math.round(115 + t * 76);
+							b = Math.round(22 + t * 14);
+						} else {
+							const t = (val - 215) / 40;
+							r = Math.round(251 + t * 4);
+							g = Math.round(191 + t * 64);
+							b = Math.round(36 + t * 219);
+						}
+					} else {
+						if (val < 65) {
+							const t = val / 65;
+							r = Math.round(248 - t * 80);
+							g = Math.round(250 - t * 70);
+							b = Math.round(252 - t * 40);
+						} else if (val < 145) {
+							const t = (val - 65) / 80;
+							r = Math.round(168 + t * 67);
+							g = Math.round(180 - t * 50);
+							b = Math.round(212 - t * 180);
+						} else if (val < 215) {
+							const t = (val - 145) / 70;
+							r = Math.round(235 - t * 15);
+							g = Math.round(130 - t * 92);
+							b = Math.round(32 + t * 6);
+						} else {
+							const t = (val - 215) / 40;
+							r = Math.round(220 - t * 80);
+							g = Math.round(38 - t * 20);
+							b = Math.round(38 - t * 18);
+						}
+					}
+				}
+				lut[rawVal] = packRgba(r, g, b, a);
+			}
+			return lut;
+		}
+
+		const darkColorLut = buildColorLut(true);
+		const lightColorLut = buildColorLut(false);
+
+		// Precomputed frequency bin mapping per canvas width
+		let specBinMap: {
+			w: number;
+			binCount: number;
+			sampleRate: number;
+			binStart: Int32Array;
+			binEnd: Int32Array;
+			b0: Int32Array;
+			b1: Int32Array;
+			frac: Float32Array;
+		} | null = null;
+
+		function getSpecBinMap(w: number, binCount: number, sampleRate: number) {
+			if (specBinMap && specBinMap.w === w && specBinMap.binCount === binCount && specBinMap.sampleRate === sampleRate) {
+				return specBinMap;
+			}
+			const binStart = new Int32Array(w);
+			const binEnd = new Int32Array(w);
+			const b0 = new Int32Array(w);
+			const b1 = new Int32Array(w);
+			const frac = new Float32Array(w);
+
+			const binWidth = (sampleRate / 2) / binCount;
+			const minFreq = 20;
+			const maxFreq = 20000;
+			const logMin = Math.log10(minFreq);
+			const logMax = Math.log10(maxFreq);
+			const logRange = logMax - logMin;
+
+			for (let x = 0; x < w; x++) {
+				const normX0 = Math.max(0, (x - 0.5) / Math.max(1, w - 1));
+				const normX1 = Math.min(1, (x + 0.5) / Math.max(1, w - 1));
+				const hz0 = Math.pow(10, logMin + normX0 * logRange);
+				const hz1 = Math.pow(10, logMin + normX1 * logRange);
+				binStart[x] = Math.max(0, Math.floor(hz0 / binWidth));
+				binEnd[x] = Math.min(binCount - 1, Math.ceil(hz1 / binWidth));
+
+				const hz = Math.pow(10, logMin + (x / Math.max(1, w - 1)) * logRange);
+				const binExact = Math.min(binCount - 1, Math.max(0, hz / binWidth));
+				const floorB = Math.floor(binExact);
+				b0[x] = floorB;
+				b1[x] = Math.min(binCount - 1, floorB + 1);
+				frac[x] = binExact - floorB;
+			}
+
+			specBinMap = { w, binCount, sampleRate, binStart, binEnd, b0, b1, frac };
+			return specBinMap;
+		}
 
 		// Visualizer Animation Loop State
 		let isAudioVisible = false;
@@ -1053,7 +1177,7 @@
 				heroCtx.stroke();
 				if (phaseValText && phaseMeterFill) {
 					phaseValText.textContent = '+1.00';
-					phaseMeterFill.style.transform = 'scaleX(1)';
+					phaseMeterFill.style.width = '100%';
 					phaseMeterFill.style.background = '#22c55e';
 				}
 				return;
@@ -1267,17 +1391,6 @@
 				return;
 			}
 
-			// Handle sound production and smooth decay when stopped
-			const isProducingSound = activeMode !== 'none' || (currentSourceMode !== 'sim' && !!micStream);
-			if (isProducingSound) {
-				spectrumDecayFactor = 1.0;
-			} else {
-				spectrumDecayFactor *= 0.82;
-				if (spectrumDecayFactor < 0.005) {
-					spectrumDecayFactor = 0.0;
-				}
-			}
-
 			if (spectrumDecayFactor === 0.0) {
 				// Flat resting baseline
 				heroCtx.strokeStyle = isDark ? 'rgba(249, 115, 22, 0.25)' : 'rgba(234, 88, 12, 0.3)';
@@ -1289,8 +1402,11 @@
 			}
 
 			const binCount = fftAnalyser.frequencyBinCount;
-			const freqData = new Uint8Array(binCount);
-			fftAnalyser.getByteFrequencyData(freqData);
+			if (!cachedFftData || cachedFftData.length !== binCount) {
+				cachedFftData = new Uint8Array(binCount);
+			}
+			fftAnalyser.getByteFrequencyData(cachedFftData);
+			const freqData = cachedFftData;
 
 			const sampleRate = audioCtx.sampleRate;
 			const binWidth = (sampleRate / 2) / binCount;
@@ -1420,116 +1536,59 @@
 				specHistoryCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
 				specHistoryCtx.fillRect(0, 0, w, scrollSpeed);
 
-				if (fftAnalyser && audioCtx) {
+				if (fftAnalyser && audioCtx && spectrumDecayFactor > 0) {
 					const binCount = fftAnalyser.frequencyBinCount;
-					const freqData = new Uint8Array(binCount);
-					fftAnalyser.getByteFrequencyData(freqData);
+					if (!cachedFftData || cachedFftData.length !== binCount) {
+						cachedFftData = new Uint8Array(binCount);
+					}
+					fftAnalyser.getByteFrequencyData(cachedFftData);
+					const freqData = cachedFftData;
 
-					const sampleRate = audioCtx.sampleRate;
-					const binWidth = (sampleRate / 2) / binCount;
+					const binMap = getSpecBinMap(w, binCount, audioCtx.sampleRate);
+					if (!specRowImgData || specRowImgData.width !== w) {
+						specRowImgData = specHistoryCtx.createImageData(w, 1);
+						specRowData32 = new Uint32Array(specRowImgData.data.buffer);
+					}
+					const imgData = specRowImgData;
+					const data32 = specRowData32!;
+					const colorLut = isDark ? darkColorLut : lightColorLut;
+					const decay = spectrumDecayFactor;
 
-					const minFreq = 20;
-					const maxFreq = 20000;
-					const logMin = Math.log10(minFreq);
-					const logMax = Math.log10(maxFreq);
-					const logRange = logMax - logMin;
-
-					const imgData = specHistoryCtx.createImageData(w, scrollSpeed);
-					const data = imgData.data;
+					const binStart = binMap.binStart;
+					const binEnd = binMap.binEnd;
+					const b0Arr = binMap.b0;
+					const b1Arr = binMap.b1;
+					const fracArr = binMap.frac;
 
 					for (let x = 0; x < w; x++) {
-						const normX0 = Math.max(0, (x - 0.5) / Math.max(1, w - 1));
-						const normX1 = Math.min(1, (x + 0.5) / Math.max(1, w - 1));
-						const hz0 = Math.pow(10, logMin + normX0 * logRange);
-						const hz1 = Math.pow(10, logMin + normX1 * logRange);
-						const binStart = Math.max(0, Math.floor(hz0 / binWidth));
-						const binEnd = Math.min(binCount - 1, Math.ceil(hz1 / binWidth));
-
+						const start = binStart[x];
+						const end = binEnd[x];
 						let rawVal = 0;
-						if (binEnd > binStart) {
-							for (let b = binStart; b <= binEnd; b++) {
-								if (freqData[b] > rawVal) rawVal = freqData[b];
+
+						if (end > start) {
+							for (let b = start; b <= end; b++) {
+								const f = freqData[b];
+								if (f > rawVal) rawVal = f;
 							}
 						} else {
-							const hz = Math.pow(10, logMin + (x / Math.max(1, w - 1)) * logRange);
-							const binExact = Math.min(binCount - 1, Math.max(0, hz / binWidth));
-							const b0 = Math.floor(binExact);
-							const b1 = Math.min(binCount - 1, b0 + 1);
-							const frac = binExact - b0;
-							rawVal = freqData[b0] * (1 - frac) + freqData[b1] * frac;
+							const b0 = b0Arr[x];
+							const b1 = b1Arr[x];
+							const frac = fracArr[x];
+							rawVal = Math.round(freqData[b0] * (1 - frac) + freqData[b1] * frac);
 						}
 
-						rawVal *= spectrumDecayFactor;
-						const val = Math.min(255, Math.pow(rawVal / 255, 0.85) * 260);
-
-						let r = isDark ? 9 : 248;
-						let g = isDark ? 9 : 250;
-						let b = isDark ? 11 : 252;
-						let a = 255;
-
-						if (val > 8) {
-							if (isDark) {
-								if (val < 65) {
-									const t = val / 65;
-									r = Math.round(12 + t * 95);
-									g = Math.round(12 + t * 25);
-									b = Math.round(25 + t * 50);
-								} else if (val < 145) {
-									const t = (val - 65) / 80;
-									r = Math.round(107 + t * 142);
-									g = Math.round(37 + t * 78);
-									b = Math.round(75 - t * 53);
-								} else if (val < 215) {
-									const t = (val - 145) / 70;
-									r = Math.round(249 + t * 2);
-									g = Math.round(115 + t * 76);
-									b = Math.round(22 + t * 14);
-								} else {
-									const t = (val - 215) / 40;
-									r = Math.round(251 + t * 4);
-									g = Math.round(191 + t * 64);
-									b = Math.round(36 + t * 219);
-								}
-							} else {
-								if (val < 65) {
-									const t = val / 65;
-									r = Math.round(248 - t * 80);
-									g = Math.round(250 - t * 70);
-									b = Math.round(252 - t * 40);
-								} else if (val < 145) {
-									const t = (val - 65) / 80;
-									r = Math.round(168 + t * 67);
-									g = Math.round(180 - t * 50);
-									b = Math.round(212 - t * 180);
-								} else if (val < 215) {
-									const t = (val - 145) / 70;
-									r = Math.round(235 - t * 15);
-									g = Math.round(130 - t * 92);
-									b = Math.round(32 + t * 6);
-								} else {
-									const t = (val - 215) / 40;
-									r = Math.round(220 - t * 80);
-									g = Math.round(38 - t * 20);
-									b = Math.round(38 - t * 18);
-								}
-							}
+						if (decay < 1.0) {
+							rawVal = Math.round(rawVal * decay);
 						}
-
-						for (let s = 0; s < scrollSpeed; s++) {
-							const idx = (s * w + x) * 4;
-							data[idx] = r;
-							data[idx + 1] = g;
-							data[idx + 2] = b;
-							data[idx + 3] = a;
-						}
+						data32[x] = colorLut[rawVal];
 					}
+
 					specHistoryCtx.putImageData(imgData, 0, 0);
 				}
 			}
 		}
 
 		function renderSpectrogramScope() {
-			updateSpectrogramBuffer();
 			if (!heroCtx || !heroCanvas || !specHistoryCanvas) return;
 			const w = heroCanvas.width;
 			const h = heroCanvas.height;
@@ -1818,8 +1877,19 @@
 				return;
 			}
 
-			// Keep spectrogram waterfall recording continuously in background once audio is enabled
-			if (audioCtx) {
+			// Handle sound production and smooth decay across all modes when stopped
+			const isProducingSound = activeMode !== 'none' || (currentSourceMode !== 'sim' && !!micStream);
+			if (isProducingSound) {
+				spectrumDecayFactor = 1.0;
+			} else if (spectrumDecayFactor > 0) {
+				spectrumDecayFactor *= 0.82;
+				if (spectrumDecayFactor < 0.005) {
+					spectrumDecayFactor = 0.0;
+				}
+			}
+
+			// Keep spectrogram waterfall recording continuously in background once audio is enabled, or whenever viewing spectrogram
+			if (audioCtx || activeHeroMode === 'spectrogram') {
 				updateSpectrogramBuffer();
 			}
 
@@ -1834,11 +1904,12 @@
 			// Render horizontal stereo VU meter
 			renderStereoMeter();
 
-			// If audio is actively playing or VU meter / spectrum are still decaying, keep animating
+			// If audio is actively playing, VU meter / spectrum are still decaying, or spectrogram is the active mode
 			const isDecaying = smoothL > -59.5 || smoothR > -59.5 || spectrumDecayFactor > 0;
 			const isProducing = activeMode !== 'none' || isSweeping || !!micStream;
+			const isSpectrogramActive = activeHeroMode === 'spectrogram';
 
-			if ((isProducing || isDecaying) && isAudioVisible) {
+			if ((isProducing || isDecaying || isSpectrogramActive) && isAudioVisible) {
 				rafVisualizerId = requestAnimationFrame(renderActiveVisualizer);
 			} else {
 				rafVisualizerId = null;

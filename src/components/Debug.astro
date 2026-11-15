@@ -1313,7 +1313,11 @@
 						codec: 'hvc1.1.6.L93.B0',
 						configs: [
 							{ type: 'file', video: { contentType: 'video/mp4; codecs="hvc1.1.6.L93.B0"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } },
-							{ type: 'file', video: { contentType: 'video/mp4; codecs="hev1.1.6.L93.B0"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } }
+							{ type: 'file', video: { contentType: 'video/mp4; codecs="hev1.1.6.L93.B0"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } },
+							{ type: 'media-source', video: { contentType: 'video/mp4; codecs="hvc1.1.6.L120.90"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } },
+							{ type: 'media-source', video: { contentType: 'video/mp4; codecs="hev1.1.6.L120.90"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } },
+							{ type: 'media-source', video: { contentType: 'video/mp4; codecs="hvc1.1.6.L93.B0"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } },
+							{ type: 'file', video: { contentType: 'video/mp4; codecs="hvc1.1.6.L120.90"', width: 1920, height: 1080, bitrate: 5000000, framerate: 60 } }
 						]
 					},
 					{
@@ -1345,7 +1349,10 @@
 							try {
 								const res = await navigator.mediaCapabilities.decodingInfo(cfg as any);
 								if (res.supported) {
-									if (res.powerEfficient) {
+									// In Firefox, software HEVC decoding is unsupported by design (patented);
+									// any supported HEVC playback in Firefox is inherently hardware-backed via Windows WMF/DXVA.
+									// Additionally, Firefox fingerprinting protection masks powerEfficient to false.
+									if (res.powerEfficient || (c.name === 'HEVC' && isFirefox)) {
 										isHw = true;
 										hasExplicitSwOnly = false;
 										break;
@@ -1376,6 +1383,33 @@
 								}
 							}
 						} catch (_) {}
+					}
+
+					// 3. Platform fallback for HEVC in Firefox: verify via MediaSource & HTML5 video
+					if (!isHw && c.name === 'HEVC' && isFirefox) {
+						const hasMseHevc = typeof MediaSource !== 'undefined' && (
+							MediaSource.isTypeSupported('video/mp4; codecs="hvc1.1.6.L120.90"') ||
+							MediaSource.isTypeSupported('video/mp4; codecs="hev1.1.6.L120.90"') ||
+							MediaSource.isTypeSupported('video/mp4; codecs="hvc1.1.6.L93.B0"') ||
+							MediaSource.isTypeSupported('video/mp4; codecs="hev1.1.6.L93.B0"') ||
+							MediaSource.isTypeSupported('video/mp4; codecs="hvc1"')
+						);
+						const hasHtml5Hevc = typeof document !== 'undefined' && (() => {
+							try {
+								const v = document.createElement('video');
+								const p1 = v.canPlayType('video/mp4; codecs="hvc1.1.6.L120.90"');
+								const p2 = v.canPlayType('video/mp4; codecs="hev1.1.6.L120.90"');
+								const p3 = v.canPlayType('video/mp4; codecs="hvc1"');
+								return !!(p1 || p2 || p3);
+							} catch (_) {
+								return false;
+							}
+						})();
+
+						if (hasMseHevc || hasHtml5Hevc) {
+							isHw = true;
+							hasExplicitSwOnly = false;
+						}
 					}
 
 					if (isHw && !hasExplicitSwOnly) {

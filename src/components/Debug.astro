@@ -880,9 +880,16 @@
 		let lastScreenHeight = window.screen.height;
 		let lastDPR = window.devicePixelRatio;
 
+		const STANDARD_SCALES = [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 3];
+
 		const updateDisplayMetrics = () => {
 			if (!displayEl) return;
-			const dprVal = window.devicePixelRatio ? Number(window.devicePixelRatio.toFixed(2)) : null;
+			let dprVal: number | null = null;
+			if (window.devicePixelRatio) {
+				const raw = window.devicePixelRatio;
+				const snapped = STANDARD_SCALES.find((s) => Math.abs(raw - s) <= 0.025);
+				dprVal = snapped ?? Number(raw.toFixed(2));
+			}
 			const dpr = dprVal ? ` @ ${dprVal}x scaling` : '';
 			const depth = window.screen.colorDepth ? ` (${window.screen.colorDepth}-bit color)` : '';
 			displayEl.textContent = `${window.screen.width} × ${window.screen.height}${dpr}${depth}`;
@@ -1940,7 +1947,7 @@
 
 	.telemetry-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+		grid-template-columns: repeat(4, 1fr);
 		gap: 1.1em 1.25em;
 	}
 	.telemetry-item {
@@ -2418,7 +2425,13 @@
 		color: rgb(var(--gray));
 	}
 
-	@media (max-width: 600px) {
+	@media (max-width: 860px) {
+		.telemetry-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	@media (max-width: 520px) {
 		.telemetry-grid {
 			grid-template-columns: 1fr;
 		}

@@ -14,11 +14,14 @@
 		</h2>
 
 		<div class="header-actions">
-			<button id="open-pixel-checker-btn" class="telemetry-btn" type="button" title="Open Fullscreen Dead / Stuck Pixel Checker">
-				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-					<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+			<button id="toggle-display-btn" class="benchmark-btn" type="button" title="Start display motion benchmark" aria-label="Start display motion benchmark">
+				<svg id="toggle-display-icon-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon hidden">
+					<rect x="5" y="5" width="14" height="14" rx="2"/>
 				</svg>
-				<span>Pixel Checker</span>
+				<svg id="toggle-display-icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon">
+					<polygon points="5 3 19 12 5 21 5 3"/>
+				</svg>
+				<span id="toggle-display-text">Start</span>
 			</button>
 		</div>
 	</div>
@@ -49,14 +52,11 @@
 		</div>
 
 		<div class="toolbar-group toolbar-right">
-			<button id="toggle-display-btn" class="telemetry-btn" type="button" title="Start display motion benchmark">
-				<svg id="toggle-display-icon-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="hidden">
-					<rect x="5" y="5" width="14" height="14" rx="2"/>
+			<button id="open-pixel-checker-btn" class="telemetry-btn" type="button" title="Open Fullscreen Dead / Stuck Pixel Checker">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
 				</svg>
-				<svg id="toggle-display-icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-					<polygon points="5 3 19 12 5 21 5 3"/>
-				</svg>
-				<span id="toggle-display-text">Start</span>
+				<span>Pixel Checker</span>
 			</button>
 		</div>
 	</div>
@@ -751,6 +751,20 @@
 		gap: 0.6em;
 	}
 
+	@media (max-width: 520px) {
+		.card-header-wrap {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+		.header-actions {
+			width: 100%;
+		}
+		.header-actions .benchmark-btn {
+			width: 100%;
+			justify-content: center;
+		}
+	}
+
 	.segmented-control {
 		display: inline-flex;
 		align-items: center;
@@ -836,17 +850,57 @@
 		transform: translateY(-1px);
 	}
 
+	/* BENCHMARK BUTTON (Prominent primary action) */
+	.benchmark-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5em;
+		background: var(--accent);
+		color: #ffffff;
+		border: 1px solid transparent;
+		padding: 0 1.1em;
+		height: 31px;
+		border-radius: 8px;
+		font-family: inherit;
+		font-size: 0.82em;
+		font-weight: 600;
+		line-height: 1;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+		box-sizing: border-box;
+		white-space: nowrap;
+	}
+
+	.benchmark-btn:hover:not(:disabled) {
+		background: #c2410c;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	}
+
+	.benchmark-btn:active:not(:disabled) {
+		transform: translateY(0);
+	}
+
+	.benchmark-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		transform: none;
+	}
+
+	.play-icon {
+		flex-shrink: 0;
+	}
+
 	#toggle-display-btn {
 		min-width: 80px;
 		justify-content: center;
 	}
 
-	#toggle-display-icon-stop {
-		color: rgba(239, 68, 68, 0.85);
-	}
-
+	#toggle-display-icon-stop,
 	#toggle-display-icon-play {
-		color: #22c55e;
+		color: #ffffff;
 	}
 
 	#open-pixel-checker-btn svg {

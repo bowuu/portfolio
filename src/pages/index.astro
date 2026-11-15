@@ -128,22 +128,23 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 							<div class="project-title-group">
 								<h3 class="project-name">Playkeys for Plex Web</h3>
 								<span class="proj-badge">Chrome Extension ▪ Manifest V3</span>
-								<span class="proj-badge ai-badge">AI-Accelerated Development</span>
+								<span class="proj-badge">Zero Telemetry</span>
 							</div>
 							<a href="https://github.com/bowuu/playkeys" target="_blank" rel="noopener" class="sub-link">GitHub Repository &rarr;</a>
 						</div>
 						<p class="project-text">
-							A zero-dependency Manifest V3 browser extension built to control Plex Web playback seamlessly via global OS hardware media keys, dynamic squircle toolbar status badges, a dark-themed popup player, and scrubbable timeline seek.
+							A Chrome extension that adds global media keys, playback status badges, and a popup controller for Plex Web (<code>app.plex.tv</code>) and self-hosted Plex servers. Built with Manifest V3, zero external dependencies or build steps, and zero telemetry.
 						</p>
 						<div class="project-meta-strip">
-							<span class="meta-label">Engineering Methodology:</span>
-							<span>Rapidly architected and shipped using AI-assisted pair-programming workflows (LLM-driven development), executing end-to-end from initial concept to store-policy compliance in a single build session.</span>
+							<span class="meta-label">Key Features:</span>
+							<span>Global OS media shortcuts (Play/Pause, Next, Previous, Stop), dynamic toolbar playback badge, popup player with track artwork and volume slider, on-demand local/self-hosted server support, and 100% local execution.</span>
 						</div>
 						<div class="project-tags">
 							<span class="tag">Manifest V3</span>
 							<span class="tag">Vanilla JavaScript</span>
-							<span class="tag">AI Pair-Programming</span>
 							<span class="tag">Zero Dependencies</span>
+							<span class="tag">Zero Telemetry</span>
+							<span class="tag">Self-Hosted Servers</span>
 							<span class="tag">MediaSession API</span>
 						</div>
 					</div>
@@ -441,17 +442,6 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 	:global(html[data-theme="dark"]) .proj-badge {
 		background: #27272a;
 		color: #d4d4d8;
-	}
-	.proj-badge.ai-badge {
-		background: rgba(168, 85, 247, 0.12);
-		color: #9333ea;
-		border: 1px solid rgba(168, 85, 247, 0.25);
-		font-weight: 700;
-	}
-	:global(html[data-theme="dark"]) .proj-badge.ai-badge {
-		background: rgba(168, 85, 247, 0.2);
-		color: #c084fc;
-		border-color: rgba(168, 85, 247, 0.4);
 	}
 	.project-meta-strip {
 		margin-top: 0.6em;

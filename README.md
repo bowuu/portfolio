@@ -14,7 +14,7 @@ Personal portfolio for **Bo Wu**, Computer Engineer specializing in silicon test
 ## Features
 
 - **3D Models:** Interactive WebGL CAD viewer rendering authentic B-Rep geometry tessellated directly from CAD STEP models using Open CASCADE.
-- **Playkeys for Plex Web:** Zero-dependency Manifest V3 browser extension for global OS media key control.
+- **Playkeys for Plex Web:** Manifest V3 browser extension for global media keys, playback status badges, and self-hosted Plex servers.
 - **Network Test:** Direct Anycast network latency, jitter, packet loss, and multi-stream wire-speed throughput benchmark with zero host bandwidth consumption.
 - **Mouse Test:** Real-time polling rate oscilloscope, reflex reaction benchmark, and switch chatter detector.
 - **Keyboard Test:** Full 104-key switch matrix, N-key rollover (NKRO), dispatch latency, and leaf-spring chatter detector.

@@ -336,7 +336,7 @@
 					<button class="wm-btn wm-min" id="codec-applet-min-btn" type="button" title="Minimize / Close (Esc)" aria-label="Minimize">
 						<svg viewBox="0 0 10 10" width="10" height="10"><line x1="1" y1="5" x2="9" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
 					</button>
-					<button class="wm-btn wm-max" id="codec-applet-maximize-btn" type="button" title="Toggle fullscreen" aria-label="Maximize">
+					<button class="wm-btn wm-max" id="codec-applet-maximize-btn" type="button" title="Full Screen in Browser (Maximize)" aria-label="Full Screen in Browser">
 						<svg id="codec-icon-maximize" viewBox="0 0 10 10" width="10" height="10"><rect x="1.5" y="1.5" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
 						<svg id="codec-icon-restore" class="hidden" viewBox="0 0 10 10" width="10" height="10"><rect x="3.5" y="1.5" width="5" height="5" rx="0.8" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 3.5v5h5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
 					</button>
@@ -349,7 +349,7 @@
 			<div class="codec-body-wrap">
 				<!-- STUDIO CONTROL RACK (CLEAN 2-ROW GRID) -->
 				<div class="codec-rack">
-					<!-- ROW 1: PIPELINE, CODEC & TOP-RIGHT START BUTTON -->
+					<!-- ROW 1: PIPELINE, CODEC, QUALITY & TOP-RIGHT START BUTTON -->
 					<div class="codec-rack-row codec-rack-top">
 						<div class="codec-rack-controls">
 							<div class="codec-rack-group">
@@ -370,6 +370,15 @@
 									<button type="button" class="codec-seg-btn" data-codec="hevc">HEVC</button>
 								</div>
 							</div>
+
+							<div class="codec-rack-group">
+								<span class="codec-ctrl-label">Quality:</span>
+								<div class="codec-segmented" id="quality-selector" role="group" aria-label="Quality preset">
+									<button type="button" class="codec-seg-btn" data-quality="high" title="14 Mbps High Bitrate Archival Profile">High</button>
+									<button type="button" class="codec-seg-btn active" data-quality="med" title="4 Mbps Medium Bitrate Streaming Profile">Med</button>
+									<button type="button" class="codec-seg-btn" data-quality="low" title="800 kbps Low Bitrate Stress Test">Low</button>
+								</div>
+							</div>
 						</div>
 
 						<button type="button" id="codec-run-btn" class="codec-run-btn" title="Start video verification test">
@@ -378,22 +387,13 @@
 						</button>
 					</div>
 
-					<!-- ROW 2: ENGINE, QUALITY & SOURCE SCENE -->
+					<!-- ROW 2: ENGINE & SOURCE SCENE -->
 					<div class="codec-rack-row codec-rack-bottom">
 						<div class="codec-rack-group">
 							<span class="codec-ctrl-label">Engine:</span>
 							<div class="codec-segmented" id="engine-selector" role="group" aria-label="Acceleration mode">
 								<button type="button" class="codec-seg-btn active" data-mode="prefer-hardware">Hardware ASIC</button>
 								<button type="button" class="codec-seg-btn" data-mode="prefer-software">Software CPU</button>
-							</div>
-						</div>
-
-						<div class="codec-rack-group">
-							<span class="codec-ctrl-label">Quality:</span>
-							<div class="codec-segmented" id="quality-selector" role="group" aria-label="Quality preset">
-								<button type="button" class="codec-seg-btn" data-quality="high" title="14 Mbps High Bitrate Archival Profile">High</button>
-								<button type="button" class="codec-seg-btn active" data-quality="med" title="4 Mbps Medium Bitrate Streaming Profile">Med</button>
-								<button type="button" class="codec-seg-btn" data-quality="low" title="800 kbps Low Bitrate Stress Test">Low</button>
 							</div>
 						</div>
 
@@ -2135,20 +2135,59 @@
 		const iconMax = document.getElementById('codec-icon-maximize');
 		const iconRestore = document.getElementById('codec-icon-restore');
 
-		function toggleMaximize() {
-			isMaximized = !isMaximized;
+		function updateMaximizeUi(maximized: boolean) {
+			isMaximized = maximized;
 			if (codecModal) {
-				codecModal.classList.toggle('is-maximized', isMaximized);
+				codecModal.classList.toggle('is-maximized', maximized);
 			}
 			if (iconMax && iconRestore) {
-				iconMax.classList.toggle('hidden', isMaximized);
-				iconRestore.classList.toggle('hidden', !isMaximized);
+				iconMax.classList.toggle('hidden', maximized);
+				iconRestore.classList.toggle('hidden', !maximized);
 			}
 			if (maxBtn) {
-				maxBtn.setAttribute('title', isMaximized ? 'Restore Window (Esc)' : 'Toggle fullscreen');
-				maxBtn.setAttribute('aria-label', isMaximized ? 'Restore Window' : 'Maximize');
+				maxBtn.setAttribute('title', maximized ? 'Exit Full Screen (Esc)' : 'Full Screen in Browser (Maximize)');
+				maxBtn.setAttribute('aria-label', maximized ? 'Exit Full Screen' : 'Full Screen in Browser');
 			}
 		}
+
+		async function toggleMaximize() {
+			const shouldEnter = !document.fullscreenElement && !codecModal?.classList.contains('is-maximized');
+			if (shouldEnter) {
+				try {
+					const root = document.documentElement;
+					if (root.requestFullscreen) {
+						await root.requestFullscreen();
+					} else if ((root as any).webkitRequestFullscreen) {
+						await (root as any).webkitRequestFullscreen();
+					}
+				} catch (err) {
+					console.warn('Fullscreen request failed or not allowed:', err);
+				}
+				updateMaximizeUi(true);
+			} else {
+				if (document.fullscreenElement) {
+					try {
+						if (document.exitFullscreen) {
+							await document.exitFullscreen();
+						} else if ((document as any).webkitExitFullscreen) {
+							await (document as any).webkitExitFullscreen();
+						}
+					} catch (err) {
+						console.warn('Exit fullscreen failed:', err);
+					}
+				}
+				updateMaximizeUi(false);
+			}
+		}
+
+		document.addEventListener('fullscreenchange', () => {
+			const isFs = !!document.fullscreenElement;
+			if (!isFs && codecModal?.classList.contains('is-maximized')) {
+				updateMaximizeUi(false);
+			} else if (isFs && codecModal && !codecModal.classList.contains('hidden')) {
+				updateMaximizeUi(true);
+			}
+		});
 
 		if (minBtn) minBtn.onclick = closeCodecModal;
 		if (closeBtn) closeBtn.onclick = closeCodecModal;
@@ -2268,10 +2307,21 @@
 
 		function closeCodecModal() {
 			stopPlayback();
+			if (document.fullscreenElement) {
+				try {
+					if (document.exitFullscreen) {
+						document.exitFullscreen();
+					} else if ((document as any).webkitExitFullscreen) {
+						(document as any).webkitExitFullscreen();
+					}
+				} catch (_) {}
+			}
 			if (codecModal) {
+				codecModal.classList.remove('is-maximized');
 				codecModal.classList.add('hidden');
 				codecModal.setAttribute('aria-hidden', 'true');
 			}
+			updateMaximizeUi(false);
 			document.body.style.overflow = '';
 			hideLoupe();
 		}
@@ -3391,6 +3441,16 @@
 			}
 			if (codecModal && !codecModal.classList.contains('hidden')) {
 				e.stopPropagation();
+				if (document.fullscreenElement) {
+					try {
+						if (document.exitFullscreen) {
+							document.exitFullscreen();
+						} else if ((document as any).webkitExitFullscreen) {
+							(document as any).webkitExitFullscreen();
+						}
+					} catch (_) {}
+					return;
+				}
 				if (codecModal.classList.contains('is-maximized')) {
 					codecModal.classList.remove('is-maximized');
 					const iconMax = document.getElementById('codec-icon-maximize');
@@ -3401,8 +3461,8 @@
 					}
 					const maxBtn = document.getElementById('codec-applet-maximize-btn');
 					if (maxBtn) {
-						maxBtn.setAttribute('title', 'Toggle fullscreen');
-						maxBtn.setAttribute('aria-label', 'Maximize');
+						maxBtn.setAttribute('title', 'Full Screen in Browser (Maximize)');
+						maxBtn.setAttribute('aria-label', 'Full Screen in Browser');
 					}
 					return;
 				}
@@ -4229,12 +4289,16 @@
 		margin: 0 !important;
 	}
 	#codec-applet-modal.is-maximized .codec-body-wrap {
-		max-height: calc(100vh - 105px) !important;
+		height: calc(100vh - 46px) !important;
+		max-height: calc(100vh - 46px) !important;
 		flex: 1 1 auto;
 		padding: 1em 1.5em 1.25em 1.5em;
+		gap: 0.9em;
 	}
 	#codec-applet-modal.is-maximized .codec-canvas-wrap {
-		max-height: 52vh;
+		max-height: 54vh;
+		max-width: calc(54vh * 16 / 9);
+		margin: 0 auto;
 	}
 	.codec-body-wrap {
 		padding: 1.1em 1.25em 1.25em 1.25em;
@@ -4249,11 +4313,11 @@
 	.codec-rack {
 		display: flex;
 		flex-direction: column;
-		gap: 0.65em;
+		gap: 0.75em;
 		background: rgba(148, 163, 184, 0.05);
 		border: 1px solid var(--border-color);
 		border-radius: 9px;
-		padding: 0.7em 0.85em;
+		padding: 0.75em 1em;
 	}
 	:global(html[data-theme="dark"]) .codec-rack {
 		background: rgba(0, 0, 0, 0.25);
@@ -4262,7 +4326,7 @@
 		display: flex;
 		align-items: center;
 		flex-wrap: wrap;
-		gap: 0.65em;
+		gap: 0.85em;
 	}
 	.codec-rack-top {
 		justify-content: space-between;
@@ -4271,19 +4335,21 @@
 		display: flex;
 		align-items: center;
 		flex-wrap: wrap;
-		gap: 0.75em;
+		gap: 1.15em;
+		flex: 1 1 auto;
+		min-width: 0;
 	}
 	.codec-rack-bottom {
 		justify-content: flex-start;
-		gap: 0.75em;
+		gap: 1.25em;
 	}
 	.codec-rack-group {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.45em;
+		gap: 0.55em;
 	}
 	.codec-ctrl-label {
-		font-size: 0.72em;
+		font-size: 0.75em;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
@@ -4293,8 +4359,9 @@
 	.codec-segmented {
 		display: inline-flex;
 		align-items: center;
+		gap: 2px;
 		background: rgba(148, 163, 184, 0.12);
-		padding: 2px;
+		padding: 2.5px;
 		border-radius: 7px;
 		border: 1px solid var(--border-color);
 	}
@@ -4305,12 +4372,12 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		padding: 0.24em 0.58em;
+		padding: 0.32em 0.72em;
 		border-radius: 5px;
 		border: 1px solid transparent;
 		background: transparent;
 		color: rgb(var(--gray));
-		font-size: 0.72em;
+		font-size: 0.75em;
 		font-weight: 700;
 		cursor: pointer;
 		line-height: 1.2;
@@ -4339,12 +4406,12 @@
 	.codec-run-btn {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.45em;
+		gap: 0.5em;
 		background: var(--accent);
 		color: #ffffff;
 		border: 1px solid var(--accent);
 		border-radius: 7px;
-		padding: 0.35em 1.15em;
+		padding: 0.4em 1.25em;
 		font-size: 0.82em;
 		font-weight: 700;
 		cursor: pointer;
@@ -4362,6 +4429,11 @@
 	.codec-run-btn:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
+	}
+	@media (max-width: 820px) {
+		.codec-rack-controls {
+			gap: 0.75em;
+		}
 	}
 	@media (max-width: 680px) {
 		.codec-rack-top {

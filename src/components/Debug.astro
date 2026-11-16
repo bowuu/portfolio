@@ -2236,7 +2236,11 @@
 				loupeDec.style.top = `${yDec}px`;
 
 				loupeSrc.classList.remove('hidden');
-				loupeDec.classList.remove('hidden');
+				if (decCanvas.getAttribute('data-has-frame') === 'true') {
+					loupeDec.classList.remove('hidden');
+				} else {
+					loupeDec.classList.add('hidden');
+				}
 			}
 		}
 
@@ -2263,6 +2267,7 @@
 		}
 
 		function closeCodecModal() {
+			stopPlayback();
 			if (codecModal) {
 				codecModal.classList.add('hidden');
 				codecModal.setAttribute('aria-hidden', 'true');
@@ -2415,7 +2420,7 @@
 		// 3. SCENE: SMPTE COLOR BARS (Studio Calibration Pattern - ITU-R BT.709 with Dynamic Opposing Motion)
 		function drawSmpteScene(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, totalFrames: number) {
 			// 1. Top 65%: Standard 7-Color Bars (Smoothly scrolling left across frame)
-			const topColors = ['#c0c0c0', '#c0c000', '#00c0c0', '#00c0c0', '#c000c0', '#c00000', '#0000c0'];
+			const topColors = ['#c0c0c0', '#c0c000', '#00c0c0', '#00c000', '#c000c0', '#c00000', '#0000c0'];
 			const numTop = topColors.length;
 			const barWidth = w / numTop;
 			const barHeight = Math.round(h * 0.65);
@@ -3396,18 +3401,23 @@
 					}
 					const maxBtn = document.getElementById('codec-applet-maximize-btn');
 					if (maxBtn) {
-						maxBtn.setAttribute('title', 'Toggle Fullscreen (⛶)');
-						maxBtn.setAttribute('aria-label', 'Toggle Fullscreen');
+						maxBtn.setAttribute('title', 'Toggle fullscreen');
+						maxBtn.setAttribute('aria-label', 'Maximize');
 					}
 					return;
 				}
-				codecModal.classList.add('hidden');
-				codecModal.setAttribute('aria-hidden', 'true');
-				document.body.style.overflow = '';
-				const loupeSrc = document.getElementById('codec-loupe-src');
-				const loupeDec = document.getElementById('codec-loupe-dec');
-				if (loupeSrc) loupeSrc.classList.add('hidden');
-				if (loupeDec) loupeDec.classList.add('hidden');
+				const codecClose = document.getElementById('codec-applet-close-btn');
+				if (codecClose) {
+					codecClose.click();
+				} else {
+					codecModal.classList.add('hidden');
+					codecModal.setAttribute('aria-hidden', 'true');
+					document.body.style.overflow = '';
+					const loupeSrc = document.getElementById('codec-loupe-src');
+					const loupeDec = document.getElementById('codec-loupe-dec');
+					if (loupeSrc) loupeSrc.classList.add('hidden');
+					if (loupeDec) loupeDec.classList.add('hidden');
+				}
 			}
 		}
 	});

@@ -355,18 +355,18 @@
 							<div class="codec-rack-group">
 								<span class="codec-ctrl-label">Pipeline:</span>
 								<div class="codec-segmented" id="pipeline-selector" role="group" aria-label="Pipeline selection">
-									<button type="button" class="codec-seg-btn active" data-pipeline="loopback">Loopback</button>
-									<button type="button" class="codec-seg-btn" data-pipeline="encode">Encode</button>
-									<button type="button" class="codec-seg-btn" data-pipeline="decode">Decode</button>
+									<button type="button" class="codec-seg-btn" data-pipeline="decode" title="Decode bitstream directly to canvas (NVDEC/VDU)">Decode</button>
+									<button type="button" class="codec-seg-btn" data-pipeline="encode" title="Encode source frames to compressed bitstream">Encode</button>
+									<button type="button" class="codec-seg-btn active" data-pipeline="loopback" title="Full loopback: encode source frames then decode back to canvas">Both</button>
 								</div>
 							</div>
 
 							<div class="codec-rack-group">
 								<span class="codec-ctrl-label">Source:</span>
 								<div class="codec-segmented" id="scene-selector" role="group" aria-label="Source frame selection">
-									<button type="button" class="codec-seg-btn active" data-scene="4k" title="Tears of Steel 4K UHD Master (Blender CC-BY)">🎬 4K Film</button>
-									<button type="button" class="codec-seg-btn" data-scene="1080p" title="Big Buck Bunny 1080p Reference (Blender CC-BY)">🐰 1080p Bunny</button>
-									<button type="button" class="codec-seg-btn" data-scene="smpte" title="SMPTE BT.709 Color Calibration Pattern">📺 SMPTE Bars</button>
+									<button type="button" class="codec-seg-btn" data-scene="smpte" title="SMPTE BT.709 color calibration &amp; alignment pattern">Test</button>
+									<button type="button" class="codec-seg-btn active" data-scene="1080p" title="Big Buck Bunny 1080p reference benchmark (Blender CC-BY)">1080</button>
+									<button type="button" class="codec-seg-btn" data-scene="4k" title="Tears of Steel 4K UHD master film footage (Blender CC-BY)">4K</button>
 								</div>
 							</div>
 						</div>
@@ -382,27 +382,27 @@
 						<div class="codec-rack-group">
 							<span class="codec-ctrl-label">Engine:</span>
 							<div class="codec-segmented" id="engine-selector" role="group" aria-label="Acceleration mode">
-								<button type="button" class="codec-seg-btn active" data-mode="prefer-hardware">Hardware ASIC</button>
-								<button type="button" class="codec-seg-btn" data-mode="prefer-software">Software CPU</button>
+								<button type="button" class="codec-seg-btn" data-mode="prefer-software" title="CPU software transcoding via WebCodecs &amp; WASM">Software</button>
+								<button type="button" class="codec-seg-btn active" data-mode="prefer-hardware" title="ASIC media transcoder on chip (dedicated hardware silicon)">Hardware</button>
 							</div>
 						</div>
 
 						<div class="codec-rack-group">
 							<span class="codec-ctrl-label">Codec:</span>
 							<div class="codec-segmented" id="codec-selector" role="group" aria-label="Codec selection">
-								<button type="button" class="codec-seg-btn active" data-codec="avc">H.264</button>
-								<button type="button" class="codec-seg-btn" data-codec="vp9">VP9</button>
-								<button type="button" class="codec-seg-btn" data-codec="av1">AV1</button>
-								<button type="button" class="codec-seg-btn" data-codec="hevc">HEVC</button>
+								<button type="button" class="codec-seg-btn" data-codec="avc" title="AVC / H.264 baseline &amp; high profiles (broad compatibility)">H.264</button>
+								<button type="button" class="codec-seg-btn" data-codec="vp9" title="Google VP9 Profile 0 8-bit web video standard">VP9</button>
+								<button type="button" class="codec-seg-btn active" data-codec="hevc" title="H.265 / HEVC high efficiency video coding (ASIC accelerated)">HEVC</button>
+								<button type="button" class="codec-seg-btn" data-codec="av1" title="AOMedia AV1 next-gen royalty-free open codec">AV1</button>
 							</div>
 						</div>
 
 						<div class="codec-rack-group">
 							<span class="codec-ctrl-label">Quality:</span>
 							<div class="codec-segmented" id="quality-selector" role="group" aria-label="Quality preset">
-								<button type="button" class="codec-seg-btn" data-quality="high" title="14 Mbps High Bitrate Archival Profile">High</button>
-								<button type="button" class="codec-seg-btn active" data-quality="med" title="4 Mbps Medium Bitrate Streaming Profile">Med</button>
-								<button type="button" class="codec-seg-btn" data-quality="low" title="800 kbps Low Bitrate Stress Test">Low</button>
+								<button type="button" class="codec-seg-btn" data-quality="low" title="800 kbps low bitrate stress test profile">Low</button>
+								<button type="button" class="codec-seg-btn active" data-quality="med" title="4 Mbps medium bitrate streaming profile">Med</button>
+								<button type="button" class="codec-seg-btn" data-quality="high" title="14 Mbps high bitrate archival profile">High</button>
 							</div>
 						</div>
 					</div>
@@ -410,7 +410,7 @@
 
 				<!-- SEPARATE STATUS BANNER (CLEANLY DECOUPLED FROM TOGGLE BUTTONS) -->
 				<div id="codec-status-bar" class="codec-status-bar">
-					<span id="codec-status-text">Ready: Loopback ▪ H.264 ▪ Hardware ASIC. Click &ldquo;Start&rdquo; to test.</span>
+					<span id="codec-status-text">Ready: Both ▪ HEVC ▪ Hardware ▪ Med Quality. Click &ldquo;Start&rdquo; to test.</span>
 				</div>
 
 				<!-- CANVAS PREVIEW GRID (SOURCE VS DECODED WITH 1:1 PIXEL LOUPE) -->
@@ -2103,10 +2103,10 @@
 		const sceneSegBtns = document.querySelectorAll<HTMLButtonElement>('#scene-selector .codec-seg-btn');
 
 		let selectedPipeline: 'loopback' | 'encode' | 'decode' = 'loopback';
-		let selectedCodec: 'avc' | 'vp9' | 'av1' | 'hevc' = 'avc';
+		let selectedCodec: 'avc' | 'vp9' | 'av1' | 'hevc' = 'hevc';
 		let selectedMode: 'prefer-hardware' | 'prefer-software' = 'prefer-hardware';
 		let selectedQuality: 'high' | 'med' | 'low' = 'med';
-		let selectedScene: '4k' | '1080p' | 'smpte' = '4k';
+		let selectedScene: '4k' | '1080p' | 'smpte' = '1080p';
 		let isRunning = false;
 
 		const image4k = new Image();
@@ -2718,8 +2718,8 @@
 				return;
 			}
 
-			const pipeName = selectedPipeline === 'loopback' ? 'Loopback' : (selectedPipeline === 'encode' ? 'Encoder' : 'Decoder');
-			const engineName = selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU';
+			const pipeName = selectedPipeline === 'loopback' ? 'Both' : (selectedPipeline === 'encode' ? 'Encoder' : 'Decoder');
+			const engineName = selectedMode === 'prefer-hardware' ? 'Hardware' : 'Software';
 			const codecName = selectedCodec === 'avc' ? 'H.264' : selectedCodec.toUpperCase();
 			const qualityName = selectedQuality === 'high' ? 'High' : (selectedQuality === 'low' ? 'Low' : 'Med');
 

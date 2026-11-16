@@ -445,6 +445,27 @@
 					</div>
 				</div>
 
+				<!-- PLAYBACK TIMELINE & FRAME SCRUBBER -->
+				<div class="codec-timeline-bar" id="codec-timeline-bar">
+					<div class="codec-timeline-controls">
+						<button type="button" id="codec-play-btn" class="codec-time-btn" title="Play / Pause (Space)" aria-label="Play / Pause">
+							<svg id="codec-icon-play" viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+							<svg id="codec-icon-pause" class="hidden" viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+						</button>
+						<button type="button" id="codec-prev-frame-btn" class="codec-time-btn" title="Previous Frame (Left Arrow)" aria-label="Previous Frame">
+							<svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+						</button>
+						<button type="button" id="codec-next-frame-btn" class="codec-time-btn" title="Next Frame (Right Arrow)" aria-label="Next Frame">
+							<svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+						</button>
+						<span class="codec-frame-readout" id="codec-frame-readout">Frame 1 / 60</span>
+					</div>
+					<div class="codec-scrubber-track">
+						<input type="range" id="codec-frame-scrubber" min="0" max="59" value="0" step="1" class="codec-scrub-slider" aria-label="Frame Scrubber">
+					</div>
+					<div class="codec-timecode-readout" id="codec-timecode-readout">0.0 ms (00:00.00)</div>
+				</div>
+
 				<!-- TELEMETRY METRICS GRID (4 BALANCED CARDS) -->
 				<div class="codec-metrics-grid">
 					<div class="webgpu-tile">
@@ -2051,6 +2072,21 @@
 		const metricDecFps = document.getElementById('codec-metric-dec-fps');
 		const metricRatio = document.getElementById('codec-metric-ratio');
 
+		const playBtn = document.getElementById('codec-play-btn');
+		const prevFrameBtn = document.getElementById('codec-prev-frame-btn');
+		const nextFrameBtn = document.getElementById('codec-next-frame-btn');
+		const frameScrubber = document.getElementById('codec-frame-scrubber') as HTMLInputElement | null;
+		const frameReadout = document.getElementById('codec-frame-readout');
+		const timecodeReadout = document.getElementById('codec-timecode-readout');
+		const iconPlay = document.getElementById('codec-icon-play');
+		const iconPause = document.getElementById('codec-icon-pause');
+
+		let currentFrameIdx = 0;
+		let isPlaying = false;
+		let playbackRaf: number | null = null;
+		let lastPlaybackTime = 0;
+		let decodedBitmaps: ImageBitmap[] = [];
+
 		const pipelineSegBtns = document.querySelectorAll<HTMLButtonElement>('#pipeline-selector .codec-seg-btn');
 		const codecSegBtns = document.querySelectorAll<HTMLButtonElement>('#codec-selector .codec-seg-btn');
 		const engineSegBtns = document.querySelectorAll<HTMLButtonElement>('#engine-selector .codec-seg-btn');
@@ -2488,6 +2524,89 @@
 			}
 		}
 
+		function displayFrame(idx: number) {
+			currentFrameIdx = Math.max(0, Math.min(59, idx));
+			if (frameScrubber) frameScrubber.value = String(currentFrameIdx);
+			if (frameReadout) frameReadout.textContent = `Frame ${currentFrameIdx + 1} / 60`;
+			if (timecodeReadout) {
+				const ms = (currentFrameIdx * 33.333).toFixed(1);
+				const sec = Math.floor(currentFrameIdx / 30);
+				const fSec = currentFrameIdx % 30;
+				timecodeReadout.textContent = `${ms} ms (00:0${sec}.${fSec < 10 ? '0' + fSec : fSec})`;
+			}
+
+			if (srcCanvas) {
+				const ctx = srcCanvas.getContext('2d');
+				if (ctx) drawSceneFrame(ctx, srcCanvas.width, srcCanvas.height, currentFrameIdx, 60);
+			}
+
+			if (decCanvas) {
+				const ctx = decCanvas.getContext('2d');
+				if (ctx && decodedBitmaps[currentFrameIdx]) {
+					ctx.drawImage(decodedBitmaps[currentFrameIdx], 0, 0, decCanvas.width, decCanvas.height);
+					decCanvas.setAttribute('data-has-frame', 'true');
+					if (decPlaceholder) decPlaceholder.style.display = 'none';
+				}
+			}
+
+			if (lastNormX !== null && lastNormY !== null) {
+				updateLoupe(lastNormX, lastNormY);
+			}
+		}
+
+		function startPlayback() {
+			if (isPlaying) return;
+			isPlaying = true;
+			if (iconPlay) iconPlay.classList.add('hidden');
+			if (iconPause) iconPause.classList.remove('hidden');
+			lastPlaybackTime = performance.now();
+
+			function loop(now: number) {
+				if (!isPlaying) return;
+				if (now - lastPlaybackTime >= 33.33) {
+					lastPlaybackTime = now;
+					currentFrameIdx = (currentFrameIdx + 1) % 60;
+					displayFrame(currentFrameIdx);
+				}
+				playbackRaf = requestAnimationFrame(loop);
+			}
+			playbackRaf = requestAnimationFrame(loop);
+		}
+
+		function stopPlayback() {
+			isPlaying = false;
+			if (playbackRaf !== null) {
+				cancelAnimationFrame(playbackRaf);
+				playbackRaf = null;
+			}
+			if (iconPlay) iconPlay.classList.remove('hidden');
+			if (iconPause) iconPause.classList.add('hidden');
+		}
+
+		function togglePlayback() {
+			if (isPlaying) {
+				stopPlayback();
+			} else {
+				startPlayback();
+			}
+		}
+
+		if (playBtn) playBtn.addEventListener('click', togglePlayback);
+		if (prevFrameBtn) prevFrameBtn.addEventListener('click', () => {
+			stopPlayback();
+			displayFrame(currentFrameIdx - 1);
+		});
+		if (nextFrameBtn) nextFrameBtn.addEventListener('click', () => {
+			stopPlayback();
+			displayFrame(currentFrameIdx + 1);
+		});
+		if (frameScrubber) {
+			frameScrubber.addEventListener('input', () => {
+				stopPlayback();
+				displayFrame(parseInt(frameScrubber.value, 10) || 0);
+			});
+		}
+
 		function updateStatusHint() {
 			if (isRunning) return;
 			if (!statusText) return;
@@ -2495,13 +2614,13 @@
 			statusText.style.color = '';
 
 			if (selectedCodec === 'av1' && selectedMode === 'prefer-hardware' && selectedPipeline !== 'decode') {
-				statusText.innerHTML = `⚠️ <strong>AV1 Hardware Encode</strong> requires RTX 40 series / Intel Arc. For RTX 30 series (Ampere), select <strong>Decode</strong> pipeline to test NVDEC.`;
+				statusText.innerHTML = `⚠️ <strong>AV1 HW Encode</strong> requires RTX 40 / Arc; select <strong>Decode</strong> to test NVDEC.`;
 				statusText.style.color = '#f97316';
 				return;
 			}
 
 			if (selectedCodec === 'hevc' && selectedMode === 'prefer-software') {
-				statusText.innerHTML = `⚠️ <strong>HEVC Software CPU</strong> is unsupported in Chromium due to MPEG licensing; select <strong>Hardware ASIC</strong>.`;
+				statusText.innerHTML = `⚠️ <strong>HEVC Software CPU</strong> is unsupported in browser; select <strong>Hardware ASIC</strong>.`;
 				statusText.style.color = '#f97316';
 				return;
 			}
@@ -2514,6 +2633,7 @@
 		}
 
 		function setPipeline(mode: 'loopback' | 'encode' | 'decode') {
+			stopPlayback();
 			selectedPipeline = mode;
 			pipelineSegBtns.forEach((b) => {
 				b.classList.toggle('active', b.getAttribute('data-pipeline') === mode);
@@ -2612,13 +2732,12 @@
 		// Segmented controls: Scene
 		sceneSegBtns.forEach((btn) => {
 			btn.onclick = () => {
+				stopPlayback();
 				sceneSegBtns.forEach((b) => b.classList.remove('active'));
 				btn.classList.add('active');
 				selectedScene = (btn.getAttribute('data-scene') as any) || '4k';
-				if (srcCanvas) {
-					const ctx = srcCanvas.getContext('2d');
-					if (ctx) drawSceneFrame(ctx, srcCanvas.width, srcCanvas.height, 0, 60);
-				}
+				decodedBitmaps.forEach((b) => b.close());
+				decodedBitmaps = [];
 				if (decCanvas) {
 					decCanvas.removeAttribute('data-has-frame');
 				}
@@ -2626,6 +2745,7 @@
 					decPlaceholder.style.display = 'flex';
 					decPlaceholder.innerHTML = '<span>Awaiting verification run...</span>';
 				}
+				displayFrame(0);
 				updateStatusHint();
 			};
 		});
@@ -2771,9 +2891,12 @@
 					}
 
 					if (statusText) {
-						statusText.textContent = `✓ Verification Complete: ${selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU'} encoded ${totalFrames} frames (2.0s motion) in ${encDuration.toFixed(1)}ms (${encFps} FPS). Bitstream: ${kbSize} KB (${ratioX}:1 vs ${rawMb} MB raw).`;
+						statusText.textContent = `✓ Encoded ${totalFrames} frames (2.0s) in ${encDuration.toFixed(0)}ms ▪ ${encFps.toLocaleString()} FPS (${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'})`;
 						statusText.style.color = '#22c55e';
 					}
+					currentFrameIdx = 0;
+					displayFrame(0);
+					startPlayback();
 					return;
 				}
 
@@ -2910,11 +3033,35 @@
 						hardwareAcceleration: selectedMode
 					};
 
+					// Store decoded frames for timeline scrubber & playback
+					decodedBitmaps.forEach((b) => b.close());
+					decodedBitmaps = [];
+
+					let offCanvas: OffscreenCanvas | HTMLCanvasElement | null = null;
+					let offCtx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null = null;
+					if (typeof OffscreenCanvas !== 'undefined') {
+						offCanvas = new OffscreenCanvas(width, height);
+						offCtx = offCanvas.getContext('2d');
+					} else {
+						offCanvas = document.createElement('canvas');
+						offCanvas.width = width;
+						offCanvas.height = height;
+						offCtx = offCanvas.getContext('2d');
+					}
+
 					let decodedCount = 0;
 					const decoder = new VideoDecoder({
 						output: (videoFrame) => {
 							decodedCount++;
 							decCtx.drawImage(videoFrame, 0, 0, width, height);
+							if (offCanvas && offCtx) {
+								offCtx.drawImage(videoFrame, 0, 0, width, height);
+								if ('transferToImageBitmap' in offCanvas) {
+									decodedBitmaps.push(offCanvas.transferToImageBitmap());
+								} else if (typeof createImageBitmap !== 'undefined') {
+									createImageBitmap(offCanvas).then((bmp) => decodedBitmaps.push(bmp));
+								}
+							}
 							videoFrame.close();
 						},
 						error: (err) => console.error('Decoder error:', err)
@@ -2957,9 +3104,12 @@
 					}
 
 					if (statusText) {
-						statusText.textContent = `✓ Verification Complete: ${selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU'} decoded ${totalFrames} frames in ${decDuration.toFixed(1)}ms (${decFps} FPS). Bitstream: ${kbSize} KB.`;
+						statusText.textContent = `✓ Decoded ${totalFrames} frames in ${decDuration.toFixed(0)}ms ▪ ${decFps.toLocaleString()} FPS (${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'})`;
 						statusText.style.color = '#22c55e';
 					}
+					currentFrameIdx = 0;
+					displayFrame(0);
+					startPlayback();
 					return;
 				}
 
@@ -3073,11 +3223,35 @@
 					hardwareAcceleration: selectedMode
 				};
 
+				// Store decoded frames for timeline scrubber & playback
+				decodedBitmaps.forEach((b) => b.close());
+				decodedBitmaps = [];
+
+				let offCanvas: OffscreenCanvas | HTMLCanvasElement | null = null;
+				let offCtx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null = null;
+				if (typeof OffscreenCanvas !== 'undefined') {
+					offCanvas = new OffscreenCanvas(width, height);
+					offCtx = offCanvas.getContext('2d');
+				} else {
+					offCanvas = document.createElement('canvas');
+					offCanvas.width = width;
+					offCanvas.height = height;
+					offCtx = offCanvas.getContext('2d');
+				}
+
 				let decodedCount = 0;
 				const decoder = new VideoDecoder({
 					output: (videoFrame) => {
 						decodedCount++;
 						decCtx.drawImage(videoFrame, 0, 0, width, height);
+						if (offCanvas && offCtx) {
+							offCtx.drawImage(videoFrame, 0, 0, width, height);
+							if ('transferToImageBitmap' in offCanvas) {
+								decodedBitmaps.push(offCanvas.transferToImageBitmap());
+							} else if (typeof createImageBitmap !== 'undefined') {
+								createImageBitmap(offCanvas).then((bmp) => decodedBitmaps.push(bmp));
+							}
+						}
 						videoFrame.close();
 					},
 					error: (err) => console.error('Decoder error:', err)
@@ -3120,9 +3294,13 @@
 				}
 
 				if (statusText) {
-					statusText.textContent = `✓ Verification Complete: ${totalFrames} frames (2.0s motion) in ${(encDuration + decDuration).toFixed(1)}ms (${encFps} FPS enc / ${decFps} FPS dec). Bitstream: ${kbSize} KB (${ratioX}:1 vs ${rawMb} MB raw).`;
+					statusText.textContent = `✓ Verified ${totalFrames} frames (2.0s) in ${(encDuration + decDuration).toFixed(0)}ms ▪ ${encFps.toLocaleString()} FPS enc / ${decFps.toLocaleString()} FPS dec`;
 					statusText.style.color = '#22c55e';
 				}
+
+				currentFrameIdx = 0;
+				displayFrame(0);
+				startPlayback();
 			} catch (err: any) {
 				if (statusText) {
 					statusText.textContent = `Verification Notice: ${err.message || 'Codec profile unsupported'}.`;
@@ -3135,6 +3313,25 @@
 				if (btnLabel) btnLabel.textContent = 'Start';
 			}
 		}
+
+		window.addEventListener('keydown', (e) => {
+			if (!codecModal || codecModal.classList.contains('hidden')) return;
+			if (e.target instanceof HTMLInputElement && e.target !== frameScrubber) return;
+			if (e.target instanceof HTMLTextAreaElement) return;
+
+			if (e.code === 'Space') {
+				e.preventDefault();
+				togglePlayback();
+			} else if (e.code === 'ArrowLeft') {
+				e.preventDefault();
+				stopPlayback();
+				displayFrame(currentFrameIdx - 1);
+			} else if (e.code === 'ArrowRight') {
+				e.preventDefault();
+				stopPlayback();
+				displayFrame(currentFrameIdx + 1);
+			}
+		});
 
 		if (runBtn) runBtn.onclick = runVerification;
 	}
@@ -4140,13 +4337,25 @@
 		background: rgba(148, 163, 184, 0.08);
 		border: 1px solid var(--border-color);
 		border-radius: 6px;
-		padding: 0.42em 0.85em;
-		font-size: 0.75em;
+		padding: 0.3em 0.85em;
+		font-size: 0.74em;
 		color: rgb(var(--gray-dark));
 		display: flex;
 		align-items: center;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-		min-height: 28px;
+		height: 30px;
+		min-height: 30px;
+		max-height: 30px;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+	#codec-status-text {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		display: block;
+		width: 100%;
 	}
 	:global(html[data-theme="dark"]) .codec-status-bar {
 		background: rgba(255, 255, 255, 0.02);
@@ -4338,6 +4547,120 @@
 		font-size: 0.76em;
 		font-weight: 500;
 		font-family: ui-monospace, monospace;
+	}
+	/* PLAYBACK TIMELINE & FRAME SCRUBBER */
+	.codec-timeline-bar {
+		display: flex;
+		align-items: center;
+		gap: 0.65em;
+		background: rgba(148, 163, 184, 0.08);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		padding: 0.35em 0.7em;
+	}
+	:global(html[data-theme="dark"]) .codec-timeline-bar {
+		background: rgba(0, 0, 0, 0.35);
+	}
+	.codec-timeline-controls {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35em;
+		flex-shrink: 0;
+	}
+	.codec-time-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 24px;
+		height: 24px;
+		border-radius: 5px;
+		background: rgba(148, 163, 184, 0.15);
+		border: 1px solid var(--border-color);
+		color: rgb(var(--gray-dark));
+		cursor: pointer;
+		transition: all 0.15s ease;
+		padding: 0;
+	}
+	.codec-time-btn:hover {
+		background: var(--accent);
+		color: #ffffff;
+		border-color: var(--accent);
+	}
+	:global(html[data-theme="dark"]) .codec-time-btn {
+		color: #cbd5e1;
+		background: rgba(255, 255, 255, 0.06);
+	}
+	:global(html[data-theme="dark"]) .codec-time-btn:hover {
+		background: var(--accent);
+		color: #ffffff;
+	}
+	.codec-frame-readout {
+		font-size: 0.72em;
+		font-weight: 700;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		color: rgb(var(--gray-dark));
+		min-width: 80px;
+		white-space: nowrap;
+	}
+	:global(html[data-theme="dark"]) .codec-frame-readout {
+		color: #e2e8f0;
+	}
+	.codec-scrubber-track {
+		flex: 1 1 auto;
+		display: flex;
+		align-items: center;
+		min-width: 80px;
+	}
+	.codec-scrub-slider {
+		width: 100%;
+		height: 6px;
+		-webkit-appearance: none;
+		appearance: none;
+		background: rgba(148, 163, 184, 0.25);
+		border-radius: 3px;
+		outline: none;
+		cursor: pointer;
+	}
+	:global(html[data-theme="dark"]) .codec-scrub-slider {
+		background: rgba(255, 255, 255, 0.15);
+	}
+	.codec-scrub-slider::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: var(--accent);
+		cursor: pointer;
+		box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.6);
+		transition: transform 0.1s ease;
+	}
+	.codec-scrub-slider::-webkit-slider-thumb:hover {
+		transform: scale(1.2);
+	}
+	.codec-scrub-slider::-moz-range-thumb {
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: var(--accent);
+		cursor: pointer;
+		border: none;
+		box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.6);
+	}
+	.codec-timecode-readout {
+		font-size: 0.72em;
+		font-weight: 600;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		color: rgb(var(--gray));
+		flex-shrink: 0;
+		min-width: 105px;
+		text-align: right;
+		white-space: nowrap;
+	}
+	@media (max-width: 600px) {
+		.codec-timecode-readout {
+			display: none;
+		}
 	}
 	.codec-metrics-grid {
 		display: grid;

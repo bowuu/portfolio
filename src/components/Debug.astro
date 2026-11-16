@@ -2397,18 +2397,24 @@
 			ctx.fillText(`1080p REFERENCE ▪ FRAME ${frameIdx + 1} / ${totalFrames} ▪ 30 FPS ▪ ${(frameIdx * 33.3).toFixed(1)} ms`, w * 0.5, bannerY + 17);
 		}
 
-		// 3. SCENE: SMPTE COLOR BARS (Studio Calibration Pattern - ITU-R BT.709)
+		// 3. SCENE: SMPTE COLOR BARS (Studio Calibration Pattern - ITU-R BT.709 with Dynamic Opposing Motion)
 		function drawSmpteScene(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, totalFrames: number) {
-			// 1. Top 65%: Standard 7-Color Bars
-			const colors = ['#c0c0c0', '#c0c000', '#00c0c0', '#00c000', '#c000c0', '#c00000', '#0000c0'];
-			const barWidth = w / colors.length;
+			// 1. Top 65%: Standard 7-Color Bars (Smoothly scrolling left across frame)
+			const topColors = ['#c0c0c0', '#c0c000', '#00c0c0', '#00c0c0', '#c000c0', '#c00000', '#0000c0'];
+			const numTop = topColors.length;
+			const barWidth = w / numTop;
 			const barHeight = Math.round(h * 0.65);
-			for (let i = 0; i < colors.length; i++) {
-				ctx.fillStyle = colors[i];
-				ctx.fillRect(i * barWidth, 0, Math.ceil(barWidth), barHeight);
+			const shiftLeft = (frameIdx / totalFrames) * (w * 0.35); // Gentle slow leftward drift
+			for (let i = -numTop; i < numTop * 2; i++) {
+				const bx = i * barWidth - (shiftLeft % w);
+				if (bx + barWidth > 0 && bx < w) {
+					const cIndex = ((i % numTop) + numTop) % numTop;
+					ctx.fillStyle = topColors[cIndex];
+					ctx.fillRect(Math.floor(bx), 0, Math.ceil(barWidth) + 1, barHeight);
+				}
 			}
 
-			// 2. Middle 10%: Alignment Cast Bars
+			// 2. Middle 10%: Alignment Cast Bars (Stationary cast grid, orange sweep ticker moves across)
 			const castColors = ['#0000c0', '#131313', '#c000c0', '#131313', '#00c0c0', '#131313', '#c0c0c0'];
 			const castY = barHeight;
 			const castHeight = Math.round(h * 0.10);
@@ -2417,27 +2423,29 @@
 				ctx.fillRect(i * barWidth, castY, Math.ceil(barWidth), castHeight);
 			}
 
-			// 3. Bottom 25%: Black sync background
-			const botY = castY + castHeight;
-			const botHeight = h - botY;
-			ctx.fillStyle = '#080c14';
-			ctx.fillRect(0, botY, w, botHeight);
-
-			// 4. Left PLUGE calibration bars (strictly contained within left 40%)
-			const plugeColors = ['#00214c', '#ffffff', '#32006a', '#080c14', '#04070c', '#080c14', '#10141f'];
-			const plugeW = Math.round((w * 0.40) / plugeColors.length);
-			for (let i = 0; i < plugeColors.length; i++) {
-				ctx.fillStyle = plugeColors[i];
-				ctx.fillRect(i * plugeW, botY, Math.ceil(plugeW), botHeight);
-			}
-
-			// 5. Broadcast Sweep Pulse (moving horizontal calibration bar)
+			// Broadcast Sweep Ticker (moving horizontal calibration pulse)
 			const sweepProgress = frameIdx / Math.max(1, totalFrames - 1);
 			const sweepX = sweepProgress * (w - 20);
 			ctx.fillStyle = '#f97316';
 			ctx.fillRect(sweepX, castY, 18, castHeight);
 
-			// 6. Top Calibration Strip (Translucent gradient)
+			// 3. Bottom 25%: Calibration Blocks (Smoothly scrolling right across frame)
+			const botColors = ['#00214c', '#ffffff', '#32006a', '#05070d', '#141824', '#00a3c4', '#f97316', '#dc2626'];
+			const numBot = botColors.length;
+			const botW = w / numBot;
+			const botY = castY + castHeight;
+			const botHeight = h - botY;
+			const shiftRight = (frameIdx / totalFrames) * (w * 0.35); // Gentle slow rightward drift
+			for (let i = -numBot; i < numBot * 2; i++) {
+				const bx = i * botW + (shiftRight % w);
+				if (bx + botW > 0 && bx < w) {
+					const cIndex = ((i % numBot) + numBot) % numBot;
+					ctx.fillStyle = botColors[cIndex];
+					ctx.fillRect(Math.floor(bx), botY, Math.ceil(botW) + 1, botHeight);
+				}
+			}
+
+			// 4. Top Calibration Strip (Translucent gradient)
 			const topGrad = ctx.createLinearGradient(0, 0, 0, 44);
 			topGrad.addColorStop(0, 'rgba(0, 0, 0, 0.7)');
 			topGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
@@ -2453,7 +2461,7 @@
 			const fSec = frameIdx % 30;
 			ctx.fillText(`SMPTE TC 00:00:01:${sec < 10 ? '0' + sec : sec}:${fSec < 10 ? '0' + fSec : fSec}`, w - 24, 24);
 
-			// 7. Bottom Frame Counter HUD Box (Cleanly positioned on right half, compact and never clipped)
+			// 5. Bottom Frame Counter HUD Box (Cleanly positioned on right half, compact and never clipped)
 			const hudX = Math.round(w * 0.46);
 			const hudW = Math.round(w * 0.51);
 			const hudH = 26;

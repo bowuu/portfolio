@@ -343,29 +343,39 @@
 			</div>
 
 			<div class="codec-body-wrap">
-				<!-- UNIFIED STUDIO CONTROL RACK (UNCLUTTERED 2-TIER DESIGN) -->
+				<!-- STUDIO CONTROL RACK (CLEAN 2-ROW GRID) -->
 				<div class="codec-rack">
-					<!-- ROW 1: EXECUTION WORKFLOW & PRIMARY RUN ACTION -->
-					<div class="codec-rack-row codec-rack-primary">
-						<div class="codec-rack-group">
-							<span class="codec-ctrl-label">Pipeline:</span>
-							<div class="codec-segmented" id="pipeline-selector" role="group" aria-label="Pipeline selection">
-								<button type="button" class="codec-seg-btn active" data-pipeline="loopback">Loopback</button>
-								<button type="button" class="codec-seg-btn" data-pipeline="encode">Encode</button>
-								<button type="button" class="codec-seg-btn" data-pipeline="decode">Decode</button>
+					<!-- ROW 1: PIPELINE, CODEC & TOP-RIGHT START BUTTON -->
+					<div class="codec-rack-row codec-rack-top">
+						<div class="codec-rack-controls">
+							<div class="codec-rack-group">
+								<span class="codec-ctrl-label">Pipeline:</span>
+								<div class="codec-segmented" id="pipeline-selector" role="group" aria-label="Pipeline selection">
+									<button type="button" class="codec-seg-btn active" data-pipeline="loopback">Loopback</button>
+									<button type="button" class="codec-seg-btn" data-pipeline="encode">Encode</button>
+									<button type="button" class="codec-seg-btn" data-pipeline="decode">Decode</button>
+								</div>
+							</div>
+
+							<div class="codec-rack-group">
+								<span class="codec-ctrl-label">Codec:</span>
+								<div class="codec-segmented" id="codec-selector" role="group" aria-label="Codec selection">
+									<button type="button" class="codec-seg-btn active" data-codec="avc">H.264</button>
+									<button type="button" class="codec-seg-btn" data-codec="vp9">VP9</button>
+									<button type="button" class="codec-seg-btn" data-codec="av1">AV1</button>
+									<button type="button" class="codec-seg-btn" data-codec="hevc">HEVC</button>
+								</div>
 							</div>
 						</div>
 
-						<div class="codec-rack-group">
-							<span class="codec-ctrl-label">Codec:</span>
-							<div class="codec-segmented" id="codec-selector" role="group" aria-label="Codec selection">
-								<button type="button" class="codec-seg-btn active" data-codec="avc">H.264</button>
-								<button type="button" class="codec-seg-btn" data-codec="vp9">VP9</button>
-								<button type="button" class="codec-seg-btn" data-codec="av1">AV1</button>
-								<button type="button" class="codec-seg-btn" data-codec="hevc">HEVC</button>
-							</div>
-						</div>
+						<button type="button" id="codec-run-btn" class="codec-run-btn" title="Start video verification test">
+							<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+							<span id="codec-btn-label">Start</span>
+						</button>
+					</div>
 
+					<!-- ROW 2: ENGINE & SOURCE SCENE -->
+					<div class="codec-rack-row codec-rack-bottom">
 						<div class="codec-rack-group">
 							<span class="codec-ctrl-label">Engine:</span>
 							<div class="codec-segmented" id="engine-selector" role="group" aria-label="Acceleration mode">
@@ -374,39 +384,32 @@
 							</div>
 						</div>
 
-						<button type="button" id="codec-run-btn" class="codec-run-btn" title="Run video verification test">
-							<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-							<span>Run Verification</span>
-						</button>
-					</div>
-
-					<!-- ROW 2: CINEMATIC SCENE PRESET & LIVE STATUS BANNER -->
-					<div class="codec-rack-row codec-rack-secondary">
 						<div class="codec-rack-group">
-							<span class="codec-ctrl-label">Scene:</span>
-							<div class="codec-segmented" id="scene-selector" role="group" aria-label="Scene selection">
-								<button type="button" class="codec-seg-btn active" data-scene="cinema" title="Cinematic Night Movie Sequence">🎬 Cinema</button>
-								<button type="button" class="codec-seg-btn" data-scene="silicon" title="Silicon Wafer Inspection Test">🔬 Silicon</button>
-								<button type="button" class="codec-seg-btn" data-scene="smpte" title="SMPTE Color Calibration Bars">📺 SMPTE</button>
+							<span class="codec-ctrl-label">Source:</span>
+							<div class="codec-segmented" id="scene-selector" role="group" aria-label="Source frame selection">
+								<button type="button" class="codec-seg-btn active" data-scene="4k" title="Tears of Steel 4K UHD Movie Frame (Blender CC-BY)">🎬 4K Film</button>
+								<button type="button" class="codec-seg-btn" data-scene="1080p" title="Big Buck Bunny 1080p Reference Frame (Blender CC-BY)">🐰 1080p Bunny</button>
+								<button type="button" class="codec-seg-btn" data-scene="smpte" title="SMPTE BT.709 Color Calibration Pattern">📺 SMPTE Bars</button>
 							</div>
 						</div>
-
-						<div id="codec-status-bar" class="codec-status-bar">
-							<span id="codec-status-text">Ready: Loopback ▪ H.264 ▪ Hardware ASIC. Click &ldquo;Run Verification&rdquo; to test.</span>
-						</div>
 					</div>
+				</div>
+
+				<!-- SEPARATE STATUS BANNER (CLEANLY DECOUPLED FROM TOGGLE BUTTONS) -->
+				<div id="codec-status-bar" class="codec-status-bar">
+					<span id="codec-status-text">Ready: Loopback ▪ H.264 ▪ Hardware ASIC. Click &ldquo;Start&rdquo; to test.</span>
 				</div>
 
 				<!-- CANVAS PREVIEW GRID (SOURCE VS DECODED) -->
 				<div class="codec-preview-grid">
 					<div class="codec-preview-box">
-						<div class="codec-preview-label">Raw Input Frame (Source) ▪ 960&times;540 RGB</div>
+						<div class="codec-preview-label">Source Frame (Input)</div>
 						<div class="codec-canvas-wrap">
 							<canvas id="codec-canvas-source" width="960" height="540" class="codec-canvas"></canvas>
 						</div>
 					</div>
 					<div class="codec-preview-box">
-						<div class="codec-preview-label">Reconstructed Frame (Decoded Output) ▪ YUV420P</div>
+						<div class="codec-preview-label">Reconstructed (Output)</div>
 						<div class="codec-canvas-wrap">
 							<canvas id="codec-canvas-decoded" width="960" height="540" class="codec-canvas"></canvas>
 							<div id="codec-canvas-placeholder" class="codec-canvas-placeholder">
@@ -439,9 +442,9 @@
 
 			<div class="map-applet-footer">
 				<div class="map-footer-info">
-					<span class="map-footer-loc">WebCodecs VideoEncoder &amp; VideoDecoder Pipeline</span>
+					<span class="map-footer-loc">WebCodecs Hardware Pipeline</span>
 					<span class="map-footer-sep" aria-hidden="true">▪</span>
-					<span class="map-footer-note">100% In-Memory Synthetic Verification</span>
+					<span class="map-footer-note">In-Memory Zero Egress</span>
 				</div>
 			</div>
 		</div>
@@ -2030,8 +2033,27 @@
 		let selectedPipeline: 'loopback' | 'encode' | 'decode' = 'loopback';
 		let selectedCodec: 'avc' | 'vp9' | 'av1' | 'hevc' = 'avc';
 		let selectedMode: 'prefer-hardware' | 'prefer-software' = 'prefer-hardware';
-		let selectedScene: 'cinema' | 'silicon' | 'smpte' = 'cinema';
+		let selectedScene: '4k' | '1080p' | 'smpte' = '4k';
 		let isRunning = false;
+
+		const image4k = new Image();
+		image4k.src = '/media/frame-4k-cinema.webp';
+
+		const image1080 = new Image();
+		image1080.src = '/media/frame-1080p-bunny.webp';
+
+		image4k.onload = () => {
+			if (selectedScene === '4k' && srcCanvas) {
+				const ctx = srcCanvas.getContext('2d');
+				if (ctx) drawSceneFrame(ctx, srcCanvas.width, srcCanvas.height, 0, 30);
+			}
+		};
+		image1080.onload = () => {
+			if (selectedScene === '1080p' && srcCanvas) {
+				const ctx = srcCanvas.getContext('2d');
+				if (ctx) drawSceneFrame(ctx, srcCanvas.width, srcCanvas.height, 0, 30);
+			}
+		};
 
 		function closeCodecModal() {
 			if (codecModal) {
@@ -2041,224 +2063,101 @@
 			document.body.style.overflow = '';
 		}
 
-		// 1. SCENE: CINEMATIC CITY (Film Camera / Night Cyberpunk Sequence)
-		function drawCinemaScene(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, totalFrames: number) {
-			const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
-			skyGrad.addColorStop(0, '#020617');
-			skyGrad.addColorStop(0.35, '#0f172a');
-			skyGrad.addColorStop(0.68, '#1e1b4b');
-			skyGrad.addColorStop(1, '#0b0f19');
-			ctx.fillStyle = skyGrad;
-			ctx.fillRect(0, 0, w, h);
+		// 1. SCENE: 4K FILM (Tears of Steel - Blender Foundation CC-BY 3.0)
+		function draw4kScene(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, totalFrames: number) {
+			if (image4k.complete && image4k.naturalWidth > 0) {
+				ctx.drawImage(image4k, 0, 0, w, h);
+			} else {
+				ctx.fillStyle = '#050811';
+				ctx.fillRect(0, 0, w, h);
+			}
 
-			const glowGrad = ctx.createRadialGradient(w * 0.7, h * 0.42, 10, w * 0.7, h * 0.42, w * 0.5);
-			glowGrad.addColorStop(0, 'rgba(56, 189, 248, 0.28)');
-			glowGrad.addColorStop(0.4, 'rgba(147, 51, 234, 0.16)');
-			glowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-			ctx.fillStyle = glowGrad;
-			ctx.fillRect(0, 0, w, h);
-
-			const buildings = [
-				{ x: 0.04, w: 0.09, h: 0.46 },
-				{ x: 0.15, w: 0.08, h: 0.58 },
-				{ x: 0.25, w: 0.11, h: 0.42 },
-				{ x: 0.38, w: 0.08, h: 0.64 },
-				{ x: 0.48, w: 0.12, h: 0.50 },
-				{ x: 0.62, w: 0.09, h: 0.60 },
-				{ x: 0.73, w: 0.10, h: 0.44 },
-				{ x: 0.85, w: 0.11, h: 0.54 }
-			];
-			ctx.fillStyle = '#080c16';
-			buildings.forEach((b) => {
-				const bx = b.x * w;
-				const bw = b.w * w;
-				const bh = b.h * h;
-				const by = h * 0.72 - bh;
-				ctx.fillRect(bx, by, bw, bh);
-
-				const cols = Math.floor(bw / 14);
-				const rows = Math.floor(bh / 18);
-				for (let r = 2; r < rows - 1; r++) {
-					for (let c = 1; c < cols - 1; c++) {
-						const seed = Math.sin(b.x * 100 + r * 13 + c * 7);
-						if (seed > 0.15) {
-							ctx.fillStyle = seed > 0.6 ? '#fef08a' : (seed > 0.35 ? '#38bdf8' : '#f43f5e');
-							ctx.globalAlpha = 0.75;
-							ctx.fillRect(bx + c * 14, by + r * 18, 7, 9);
-							ctx.globalAlpha = 1.0;
-						}
-					}
-				}
-			});
-
-			const waterGrad = ctx.createLinearGradient(0, h * 0.72, 0, h);
-			waterGrad.addColorStop(0, '#080c16');
-			waterGrad.addColorStop(0.3, '#0f172a');
-			waterGrad.addColorStop(1, '#020617');
-			ctx.fillStyle = waterGrad;
-			ctx.fillRect(0, h * 0.72, w, h * 0.28);
-
-			ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
-			ctx.fillRect(w * 0.35, h * 0.76, w * 0.3, 3);
-			ctx.fillStyle = 'rgba(244, 63, 94, 0.3)';
-			ctx.fillRect(w * 0.55, h * 0.82, w * 0.25, 4);
-
-			const carProgress = frameIdx / Math.max(1, totalFrames - 1);
-			const carX = w * (0.08 + carProgress * 0.84);
-			const carY = h * 0.73;
-
-			const flareGrad = ctx.createRadialGradient(carX, carY, 2, carX, carY, 65);
-			flareGrad.addColorStop(0, '#ffffff');
-			flareGrad.addColorStop(0.25, 'rgba(249, 115, 22, 0.85)');
-			flareGrad.addColorStop(1, 'rgba(249, 115, 22, 0)');
-			ctx.fillStyle = flareGrad;
-			ctx.beginPath();
-			ctx.arc(carX, carY, 65, 0, Math.PI * 2);
-			ctx.fill();
-
-			ctx.fillStyle = '#ef4444';
-			ctx.fillRect(Math.max(0, carX - 140), carY - 2, 140, 4);
-
-			ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
-			ctx.fillRect(0, carY - 1, w, 2);
-
+			// Film Camera HUD Top Strip
 			ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
 			ctx.fillRect(0, 0, w, 44);
 
 			ctx.textAlign = 'left';
-			ctx.font = 'bold 16px ui-monospace, monospace';
+			ctx.font = 'bold 16px ui-monospace, SFMono-Regular, Consolas, monospace';
 			ctx.fillStyle = frameIdx % 6 < 3 ? '#ef4444' : '#7f1d1d';
 			ctx.beginPath();
 			ctx.arc(26, 22, 6, 0, Math.PI * 2);
 			ctx.fill();
 
 			ctx.fillStyle = '#ffffff';
-			ctx.fillText('REC 4K PRORES RAW', 44, 28);
+			ctx.fillText('REC 4K DCI ▪ TEARS OF STEEL', 44, 28);
 
 			ctx.textAlign = 'right';
 			ctx.fillStyle = '#94a3b8';
 			const tcSec = frameIdx % 30;
-			ctx.fillText(`TC 00:01:24:${tcSec < 10 ? '0' + tcSec : tcSec} ▪ ISO 800 ▪ 5600K`, w - 24, 28);
+			ctx.fillText(`TC 00:01:24:${tcSec < 10 ? '0' + tcSec : tcSec} ▪ 3840×2160 MASTER ▪ 24.00 FPS`, w - 24, 28);
 
+			// Bottom Frame Counter Banner
 			const bannerW = Math.round(w * 0.76);
-			const bannerH = 96;
+			const bannerH = 54;
 			const bannerX = Math.round((w - bannerW) / 2);
-			const bannerY = Math.round(h * 0.16);
+			const bannerY = h - 68;
 
-			ctx.fillStyle = 'rgba(4, 7, 18, 0.92)';
+			ctx.fillStyle = 'rgba(4, 7, 18, 0.88)';
 			ctx.fillRect(bannerX, bannerY, bannerW, bannerH);
 			ctx.strokeStyle = '#f97316';
-			ctx.lineWidth = 2.5;
+			ctx.lineWidth = 2;
 			ctx.strokeRect(bannerX, bannerY, bannerW, bannerH);
 
 			ctx.fillStyle = '#ffffff';
-			ctx.font = 'bold 28px ui-monospace, SFMono-Regular, Consolas, sans-serif';
+			ctx.font = 'bold 19px ui-monospace, SFMono-Regular, Consolas, sans-serif';
 			ctx.textAlign = 'center';
-			ctx.fillText('CINEMATICS 4K MASTER', w * 0.5, bannerY + 40);
-
-			ctx.fillStyle = '#38bdf8';
-			ctx.font = 'bold 18px ui-monospace, SFMono-Regular, Consolas, monospace';
-			ctx.fillText(`FRAME ${frameIdx + 1} / ${totalFrames} ▪ 30 FPS ▪ ${(frameIdx * 33.3).toFixed(1)} ms ▪ 2.39:1 DCI`, w * 0.5, bannerY + 74);
+			ctx.fillText(`4K UHD MASTER ▪ FRAME ${frameIdx + 1} / ${totalFrames} ▪ 30 FPS ▪ ${(frameIdx * 33.3).toFixed(1)} ms`, w * 0.5, bannerY + 34);
 		}
 
-		// 2. SCENE: SILICON WAFER (Semiconductor ATE Optical Inspection Sequence)
-		function drawSiliconScene(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, totalFrames: number) {
-			ctx.fillStyle = '#060a12';
-			ctx.fillRect(0, 0, w, h);
-
-			ctx.strokeStyle = 'rgba(30, 58, 138, 0.28)';
-			ctx.lineWidth = 1;
-			const gridSize = 32;
-			for (let x = 0; x < w; x += gridSize) {
-				ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
-			}
-			for (let y = 0; y < h; y += gridSize) {
-				ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+		// 2. SCENE: 1080p BUNNY (Big Buck Bunny - Blender Foundation CC-BY 3.0)
+		function draw1080pScene(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, totalFrames: number) {
+			if (image1080.complete && image1080.naturalWidth > 0) {
+				ctx.drawImage(image1080, 0, 0, w, h);
+			} else {
+				ctx.fillStyle = '#050811';
+				ctx.fillRect(0, 0, w, h);
 			}
 
-			const dieW = Math.round(w * 0.44);
-			const dieH = Math.round(h * 0.52);
-			const dieX = Math.round((w - dieW) / 2);
-			const dieY = Math.round((h - dieH) / 2);
-
-			ctx.fillStyle = '#0b1329';
-			ctx.fillRect(dieX - 16, dieY - 16, dieW + 32, dieH + 32);
-			ctx.strokeStyle = '#2563eb';
-			ctx.lineWidth = 2;
-			ctx.strokeRect(dieX - 16, dieY - 16, dieW + 32, dieH + 32);
-
-			ctx.fillStyle = '#020617';
-			ctx.fillRect(dieX, dieY, dieW, dieH);
-			ctx.strokeStyle = '#38bdf8';
-			ctx.lineWidth = 1.5;
-			ctx.strokeRect(dieX, dieY, dieW, dieH);
-
-			const coreCols = 4;
-			const coreRows = 2;
-			const coreW = (dieW - 30) / coreCols;
-			const coreH = (dieH - 24) / coreRows;
-			for (let r = 0; r < coreRows; r++) {
-				for (let c = 0; c < coreCols; c++) {
-					const cx = dieX + 12 + c * (coreW + 2);
-					const cy = dieY + 12 + r * (coreH + 2);
-					ctx.fillStyle = 'rgba(56, 189, 248, 0.08)';
-					ctx.fillRect(cx, cy, coreW, coreH);
-					ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
-					ctx.strokeRect(cx, cy, coreW, coreH);
-				}
-			}
-
-			const scanProgress = frameIdx / Math.max(1, totalFrames - 1);
-			const laserY = dieY + scanProgress * dieH;
-
-			const laserGrad = ctx.createLinearGradient(0, laserY - 14, 0, laserY + 14);
-			laserGrad.addColorStop(0, 'rgba(249, 115, 22, 0)');
-			laserGrad.addColorStop(0.5, 'rgba(249, 115, 22, 0.95)');
-			laserGrad.addColorStop(1, 'rgba(249, 115, 22, 0)');
-			ctx.fillStyle = laserGrad;
-			ctx.fillRect(dieX - 24, laserY - 14, dieW + 48, 28);
-
-			ctx.strokeStyle = '#ffffff';
-			ctx.lineWidth = 2;
-			ctx.beginPath();
-			ctx.moveTo(dieX - 30, laserY);
-			ctx.lineTo(dieX + dieW + 30, laserY);
-			ctx.stroke();
-
+			// Player HUD Top Strip
 			ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
 			ctx.fillRect(0, 0, w, 44);
+
 			ctx.textAlign = 'left';
-			ctx.font = 'bold 16px ui-monospace, monospace';
-			ctx.fillStyle = '#38bdf8';
-			ctx.fillText('ATE WAFER TEST BENCH ▪ DIE #GA104-NV', 24, 28);
+			ctx.font = 'bold 16px ui-monospace, SFMono-Regular, Consolas, monospace';
+			ctx.fillStyle = '#22c55e';
+			ctx.beginPath();
+			ctx.arc(26, 22, 6, 0, Math.PI * 2);
+			ctx.fill();
+
+			ctx.fillStyle = '#ffffff';
+			ctx.fillText('PLAY 1080p ▪ BIG BUCK BUNNY', 44, 28);
+
 			ctx.textAlign = 'right';
-			ctx.fillStyle = '#a855f7';
-			ctx.fillText('TSMC FINFET ▪ SCAN CLOCK 100 MHz', w - 24, 28);
+			ctx.fillStyle = '#94a3b8';
+			const tcSec = frameIdx % 30;
+			ctx.fillText(`TC 00:00:12:${tcSec < 10 ? '0' + tcSec : tcSec} ▪ 1920×1080 REFERENCE`, w - 24, 28);
 
-			const bannerW = Math.round(w * 0.78);
-			const bannerH = 96;
+			// Bottom Frame Counter Banner
+			const bannerW = Math.round(w * 0.76);
+			const bannerH = 54;
 			const bannerX = Math.round((w - bannerW) / 2);
-			const bannerY = Math.round(h * 0.14);
+			const bannerY = h - 68;
 
-			ctx.fillStyle = 'rgba(2, 6, 23, 0.94)';
+			ctx.fillStyle = 'rgba(4, 7, 18, 0.88)';
 			ctx.fillRect(bannerX, bannerY, bannerW, bannerH);
 			ctx.strokeStyle = '#38bdf8';
-			ctx.lineWidth = 2.5;
+			ctx.lineWidth = 2;
 			ctx.strokeRect(bannerX, bannerY, bannerW, bannerH);
 
 			ctx.fillStyle = '#ffffff';
-			ctx.font = 'bold 28px ui-monospace, SFMono-Regular, Consolas, sans-serif';
+			ctx.font = 'bold 19px ui-monospace, SFMono-Regular, Consolas, sans-serif';
 			ctx.textAlign = 'center';
-			ctx.fillText('SILICON DIE VALIDATION 3nm', w * 0.5, bannerY + 40);
-
-			ctx.fillStyle = '#22c55e';
-			ctx.font = 'bold 18px ui-monospace, SFMono-Regular, Consolas, monospace';
-			ctx.fillText(`FRAME ${frameIdx + 1} / ${totalFrames} ▪ OPTICAL ATE SCAN ▪ STATUS: PASS`, w * 0.5, bannerY + 74);
+			ctx.fillText(`1080p REFERENCE ▪ FRAME ${frameIdx + 1} / ${totalFrames} ▪ 30 FPS ▪ ${(frameIdx * 33.3).toFixed(1)} ms`, w * 0.5, bannerY + 34);
 		}
 
-		// 3. SCENE: SMPTE COLOR BARS (Studio Calibration & Multiburst Vector Pattern)
+		// 3. SCENE: SMPTE COLOR BARS (Studio Calibration Pattern - ITU-R BT.709)
 		function drawSmpteScene(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, totalFrames: number) {
-			const colors = ['#c0c0c0', '#c0c000', '#00c0c0', '#00c000', '#c000c0', '#c00000', '#0000c0'];
+			const colors = ['#c0c0c0', '#c0c000', '#00c0c0', '#00c0c0', '#c000c0', '#c00000', '#0000c0'];
 			const barWidth = w / colors.length;
 			for (let i = 0; i < colors.length; i++) {
 				ctx.fillStyle = colors[i];
@@ -2272,26 +2171,36 @@
 			ctx.fillStyle = '#ea580c';
 			ctx.fillRect(Math.max(0, sweepX - 6), Math.round(h * 0.65), 12, Math.round(h * 0.35));
 
-			const boxW = Math.round(w * 0.78);
-			const boxH = 96;
-			const boxX = Math.round((w - boxW) / 2);
-			const boxY = Math.round(h * 0.18);
+			// Top Calibration Strip
+			ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+			ctx.fillRect(0, 0, w, 44);
+			ctx.textAlign = 'left';
+			ctx.font = 'bold 16px ui-monospace, monospace';
+			ctx.fillStyle = '#38bdf8';
+			ctx.fillText('SMPTE COLOR CALIBRATION ▪ ITU-R BT.709', 24, 28);
+			ctx.textAlign = 'right';
+			ctx.fillStyle = '#94a3b8';
+			const tcSec = frameIdx % 30;
+			ctx.fillText(`SMPTE TC 00:00:01:${tcSec < 10 ? '0' + tcSec : tcSec}`, w - 24, 28);
 
-			ctx.fillStyle = 'rgba(0, 0, 0, 0.92)';
-			ctx.fillRect(boxX, boxY, boxW, boxH);
+			// Bottom Frame Counter Banner
+			const bannerW = Math.round(w * 0.76);
+			const bannerH = 54;
+			const bannerX = Math.round((w - bannerW) / 2);
+			const bannerY = h - 68;
+
+			ctx.fillStyle = 'rgba(0, 0, 0, 0.90)';
+			ctx.fillRect(bannerX, bannerY, bannerW, bannerH);
 			ctx.strokeStyle = '#ea580c';
-			ctx.lineWidth = 2.5;
-			ctx.strokeRect(boxX, boxY, boxW, boxH);
+			ctx.lineWidth = 2;
+			ctx.strokeRect(bannerX, bannerY, bannerW, bannerH);
 
 			ctx.fillStyle = '#ffffff';
-			ctx.font = 'bold 28px ui-monospace, SFMono-Regular, Consolas, sans-serif';
+			ctx.font = 'bold 19px ui-monospace, SFMono-Regular, Consolas, sans-serif';
 			ctx.textAlign = 'center';
-			ctx.fillText('SMPTE COLOR CALIBRATION', w * 0.5, boxY + 40);
+			ctx.fillText(`TEST PATTERN ▪ FRAME ${frameIdx + 1} / ${totalFrames} ▪ 30 FPS ▪ ${(frameIdx * 33.3).toFixed(1)} ms`, w * 0.5, bannerY + 34);
 
-			ctx.font = 'bold 18px ui-monospace, SFMono-Regular, Consolas, monospace';
-			ctx.fillStyle = '#38bdf8';
-			ctx.fillText(`FRAME ${frameIdx + 1} / ${totalFrames} ▪ 30 FPS ▪ ${(frameIdx * 33.3).toFixed(1)} ms ▪ BT.709`, w * 0.5, boxY + 74);
-
+			// Pluge bars
 			const plugeW = w / 7;
 			ctx.fillStyle = '#000000'; ctx.fillRect(0, Math.round(h * 0.75), plugeW, Math.round(h * 0.25));
 			ctx.fillStyle = '#141414'; ctx.fillRect(plugeW, Math.round(h * 0.75), plugeW, Math.round(h * 0.25));
@@ -2300,10 +2209,10 @@
 		}
 
 		function drawSceneFrame(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, totalFrames: number) {
-			if (selectedScene === 'cinema') {
-				drawCinemaScene(ctx, w, h, frameIdx, totalFrames);
-			} else if (selectedScene === 'silicon') {
-				drawSiliconScene(ctx, w, h, frameIdx, totalFrames);
+			if (selectedScene === '4k') {
+				draw4kScene(ctx, w, h, frameIdx, totalFrames);
+			} else if (selectedScene === '1080p') {
+				draw1080pScene(ctx, w, h, frameIdx, totalFrames);
 			} else {
 				drawSmpteScene(ctx, w, h, frameIdx, totalFrames);
 			}
@@ -2331,7 +2240,7 @@
 			const engineName = selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU';
 			const codecName = selectedCodec === 'avc' ? 'H.264' : selectedCodec.toUpperCase();
 
-			statusText.textContent = `Ready: ${pipeName} ▪ ${codecName} ▪ ${engineName}. Click "Run Verification" to test.`;
+			statusText.textContent = `Ready: ${pipeName} ▪ ${codecName} ▪ ${engineName}. Click "Start" to test.`;
 		}
 
 		function setPipeline(mode: 'loopback' | 'encode' | 'decode') {
@@ -2435,7 +2344,7 @@
 			btn.onclick = () => {
 				sceneSegBtns.forEach((b) => b.classList.remove('active'));
 				btn.classList.add('active');
-				selectedScene = (btn.getAttribute('data-scene') as any) || 'cinema';
+				selectedScene = (btn.getAttribute('data-scene') as any) || '4k';
 				if (srcCanvas) {
 					const ctx = srcCanvas.getContext('2d');
 					if (ctx) drawSceneFrame(ctx, srcCanvas.width, srcCanvas.height, 0, 30);
@@ -2464,8 +2373,16 @@
 
 			isRunning = true;
 			if (runBtn) runBtn.disabled = true;
+			const btnLabel = document.getElementById('codec-btn-label');
+			if (btnLabel) btnLabel.textContent = 'Stop';
 
 			try {
+				if (selectedScene === '4k' && (!image4k.complete || image4k.naturalWidth === 0)) {
+					await new Promise((r) => { image4k.onload = r; setTimeout(r, 600); });
+				} else if (selectedScene === '1080p' && (!image1080.complete || image1080.naturalWidth === 0)) {
+					await new Promise((r) => { image1080.onload = r; setTimeout(r, 600); });
+				}
+
 				let codecCandidates = ['avc1.4d001f', 'avc1.42001f'];
 				if (selectedCodec === 'vp9') codecCandidates = ['vp09.00.10.08'];
 				else if (selectedCodec === 'av1') codecCandidates = ['av01.0.05M.08', 'av01.0.08M.10'];
@@ -2939,6 +2856,8 @@
 			} finally {
 				isRunning = false;
 				if (runBtn) runBtn.disabled = false;
+				const btnLabel = document.getElementById('codec-btn-label');
+				if (btnLabel) btnLabel.textContent = 'Start';
 			}
 		}
 
@@ -3730,11 +3649,11 @@
 	.codec-rack {
 		display: flex;
 		flex-direction: column;
-		gap: 0.6em;
+		gap: 0.65em;
 		background: rgba(148, 163, 184, 0.05);
 		border: 1px solid var(--border-color);
 		border-radius: 9px;
-		padding: 0.65em 0.85em;
+		padding: 0.7em 0.85em;
 	}
 	:global(html[data-theme="dark"]) .codec-rack {
 		background: rgba(0, 0, 0, 0.25);
@@ -3745,26 +3664,18 @@
 		flex-wrap: wrap;
 		gap: 0.65em;
 	}
-	.codec-rack-primary {
-		justify-content: flex-start;
-	}
-	.codec-rack-primary .codec-run-btn {
-		margin-left: auto;
-	}
-	@media (max-width: 840px) {
-		.codec-rack-primary .codec-run-btn {
-			margin-left: 0;
-			width: 100%;
-			justify-content: center;
-		}
-	}
-	.codec-rack-secondary {
-		align-items: center;
+	.codec-rack-top {
 		justify-content: space-between;
 	}
-	.codec-rack-secondary .codec-status-bar {
-		flex: 1 1 300px;
-		margin: 0;
+	.codec-rack-controls {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.75em;
+	}
+	.codec-rack-bottom {
+		justify-content: flex-start;
+		gap: 0.75em;
 	}
 	.codec-rack-group {
 		display: inline-flex;
@@ -3833,14 +3744,15 @@
 		color: #ffffff;
 		border: 1px solid var(--accent);
 		border-radius: 7px;
-		padding: 0.35em 0.95em;
-		font-size: 0.78em;
+		padding: 0.35em 1.15em;
+		font-size: 0.82em;
 		font-weight: 700;
 		cursor: pointer;
 		transition: all 0.15s ease;
 		font-family: inherit;
 		box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.3);
 		white-space: nowrap;
+		margin-left: auto;
 	}
 	.codec-run-btn:hover:not(:disabled) {
 		background: var(--accent-dark);
@@ -3851,11 +3763,22 @@
 		opacity: 0.6;
 		cursor: not-allowed;
 	}
+	@media (max-width: 680px) {
+		.codec-rack-top {
+			flex-direction: column;
+			align-items: stretch;
+		}
+		.codec-run-btn {
+			margin-left: 0;
+			width: 100%;
+			justify-content: center;
+		}
+	}
 	.codec-status-bar {
 		background: rgba(148, 163, 184, 0.08);
 		border: 1px solid var(--border-color);
 		border-radius: 6px;
-		padding: 0.35em 0.75em;
+		padding: 0.42em 0.85em;
 		font-size: 0.75em;
 		color: rgb(var(--gray-dark));
 		display: flex;
@@ -3881,13 +3804,19 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.3em;
+		min-width: 0;
 	}
 	.codec-preview-label {
-		font-size: 0.68em;
+		font-size: 0.72em;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: rgb(var(--gray));
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		line-height: 1.4;
+		height: 1.4em;
 	}
 	.codec-canvas-wrap {
 		position: relative;

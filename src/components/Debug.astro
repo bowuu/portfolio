@@ -2128,16 +2128,13 @@
 			sourceBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
 			sourceBitmaps = new Array(60);
 
-			const previewW = is4k ? 1920 : width;
-			const previewH = is4k ? 1080 : height;
-
 			if (selectedScene === 'smpte') {
-				const offCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(previewW, previewH) : document.createElement('canvas');
-				offCanvas.width = previewW;
-				offCanvas.height = previewH;
+				const offCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(width, height) : document.createElement('canvas');
+				offCanvas.width = width;
+				offCanvas.height = height;
 				const offCtx = offCanvas.getContext('2d')!;
 				for (let i = 0; i < 60; i++) {
-					drawSmpteScene(offCtx, previewW, previewH, i, 60);
+					drawSmpteScene(offCtx, width, height, i, 60);
 					if ('transferToImageBitmap' in offCanvas) {
 						sourceBitmaps[i] = (offCanvas as any).transferToImageBitmap();
 					} else {
@@ -2150,25 +2147,55 @@
 
 			if (!srcVideo) return [];
 
+			// Ensure correct scene video is loaded without redundant reload
+			loadVideoForScene(selectedScene === '4k' ? '4k' : '1080p');
+
 			if (srcVideo.readyState < 2) {
-				if (statusText) statusText.textContent = `Buffering ${selectedScene === '4k' ? 'Dog 4K' : 'Charge 1080p'} master...`;
-				await new Promise<void>((r) => {
-					const onData = () => { srcVideo.removeEventListener('loadeddata', onData); r(); };
-					srcVideo.addEventListener('loadeddata', onData, { once: true });
-					srcVideo.load();
-					setTimeout(r, 1500);
+				if (statusText) {
+					statusText.textContent = `Buffering ${selectedScene === '4k' ? 'Dog 4K' : 'Charge 1080p'} master...`;
+					statusText.style.color = '';
+				}
+				await new Promise<void>((resolve, reject) => {
+					if (srcVideo.readyState >= 2) {
+						resolve();
+						return;
+					}
+					let timer: any;
+					const onReady = () => {
+						clearTimeout(timer);
+						srcVideo.removeEventListener('loadeddata', onReady);
+						srcVideo.removeEventListener('canplay', onReady);
+						srcVideo.removeEventListener('canplaythrough', onReady);
+						resolve();
+					};
+					srcVideo.addEventListener('loadeddata', onReady, { once: true });
+					srcVideo.addEventListener('canplay', onReady, { once: true });
+					srcVideo.addEventListener('canplaythrough', onReady, { once: true });
+					timer = setTimeout(() => {
+						srcVideo.removeEventListener('loadeddata', onReady);
+						srcVideo.removeEventListener('canplay', onReady);
+						srcVideo.removeEventListener('canplaythrough', onReady);
+						if (srcVideo.readyState >= 2) {
+							resolve();
+						} else {
+							reject(new Error(`Timed out buffering ${selectedScene === '4k' ? 'Dog 4K' : 'Charge 1080p'} master. Check network connection.`));
+						}
+					}, 12000);
 				});
 			}
 
 			srcVideo.pause();
 
-			const extractCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(previewW, previewH) : document.createElement('canvas');
-			extractCanvas.width = previewW;
-			extractCanvas.height = previewH;
+			const extractCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(width, height) : document.createElement('canvas');
+			extractCanvas.width = width;
+			extractCanvas.height = height;
 			const extractCtx = extractCanvas.getContext('2d')!;
 
 			for (let i = 0; i < 60; i++) {
 				if (!isRunning) break;
+				if (statusText && (i % 6 === 0 || i === 59)) {
+					statusText.textContent = `Extracting ${selectedScene.toUpperCase()} reference frames (${i + 1}/60)...`;
+				}
 				const targetTime = (i + 0.5) / 24;
 				srcVideo.currentTime = targetTime;
 
@@ -2177,19 +2204,22 @@
 					const finish = () => {
 						if (done) return;
 						done = true;
-						srcVideo.removeEventListener('seeked', finish);
+						srcVideo.removeEventListener('seeked', onSeeked);
 						resolve();
 					};
-					srcVideo.addEventListener('seeked', finish, { once: true });
-					if ('requestVideoFrameCallback' in srcVideo) {
-						srcVideo.requestVideoFrameCallback(finish);
-					}
-					setTimeout(finish, 120);
+					const onSeeked = () => {
+						if ('requestVideoFrameCallback' in srcVideo) {
+							srcVideo.requestVideoFrameCallback(finish);
+							setTimeout(finish, 80);
+						} else {
+							requestAnimationFrame(() => requestAnimationFrame(finish));
+						}
+					};
+					srcVideo.addEventListener('seeked', onSeeked, { once: true });
+					setTimeout(finish, 180);
 				});
 
-				await new Promise<void>((r) => requestAnimationFrame(() => r()));
-
-				extractCtx.drawImage(srcVideo, 0, 0, previewW, previewH);
+				extractCtx.drawImage(srcVideo, 0, 0, width, height);
 				if ('transferToImageBitmap' in extractCanvas) {
 					sourceBitmaps[i] = (extractCanvas as any).transferToImageBitmap();
 				} else {
@@ -2205,7 +2235,9 @@
 			if (!srcVideo) return;
 			const targetWebm = scene === '4k' ? '/media/dog_4k.webm' : '/media/charge_1080p.webm';
 			const targetMp4 = scene === '4k' ? '/media/dog_4k.mp4' : '/media/charge_1080p.mp4';
-			if (!srcVideo.currentSrc || !srcVideo.currentSrc.includes(scene === '4k' ? 'dog_4k' : 'charge_1080p')) {
+			const activeSrc = srcVideo.querySelector('source')?.getAttribute('src') || srcVideo.currentSrc || '';
+			const matches = scene === '4k' ? activeSrc.includes('dog_4k') : activeSrc.includes('charge_1080p');
+			if (!matches) {
 				srcVideo.innerHTML = `
 					<source src="${targetWebm}" type="video/webm">
 					<source src="${targetMp4}" type="video/mp4">
@@ -2636,6 +2668,7 @@
 
 		function stopPlayback() {
 			isPlaying = false;
+			isRunning = false;
 			if (playbackRaf !== null) {
 				cancelAnimationFrame(playbackRaf);
 				playbackRaf = null;
@@ -2750,6 +2783,10 @@
 				decCanvas.width = targetW;
 				decCanvas.height = targetH;
 			}
+			if (srcCanvas) {
+				srcCanvas.width = targetW;
+				srcCanvas.height = targetH;
+			}
 
 			currentFrameIdx = 0;
 
@@ -2760,8 +2797,6 @@
 				}
 				if (srcCanvas) {
 					srcCanvas.classList.remove('hidden');
-					srcCanvas.width = 1920;
-					srcCanvas.height = 1080;
 					const ctx = srcCanvas.getContext('2d');
 					if (ctx) drawSmpteScene(ctx, 1920, 1080, 0, 60);
 				}
@@ -2771,7 +2806,9 @@
 				if (srcVideo) {
 					srcVideo.classList.remove('hidden');
 					loadVideoForScene(scene);
-					srcVideo.currentTime = 0;
+					if (srcVideo.readyState >= 1) {
+						srcVideo.currentTime = 0;
+					}
 				}
 				syncTimelineUI(0);
 			}
@@ -2899,8 +2936,6 @@
 				const is4k = selectedScene === '4k';
 				const width = is4k ? 3840 : 1920;
 				const height = is4k ? 2160 : 1080;
-				const previewW = is4k ? 1920 : width;
-				const previewH = is4k ? 1080 : height;
 				const fps = 24;
 				const totalFrames = 60;
 				const frameIntervalUs = 41667;
@@ -2933,8 +2968,8 @@
 				}
 
 				if (!decCanvas) throw new Error('Decoded canvas not found');
-				decCanvas.width = previewW;
-				decCanvas.height = previewH;
+				decCanvas.width = width;
+				decCanvas.height = height;
 
 				// 1. Ensure source reference frames are extracted
 				if (statusText) {
@@ -2948,8 +2983,10 @@
 				if (srcVideo) srcVideo.classList.add('hidden');
 				if (srcCanvas) {
 					srcCanvas.classList.remove('hidden');
-					srcCanvas.width = previewW;
-					srcCanvas.height = previewH;
+					srcCanvas.width = width;
+					srcCanvas.height = height;
+					const ctx = srcCanvas.getContext('2d');
+					if (ctx && frames[0]) ctx.drawImage(frames[0], 0, 0, width, height);
 				}
 
 				// 2. Probing encoder support
@@ -3141,17 +3178,20 @@
 					decodedBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
 					decodedBitmaps = new Array(totalFrames);
 
+					const decOffCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(width, height) : document.createElement('canvas');
+					decOffCanvas.width = width;
+					decOffCanvas.height = height;
+					const decOffCtx = decOffCanvas.getContext('2d');
+
 					const decoder = new VideoDecoder({
 						output: (videoFrame) => {
 							const fIdx = Math.min(59, Math.max(0, Math.round(videoFrame.timestamp / frameIntervalUs)));
-							if (typeof OffscreenCanvas !== 'undefined') {
-								const frameCanvas = new OffscreenCanvas(previewW, previewH);
-								const fCtx = frameCanvas.getContext('2d');
-								if (fCtx) fCtx.drawImage(videoFrame, 0, 0, previewW, previewH);
-								if ('transferToImageBitmap' in frameCanvas) {
-									decodedBitmaps[fIdx] = frameCanvas.transferToImageBitmap();
+							if (decOffCtx) {
+								decOffCtx.drawImage(videoFrame, 0, 0, width, height);
+								if ('transferToImageBitmap' in decOffCanvas) {
+									decodedBitmaps[fIdx] = (decOffCanvas as any).transferToImageBitmap();
 								} else {
-									createImageBitmap(frameCanvas).then((bmp) => { decodedBitmaps[fIdx] = bmp; });
+									createImageBitmap(decOffCanvas).then((bmp) => { decodedBitmaps[fIdx] = bmp; });
 								}
 							}
 							videoFrame.close();
@@ -3260,17 +3300,20 @@
 				decodedBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
 				decodedBitmaps = new Array(totalFrames);
 
+				const decOffCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(width, height) : document.createElement('canvas');
+				decOffCanvas.width = width;
+				decOffCanvas.height = height;
+				const decOffCtx = decOffCanvas.getContext('2d');
+
 				const decoder = new VideoDecoder({
 					output: (videoFrame) => {
 						const fIdx = Math.min(59, Math.max(0, Math.round(videoFrame.timestamp / frameIntervalUs)));
-						if (typeof OffscreenCanvas !== 'undefined') {
-							const frameCanvas = new OffscreenCanvas(previewW, previewH);
-							const fCtx = frameCanvas.getContext('2d');
-							if (fCtx) fCtx.drawImage(videoFrame, 0, 0, previewW, previewH);
-							if ('transferToImageBitmap' in frameCanvas) {
-								decodedBitmaps[fIdx] = frameCanvas.transferToImageBitmap();
+						if (decOffCtx) {
+							decOffCtx.drawImage(videoFrame, 0, 0, width, height);
+							if ('transferToImageBitmap' in decOffCanvas) {
+								decodedBitmaps[fIdx] = (decOffCanvas as any).transferToImageBitmap();
 							} else {
-								createImageBitmap(frameCanvas).then((bmp) => { decodedBitmaps[fIdx] = bmp; });
+								createImageBitmap(decOffCanvas).then((bmp) => { decodedBitmaps[fIdx] = bmp; });
 							}
 						}
 						videoFrame.close();

@@ -417,13 +417,15 @@
 				<div class="codec-preview-grid">
 					<div class="codec-preview-box">
 						<div class="codec-preview-header">
-							<span class="codec-preview-label">Source Frame (Input)</span>
+							<div class="codec-preview-title-row">
+								<span class="codec-preview-label">Source Frame (Input)</span>
+								<span class="codec-loupe-pill" id="codec-pill-src">4× Raw</span>
+							</div>
 							<div class="codec-loupe-zoom-wrap" role="group" aria-label="Magnifier Zoom">
 								<span class="codec-zoom-label">Loupe:</span>
 								<button type="button" class="codec-zoom-btn" data-zoom="2">2×</button>
 								<button type="button" class="codec-zoom-btn active" data-zoom="4">4×</button>
 								<button type="button" class="codec-zoom-btn" data-zoom="8">8×</button>
-								<button type="button" class="codec-zoom-btn" data-zoom="16">16×</button>
 							</div>
 						</div>
 						<div class="codec-canvas-wrap" id="codec-wrap-src">
@@ -431,14 +433,16 @@
 							<div id="codec-loupe-src" class="codec-pixel-loupe hidden" aria-hidden="true">
 								<canvas id="codec-loupe-canvas-src" width="160" height="160"></canvas>
 								<div class="codec-loupe-reticle"></div>
-								<div class="codec-loupe-tag">1:1 Raw</div>
 							</div>
 						</div>
 					</div>
 					<div class="codec-preview-box">
 						<div class="codec-preview-header">
-							<span class="codec-preview-label">Reconstructed (Output)</span>
-							<span class="codec-loupe-hint">Hover to inspect</span>
+							<div class="codec-preview-title-row">
+								<span class="codec-preview-label">Reconstructed (Output)</span>
+								<span class="codec-loupe-pill" id="codec-pill-dec">4× ASIC</span>
+							</div>
+							<button type="button" id="codec-pin-hint" class="codec-loupe-hint-btn" title="Click anywhere on the video frame to pin the magnifier">Click frame to pin</button>
 						</div>
 						<div class="codec-canvas-wrap" id="codec-wrap-dec">
 							<canvas id="codec-canvas-decoded" width="960" height="540" class="codec-canvas"></canvas>
@@ -448,7 +452,6 @@
 							<div id="codec-loupe-dec" class="codec-pixel-loupe hidden" aria-hidden="true">
 								<canvas id="codec-loupe-canvas-dec" width="160" height="160"></canvas>
 								<div class="codec-loupe-reticle"></div>
-								<div class="codec-loupe-tag">1:1 ASIC</div>
 							</div>
 						</div>
 					</div>
@@ -2200,10 +2203,56 @@
 		const loupeDec = document.getElementById('codec-loupe-dec');
 		const loupeCanvasSrc = document.getElementById('codec-loupe-canvas-src') as HTMLCanvasElement | null;
 		const loupeCanvasDec = document.getElementById('codec-loupe-canvas-dec') as HTMLCanvasElement | null;
+		const pillSrc = document.getElementById('codec-pill-src');
+		const pillDec = document.getElementById('codec-pill-dec');
+		const pinHintBtn = document.getElementById('codec-pin-hint');
 
 		let loupeZoom = 4;
 		let lastNormX: number | null = null;
 		let lastNormY: number | null = null;
+		let isLoupePinned = false;
+		let pinnedNormX = 0.5;
+		let pinnedNormY = 0.5;
+		let isPointerOver = false;
+
+		function updateLoupePills() {
+			const engineLabel = selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU';
+			if (pillSrc) pillSrc.textContent = `${loupeZoom}× Raw`;
+			if (pillDec) pillDec.textContent = `${loupeZoom}× ${engineLabel}`;
+		}
+
+		function updatePinUi(pinned: boolean) {
+			isLoupePinned = pinned;
+			if (wrapSrc) wrapSrc.classList.toggle('is-pinned', pinned);
+			if (wrapDec) wrapDec.classList.toggle('is-pinned', pinned);
+			if (pinHintBtn) {
+				if (pinned) {
+					pinHintBtn.classList.add('pinned');
+					pinHintBtn.innerHTML = `📌 Pinned <span class="codec-unpin-text">(click to unpin)</span>`;
+					pinHintBtn.setAttribute('title', 'Magnifier is pinned to this position. Click to unpin or click another spot to move.');
+				} else {
+					pinHintBtn.classList.remove('pinned');
+					pinHintBtn.textContent = 'Click frame to pin';
+					pinHintBtn.setAttribute('title', 'Click anywhere on the video frame to pin the magnifier');
+				}
+			}
+		}
+
+		if (pinHintBtn) {
+			pinHintBtn.onclick = (e) => {
+				e.stopPropagation();
+				if (isLoupePinned) {
+					isLoupePinned = false;
+					updatePinUi(false);
+					hideLoupe();
+				} else {
+					pinnedNormX = lastNormX !== null ? lastNormX : 0.5;
+					pinnedNormY = lastNormY !== null ? lastNormY : 0.5;
+					updatePinUi(true);
+					updateLoupe(pinnedNormX, pinnedNormY);
+				}
+			};
+		}
 
 		const zoomBtns = document.querySelectorAll<HTMLButtonElement>('.codec-zoom-btn');
 		zoomBtns.forEach((btn) => {
@@ -2212,12 +2261,11 @@
 				zoomBtns.forEach((b) => b.classList.remove('active'));
 				btn.classList.add('active');
 				loupeZoom = parseInt(btn.getAttribute('data-zoom') || '4', 10);
-				const tagSrc = document.querySelector('#codec-loupe-src .codec-loupe-tag');
-				const tagDec = document.querySelector('#codec-loupe-dec .codec-loupe-tag');
-				if (tagSrc) tagSrc.textContent = `${loupeZoom}× Raw`;
-				if (tagDec) tagDec.textContent = `${loupeZoom}× ASIC`;
-				if (lastNormX !== null && lastNormY !== null) {
-					updateLoupe(lastNormX, lastNormY);
+				updateLoupePills();
+				const targetX = isLoupePinned ? pinnedNormX : lastNormX;
+				const targetY = isLoupePinned ? pinnedNormY : lastNormY;
+				if (targetX !== null && targetY !== null) {
+					updateLoupe(targetX, targetY);
 				}
 			};
 		});
@@ -2294,11 +2342,20 @@
 		}
 
 		function hideLoupe() {
+			if (isLoupePinned) return;
+			if (loupeSrc) loupeSrc.classList.add('hidden');
+			if (loupeDec) loupeDec.classList.add('hidden');
+		}
+
+		function forceHideLoupe() {
+			isLoupePinned = false;
+			updatePinUi(false);
 			if (loupeSrc) loupeSrc.classList.add('hidden');
 			if (loupeDec) loupeDec.classList.add('hidden');
 		}
 
 		function handlePointerMove(e: PointerEvent, wrap: HTMLElement) {
+			if (isLoupePinned) return;
 			const rect = wrap.getBoundingClientRect();
 			if (rect.width <= 0 || rect.height <= 0) return;
 			const normX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
@@ -2307,9 +2364,38 @@
 			updateLoupe(normX, normY, isTouch);
 		}
 
+		function handleFrameClick(e: MouseEvent, wrap: HTMLElement) {
+			const rect = wrap.getBoundingClientRect();
+			if (rect.width <= 0 || rect.height <= 0) return;
+			const normX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+			const normY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+			const isTouch = (e as any).pointerType === 'touch';
+
+			if (isLoupePinned) {
+				// If clicking close to current pinned location (< 4% distance), unpin
+				const dx = normX - pinnedNormX;
+				const dy = normY - pinnedNormY;
+				if (Math.hypot(dx, dy) < 0.04) {
+					isLoupePinned = false;
+					updatePinUi(false);
+					if (!isPointerOver || isTouch) hideLoupe();
+					return;
+				}
+			}
+
+			pinnedNormX = normX;
+			pinnedNormY = normY;
+			updatePinUi(true);
+			updateLoupe(normX, normY, isTouch);
+		}
+
 		function attachLoupeEvents(wrap: HTMLElement) {
 			// Disable long-press context menu on mobile so it doesn't interrupt or displace magnifier
 			wrap.addEventListener('contextmenu', (e) => e.preventDefault());
+
+			wrap.addEventListener('pointerenter', () => {
+				isPointerOver = true;
+			});
 
 			wrap.addEventListener('pointerdown', (e) => {
 				if (e.pointerType === 'touch') {
@@ -2326,7 +2412,7 @@
 			wrap.addEventListener('pointerup', (e) => {
 				if (e.pointerType === 'touch') {
 					try { wrap.releasePointerCapture(e.pointerId); } catch (_) {}
-					hideLoupe();
+					if (!isLoupePinned) hideLoupe();
 				}
 			});
 
@@ -2334,13 +2420,18 @@
 				if (e.pointerType === 'touch') {
 					try { wrap.releasePointerCapture(e.pointerId); } catch (_) {}
 				}
-				hideLoupe();
+				if (!isLoupePinned) hideLoupe();
 			});
 
 			wrap.addEventListener('pointerleave', (e) => {
+				isPointerOver = false;
 				if (e.pointerType !== 'touch') {
-					hideLoupe();
+					if (!isLoupePinned) hideLoupe();
 				}
+			});
+
+			wrap.addEventListener('click', (e) => {
+				handleFrameClick(e, wrap);
 			});
 		}
 
@@ -2365,7 +2456,7 @@
 			}
 			updateMaximizeUi(false);
 			document.body.style.overflow = '';
-			hideLoupe();
+			forceHideLoupe();
 		}
 
 		// Global Launch Listeners (from Spotlight card & elsewhere)
@@ -2632,8 +2723,8 @@
 				}
 			}
 
-			if (lastNormX !== null && lastNormY !== null) {
-				updateLoupe(lastNormX, lastNormY);
+			if (lastNormX !== null && lastNormY !== null && (isLoupePinned || isPointerOver)) {
+				updateLoupe(isLoupePinned ? pinnedNormX : lastNormX, isLoupePinned ? pinnedNormY : lastNormY);
 			}
 		}
 
@@ -2752,6 +2843,7 @@
 			}
 			document.body.style.overflow = 'hidden';
 			updateStatusHint();
+			updateLoupePills();
 
 			// Draw preview frame 0 on source canvas if available
 			if (srcCanvas) {
@@ -2820,6 +2912,7 @@
 				btn.classList.add('active');
 				selectedMode = (btn.getAttribute('data-mode') as any) || 'prefer-hardware';
 				updateStatusHint();
+				updateLoupePills();
 			};
 		});
 
@@ -3491,6 +3584,11 @@
 							(document as any).webkitExitFullscreen();
 						}
 					} catch (_) {}
+					return;
+				}
+				const pinHint = document.getElementById('codec-pin-hint');
+				if (pinHint && pinHint.classList.contains('pinned')) {
+					pinHint.click();
 					return;
 				}
 				if (codecModal.classList.contains('is-maximized')) {
@@ -4677,23 +4775,66 @@
 		width: 1px;
 		background: rgba(255, 255, 255, 0.7);
 	}
-	.codec-loupe-tag {
-		position: absolute;
-		bottom: 5px;
-		left: 50%;
-		transform: translateX(-50%);
-		background: rgba(0, 0, 0, 0.75);
-		backdrop-filter: blur(4px);
-		color: #ffffff;
-		font-size: 9px;
+	.codec-preview-title-row {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55em;
+		min-width: 0;
+	}
+	.codec-loupe-pill {
+		display: inline-flex;
+		align-items: center;
+		padding: 1px 6px;
+		background: rgba(var(--accent-rgb), 0.12);
+		border: 1px solid rgba(var(--accent-rgb), 0.3);
+		color: var(--accent);
+		border-radius: 4px;
+		font-size: 0.65em;
 		font-weight: 700;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		line-height: 1.3;
+	}
+	:global(html[data-theme="dark"]) .codec-loupe-pill {
+		background: rgba(var(--accent-rgb), 0.2);
+		border-color: rgba(var(--accent-rgb), 0.45);
+		color: #fb923c;
+	}
+	.codec-loupe-hint-btn {
+		background: transparent;
+		border: 1px solid transparent;
+		font-size: 0.68em;
+		font-weight: 600;
+		color: rgb(var(--gray));
 		font-family: ui-monospace, monospace;
 		padding: 1px 6px;
 		border-radius: 4px;
-		border: 1px solid rgba(255, 255, 255, 0.25);
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		white-space: nowrap;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		line-height: 1.3;
+	}
+	.codec-loupe-hint-btn:hover {
+		color: rgb(var(--black));
+		background: rgba(148, 163, 184, 0.15);
+	}
+	:global(html[data-theme="dark"]) .codec-loupe-hint-btn:hover {
+		color: #ffffff;
+		background: rgba(255, 255, 255, 0.08);
+	}
+	.codec-loupe-hint-btn.pinned {
+		color: #f59e0b;
+		border-color: rgba(245, 158, 11, 0.4);
+		background: rgba(245, 158, 11, 0.12);
+	}
+	.codec-unpin-text {
+		opacity: 0.75;
+		font-size: 0.9em;
+		margin-left: 2px;
+	}
+	.codec-canvas-wrap.is-pinned .codec-pixel-loupe {
+		border-color: #f59e0b;
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 12px rgba(245, 158, 11, 0.5);
 	}
 	.codec-canvas {
 		width: 100%;

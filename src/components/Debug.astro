@@ -2688,7 +2688,7 @@
 			});
 			if (selectedPipeline === 'encode' && decPlaceholder) {
 				decPlaceholder.style.display = 'flex';
-				decPlaceholder.innerHTML = '<span>Decoder bypassed in Encode Only mode</span>';
+				decPlaceholder.innerHTML = '<span>Decoder bypassed in Encode Only mode<br><span style="font-size: 0.85em; opacity: 0.75; font-weight: normal; margin-top: 4px; display: inline-block;">Select &ldquo;Both&rdquo; to decode and view video output</span></span>';
 			} else if (decPlaceholder && !decCanvas?.getAttribute('data-has-frame')) {
 				decPlaceholder.style.display = 'flex';
 				decPlaceholder.innerHTML = '<span>Awaiting verification run...</span>';
@@ -2902,7 +2902,7 @@
 
 					if (decPlaceholder) {
 						decPlaceholder.style.display = 'flex';
-						decPlaceholder.innerHTML = '<span>Decoder bypassed in Encode Only mode</span>';
+						decPlaceholder.innerHTML = '<span>Decoder bypassed in Encode Only mode<br><span style="font-size: 0.85em; opacity: 0.75; font-weight: normal; margin-top: 4px; display: inline-block;">Select &ldquo;Both&rdquo; to decode and view video output</span></span>';
 					}
 
 					let totalChunkBytes = 0;

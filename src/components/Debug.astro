@@ -2170,15 +2170,18 @@
 				}
 			}
 
-			// Position both loupes consistently at bottom-right of crosshair
+			// Position both loupes consistently at bottom-right of crosshair, safely bounded
 			if (wrapSrc && wrapDec && loupeSrc && loupeDec) {
 				const rectSrc = wrapSrc.getBoundingClientRect();
 				const rectDec = wrapDec.getBoundingClientRect();
 
-				const xSrc = normX * rectSrc.width + 16;
-				const ySrc = normY * rectSrc.height + 16;
-				const xDec = normX * rectDec.width + 16;
-				const yDec = normY * rectDec.height + 16;
+				const loupeW = 140;
+				const loupeH = 140;
+
+				const xSrc = Math.max(4, Math.min(rectSrc.width - loupeW - 4, normX * rectSrc.width + 14));
+				const ySrc = Math.max(4, Math.min(rectSrc.height - loupeH - 4, normY * rectSrc.height + 14));
+				const xDec = Math.max(4, Math.min(rectDec.width - loupeW - 4, normX * rectDec.width + 14));
+				const yDec = Math.max(4, Math.min(rectDec.height - loupeH - 4, normY * rectDec.height + 14));
 
 				loupeSrc.style.left = `${xSrc}px`;
 				loupeSrc.style.top = `${ySrc}px`;
@@ -3952,6 +3955,7 @@
 		padding: 1.1em 1.25em 1.25em 1.25em;
 		max-height: 85vh;
 		overflow-y: auto;
+		overflow-x: hidden;
 		background: var(--bg-card);
 		display: flex;
 		flex-direction: column;
@@ -4103,12 +4107,14 @@
 	}
 	.codec-preview-grid {
 		display: grid;
-		grid-template-columns: repeat(2, 1fr);
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 0.75em;
+		width: 100%;
+		min-width: 0;
 	}
 	@media (max-width: 600px) {
 		.codec-preview-grid {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 		}
 	}
 	.codec-preview-box {
@@ -4194,7 +4200,7 @@
 		background: #090a0f;
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
-		overflow: visible;
+		overflow: hidden;
 		cursor: crosshair;
 	}
 	/* 1:1 SYNCHRONIZED PIXEL LOUPE */
@@ -4262,12 +4268,6 @@
 		font-weight: 700;
 		font-family: ui-monospace, monospace;
 		padding: 1px 6px;
-		border-radius: 4px;
-		border: 1px solid rgba(255, 255, 255, 0.25);
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		white-space: nowrap;
-	}
 		border-radius: 4px;
 		border: 1px solid rgba(255, 255, 255, 0.25);
 		letter-spacing: 0.05em;

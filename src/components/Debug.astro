@@ -429,7 +429,7 @@
 							</div>
 						</div>
 						<div class="codec-canvas-wrap" id="codec-wrap-src">
-							<video id="codec-video-source" class="codec-media-video" playsinline muted preload="auto">
+							<video id="codec-video-source" class="codec-media-video" playsinline muted preload="none">
 								<source src="/media/charge_1080p.webm" type="video/webm">
 								<source src="/media/charge_1080p.mp4" type="video/mp4">
 							</video>
@@ -2152,7 +2152,7 @@
 
 			if (srcVideo.readyState < 2) {
 				if (statusText) {
-					statusText.textContent = `Buffering ${selectedScene === '4k' ? 'Dog 4K' : 'Charge 1080p'} master...`;
+					statusText.textContent = `Buffering ${selectedScene === '4k' ? '4K UHD' : '1080p'} master...`;
 					statusText.style.color = '';
 				}
 				await new Promise<void>((resolve, reject) => {
@@ -2178,9 +2178,9 @@
 						if (srcVideo.readyState >= 2) {
 							resolve();
 						} else {
-							reject(new Error(`Timed out buffering ${selectedScene === '4k' ? 'Dog 4K' : 'Charge 1080p'} master. Check network connection.`));
+							reject(new Error(`Timed out buffering ${selectedScene === '4k' ? '4K' : '1080p'} master. Check network connection.`));
 						}
-					}, 12000);
+					}, 15000);
 				});
 			}
 
@@ -2197,26 +2197,35 @@
 					statusText.textContent = `Extracting ${selectedScene.toUpperCase()} reference frames (${i + 1}/60)...`;
 				}
 				const targetTime = (i + 0.5) / 24;
-				srcVideo.currentTime = targetTime;
 
 				await new Promise<void>((resolve) => {
 					let done = false;
+					let timer: any;
 					const finish = () => {
 						if (done) return;
 						done = true;
+						clearTimeout(timer);
 						srcVideo.removeEventListener('seeked', onSeeked);
 						resolve();
 					};
 					const onSeeked = () => {
 						if ('requestVideoFrameCallback' in srcVideo) {
 							srcVideo.requestVideoFrameCallback(finish);
-							setTimeout(finish, 80);
+							setTimeout(finish, 100);
 						} else {
 							requestAnimationFrame(() => requestAnimationFrame(finish));
 						}
 					};
+
+					if (Math.abs(srcVideo.currentTime - targetTime) < 0.005) {
+						finish();
+						return;
+					}
+
 					srcVideo.addEventListener('seeked', onSeeked, { once: true });
-					setTimeout(finish, 180);
+					srcVideo.currentTime = targetTime;
+					// Generous timeout (3500ms) for high-resolution 4K frames over network/demuxer
+					timer = setTimeout(finish, 3500);
 				});
 
 				extractCtx.drawImage(srcVideo, 0, 0, width, height);
@@ -2522,6 +2531,7 @@
 
 		function closeCodecModal() {
 			stopPlayback();
+			if (srcVideo) srcVideo.pause();
 			if (document.fullscreenElement) {
 				try {
 					if (document.exitFullscreen) document.exitFullscreen();
@@ -2816,6 +2826,7 @@
 		}
 
 		function openCodecModal(defaultPipeline?: 'loopback' | 'encode' | 'decode') {
+			if (srcVideo) srcVideo.preload = 'auto';
 			if (defaultPipeline) setPipeline(defaultPipeline);
 			if (codecModal) {
 				codecModal.classList.remove('hidden');

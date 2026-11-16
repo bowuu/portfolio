@@ -349,7 +349,7 @@
 			<div class="codec-body-wrap">
 				<!-- STUDIO CONTROL RACK (CLEAN 2-ROW GRID) -->
 				<div class="codec-rack">
-					<!-- ROW 1: PIPELINE, SOURCE & TOP-RIGHT START BUTTON -->
+					<!-- ROW 1: PIPELINE, ENGINE & TOP-RIGHT START BUTTON -->
 					<div class="codec-rack-row codec-rack-top">
 						<div class="codec-rack-controls">
 							<div class="codec-rack-group">
@@ -362,11 +362,10 @@
 							</div>
 
 							<div class="codec-rack-group">
-								<span class="codec-ctrl-label">Source:</span>
-								<div class="codec-segmented" id="scene-selector" role="group" aria-label="Source frame selection">
-									<button type="button" class="codec-seg-btn" data-scene="smpte" title="SMPTE BT.709 color calibration &amp; alignment pattern">Test</button>
-									<button type="button" class="codec-seg-btn active" data-scene="1080p" title="Big Buck Bunny 1080p reference benchmark (Blender CC-BY)">1080</button>
-									<button type="button" class="codec-seg-btn" data-scene="4k" title="Tears of Steel 4K UHD master film footage (Blender CC-BY)">4K</button>
+								<span class="codec-ctrl-label">Engine:</span>
+								<div class="codec-segmented" id="engine-selector" role="group" aria-label="Acceleration mode">
+									<button type="button" class="codec-seg-btn" data-mode="prefer-software" title="CPU software transcoding via WebCodecs &amp; WASM">Software</button>
+									<button type="button" class="codec-seg-btn active" data-mode="prefer-hardware" title="ASIC media transcoder on chip (dedicated hardware silicon)">Hardware</button>
 								</div>
 							</div>
 						</div>
@@ -377,13 +376,14 @@
 						</button>
 					</div>
 
-					<!-- ROW 2: ENGINE, CODEC & QUALITY -->
+					<!-- ROW 2: SOURCE, CODEC & QUALITY -->
 					<div class="codec-rack-row codec-rack-bottom">
 						<div class="codec-rack-group">
-							<span class="codec-ctrl-label">Engine:</span>
-							<div class="codec-segmented" id="engine-selector" role="group" aria-label="Acceleration mode">
-								<button type="button" class="codec-seg-btn" data-mode="prefer-software" title="CPU software transcoding via WebCodecs &amp; WASM">Software</button>
-								<button type="button" class="codec-seg-btn active" data-mode="prefer-hardware" title="ASIC media transcoder on chip (dedicated hardware silicon)">Hardware</button>
+							<span class="codec-ctrl-label">Source:</span>
+							<div class="codec-segmented" id="scene-selector" role="group" aria-label="Source frame selection">
+								<button type="button" class="codec-seg-btn" data-scene="smpte" title="SMPTE BT.709 color calibration &amp; alignment pattern">Test</button>
+								<button type="button" class="codec-seg-btn active" data-scene="1080p" title="Blender 'Charge' sci-fi action master (1920×1080)">1080</button>
+								<button type="button" class="codec-seg-btn" data-scene="4k" title="Chief Morale Officer (Samoyed) 4K UHD Master (3840×2160)">4K</button>
 							</div>
 						</div>
 
@@ -429,7 +429,11 @@
 							</div>
 						</div>
 						<div class="codec-canvas-wrap" id="codec-wrap-src">
-							<canvas id="codec-canvas-source" width="960" height="540" class="codec-canvas"></canvas>
+							<video id="codec-video-source" class="codec-media-video" playsinline muted preload="auto">
+								<source src="/media/charge_1080p.webm" type="video/webm">
+								<source src="/media/charge_1080p.mp4" type="video/mp4">
+							</video>
+							<canvas id="codec-canvas-source" width="1920" height="1080" class="codec-canvas hidden"></canvas>
 							<div id="codec-loupe-src" class="codec-pixel-loupe hidden" aria-hidden="true">
 								<canvas id="codec-loupe-canvas-src" width="160" height="160"></canvas>
 								<div class="codec-loupe-reticle"></div>
@@ -445,7 +449,7 @@
 							<button type="button" id="codec-pin-hint" class="codec-loupe-hint-btn" title="Click anywhere on the video frame to pin the magnifier">Click frame to pin</button>
 						</div>
 						<div class="codec-canvas-wrap" id="codec-wrap-dec">
-							<canvas id="codec-canvas-decoded" width="960" height="540" class="codec-canvas"></canvas>
+							<canvas id="codec-canvas-decoded" width="1920" height="1080" class="codec-canvas"></canvas>
 							<div id="codec-canvas-placeholder" class="codec-canvas-placeholder">
 								<span>Awaiting verification run...</span>
 							</div>
@@ -493,7 +497,7 @@
 						<div class="webgpu-tile-val mono" id="codec-metric-dec-fps">-- <span class="webgpu-tile-sub">FPS</span></div>
 					</div>
 					<div class="webgpu-tile">
-						<div class="webgpu-tile-label">Payload Size</div>
+						<div class="webgpu-tile-label">Payload & Bitrate</div>
 						<div class="webgpu-tile-val mono" id="codec-metric-ratio">-- <span class="webgpu-tile-sub">KB</span></div>
 					</div>
 				</div>
@@ -2075,6 +2079,7 @@
 
 		const runBtn = document.getElementById('codec-run-btn') as HTMLButtonElement | null;
 		const statusText = document.getElementById('codec-status-text');
+		const srcVideo = document.getElementById('codec-video-source') as HTMLVideoElement | null;
 		const srcCanvas = document.getElementById('codec-canvas-source') as HTMLCanvasElement | null;
 		const decCanvas = document.getElementById('codec-canvas-decoded') as HTMLCanvasElement | null;
 		const decPlaceholder = document.getElementById('codec-canvas-placeholder');
@@ -2097,7 +2102,9 @@
 		let isPlaying = false;
 		let playbackRaf: number | null = null;
 		let lastPlaybackTime = 0;
+		let sourceBitmaps: ImageBitmap[] = [];
 		let decodedBitmaps: ImageBitmap[] = [];
+		let sourceSceneLoaded = '';
 
 		const pipelineSegBtns = document.querySelectorAll<HTMLButtonElement>('#pipeline-selector .codec-seg-btn');
 		const codecSegBtns = document.querySelectorAll<HTMLButtonElement>('#codec-selector .codec-seg-btn');
@@ -2112,24 +2119,100 @@
 		let selectedScene: '4k' | '1080p' | 'smpte' = '1080p';
 		let isRunning = false;
 
-		const image4k = new Image();
-		image4k.src = '/media/tos_motion_sprite.webp';
-
-		const image1080 = new Image();
-		image1080.src = '/media/bbb_motion_sprite.webp';
-
-		image4k.onload = () => {
-			if (selectedScene === '4k' && srcCanvas) {
-				const ctx = srcCanvas.getContext('2d');
-				if (ctx) drawSceneFrame(ctx, srcCanvas.width, srcCanvas.height, 0, 60);
+		
+		async function ensureSourceFrames(is4k: boolean, width: number, height: number): Promise<ImageBitmap[]> {
+			if (sourceBitmaps.length === 60 && sourceBitmaps.every((b) => !!b) && sourceSceneLoaded === selectedScene) {
+				return sourceBitmaps;
 			}
-		};
-		image1080.onload = () => {
-			if (selectedScene === '1080p' && srcCanvas) {
-				const ctx = srcCanvas.getContext('2d');
-				if (ctx) drawSceneFrame(ctx, srcCanvas.width, srcCanvas.height, 0, 60);
+
+			sourceBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
+			sourceBitmaps = new Array(60);
+
+			const previewW = is4k ? 1920 : width;
+			const previewH = is4k ? 1080 : height;
+
+			if (selectedScene === 'smpte') {
+				const offCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(previewW, previewH) : document.createElement('canvas');
+				offCanvas.width = previewW;
+				offCanvas.height = previewH;
+				const offCtx = offCanvas.getContext('2d')!;
+				for (let i = 0; i < 60; i++) {
+					drawSmpteScene(offCtx, previewW, previewH, i, 60);
+					if ('transferToImageBitmap' in offCanvas) {
+						sourceBitmaps[i] = (offCanvas as any).transferToImageBitmap();
+					} else {
+						sourceBitmaps[i] = await createImageBitmap(offCanvas);
+					}
+				}
+				sourceSceneLoaded = 'smpte';
+				return sourceBitmaps;
 			}
-		};
+
+			if (!srcVideo) return [];
+
+			if (srcVideo.readyState < 2) {
+				if (statusText) statusText.textContent = `Buffering ${selectedScene === '4k' ? 'Dog 4K' : 'Charge 1080p'} master...`;
+				await new Promise<void>((r) => {
+					const onData = () => { srcVideo.removeEventListener('loadeddata', onData); r(); };
+					srcVideo.addEventListener('loadeddata', onData, { once: true });
+					srcVideo.load();
+					setTimeout(r, 1500);
+				});
+			}
+
+			srcVideo.pause();
+
+			const extractCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(previewW, previewH) : document.createElement('canvas');
+			extractCanvas.width = previewW;
+			extractCanvas.height = previewH;
+			const extractCtx = extractCanvas.getContext('2d')!;
+
+			for (let i = 0; i < 60; i++) {
+				if (!isRunning) break;
+				const targetTime = (i + 0.5) / 24;
+				srcVideo.currentTime = targetTime;
+
+				await new Promise<void>((resolve) => {
+					let done = false;
+					const finish = () => {
+						if (done) return;
+						done = true;
+						srcVideo.removeEventListener('seeked', finish);
+						resolve();
+					};
+					srcVideo.addEventListener('seeked', finish, { once: true });
+					if ('requestVideoFrameCallback' in srcVideo) {
+						srcVideo.requestVideoFrameCallback(finish);
+					}
+					setTimeout(finish, 120);
+				});
+
+				await new Promise<void>((r) => requestAnimationFrame(() => r()));
+
+				extractCtx.drawImage(srcVideo, 0, 0, previewW, previewH);
+				if ('transferToImageBitmap' in extractCanvas) {
+					sourceBitmaps[i] = (extractCanvas as any).transferToImageBitmap();
+				} else {
+					sourceBitmaps[i] = await createImageBitmap(extractCanvas);
+				}
+			}
+
+			sourceSceneLoaded = selectedScene;
+			return sourceBitmaps;
+		}
+
+		function loadVideoForScene(scene: '4k' | '1080p') {
+			if (!srcVideo) return;
+			const targetWebm = scene === '4k' ? '/media/dog_4k.webm' : '/media/charge_1080p.webm';
+			const targetMp4 = scene === '4k' ? '/media/dog_4k.mp4' : '/media/charge_1080p.mp4';
+			if (!srcVideo.currentSrc || !srcVideo.currentSrc.includes(scene === '4k' ? 'dog_4k' : 'charge_1080p')) {
+				srcVideo.innerHTML = `
+					<source src="${targetWebm}" type="video/webm">
+					<source src="${targetMp4}" type="video/mp4">
+				`;
+				srcVideo.load();
+			}
+		}
 
 		let isMaximized = false;
 		const minBtn = document.getElementById('codec-applet-min-btn');
@@ -2148,288 +2231,255 @@
 				iconRestore.classList.toggle('hidden', !maximized);
 			}
 			if (maxBtn) {
-				maxBtn.setAttribute('title', maximized ? 'Exit Full Screen (Esc)' : 'Full Screen in Browser (Maximize)');
-				maxBtn.setAttribute('aria-label', maximized ? 'Exit Full Screen' : 'Full Screen in Browser');
+				maxBtn.title = maximized ? 'Restore window size' : 'Maximize window';
 			}
 		}
 
-		async function toggleMaximize() {
-			const shouldEnter = !document.fullscreenElement && !codecModal?.classList.contains('is-maximized');
-			if (shouldEnter) {
-				try {
-					const root = document.documentElement;
-					if (root.requestFullscreen) {
-						await root.requestFullscreen();
-					} else if ((root as any).webkitRequestFullscreen) {
-						await (root as any).webkitRequestFullscreen();
-					}
-				} catch (err) {
-					console.warn('Fullscreen request failed or not allowed:', err);
+		function toggleMaximize() {
+			if (!codecModal) return;
+			const target = !isMaximized;
+			if (target) {
+				if (codecModal.requestFullscreen) {
+					codecModal.requestFullscreen().catch(() => updateMaximizeUi(true));
+				} else if ((codecModal as any).webkitRequestFullscreen) {
+					(codecModal as any).webkitRequestFullscreen();
+					updateMaximizeUi(true);
+				} else {
+					updateMaximizeUi(true);
 				}
-				updateMaximizeUi(true);
 			} else {
 				if (document.fullscreenElement) {
-					try {
-						if (document.exitFullscreen) {
-							await document.exitFullscreen();
-						} else if ((document as any).webkitExitFullscreen) {
-							await (document as any).webkitExitFullscreen();
-						}
-					} catch (err) {
-						console.warn('Exit fullscreen failed:', err);
-					}
+					if (document.exitFullscreen) document.exitFullscreen().catch(() => updateMaximizeUi(false));
+					else if ((document as any).webkitExitFullscreen) (document as any).webkitExitFullscreen();
 				}
 				updateMaximizeUi(false);
 			}
 		}
 
+		if (maxBtn) maxBtn.addEventListener('click', toggleMaximize);
+		if (minBtn) minBtn.addEventListener('click', closeCodecModal);
+		if (closeBtn) closeBtn.addEventListener('click', closeCodecModal);
+
 		document.addEventListener('fullscreenchange', () => {
-			const isFs = !!document.fullscreenElement;
-			if (!isFs && codecModal?.classList.contains('is-maximized')) {
-				updateMaximizeUi(false);
-			} else if (isFs && codecModal && !codecModal.classList.contains('hidden')) {
-				updateMaximizeUi(true);
-			}
+			const inFs = !!document.fullscreenElement;
+			if (inFs !== isMaximized) updateMaximizeUi(inFs);
 		});
 
-		if (minBtn) minBtn.onclick = closeCodecModal;
-		if (closeBtn) closeBtn.onclick = closeCodecModal;
-		if (maxBtn) maxBtn.onclick = toggleMaximize;
-
-		// 1:1 Synchronized Pixel Loupe Magnifier
-		const wrapSrc = document.getElementById('codec-wrap-src');
-		const wrapDec = document.getElementById('codec-wrap-dec');
 		const loupeSrc = document.getElementById('codec-loupe-src');
 		const loupeDec = document.getElementById('codec-loupe-dec');
 		const loupeCanvasSrc = document.getElementById('codec-loupe-canvas-src') as HTMLCanvasElement | null;
 		const loupeCanvasDec = document.getElementById('codec-loupe-canvas-dec') as HTMLCanvasElement | null;
+		const wrapSrc = document.getElementById('codec-wrap-src');
+		const wrapDec = document.getElementById('codec-wrap-dec');
+		const zoomBtns = document.querySelectorAll<HTMLButtonElement>('.codec-zoom-btn');
+		const pinHintBtn = document.getElementById('codec-pin-hint');
 		const pillSrc = document.getElementById('codec-pill-src');
 		const pillDec = document.getElementById('codec-pill-dec');
-		const pinHintBtn = document.getElementById('codec-pin-hint');
 
-		let loupeZoom = 4;
-		let lastNormX: number | null = null;
-		let lastNormY: number | null = null;
+		let currentZoom = 4;
 		let isLoupePinned = false;
 		let pinnedNormX = 0.5;
 		let pinnedNormY = 0.5;
+		let lastNormX: number | null = null;
+		let lastNormY: number | null = null;
 		let isPointerOver = false;
 
 		function updateLoupePills() {
-			const engineLabel = selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU';
-			if (pillSrc) pillSrc.textContent = `${loupeZoom}× Raw`;
-			if (pillDec) pillDec.textContent = `${loupeZoom}× ${engineLabel}`;
+			const label = `${currentZoom}×`;
+			if (pillSrc) pillSrc.textContent = `${label} RAW`;
+			if (pillDec) pillDec.textContent = `${label} ${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'}`;
 		}
 
-		function updatePinUi(pinned: boolean) {
-			isLoupePinned = pinned;
-			if (wrapSrc) wrapSrc.classList.toggle('is-pinned', pinned);
-			if (wrapDec) wrapDec.classList.toggle('is-pinned', pinned);
-			if (pinHintBtn) {
-				if (pinned) {
-					pinHintBtn.classList.add('pinned');
-					pinHintBtn.innerHTML = `📌 Pinned <span class="codec-unpin-text">(click to unpin)</span>`;
-					pinHintBtn.setAttribute('title', 'Magnifier is pinned to this position. Click to unpin or click another spot to move.');
-				} else {
-					pinHintBtn.classList.remove('pinned');
-					pinHintBtn.textContent = 'Click frame to pin';
-					pinHintBtn.setAttribute('title', 'Click anywhere on the video frame to pin the magnifier');
+		zoomBtns.forEach((btn) => {
+			btn.addEventListener('click', (e) => {
+				e.stopPropagation();
+				zoomBtns.forEach((b) => b.classList.remove('active'));
+				btn.classList.add('active');
+				currentZoom = parseInt(btn.getAttribute('data-zoom') || '4', 10);
+				updateLoupePills();
+				if (isLoupePinned || isPointerOver) {
+					const nx = isLoupePinned ? pinnedNormX : (lastNormX ?? 0.5);
+					const ny = isLoupePinned ? pinnedNormY : (lastNormY ?? 0.5);
+					updateLoupe(nx, ny);
 				}
+			});
+		});
+
+		function setLoupePinned(pinned: boolean, normX?: number, normY?: number) {
+			isLoupePinned = pinned;
+			if (pinned && normX !== undefined && normY !== undefined) {
+				pinnedNormX = normX;
+				pinnedNormY = normY;
+				lastNormX = normX;
+				lastNormY = normY;
+			}
+			if (pinHintBtn) {
+				pinHintBtn.classList.toggle('pinned', pinned);
+				pinHintBtn.textContent = pinned ? 'Loupe pinned (click to release)' : 'Click frame to pin';
+			}
+			if (pinned) {
+				showLoupe();
+				updateLoupe(pinnedNormX, pinnedNormY);
+			} else if (!isPointerOver) {
+				hideLoupe();
 			}
 		}
 
 		if (pinHintBtn) {
-			pinHintBtn.onclick = (e) => {
+			pinHintBtn.addEventListener('click', (e) => {
 				e.stopPropagation();
 				if (isLoupePinned) {
-					isLoupePinned = false;
-					updatePinUi(false);
-					hideLoupe();
+					setLoupePinned(false);
 				} else {
-					pinnedNormX = lastNormX !== null ? lastNormX : 0.5;
-					pinnedNormY = lastNormY !== null ? lastNormY : 0.5;
-					updatePinUi(true);
-					updateLoupe(pinnedNormX, pinnedNormY);
+					setLoupePinned(true, lastNormX ?? 0.5, lastNormY ?? 0.5);
 				}
-			};
+			});
 		}
 
-		const zoomBtns = document.querySelectorAll<HTMLButtonElement>('.codec-zoom-btn');
-		zoomBtns.forEach((btn) => {
-			btn.onclick = (e) => {
-				e.stopPropagation();
-				zoomBtns.forEach((b) => b.classList.remove('active'));
-				btn.classList.add('active');
-				loupeZoom = parseInt(btn.getAttribute('data-zoom') || '4', 10);
-				updateLoupePills();
-				const targetX = isLoupePinned ? pinnedNormX : lastNormX;
-				const targetY = isLoupePinned ? pinnedNormY : lastNormY;
-				if (targetX !== null && targetY !== null) {
-					updateLoupe(targetX, targetY);
-				}
-			};
-		});
-
-		function updateLoupe(normX: number, normY: number, isTouch = false) {
-			if (!srcCanvas || !decCanvas || !loupeCanvasSrc || !loupeCanvasDec) return;
-			lastNormX = normX;
-			lastNormY = normY;
-
-			const cropSize = Math.max(4, Math.round(160 / loupeZoom));
-			const centerX = normX * 960;
-			const centerY = normY * 540;
-			const cropX = Math.round(Math.max(0, Math.min(960 - cropSize, centerX - cropSize / 2)));
-			const cropY = Math.round(Math.max(0, Math.min(540 - cropSize, centerY - cropSize / 2)));
-
-			const ctxSrc = loupeCanvasSrc.getContext('2d');
-			if (ctxSrc) {
-				ctxSrc.imageSmoothingEnabled = false;
-				ctxSrc.clearRect(0, 0, 160, 160);
-				ctxSrc.drawImage(srcCanvas, cropX, cropY, cropSize, cropSize, 0, 0, 160, 160);
-			}
-
-			const ctxDec = loupeCanvasDec.getContext('2d');
-			if (ctxDec) {
-				ctxDec.imageSmoothingEnabled = false;
-				ctxDec.clearRect(0, 0, 160, 160);
-				if (decCanvas.getAttribute('data-has-frame') === 'true') {
-					ctxDec.drawImage(decCanvas, cropX, cropY, cropSize, cropSize, 0, 0, 160, 160);
-				} else {
-					ctxDec.fillStyle = '#090a0f';
-					ctxDec.fillRect(0, 0, 160, 160);
-					ctxDec.fillStyle = '#64748b';
-					ctxDec.font = '10px monospace';
-					ctxDec.textAlign = 'center';
-					ctxDec.fillText('No Output Yet', 80, 85);
-				}
-			}
-
-			// Position both loupes: strictly pinned to bottom-right of crosshair on desktop/non-touch
-			if (wrapSrc && wrapDec && loupeSrc && loupeDec) {
-				const rectSrc = wrapSrc.getBoundingClientRect();
-				const rectDec = wrapDec.getBoundingClientRect();
-
-				const loupeW = 140;
-				const loupeH = 140;
-
-				// Strictly pinned to bottom-right of crosshair for desktop/non-touch platforms (+14px, +14px)
-				let xOffset = 14;
-				let yOffset = 14;
-
-				// Only on touch devices when finger is near the bottom edge: shift above touch point
-				if (isTouch) {
-					if (normY > 0.65) yOffset = -loupeH - 18;
-					if (normX > 0.7) xOffset = -loupeW - 14;
-				}
-
-				const xSrc = Math.max(4, Math.min(rectSrc.width - loupeW - 4, normX * rectSrc.width + xOffset));
-				const ySrc = Math.max(4, Math.min(rectSrc.height - loupeH - 4, normY * rectSrc.height + yOffset));
-				const xDec = Math.max(4, Math.min(rectDec.width - loupeW - 4, normX * rectDec.width + xOffset));
-				const yDec = Math.max(4, Math.min(rectDec.height - loupeH - 4, normY * rectDec.height + yOffset));
-
-				loupeSrc.style.left = `${xSrc}px`;
-				loupeSrc.style.top = `${ySrc}px`;
-				loupeDec.style.left = `${xDec}px`;
-				loupeDec.style.top = `${yDec}px`;
-
-				loupeSrc.classList.remove('hidden');
-				if (decCanvas.getAttribute('data-has-frame') === 'true') {
-					loupeDec.classList.remove('hidden');
-				} else {
-					loupeDec.classList.add('hidden');
-				}
-			}
+		function showLoupe() {
+			if (loupeSrc) loupeSrc.classList.remove('hidden');
+			if (loupeDec) loupeDec.classList.remove('hidden');
 		}
 
 		function hideLoupe() {
 			if (isLoupePinned) return;
 			if (loupeSrc) loupeSrc.classList.add('hidden');
 			if (loupeDec) loupeDec.classList.add('hidden');
+			lastNormX = null;
+			lastNormY = null;
 		}
 
 		function forceHideLoupe() {
-			isLoupePinned = false;
-			updatePinUi(false);
+			setLoupePinned(false);
+			isPointerOver = false;
 			if (loupeSrc) loupeSrc.classList.add('hidden');
 			if (loupeDec) loupeDec.classList.add('hidden');
+			lastNormX = null;
+			lastNormY = null;
 		}
 
-		function handlePointerMove(e: PointerEvent, wrap: HTMLElement) {
+		function positionLoupe(loupe: HTMLElement, clientX: number, clientY: number, wrap: HTMLElement) {
+			const wrapRect = wrap.getBoundingClientRect();
+			const loupeW = loupe.offsetWidth || 140;
+			const loupeH = loupe.offsetHeight || 140;
+			const margin = 12;
+
+			let left = clientX - wrapRect.left - loupeW / 2;
+			let top = clientY - wrapRect.top - loupeH - 18;
+
+			if (top < margin) top = clientY - wrapRect.top + 22;
+			if (top + loupeH > wrapRect.height - margin) top = wrapRect.height - margin - loupeH;
+			if (left < margin) left = margin;
+			else if (left + loupeW > wrapRect.width - margin) left = wrapRect.width - margin - loupeW;
+
+			loupe.style.left = `${Math.round(left)}px`;
+			loupe.style.top = `${Math.round(top)}px`;
+		}
+
+		function updateLoupe(normX: number, normY: number) {
+			if (!wrapSrc || !wrapDec || !loupeCanvasSrc || !loupeCanvasDec) return;
+			const ctxSrc = loupeCanvasSrc.getContext('2d');
+			const ctxDec = loupeCanvasDec.getContext('2d');
+			if (!ctxSrc || !ctxDec) return;
+
+			ctxSrc.imageSmoothingEnabled = false;
+			ctxDec.imageSmoothingEnabled = false;
+
+			const isSrcCanvasActive = selectedScene === 'smpte' || (sourceBitmaps.length === 60 && !!sourceBitmaps[0] && srcCanvas && !srcCanvas.classList.contains('hidden'));
+			const activeSrcEl: HTMLCanvasElement | HTMLVideoElement = isSrcCanvasActive ? srcCanvas! : (srcVideo || srcCanvas!);
+			const srcW = activeSrcEl instanceof HTMLVideoElement ? (activeSrcEl.videoWidth || (selectedScene === '4k' ? 3840 : 1920)) : activeSrcEl.width;
+			const srcH = activeSrcEl instanceof HTMLVideoElement ? (activeSrcEl.videoHeight || (selectedScene === '4k' ? 2160 : 1080)) : activeSrcEl.height;
+
+			const cropW = Math.round(160 / currentZoom);
+			const cropH = Math.round(160 / currentZoom);
+
+			const pxX = Math.round(normX * srcW);
+			const pxY = Math.round(normY * srcH);
+
+			const sx = Math.max(0, Math.min(srcW - cropW, pxX - Math.floor(cropW / 2)));
+			const sy = Math.max(0, Math.min(srcH - cropH, pxY - Math.floor(cropH / 2)));
+
+			try {
+				ctxSrc.drawImage(activeSrcEl, sx, sy, cropW, cropH, 0, 0, 160, 160);
+			} catch (_) {}
+
+			if (decCanvas) {
+				const decW = decCanvas.width;
+				const decH = decCanvas.height;
+				const decPxX = Math.round(normX * decW);
+				const decPxY = Math.round(normY * decH);
+				const decSx = Math.max(0, Math.min(decW - cropW, decPxX - Math.floor(cropW / 2)));
+				const decSy = Math.max(0, Math.min(decH - cropH, decPxY - Math.floor(cropH / 2)));
+				try {
+					ctxDec.drawImage(decCanvas, decSx, decSy, cropW, cropH, 0, 0, 160, 160);
+				} catch (_) {}
+			}
+
+			if (wrapSrc && loupeSrc) {
+				const wrapRect = wrapSrc.getBoundingClientRect();
+				const targetClientX = wrapRect.left + normX * wrapRect.width;
+				const targetClientY = wrapRect.top + normY * wrapRect.height;
+				positionLoupe(loupeSrc, targetClientX, targetClientY, wrapSrc);
+			}
+			if (wrapDec && loupeDec) {
+				const wrapRect = wrapDec.getBoundingClientRect();
+				const targetClientX = wrapRect.left + normX * wrapRect.width;
+				const targetClientY = wrapRect.top + normY * wrapRect.height;
+				positionLoupe(loupeDec, targetClientX, targetClientY, wrapDec);
+			}
+		}
+
+		function handleFramePointer(e: PointerEvent, wrap: HTMLElement) {
 			if (isLoupePinned) return;
-			const rect = wrap.getBoundingClientRect();
-			if (rect.width <= 0 || rect.height <= 0) return;
-			const normX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-			const normY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
-			const isTouch = e.pointerType === 'touch';
-			updateLoupe(normX, normY, isTouch);
+			const wrapRect = wrap.getBoundingClientRect();
+			const normX = Math.max(0, Math.min(1, (e.clientX - wrapRect.left) / wrapRect.width));
+			const normY = Math.max(0, Math.min(1, (e.clientY - wrapRect.top) / wrapRect.height));
+			lastNormX = normX;
+			lastNormY = normY;
+			isPointerOver = true;
+			showLoupe();
+			updateLoupe(normX, normY);
 		}
 
 		function handleFrameClick(e: MouseEvent, wrap: HTMLElement) {
-			const rect = wrap.getBoundingClientRect();
-			if (rect.width <= 0 || rect.height <= 0) return;
-			const normX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-			const normY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
-			const isTouch = (e as any).pointerType === 'touch';
-
+			const wrapRect = wrap.getBoundingClientRect();
+			const normX = Math.max(0, Math.min(1, (e.clientX - wrapRect.left) / wrapRect.width));
+			const normY = Math.max(0, Math.min(1, (e.clientY - wrapRect.top) / wrapRect.height));
 			if (isLoupePinned) {
-				// If clicking close to current pinned location (< 4% distance), unpin
-				const dx = normX - pinnedNormX;
-				const dy = normY - pinnedNormY;
-				if (Math.hypot(dx, dy) < 0.04) {
-					isLoupePinned = false;
-					updatePinUi(false);
-					if (!isPointerOver || isTouch) hideLoupe();
+				const dist = Math.hypot(normX - pinnedNormX, normY - pinnedNormY);
+				if (dist < 0.05) {
+					setLoupePinned(false);
 					return;
 				}
 			}
-
-			pinnedNormX = normX;
-			pinnedNormY = normY;
-			updatePinUi(true);
-			updateLoupe(normX, normY, isTouch);
+			setLoupePinned(true, normX, normY);
 		}
 
 		function attachLoupeEvents(wrap: HTMLElement) {
-			// Disable long-press context menu on mobile so it doesn't interrupt or displace magnifier
-			wrap.addEventListener('contextmenu', (e) => e.preventDefault());
-
-			wrap.addEventListener('pointerenter', () => {
+			wrap.addEventListener('pointerenter', (e) => {
+				if (e.pointerType === 'touch') return;
 				isPointerOver = true;
+				handleFramePointer(e, wrap);
 			});
-
+			wrap.addEventListener('pointermove', (e) => {
+				handleFramePointer(e, wrap);
+			});
 			wrap.addEventListener('pointerdown', (e) => {
 				if (e.pointerType === 'touch') {
-					e.preventDefault();
 					try { wrap.setPointerCapture(e.pointerId); } catch (_) {}
+					handleFramePointer(e, wrap);
 				}
-				handlePointerMove(e, wrap);
 			});
-
-			wrap.addEventListener('pointermove', (e) => {
-				handlePointerMove(e, wrap);
-			});
-
 			wrap.addEventListener('pointerup', (e) => {
 				if (e.pointerType === 'touch') {
 					try { wrap.releasePointerCapture(e.pointerId); } catch (_) {}
 					if (!isLoupePinned) hideLoupe();
 				}
 			});
-
-			wrap.addEventListener('pointercancel', (e) => {
-				if (e.pointerType === 'touch') {
-					try { wrap.releasePointerCapture(e.pointerId); } catch (_) {}
-				}
-				if (!isLoupePinned) hideLoupe();
-			});
-
 			wrap.addEventListener('pointerleave', (e) => {
 				isPointerOver = false;
-				if (e.pointerType !== 'touch') {
-					if (!isLoupePinned) hideLoupe();
-				}
+				if (e.pointerType !== 'touch' && !isLoupePinned) hideLoupe();
 			});
-
 			wrap.addEventListener('click', (e) => {
 				handleFrameClick(e, wrap);
 			});
@@ -2442,11 +2492,8 @@
 			stopPlayback();
 			if (document.fullscreenElement) {
 				try {
-					if (document.exitFullscreen) {
-						document.exitFullscreen();
-					} else if ((document as any).webkitExitFullscreen) {
-						(document as any).webkitExitFullscreen();
-					}
+					if (document.exitFullscreen) document.exitFullscreen();
+					else if ((document as any).webkitExitFullscreen) (document as any).webkitExitFullscreen();
 				} catch (_) {}
 			}
 			if (codecModal) {
@@ -2459,57 +2506,12 @@
 			forceHideLoupe();
 		}
 
-		// Global Launch Listeners (from Spotlight card & elsewhere)
-		document.addEventListener('click', (e) => {
-			const btn = (e.target as HTMLElement)?.closest('#launch-codec-spotlight-btn, [data-open-codec-studio]');
-			if (btn) {
-				e.preventDefault();
-				openCodecModal('loopback');
-			}
-		});
-
-		window.addEventListener('open-codec-studio', (e: any) => {
-			openCodecModal(e?.detail?.pipeline || 'loopback');
-		});
-
-		// 1. SCENE: 4K FILM (Tears of Steel - Blender Foundation CC-BY 3.0)
-		function draw4kScene(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, _totalFrames: number) {
-			if (image4k.complete && image4k.naturalWidth > 0) {
-				const f = Math.max(0, Math.min(59, frameIdx));
-				const col = f % 8;
-				const row = Math.floor(f / 8);
-				const cellW = image4k.naturalWidth >= 7680 ? 960 : 480;
-				const cellH = image4k.naturalHeight >= 4320 ? 540 : 270;
-				ctx.drawImage(image4k, col * cellW, row * cellH, cellW, cellH, 0, 0, w, h);
-			} else {
-				ctx.fillStyle = '#050811';
-				ctx.fillRect(0, 0, w, h);
-			}
-		}
-
-		// 2. SCENE: 1080p BUNNY (Big Buck Bunny - Blender Foundation CC-BY 3.0)
-		function draw1080pScene(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, _totalFrames: number) {
-			if (image1080.complete && image1080.naturalWidth > 0) {
-				const f = Math.max(0, Math.min(59, frameIdx));
-				const col = f % 8;
-				const row = Math.floor(f / 8);
-				const cellW = image1080.naturalWidth >= 7680 ? 960 : 480;
-				const cellH = image1080.naturalHeight >= 4320 ? 540 : 270;
-				ctx.drawImage(image1080, col * cellW, row * cellH, cellW, cellH, 0, 0, w, h);
-			} else {
-				ctx.fillStyle = '#050811';
-				ctx.fillRect(0, 0, w, h);
-			}
-		}
-
-		// 3. SCENE: SMPTE COLOR BARS (Studio Calibration Pattern - ITU-R BT.709 with Dynamic Opposing Motion)
 		function drawSmpteScene(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, totalFrames: number) {
-			// 1. Top 65%: Standard 7-Color Bars (Smoothly scrolling left across frame)
 			const topColors = ['#c0c0c0', '#c0c000', '#00c0c0', '#00c000', '#c000c0', '#c00000', '#0000c0'];
 			const numTop = topColors.length;
 			const barWidth = w / numTop;
 			const barHeight = Math.round(h * 0.65);
-			const shiftLeft = (frameIdx / totalFrames) * (w * 0.35); // Gentle slow leftward drift
+			const shiftLeft = (frameIdx / totalFrames) * (w * 0.35);
 			for (let i = -numTop; i < numTop * 2; i++) {
 				const bx = i * barWidth - (shiftLeft % w);
 				if (bx + barWidth > 0 && bx < w) {
@@ -2519,7 +2521,6 @@
 				}
 			}
 
-			// 2. Middle 10%: Alignment Cast Bars (Stationary cast grid, orange sweep ticker moves across)
 			const castColors = ['#0000c0', '#131313', '#c000c0', '#131313', '#00c0c0', '#131313', '#c0c0c0'];
 			const castY = barHeight;
 			const castHeight = Math.round(h * 0.10);
@@ -2528,58 +2529,51 @@
 				ctx.fillRect(i * barWidth, castY, Math.ceil(barWidth), castHeight);
 			}
 
-			// Broadcast Sweep Ticker (moving horizontal calibration pulse)
 			const sweepProgress = frameIdx / Math.max(1, totalFrames - 1);
 			const sweepX = sweepProgress * (w - 20);
 			ctx.fillStyle = '#f97316';
 			ctx.fillRect(sweepX, castY, 18, castHeight);
 
-			// 3. Bottom 25%: Calibration Blocks (Smoothly scrolling right across frame)
 			const botColors = ['#00214c', '#ffffff', '#32006a', '#05070d', '#141824', '#00a3c4', '#f97316', '#dc2626'];
 			const numBot = botColors.length;
 			const botW = w / numBot;
 			const botY = castY + castHeight;
 			const botHeight = h - botY;
-			const shiftRight = (frameIdx / totalFrames) * (w * 0.35); // Gentle slow rightward drift
+			const shiftRight = (frameIdx / totalFrames) * (w * 0.35);
 			for (let i = -numBot; i < numBot * 2; i++) {
 				const bx = i * botW + (shiftRight % w);
 				if (bx + botW > 0 && bx < w) {
 					const cIndex = ((i % numBot) + numBot) % numBot;
 					ctx.fillStyle = botColors[cIndex];
-					ctx.fillRect(Math.floor(bx), botY, Math.ceil(botW) + 1, botHeight);
+					ctx.fillRect(Math.floor(bx), 0, Math.ceil(botW) + 1, botHeight);
 				}
 			}
 		}
 
-		function drawSceneFrame(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, totalFrames: number) {
-			if (selectedScene === '4k') {
-				draw4kScene(ctx, w, h, frameIdx, totalFrames);
-			} else if (selectedScene === '1080p') {
-				draw1080pScene(ctx, w, h, frameIdx, totalFrames);
-			} else {
-				drawSmpteScene(ctx, w, h, frameIdx, totalFrames);
-			}
-		}
-
-		function displayFrame(idx: number) {
-			currentFrameIdx = Math.max(0, Math.min(59, idx));
+		function syncTimelineUI(frameIdx: number) {
+			currentFrameIdx = Math.max(0, Math.min(59, frameIdx));
 			if (frameScrubber) frameScrubber.value = String(currentFrameIdx);
 			if (frameReadout) frameReadout.textContent = `Frame ${currentFrameIdx + 1} / 60`;
 			if (timecodeReadout) {
-				const ms = (currentFrameIdx * 33.333).toFixed(1);
-				const sec = Math.floor(currentFrameIdx / 30);
-				const fSec = currentFrameIdx % 30;
+				const ms = (currentFrameIdx * 41.667).toFixed(1);
+				const sec = Math.floor(currentFrameIdx / 24);
+				const fSec = currentFrameIdx % 24;
 				timecodeReadout.textContent = `${ms} ms (00:0${sec}.${fSec < 10 ? '0' + fSec : fSec})`;
 			}
 
-			if (srcCanvas) {
+			if (selectedScene === 'smpte') {
+				if (srcCanvas) {
+					const ctx = srcCanvas.getContext('2d');
+					if (ctx) drawSmpteScene(ctx, srcCanvas.width, srcCanvas.height, currentFrameIdx, 60);
+				}
+			} else if (sourceBitmaps[currentFrameIdx] && srcCanvas && !srcCanvas.classList.contains('hidden')) {
 				const ctx = srcCanvas.getContext('2d');
-				if (ctx) drawSceneFrame(ctx, srcCanvas.width, srcCanvas.height, currentFrameIdx, 60);
+				if (ctx) ctx.drawImage(sourceBitmaps[currentFrameIdx], 0, 0, srcCanvas.width, srcCanvas.height);
 			}
 
-			if (decCanvas) {
+			if (decCanvas && decodedBitmaps[currentFrameIdx]) {
 				const ctx = decCanvas.getContext('2d');
-				if (ctx && decodedBitmaps[currentFrameIdx]) {
+				if (ctx) {
 					ctx.drawImage(decodedBitmaps[currentFrameIdx], 0, 0, decCanvas.width, decCanvas.height);
 					decCanvas.setAttribute('data-has-frame', 'true');
 					if (decPlaceholder) decPlaceholder.style.display = 'none';
@@ -2591,33 +2585,53 @@
 			}
 		}
 
+		function seekToFrame(frameIdx: number) {
+			currentFrameIdx = Math.max(0, Math.min(59, frameIdx));
+			if (selectedScene !== 'smpte' && srcVideo && (!srcCanvas || srcCanvas.classList.contains('hidden'))) {
+				srcVideo.currentTime = (currentFrameIdx + 0.5) / 24;
+			}
+			syncTimelineUI(currentFrameIdx);
+		}
+
 		function startPlayback() {
 			if (isPlaying) return;
-			if (currentFrameIdx >= 59) {
-				currentFrameIdx = 0;
-				displayFrame(0);
-			}
 			isPlaying = true;
 			if (iconPlay) iconPlay.classList.add('hidden');
 			if (iconPause) iconPause.classList.remove('hidden');
-			lastPlaybackTime = performance.now();
 
-			function loop(now: number) {
-				if (!isPlaying) return;
-				if (now - lastPlaybackTime >= 33.33) {
-					lastPlaybackTime = now;
-					currentFrameIdx++;
-					if (currentFrameIdx >= 60) {
-						currentFrameIdx = 59;
-						displayFrame(59);
-						stopPlayback();
-						return;
+			if (selectedScene === 'smpte' || (sourceBitmaps.length === 60 && !!sourceBitmaps[0] && srcCanvas && !srcCanvas.classList.contains('hidden'))) {
+				lastPlaybackTime = performance.now();
+				function loop(now: number) {
+					if (!isPlaying) return;
+					if (now - lastPlaybackTime >= 41.667) {
+						lastPlaybackTime = now;
+						currentFrameIdx = (currentFrameIdx + 1) % 60;
+						syncTimelineUI(currentFrameIdx);
 					}
-					displayFrame(currentFrameIdx);
+					playbackRaf = requestAnimationFrame(loop);
 				}
 				playbackRaf = requestAnimationFrame(loop);
+			} else if (srcVideo) {
+				if (srcVideo.currentTime >= (srcVideo.duration - 0.05)) {
+					srcVideo.currentTime = 0;
+				}
+				function onVideoFrame() {
+					if (!isPlaying || !srcVideo || srcVideo.paused) return;
+					const curIdx = Math.min(59, Math.max(0, Math.round(srcVideo.currentTime * 24)));
+					syncTimelineUI(curIdx);
+					if ('requestVideoFrameCallback' in srcVideo) {
+						srcVideo.requestVideoFrameCallback(onVideoFrame);
+					} else {
+						playbackRaf = requestAnimationFrame(onVideoFrame);
+					}
+				}
+				if ('requestVideoFrameCallback' in srcVideo) {
+					srcVideo.requestVideoFrameCallback(onVideoFrame);
+				} else {
+					playbackRaf = requestAnimationFrame(onVideoFrame);
+				}
+				srcVideo.play().catch(() => stopPlayback());
 			}
-			playbackRaf = requestAnimationFrame(loop);
 		}
 
 		function stopPlayback() {
@@ -2626,31 +2640,48 @@
 				cancelAnimationFrame(playbackRaf);
 				playbackRaf = null;
 			}
+			if (srcVideo && !srcVideo.paused) {
+				srcVideo.pause();
+			}
 			if (iconPlay) iconPlay.classList.remove('hidden');
 			if (iconPause) iconPause.classList.add('hidden');
 		}
 
 		function togglePlayback() {
-			if (isPlaying) {
-				stopPlayback();
-			} else {
-				startPlayback();
-			}
+			if (isPlaying) stopPlayback();
+			else startPlayback();
 		}
 
 		if (playBtn) playBtn.addEventListener('click', togglePlayback);
 		if (prevFrameBtn) prevFrameBtn.addEventListener('click', () => {
 			stopPlayback();
-			displayFrame(currentFrameIdx - 1);
+			seekToFrame(currentFrameIdx - 1);
 		});
 		if (nextFrameBtn) nextFrameBtn.addEventListener('click', () => {
 			stopPlayback();
-			displayFrame(currentFrameIdx + 1);
+			seekToFrame(currentFrameIdx + 1);
 		});
 		if (frameScrubber) {
 			frameScrubber.addEventListener('input', () => {
 				stopPlayback();
-				displayFrame(parseInt(frameScrubber.value, 10) || 0);
+				seekToFrame(parseInt(frameScrubber.value, 10) || 0);
+			});
+		}
+
+		if (srcVideo) {
+			srcVideo.addEventListener('ended', () => {
+				stopPlayback();
+				syncTimelineUI(59);
+			});
+			srcVideo.addEventListener('play', () => {
+				isPlaying = true;
+				if (iconPlay) iconPlay.classList.remove('hidden');
+				if (iconPause) iconPause.classList.remove('hidden');
+			});
+			srcVideo.addEventListener('pause', () => {
+				isPlaying = false;
+				if (iconPlay) iconPlay.classList.remove('hidden');
+				if (iconPause) iconPause.classList.add('hidden');
 			});
 		}
 
@@ -2688,28 +2719,75 @@
 			});
 			if (decPlaceholder && !decCanvas?.getAttribute('data-has-frame')) {
 				decPlaceholder.style.display = 'flex';
-				decPlaceholder.innerHTML = '<span>Awaiting verification run...</span>';
+				decPlaceholder.innerHTML = '<span>Awaiting verification run... Click &ldquo;Start&rdquo; to test.</span>';
+			}
+			updateStatusHint();
+		}
+
+		function setScene(scene: '4k' | '1080p' | 'smpte') {
+			stopPlayback();
+			selectedScene = scene;
+			sceneSegBtns.forEach((b) => b.classList.toggle('active', b.getAttribute('data-scene') === scene));
+
+			sourceBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
+			sourceBitmaps = [];
+			sourceSceneLoaded = '';
+			decodedBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
+			decodedBitmaps = [];
+			if (decCanvas) {
+				decCanvas.removeAttribute('data-has-frame');
+				const dCtx = decCanvas.getContext('2d');
+				if (dCtx) dCtx.clearRect(0, 0, decCanvas.width, decCanvas.height);
+			}
+			if (decPlaceholder) {
+				decPlaceholder.style.display = 'flex';
+				decPlaceholder.innerHTML = '<span>Awaiting verification run... Click &ldquo;Start&rdquo; to test.</span>';
+			}
+
+			const targetW = scene === '4k' ? 3840 : 1920;
+			const targetH = scene === '4k' ? 2160 : 1080;
+			if (decCanvas) {
+				decCanvas.width = targetW;
+				decCanvas.height = targetH;
+			}
+
+			currentFrameIdx = 0;
+
+			if (scene === 'smpte') {
+				if (srcVideo) {
+					srcVideo.pause();
+					srcVideo.classList.add('hidden');
+				}
+				if (srcCanvas) {
+					srcCanvas.classList.remove('hidden');
+					srcCanvas.width = 1920;
+					srcCanvas.height = 1080;
+					const ctx = srcCanvas.getContext('2d');
+					if (ctx) drawSmpteScene(ctx, 1920, 1080, 0, 60);
+				}
+				syncTimelineUI(0);
+			} else {
+				if (srcCanvas) srcCanvas.classList.add('hidden');
+				if (srcVideo) {
+					srcVideo.classList.remove('hidden');
+					loadVideoForScene(scene);
+					srcVideo.currentTime = 0;
+				}
+				syncTimelineUI(0);
 			}
 			updateStatusHint();
 		}
 
 		function openCodecModal(defaultPipeline?: 'loopback' | 'encode' | 'decode') {
-			if (defaultPipeline) {
-				setPipeline(defaultPipeline);
-			}
+			if (defaultPipeline) setPipeline(defaultPipeline);
 			if (codecModal) {
 				codecModal.classList.remove('hidden');
 				codecModal.setAttribute('aria-hidden', 'false');
 			}
 			document.body.style.overflow = 'hidden';
+			setScene(selectedScene);
 			updateStatusHint();
 			updateLoupePills();
-
-			// Draw preview frame 0 on source canvas if available
-			if (srcCanvas) {
-				const ctx = srcCanvas.getContext('2d');
-				if (ctx) drawSceneFrame(ctx, srcCanvas.width, srcCanvas.height, 0, 60);
-			}
 		}
 
 		if (codecCloseBtn) codecCloseBtn.onclick = closeCodecModal;
@@ -2747,7 +2825,6 @@
 			};
 		}
 
-		// Segmented controls: Pipeline
 		pipelineSegBtns.forEach((btn) => {
 			btn.onclick = () => {
 				const p = (btn.getAttribute('data-pipeline') as any) || 'loopback';
@@ -2755,7 +2832,6 @@
 			};
 		});
 
-		// Segmented controls: Codec
 		codecSegBtns.forEach((btn) => {
 			btn.onclick = () => {
 				codecSegBtns.forEach((b) => b.classList.remove('active'));
@@ -2765,7 +2841,6 @@
 			};
 		});
 
-		// Segmented controls: Engine Mode
 		engineSegBtns.forEach((btn) => {
 			btn.onclick = () => {
 				engineSegBtns.forEach((b) => b.classList.remove('active'));
@@ -2776,7 +2851,6 @@
 			};
 		});
 
-		// Segmented controls: Quality Profile
 		qualitySegBtns.forEach((btn) => {
 			btn.onclick = () => {
 				qualitySegBtns.forEach((b) => b.classList.remove('active'));
@@ -2786,463 +2860,101 @@
 			};
 		});
 
-		// Segmented controls: Scene
 		sceneSegBtns.forEach((btn) => {
 			btn.onclick = () => {
-				stopPlayback();
-				sceneSegBtns.forEach((b) => b.classList.remove('active'));
-				btn.classList.add('active');
-				selectedScene = (btn.getAttribute('data-scene') as any) || '4k';
-				decodedBitmaps.forEach((b) => b.close());
-				decodedBitmaps = [];
-				if (decCanvas) {
-					decCanvas.removeAttribute('data-has-frame');
-				}
-				if (decPlaceholder) {
-					decPlaceholder.style.display = 'flex';
-					decPlaceholder.innerHTML = '<span>Awaiting verification run...</span>';
-				}
-				displayFrame(0);
-				updateStatusHint();
+				const s = (btn.getAttribute('data-scene') as any) || '1080p';
+				setScene(s);
 			};
 		});
 
-		// Verification Test Runner
+		document.addEventListener('click', (e) => {
+			const btn = (e.target as HTMLElement)?.closest('#launch-codec-spotlight-btn, [data-open-codec-studio]');
+			if (btn) {
+				e.preventDefault();
+				openCodecModal('loopback');
+			}
+		});
+
+		window.addEventListener('open-codec-studio', (e: any) => {
+			openCodecModal(e?.detail?.pipeline || 'loopback');
+		});
+
 		async function runVerification() {
 			if (isRunning) return;
 			if (typeof VideoEncoder === 'undefined' || typeof VideoDecoder === 'undefined') {
 				if (statusText) {
-					statusText.textContent = 'WebCodecs VideoEncoder/Decoder API not available in this browser (Firefox requires dom.media.webcodecs.enabled).';
+					statusText.textContent = 'WebCodecs VideoEncoder/Decoder API not available in this browser.';
 					statusText.style.color = '#f97316';
 				}
 				return;
 			}
 
+			stopPlayback();
 			isRunning = true;
 			if (runBtn) runBtn.disabled = true;
 			const btnLabel = document.getElementById('codec-btn-label');
-			if (btnLabel) btnLabel.textContent = 'Stop';
+			if (btnLabel) btnLabel.textContent = 'Testing...';
 
 			try {
-				if (selectedScene === '4k' && (!image4k.complete || image4k.naturalWidth === 0)) {
-					await new Promise((r) => { image4k.onload = r; setTimeout(r, 600); });
-				} else if (selectedScene === '1080p' && (!image1080.complete || image1080.naturalWidth === 0)) {
-					await new Promise((r) => { image1080.onload = r; setTimeout(r, 600); });
+				const is4k = selectedScene === '4k';
+				const width = is4k ? 3840 : 1920;
+				const height = is4k ? 2160 : 1080;
+				const previewW = is4k ? 1920 : width;
+				const previewH = is4k ? 1080 : height;
+				const fps = 24;
+				const totalFrames = 60;
+				const frameIntervalUs = 41667;
+
+				let codecCandidates = is4k
+					? ['avc1.640033', 'avc1.4d0033', 'avc1.640034']
+					: ['avc1.640028', 'avc1.4d0028', 'avc1.420028'];
+				if (selectedCodec === 'vp9') {
+					codecCandidates = is4k ? ['vp09.00.51.08', 'vp09.00.50.08'] : ['vp09.00.40.08', 'vp09.00.41.08'];
+				} else if (selectedCodec === 'av1') {
+					codecCandidates = is4k ? ['av01.0.12M.08', 'av01.0.13M.08'] : ['av01.0.08M.08', 'av01.0.05M.08'];
+				} else if (selectedCodec === 'hevc') {
+					codecCandidates = is4k
+						? ['hvc1.1.6.L150.B0', 'hev1.1.6.L150.B0', 'hvc1.1.6.L153.B0', 'hev1.1.6.L153.B0']
+						: ['hvc1.1.6.L120.B0', 'hev1.1.6.L120.B0', 'hvc1.1.6.L93.B0', 'hev1.1.6.L93.B0'];
 				}
 
-				let codecCandidates = ['avc1.4d001f', 'avc1.42001f'];
-				if (selectedCodec === 'vp9') codecCandidates = ['vp09.00.10.08'];
-				else if (selectedCodec === 'av1') codecCandidates = ['av01.0.05M.08', 'av01.0.08M.10'];
-				else if (selectedCodec === 'hevc') codecCandidates = ['hvc1.1.6.L93.B0', 'hev1.1.6.L93.B0', 'hvc1.1.6.L120.90', 'hev1.1.6.L120.90'];
-
-				const width = 960;
-				const height = 540;
-				const fps = 30;
-				const totalFrames = 60;
-				let bitrate = 4_000_000;
+				let bitrate = is4k ? 25_000_000 : 6_000_000;
 				let latencyMode: 'quality' | 'realtime' = 'quality';
 				let bitrateMode: 'variable' | 'constant' = 'variable';
 
 				if (selectedQuality === 'low') {
-					bitrate = 800_000;
+					bitrate = is4k ? 10_000_000 : 2_000_000;
 					latencyMode = 'realtime';
 					bitrateMode = 'constant';
 				} else if (selectedQuality === 'high') {
-					bitrate = 14_000_000;
+					bitrate = is4k ? 45_000_000 : 16_000_000;
 					latencyMode = 'quality';
 					bitrateMode = 'variable';
 				}
 
-				if (!srcCanvas || !decCanvas) throw new Error('Preview canvases not found');
-				const srcCtx = srcCanvas.getContext('2d')!;
-				const decCtx = decCanvas.getContext('2d')!;
+				if (!decCanvas) throw new Error('Decoded canvas not found');
+				decCanvas.width = previewW;
+				decCanvas.height = previewH;
 
-				// 1. PIPELINE: ENCODE ONLY
-				if (selectedPipeline === 'encode') {
-					if (statusText) {
-						statusText.textContent = `Probing ${selectedCodec.toUpperCase()} encoder (${selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU'})...`;
-						statusText.style.color = '';
-					}
-
-					let chosenCodec = codecCandidates[0];
-					let encSupported = false;
-
-					for (const c of codecCandidates) {
-						try {
-							const res = await VideoEncoder.isConfigSupported({
-								codec: c,
-								width,
-								height,
-								bitrate,
-								framerate: fps,
-								latencyMode,
-								bitrateMode,
-								hardwareAcceleration: selectedMode
-							});
-							if (res && res.supported) {
-								chosenCodec = c;
-								encSupported = true;
-								break;
-							}
-						} catch (_) {}
-					}
-
-					if (!encSupported) {
-						if (selectedCodec === 'av1' && selectedMode === 'prefer-hardware') {
-							throw new Error('AV1 Hardware Encoding requires RTX 40 series (Ada Lovelace) or Intel Arc. RTX 30 series (Ampere) supports AV1 Hardware Decode only (NVDEC). Select "Decode" pipeline to test ASIC acceleration');
-						} else if (selectedCodec === 'hevc' && selectedMode === 'prefer-software') {
-							throw new Error('HEVC Software Fallback is not supported by Chromium due to MPEG licensing (requires Hardware ASIC)');
-						} else {
-							throw new Error(`${selectedCodec.toUpperCase()} Encoder not supported with ${selectedMode === 'prefer-hardware' ? 'Hardware Acceleration' : 'Software Fallback'}`);
-						}
-					}
-
-					const encodedChunks: EncodedVideoChunk[] = [];
-					let decoderConfig: VideoDecoderConfig | null = null;
-					let totalChunkBytes = 0;
-					let chunkCount = 0;
-
-					const encoder = new VideoEncoder({
-						output: (chunk, metadata) => {
-							chunkCount++;
-							totalChunkBytes += chunk.byteLength;
-							encodedChunks.push(chunk);
-							if (metadata && metadata.decoderConfig) {
-								decoderConfig = metadata.decoderConfig;
-							}
-						},
-						error: (err) => console.error('Encoder error:', err)
-					});
-
-					encoder.configure({
-						codec: chosenCodec,
-						width,
-						height,
-						bitrate,
-						framerate: fps,
-						latencyMode,
-						bitrateMode,
-						hardwareAcceleration: selectedMode
-					});
-
-					const encStartTime = performance.now();
-					for (let i = 0; i < totalFrames; i++) {
-						drawSceneFrame(srcCtx, width, height, i, totalFrames);
-						const frame = new VideoFrame(srcCanvas, {
-							timestamp: i * 33333,
-							duration: 33333
-						});
-						encoder.encode(frame, { keyFrame: i === 0 || i % 30 === 0 });
-						frame.close();
-					}
-
-					await encoder.flush();
-					const encEndTime = performance.now();
-					encoder.close();
-
-					const encDuration = Math.max(1, encEndTime - encStartTime);
-					const encFps = Math.round(totalFrames / (encDuration / 1000));
-					const encLatency = (encDuration / totalFrames).toFixed(1);
-
-					const rawBytes = width * height * 3 * totalFrames;
-					const kbSize = (totalChunkBytes / 1024).toFixed(1);
-					const avgKbPerFrame = ((totalChunkBytes / 1024) / totalFrames).toFixed(1);
-					const rawMb = (rawBytes / (1024 * 1024)).toFixed(1);
-					const ratioX = Math.round(rawBytes / Math.max(1, totalChunkBytes));
-
-					// Decode output frames so user can inspect encoded video quality (Handbrake output preview)
-					decodedBitmaps.forEach((b) => b.close());
-					decodedBitmaps = [];
-
-					let offCanvas: OffscreenCanvas | HTMLCanvasElement | null = null;
-					let offCtx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null = null;
-					if (typeof OffscreenCanvas !== 'undefined') {
-						offCanvas = new OffscreenCanvas(width, height);
-						offCtx = offCanvas.getContext('2d');
-					}
-
-					const previewDecoder = new VideoDecoder({
-						output: (videoFrame) => {
-							decCtx.drawImage(videoFrame, 0, 0, width, height);
-							if (offCanvas && offCtx) {
-								offCtx.drawImage(videoFrame, 0, 0, width, height);
-								if ('transferToImageBitmap' in offCanvas) {
-									decodedBitmaps.push(offCanvas.transferToImageBitmap());
-								} else if (typeof createImageBitmap !== 'undefined') {
-									createImageBitmap(offCanvas).then((bmp) => decodedBitmaps.push(bmp));
-								}
-							}
-							videoFrame.close();
-						},
-						error: (err) => console.error('Preview decoder error:', err)
-					});
-
-					const decConf: VideoDecoderConfig = {
-						...(decoderConfig || { codec: chosenCodec, codedWidth: width, codedHeight: height }),
-						hardwareAcceleration: selectedMode
-					};
-
-					try {
-						previewDecoder.configure(decConf);
-						for (const chunk of encodedChunks) {
-							previewDecoder.decode(chunk);
-						}
-						await previewDecoder.flush();
-						previewDecoder.close();
-						decCanvas.setAttribute('data-has-frame', 'true');
-						if (decPlaceholder) decPlaceholder.style.display = 'none';
-					} catch (_) {}
-
-					if (metricEngine) {
-						metricEngine.textContent = selectedMode === 'prefer-hardware' ? 'Hardware ASIC (Enc)' : 'Software CPU (Enc)';
-					}
-					if (metricEncFps) {
-						metricEncFps.innerHTML = `${encFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${encLatency} ms)</span>`;
-					}
-					if (metricDecFps) {
-						metricDecFps.innerHTML = `Preview <span class="webgpu-tile-sub">(Decoded)</span>`;
-					}
-					if (metricRatio) {
-						metricRatio.innerHTML = `${kbSize} <span class="webgpu-tile-sub">KB (${avgKbPerFrame} KB/fr ▪ ${ratioX}:1)</span>`;
-						metricRatio.title = `Compressed ${totalFrames} frames (${rawMb} MB raw stream) into ${kbSize} KB bitstream (${ratioX}:1 reduction).`;
-					}
-
-					if (statusText) {
-						statusText.textContent = `✓ Encoded ${totalFrames} frames (2.0s) in ${encDuration.toFixed(0)}ms ▪ ${encFps.toLocaleString()} FPS (${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'})`;
-						statusText.style.color = '#22c55e';
-					}
-					currentFrameIdx = 0;
-					displayFrame(0);
-					startPlayback();
-					return;
-				}
-
-				// 2. PIPELINE: DECODE ONLY
-				if (selectedPipeline === 'decode') {
-					if (statusText) {
-						statusText.textContent = `Verifying ${selectedCodec.toUpperCase()} decoder (${selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU'})...`;
-						statusText.style.color = '';
-					}
-
-					let chosenDecCodec = codecCandidates[0];
-					let decSupported = false;
-
-					for (const c of codecCandidates) {
-						try {
-							const res = await VideoDecoder.isConfigSupported({
-								codec: c,
-								codedWidth: width,
-								codedHeight: height,
-								hardwareAcceleration: selectedMode
-							});
-							if (res && res.supported) {
-								chosenDecCodec = c;
-								decSupported = true;
-								break;
-							}
-						} catch (_) {}
-					}
-
-					if (!decSupported) {
-						if (selectedCodec === 'hevc' && selectedMode === 'prefer-software') {
-							throw new Error('HEVC Software Decoding is not supported by Chromium due to MPEG licensing (requires Hardware ASIC)');
-						} else {
-							throw new Error(`${selectedCodec.toUpperCase()} Decoder not supported with ${selectedMode === 'prefer-hardware' ? 'Hardware Acceleration' : 'Software Fallback'}`);
-						}
-					}
-
-					let encHwMode: 'prefer-hardware' | 'prefer-software' = selectedMode;
-					let chosenEncCodec = chosenDecCodec;
-					let canEncode = false;
-
-					for (const c of codecCandidates) {
-						try {
-							const res = await VideoEncoder.isConfigSupported({
-								codec: c,
-								width,
-								height,
-								bitrate,
-								framerate: fps,
-								latencyMode,
-								bitrateMode,
-								hardwareAcceleration: encHwMode
-							});
-							if (res && res.supported) {
-								chosenEncCodec = c;
-								canEncode = true;
-								break;
-							}
-						} catch (_) {}
-					}
-
-					if (!canEncode && selectedMode === 'prefer-hardware') {
-						encHwMode = 'prefer-software';
-						for (const c of codecCandidates) {
-							try {
-								const res = await VideoEncoder.isConfigSupported({
-									codec: c,
-									width,
-									height,
-									bitrate,
-									framerate: fps,
-									hardwareAcceleration: encHwMode
-								});
-								if (res && res.supported) {
-									chosenEncCodec = c;
-									canEncode = true;
-									break;
-								}
-							} catch (_) {}
-						}
-					}
-
-					if (!canEncode) {
-						throw new Error(`Unable to prepare test bitstream: no encoder available in browser for ${selectedCodec.toUpperCase()}`);
-					}
-
-					if (statusText) {
-						statusText.textContent = `Preparing ${selectedCodec.toUpperCase()} bitstream (${encHwMode === 'prefer-hardware' ? 'hardware encoder' : 'software encoder'})...`;
-					}
-
-					const encodedChunks: EncodedVideoChunk[] = [];
-					let decoderConfig: VideoDecoderConfig | null = null;
-					let totalChunkBytes = 0;
-
-					const prepEncoder = new VideoEncoder({
-						output: (chunk, metadata) => {
-							encodedChunks.push(chunk);
-							totalChunkBytes += chunk.byteLength;
-							if (metadata && metadata.decoderConfig) {
-								decoderConfig = metadata.decoderConfig;
-							}
-						},
-						error: (err) => console.error('Encoder error:', err)
-					});
-
-					prepEncoder.configure({
-						codec: chosenEncCodec,
-						width,
-						height,
-						bitrate,
-						framerate: fps,
-						latencyMode,
-						bitrateMode,
-						hardwareAcceleration: encHwMode
-					});
-
-					for (let i = 0; i < totalFrames; i++) {
-						drawSceneFrame(srcCtx, width, height, i, totalFrames);
-						const frame = new VideoFrame(srcCanvas, {
-							timestamp: i * 33333,
-							duration: 33333
-						});
-						prepEncoder.encode(frame, { keyFrame: i === 0 || i % 30 === 0 });
-						frame.close();
-					}
-
-					await prepEncoder.flush();
-					prepEncoder.close();
-
-					if (statusText) {
-						statusText.textContent = `Decoding ${totalFrames} ${selectedCodec.toUpperCase()} frames via ${selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU'}...`;
-					}
-
-					if (decPlaceholder) decPlaceholder.style.display = 'none';
-
-					const finalDecoderConfig: VideoDecoderConfig = {
-						...(decoderConfig || { codec: chosenDecCodec, codedWidth: width, codedHeight: height }),
-						hardwareAcceleration: selectedMode
-					};
-
-					// Store decoded frames for timeline scrubber & playback
-					decodedBitmaps.forEach((b) => b.close());
-					decodedBitmaps = [];
-
-					let offCanvas: OffscreenCanvas | HTMLCanvasElement | null = null;
-					let offCtx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null = null;
-					if (typeof OffscreenCanvas !== 'undefined') {
-						offCanvas = new OffscreenCanvas(width, height);
-						offCtx = offCanvas.getContext('2d');
-					} else {
-						offCanvas = document.createElement('canvas');
-						offCanvas.width = width;
-						offCanvas.height = height;
-						offCtx = offCanvas.getContext('2d');
-					}
-
-					let decodedCount = 0;
-					const decoder = new VideoDecoder({
-						output: (videoFrame) => {
-							decodedCount++;
-							decCtx.drawImage(videoFrame, 0, 0, width, height);
-							if (offCanvas && offCtx) {
-								offCtx.drawImage(videoFrame, 0, 0, width, height);
-								if ('transferToImageBitmap' in offCanvas) {
-									decodedBitmaps.push(offCanvas.transferToImageBitmap());
-								} else if (typeof createImageBitmap !== 'undefined') {
-									createImageBitmap(offCanvas).then((bmp) => decodedBitmaps.push(bmp));
-								}
-							}
-							videoFrame.close();
-						},
-						error: (err) => console.error('Decoder error:', err)
-					});
-
-					decoder.configure(finalDecoderConfig);
-
-					const decStartTime = performance.now();
-					for (const chunk of encodedChunks) {
-						decoder.decode(chunk);
-					}
-					await decoder.flush();
-					const decEndTime = performance.now();
-					decoder.close();
-
-					decCanvas.setAttribute('data-has-frame', 'true');
-
-					const decDuration = Math.max(1, decEndTime - decStartTime);
-					const decFps = Math.round(totalFrames / (decDuration / 1000));
-					const decLatency = (decDuration / totalFrames).toFixed(1);
-
-					const rawBytes = width * height * 3 * totalFrames;
-					const kbSize = (totalChunkBytes / 1024).toFixed(1);
-					const avgKbPerFrame = ((totalChunkBytes / 1024) / totalFrames).toFixed(1);
-					const rawMb = (rawBytes / (1024 * 1024)).toFixed(1);
-					const ratioX = Math.round(rawBytes / Math.max(1, totalChunkBytes));
-
-					if (metricEngine) {
-						metricEngine.textContent = selectedMode === 'prefer-hardware' ? 'Hardware ASIC (Dec)' : 'Software CPU (Dec)';
-					}
-					if (metricEncFps) {
-						metricEncFps.innerHTML = `Bypassed <span class="webgpu-tile-sub">(${encHwMode === 'prefer-hardware' ? 'HW Prep' : 'CPU Prep'})</span>`;
-					}
-					if (metricDecFps) {
-						metricDecFps.innerHTML = `${decFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${decLatency} ms)</span>`;
-					}
-					if (metricRatio) {
-						metricRatio.innerHTML = `${kbSize} <span class="webgpu-tile-sub">KB (${avgKbPerFrame} KB/fr ▪ ${ratioX}:1)</span>`;
-						metricRatio.title = `Decoded ${totalFrames} frames from a ${kbSize} KB bitstream (${rawMb} MB uncompressed).`;
-					}
-
-					if (statusText) {
-						statusText.textContent = `✓ Decoded ${totalFrames} frames in ${decDuration.toFixed(0)}ms ▪ ${decFps.toLocaleString()} FPS (${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'})`;
-						statusText.style.color = '#22c55e';
-					}
-					currentFrameIdx = 0;
-					displayFrame(0);
-					startPlayback();
-					return;
-				}
-
-				// 3. PIPELINE: LOOPBACK (DEFAULT)
+				// 1. Ensure source reference frames are extracted
 				if (statusText) {
-					statusText.textContent = `Initializing ${selectedCodec.toUpperCase()} loopback (${selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU'})...`;
+					statusText.textContent = `Extracting ${selectedScene.toUpperCase()} reference frames...`;
 					statusText.style.color = '';
 				}
+				const frames = await ensureSourceFrames(is4k, width, height);
+				if (!isRunning) return;
 
+				// Switch Left side to canvas display
+				if (srcVideo) srcVideo.classList.add('hidden');
+				if (srcCanvas) {
+					srcCanvas.classList.remove('hidden');
+					srcCanvas.width = previewW;
+					srcCanvas.height = previewH;
+				}
+
+				// 2. Probing encoder support
 				let chosenCodec = codecCandidates[0];
 				let encSupported = false;
-
 				for (const c of codecCandidates) {
 					try {
 						const res = await VideoEncoder.isConfigSupported({
@@ -3263,14 +2975,260 @@
 					} catch (_) {}
 				}
 
-				if (!encSupported) {
+				if (!encSupported && selectedPipeline !== 'decode') {
 					if (selectedCodec === 'av1' && selectedMode === 'prefer-hardware') {
-						throw new Error('AV1 Hardware Encoding requires RTX 40 series (Ada Lovelace) or Intel Arc. RTX 30 series (Ampere) supports AV1 Hardware Decode only (NVDEC). Select "Decode" pipeline to test ASIC acceleration');
+						throw new Error('AV1 Hardware Encoding requires RTX 40 series (Ada Lovelace) or Intel Arc. Select "Decode" pipeline to test ASIC acceleration.');
 					} else if (selectedCodec === 'hevc' && selectedMode === 'prefer-software') {
 						throw new Error('HEVC Software Fallback is not supported by Chromium due to MPEG licensing (requires Hardware ASIC)');
 					} else {
-						throw new Error(`${selectedCodec.toUpperCase()} not supported with ${selectedMode === 'prefer-hardware' ? 'Hardware Acceleration' : 'Software Fallback'}`);
+						throw new Error(`${selectedCodec.toUpperCase()} Encoder not supported with ${selectedMode === 'prefer-hardware' ? 'Hardware Acceleration' : 'Software Fallback'}`);
 					}
+				}
+
+				// --- 1. PIPELINE: ENCODE ONLY ---
+				if (selectedPipeline === 'encode') {
+					if (statusText) {
+						statusText.textContent = `Benchmarking ${selectedCodec.toUpperCase()} hardware ASIC encoder...`;
+						statusText.style.color = '';
+					}
+
+					const encodedChunks: EncodedVideoChunk[] = [];
+					let totalChunkBytes = 0;
+
+					const encoder = new VideoEncoder({
+						output: (chunk) => {
+							totalChunkBytes += chunk.byteLength;
+							encodedChunks.push(chunk);
+						},
+						error: (err) => console.error('Encoder error:', err)
+					});
+
+					encoder.configure({
+						codec: chosenCodec,
+						width,
+						height,
+						bitrate,
+						framerate: fps,
+						latencyMode,
+						bitrateMode,
+						hardwareAcceleration: selectedMode
+					});
+
+					const encStartTime = performance.now();
+					for (let i = 0; i < totalFrames; i++) {
+						const frame = new VideoFrame(frames[i], {
+							timestamp: i * frameIntervalUs,
+							duration: frameIntervalUs
+						});
+						encoder.encode(frame, { keyFrame: i === 0 || i % 24 === 0 });
+						frame.close();
+					}
+					await encoder.flush();
+					const encEndTime = performance.now();
+					encoder.close();
+
+					const encDuration = Math.max(1, encEndTime - encStartTime);
+					const encFps = Math.round(totalFrames / (encDuration / 1000));
+					const encLatency = (encDuration / totalFrames).toFixed(1);
+
+					const rawBytes = width * height * 1.5 * totalFrames; // Standard YUV 4:2:0 planar baseband (12 bpp)
+					const kbSize = totalChunkBytes / 1024;
+					const mbSize = kbSize / 1024;
+					const displaySize = mbSize >= 1.0 ? `${mbSize.toFixed(1)} MB` : `${kbSize.toFixed(0)} KB`;
+					const avgKbPerFrame = (kbSize / totalFrames).toFixed(1);
+					const durationSec = totalFrames / fps;
+					const bitrateMbps = ((totalChunkBytes * 8) / (durationSec * 1_000_000)).toFixed(1);
+					const rawMb = Math.round(rawBytes / (1024 * 1024));
+					const ratioX = Math.round(rawBytes / Math.max(1, totalChunkBytes));
+
+					if (metricEngine) {
+						metricEngine.textContent = selectedMode === 'prefer-hardware' ? 'Hardware ASIC (Enc)' : 'Software CPU (Enc)';
+					}
+					if (metricEncFps) {
+						metricEncFps.innerHTML = `${encFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${encLatency} ms)</span>`;
+					}
+					if (metricDecFps) {
+						metricDecFps.innerHTML = 'Bypassed <span class="webgpu-tile-sub">(Encode Only)</span>';
+					}
+					if (metricRatio) {
+						metricRatio.innerHTML = `${displaySize} <span class="webgpu-tile-sub">(${bitrateMbps} Mbps ▪ ${avgKbPerFrame} KB/fr)</span>`;
+						metricRatio.title = `Bitstream: ${displaySize} (${bitrateMbps} Mbps average at 24 fps). Uncompressed YUV 4:2:0 baseband raster: ${rawMb} MB (${ratioX}:1 reduction vs raw uncompressed HDMI/SDI baseband).`;
+					}
+
+					if (decPlaceholder) {
+						decPlaceholder.style.display = 'flex';
+						decPlaceholder.innerHTML = '<span>Encoding benchmark complete. Select &ldquo;Both&rdquo; or &ldquo;Decode&rdquo; to view reconstructed frames.</span>';
+					}
+
+					if (statusText) {
+						statusText.textContent = `✓ Encoded ${totalFrames} frames in ${encDuration.toFixed(0)}ms ▪ ${encFps.toLocaleString()} FPS (${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'})`;
+						statusText.style.color = '#22c55e';
+					}
+					currentFrameIdx = 0;
+					syncTimelineUI(0);
+					return;
+				}
+
+				// --- 2. PIPELINE: DECODE ONLY ---
+				if (selectedPipeline === 'decode') {
+					if (statusText) {
+						statusText.textContent = `Preparing bitstream & benchmarking ${selectedCodec.toUpperCase()} hardware ASIC decoder...`;
+						statusText.style.color = '';
+					}
+
+					let decSupported = false;
+					for (const c of codecCandidates) {
+					try {
+						const res = await VideoDecoder.isConfigSupported({
+							codec: c,
+							codedWidth: width,
+							codedHeight: height,
+							hardwareAcceleration: selectedMode
+						});
+						if (res && res.supported) {
+							chosenCodec = c;
+							decSupported = true;
+							break;
+						}
+					} catch (_) {}
+					}
+
+					if (!decSupported) {
+						throw new Error(`${selectedCodec.toUpperCase()} Decoder not supported with ${selectedMode === 'prefer-hardware' ? 'Hardware Acceleration' : 'Software Fallback'}`);
+					}
+
+					const encodedChunks: EncodedVideoChunk[] = [];
+					let decoderConfig: VideoDecoderConfig | null = null;
+					let totalChunkBytes = 0;
+
+					let encHwMode: 'prefer-hardware' | 'prefer-software' = selectedMode;
+					if (selectedCodec === 'av1' && encHwMode === 'prefer-hardware') {
+						encHwMode = 'prefer-software';
+					}
+
+					const encoder = new VideoEncoder({
+						output: (chunk, metadata) => {
+							totalChunkBytes += chunk.byteLength;
+							encodedChunks.push(chunk);
+							if (metadata && metadata.decoderConfig) decoderConfig = metadata.decoderConfig;
+						},
+						error: (err) => console.error('Prep encoder error:', err)
+					});
+
+					encoder.configure({
+						codec: chosenCodec,
+						width,
+						height,
+						bitrate,
+						framerate: fps,
+						latencyMode,
+						bitrateMode,
+						hardwareAcceleration: encHwMode
+					});
+
+					for (let i = 0; i < totalFrames; i++) {
+						const frame = new VideoFrame(frames[i], {
+							timestamp: i * frameIntervalUs,
+							duration: frameIntervalUs
+						});
+						encoder.encode(frame, { keyFrame: i === 0 || i % 24 === 0 });
+						frame.close();
+					}
+
+					await encoder.flush();
+					encoder.close();
+
+					decodedBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
+					decodedBitmaps = new Array(totalFrames);
+
+					const decoder = new VideoDecoder({
+						output: (videoFrame) => {
+							const fIdx = Math.min(59, Math.max(0, Math.round(videoFrame.timestamp / frameIntervalUs)));
+							if (typeof OffscreenCanvas !== 'undefined') {
+								const frameCanvas = new OffscreenCanvas(previewW, previewH);
+								const fCtx = frameCanvas.getContext('2d');
+								if (fCtx) fCtx.drawImage(videoFrame, 0, 0, previewW, previewH);
+								if ('transferToImageBitmap' in frameCanvas) {
+									decodedBitmaps[fIdx] = frameCanvas.transferToImageBitmap();
+								} else {
+									createImageBitmap(frameCanvas).then((bmp) => { decodedBitmaps[fIdx] = bmp; });
+								}
+							}
+							videoFrame.close();
+						},
+						error: (err) => console.error('Decoder error:', err)
+					});
+
+					const decConfig: VideoDecoderConfig = decoderConfig ? {
+						...decoderConfig,
+						hardwareAcceleration: selectedMode
+					} : {
+						codec: chosenCodec,
+						codedWidth: width,
+						codedHeight: height,
+						hardwareAcceleration: selectedMode
+					};
+
+					decoder.configure(decConfig);
+
+					const decStartTime = performance.now();
+					for (const chunk of encodedChunks) {
+						decoder.decode(chunk);
+					}
+					await decoder.flush();
+					const decEndTime = performance.now();
+					decoder.close();
+
+					for (let i = 0; i < totalFrames; i++) {
+						if (!decodedBitmaps[i] && i > 0 && decodedBitmaps[i - 1]) {
+							decodedBitmaps[i] = decodedBitmaps[i - 1];
+						}
+					}
+
+					decCanvas.setAttribute('data-has-frame', 'true');
+					if (decPlaceholder) decPlaceholder.style.display = 'none';
+
+					const decDuration = Math.max(1, decEndTime - decStartTime);
+					const decFps = Math.round(totalFrames / (decDuration / 1000));
+					const decLatency = (decDuration / totalFrames).toFixed(1);
+
+					const rawBytes = width * height * 1.5 * totalFrames; // Standard YUV 4:2:0 planar baseband (12 bpp)
+					const kbSize = totalChunkBytes / 1024;
+					const mbSize = kbSize / 1024;
+					const displaySize = mbSize >= 1.0 ? `${mbSize.toFixed(1)} MB` : `${kbSize.toFixed(0)} KB`;
+					const avgKbPerFrame = (kbSize / totalFrames).toFixed(1);
+					const durationSec = totalFrames / fps;
+					const bitrateMbps = ((totalChunkBytes * 8) / (durationSec * 1_000_000)).toFixed(1);
+					const rawMb = Math.round(rawBytes / (1024 * 1024));
+					const ratioX = Math.round(rawBytes / Math.max(1, totalChunkBytes));
+
+					if (metricEngine) {
+						metricEngine.textContent = selectedMode === 'prefer-hardware' ? 'Hardware ASIC (Dec)' : 'Software CPU (Dec)';
+					}
+					if (metricEncFps) {
+						metricEncFps.innerHTML = `Bypassed <span class="webgpu-tile-sub">(${encHwMode === 'prefer-hardware' ? 'HW Prep' : 'CPU Prep'})</span>`;
+					}
+					if (metricDecFps) {
+						metricDecFps.innerHTML = `${decFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${decLatency} ms)</span>`;
+					}
+					if (metricRatio) {
+						metricRatio.innerHTML = `${displaySize} <span class="webgpu-tile-sub">(${bitrateMbps} Mbps ▪ ${avgKbPerFrame} KB/fr)</span>`;
+						metricRatio.title = `Bitstream: ${displaySize} (${bitrateMbps} Mbps average at 24 fps). Uncompressed YUV 4:2:0 baseband raster: ${rawMb} MB (${ratioX}:1 reduction vs raw uncompressed HDMI/SDI baseband).`;
+					}
+
+					if (statusText) {
+						statusText.textContent = `✓ Decoded ${totalFrames} frames in ${decDuration.toFixed(0)}ms ▪ ${decFps.toLocaleString()} FPS (${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'})`;
+						statusText.style.color = '#22c55e';
+					}
+					currentFrameIdx = 0;
+					syncTimelineUI(0);
+					return;
+				}
+
+				// --- 3. PIPELINE: LOOPBACK (BOTH) ---
+				if (statusText) {
+					statusText.textContent = `Benchmarking ${selectedCodec.toUpperCase()} hardware ASIC encode & decode...`;
+					statusText.style.color = '';
 				}
 
 				let decSupported = false;
@@ -3299,11 +3257,32 @@
 				let decoderConfig: VideoDecoderConfig | null = null;
 				let totalChunkBytes = 0;
 
+				decodedBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
+				decodedBitmaps = new Array(totalFrames);
+
+				const decoder = new VideoDecoder({
+					output: (videoFrame) => {
+						const fIdx = Math.min(59, Math.max(0, Math.round(videoFrame.timestamp / frameIntervalUs)));
+						if (typeof OffscreenCanvas !== 'undefined') {
+							const frameCanvas = new OffscreenCanvas(previewW, previewH);
+							const fCtx = frameCanvas.getContext('2d');
+							if (fCtx) fCtx.drawImage(videoFrame, 0, 0, previewW, previewH);
+							if ('transferToImageBitmap' in frameCanvas) {
+								decodedBitmaps[fIdx] = frameCanvas.transferToImageBitmap();
+							} else {
+								createImageBitmap(frameCanvas).then((bmp) => { decodedBitmaps[fIdx] = bmp; });
+							}
+						}
+						videoFrame.close();
+					},
+					error: (err) => console.error('Decoder error:', err)
+				});
+
 				const encoder = new VideoEncoder({
 					output: (chunk, metadata) => {
-						encodedChunks.push(chunk);
 						totalChunkBytes += chunk.byteLength;
-						if (metadata && metadata.decoderConfig) {
+						encodedChunks.push(chunk);
+						if (metadata && metadata.decoderConfig && !decoderConfig) {
 							decoderConfig = metadata.decoderConfig;
 						}
 					},
@@ -3321,15 +3300,14 @@
 					hardwareAcceleration: selectedMode
 				});
 
+				// --- PASS 1: HARDWARE ENCODING ---
 				const encStartTime = performance.now();
-
 				for (let i = 0; i < totalFrames; i++) {
-					drawSceneFrame(srcCtx, width, height, i, totalFrames);
-					const frame = new VideoFrame(srcCanvas, {
-						timestamp: i * 33333,
-						duration: 33333
+					const frame = new VideoFrame(frames[i], {
+						timestamp: i * frameIntervalUs,
+						duration: frameIntervalUs
 					});
-					encoder.encode(frame, { keyFrame: i === 0 || i % 30 === 0 });
+					encoder.encode(frame, { keyFrame: i === 0 || i % 24 === 0 });
 					frame.close();
 				}
 
@@ -3341,48 +3319,18 @@
 				const encFps = Math.round(totalFrames / (encDuration / 1000));
 				const encLatency = (encDuration / totalFrames).toFixed(1);
 
-				if (statusText) statusText.textContent = `Encoded ${totalFrames} frames in ${encDuration.toFixed(1)}ms. Decoding via ASIC...`;
-
-				const finalDecoderConfig: VideoDecoderConfig = {
-					...(decoderConfig || { codec: chosenCodec, codedWidth: width, codedHeight: height }),
+				// --- PASS 2: HARDWARE DECODING ---
+				const decConfig: VideoDecoderConfig = decoderConfig ? {
+					...decoderConfig,
+					hardwareAcceleration: selectedMode
+				} : {
+					codec: chosenCodec,
+					codedWidth: width,
+					codedHeight: height,
 					hardwareAcceleration: selectedMode
 				};
 
-				// Store decoded frames for timeline scrubber & playback
-				decodedBitmaps.forEach((b) => b.close());
-				decodedBitmaps = [];
-
-				let offCanvas: OffscreenCanvas | HTMLCanvasElement | null = null;
-				let offCtx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null = null;
-				if (typeof OffscreenCanvas !== 'undefined') {
-					offCanvas = new OffscreenCanvas(width, height);
-					offCtx = offCanvas.getContext('2d');
-				} else {
-					offCanvas = document.createElement('canvas');
-					offCanvas.width = width;
-					offCanvas.height = height;
-					offCtx = offCanvas.getContext('2d');
-				}
-
-				let decodedCount = 0;
-				const decoder = new VideoDecoder({
-					output: (videoFrame) => {
-						decodedCount++;
-						decCtx.drawImage(videoFrame, 0, 0, width, height);
-						if (offCanvas && offCtx) {
-							offCtx.drawImage(videoFrame, 0, 0, width, height);
-							if ('transferToImageBitmap' in offCanvas) {
-								decodedBitmaps.push(offCanvas.transferToImageBitmap());
-							} else if (typeof createImageBitmap !== 'undefined') {
-								createImageBitmap(offCanvas).then((bmp) => decodedBitmaps.push(bmp));
-							}
-						}
-						videoFrame.close();
-					},
-					error: (err) => console.error('Decoder error:', err)
-				});
-
-				decoder.configure(finalDecoderConfig);
+				decoder.configure(decConfig);
 
 				const decStartTime = performance.now();
 				for (const chunk of encodedChunks) {
@@ -3392,16 +3340,26 @@
 				const decEndTime = performance.now();
 				decoder.close();
 
-				decCanvas.setAttribute('data-has-frame', 'true');
-
 				const decDuration = Math.max(1, decEndTime - decStartTime);
 				const decFps = Math.round(totalFrames / (decDuration / 1000));
 				const decLatency = (decDuration / totalFrames).toFixed(1);
 
-				const rawBytes = width * height * 3 * totalFrames;
-				const kbSize = (totalChunkBytes / 1024).toFixed(1);
-				const avgKbPerFrame = ((totalChunkBytes / 1024) / totalFrames).toFixed(1);
-				const rawMb = (rawBytes / (1024 * 1024)).toFixed(1);
+				for (let i = 0; i < totalFrames; i++) {
+					if (!decodedBitmaps[i] && i > 0 && decodedBitmaps[i - 1]) {
+						decodedBitmaps[i] = decodedBitmaps[i - 1];
+					}
+				}
+
+				decCanvas.setAttribute('data-has-frame', 'true');
+
+				const rawBytes = width * height * 1.5 * totalFrames; // Standard YUV 4:2:0 planar baseband (12 bpp)
+				const kbSize = totalChunkBytes / 1024;
+				const mbSize = kbSize / 1024;
+				const displaySize = mbSize >= 1.0 ? `${mbSize.toFixed(1)} MB` : `${kbSize.toFixed(0)} KB`;
+				const avgKbPerFrame = (kbSize / totalFrames).toFixed(1);
+				const durationSec = totalFrames / fps;
+				const bitrateMbps = ((totalChunkBytes * 8) / (durationSec * 1_000_000)).toFixed(1);
+				const rawMb = Math.round(rawBytes / (1024 * 1024));
 				const ratioX = Math.round(rawBytes / Math.max(1, totalChunkBytes));
 
 				if (metricEngine) {
@@ -3414,18 +3372,17 @@
 					metricDecFps.innerHTML = `${decFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${decLatency} ms)</span>`;
 				}
 				if (metricRatio) {
-					metricRatio.innerHTML = `${kbSize} <span class="webgpu-tile-sub">KB (${avgKbPerFrame} KB/fr ▪ ${ratioX}:1)</span>`;
-					metricRatio.title = `Compressed ${totalFrames} frames (${rawMb} MB raw stream) into ${kbSize} KB bitstream (${ratioX}:1 bandwidth reduction).`;
+					metricRatio.innerHTML = `${displaySize} <span class="webgpu-tile-sub">(${bitrateMbps} Mbps ▪ ${avgKbPerFrame} KB/fr)</span>`;
+					metricRatio.title = `Bitstream: ${displaySize} (${bitrateMbps} Mbps average at 24 fps). Uncompressed YUV 4:2:0 baseband raster: ${rawMb} MB (${ratioX}:1 reduction vs raw uncompressed HDMI/SDI baseband).`;
 				}
 
 				if (statusText) {
-					statusText.textContent = `✓ Verified ${totalFrames} frames (2.0s) in ${(encDuration + decDuration).toFixed(0)}ms ▪ ${encFps.toLocaleString()} FPS enc / ${decFps.toLocaleString()} FPS dec`;
+					statusText.textContent = `✓ Verified ${totalFrames} frames in ${(encDuration + decDuration).toFixed(0)}ms ▪ ${encFps.toLocaleString()} FPS enc / ${decFps.toLocaleString()} FPS dec`;
 					statusText.style.color = '#22c55e';
 				}
 
 				currentFrameIdx = 0;
-				displayFrame(0);
-				startPlayback();
+				syncTimelineUI(0);
 			} catch (err: any) {
 				if (statusText) {
 					statusText.textContent = `Verification Notice: ${err.message || 'Codec profile unsupported'}.`;
@@ -3450,11 +3407,11 @@
 			} else if (e.code === 'ArrowLeft') {
 				e.preventDefault();
 				stopPlayback();
-				displayFrame(currentFrameIdx - 1);
+				seekToFrame(currentFrameIdx - 1);
 			} else if (e.code === 'ArrowRight') {
 				e.preventDefault();
 				stopPlayback();
-				displayFrame(currentFrameIdx + 1);
+				seekToFrame(currentFrameIdx + 1);
 			}
 		});
 
@@ -4739,6 +4696,21 @@
 	.codec-canvas-wrap.is-pinned .codec-pixel-loupe {
 		border-color: #f59e0b;
 		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 12px rgba(245, 158, 11, 0.5);
+	}
+	.codec-media-video {
+		width: 100%;
+		height: 100%;
+		display: block;
+		object-fit: contain;
+		touch-action: none;
+		-webkit-touch-callout: none;
+		-webkit-user-select: none;
+		user-select: none;
+		pointer-events: none;
+		background: #000000;
+	}
+	.codec-media-video.hidden {
+		display: none;
 	}
 	.codec-canvas {
 		width: 100%;

@@ -2151,40 +2151,35 @@
 
 			if (!srcVideo) return [];
 
+			// Ensure video is visible and retains compositor layer during frame extraction
+			srcVideo.classList.remove('hidden');
+			if (srcCanvas) srcCanvas.classList.add('hidden');
+
 			// Ensure correct scene video is loaded without redundant reload
 			loadVideoForScene(selectedScene === '4k' ? '4k' : '1080p');
 
-			if (srcVideo.readyState < 2) {
+			if (srcVideo.readyState < 3) {
 				if (statusText) {
 					statusText.textContent = `Buffering ${selectedScene === '4k' ? '4K UHD' : '1080p'} master...`;
 					statusText.style.color = '';
 				}
-				await new Promise<void>((resolve, reject) => {
-					if (srcVideo.readyState >= 2) {
+				await new Promise<void>((resolve) => {
+					if (srcVideo.readyState >= 3) {
 						resolve();
 						return;
 					}
 					let timer: any;
 					const onReady = () => {
 						clearTimeout(timer);
-						srcVideo.removeEventListener('loadeddata', onReady);
 						srcVideo.removeEventListener('canplay', onReady);
 						srcVideo.removeEventListener('canplaythrough', onReady);
+						srcVideo.removeEventListener('loadeddata', onReady);
 						resolve();
 					};
-					srcVideo.addEventListener('loadeddata', onReady, { once: true });
 					srcVideo.addEventListener('canplay', onReady, { once: true });
 					srcVideo.addEventListener('canplaythrough', onReady, { once: true });
-					timer = setTimeout(() => {
-						srcVideo.removeEventListener('loadeddata', onReady);
-						srcVideo.removeEventListener('canplay', onReady);
-						srcVideo.removeEventListener('canplaythrough', onReady);
-						if (srcVideo.readyState >= 2) {
-							resolve();
-						} else {
-							reject(new Error(`Timed out buffering ${selectedScene === '4k' ? '4K' : '1080p'} master. Check network connection.`));
-						}
-					}, 15000);
+					srcVideo.addEventListener('loadeddata', onReady, { once: true });
+					timer = setTimeout(onReady, 8000);
 				});
 			}
 
@@ -2203,33 +2198,44 @@
 				const targetTime = (i + 0.5) / 24;
 
 				await new Promise<void>((resolve) => {
-					let done = false;
-					let timer: any;
+					let resolved = false;
+					let rVfcId: number | null = null;
+					let fallbackTimer: any;
+
 					const finish = () => {
-						if (done) return;
-						done = true;
-						clearTimeout(timer);
-						srcVideo.removeEventListener('seeked', onSeeked);
+						if (resolved) return;
+						resolved = true;
+						clearTimeout(fallbackTimer);
+						if (rVfcId !== null && 'cancelVideoFrameCallback' in srcVideo) {
+							srcVideo.cancelVideoFrameCallback(rVfcId);
+						}
 						resolve();
 					};
-					const onSeeked = () => {
-						if ('requestVideoFrameCallback' in srcVideo) {
-							srcVideo.requestVideoFrameCallback(finish);
-							setTimeout(finish, 100);
-						} else {
-							requestAnimationFrame(() => requestAnimationFrame(finish));
-						}
-					};
 
-					if (Math.abs(srcVideo.currentTime - targetTime) < 0.005) {
+					if (Math.abs(srcVideo.currentTime - targetTime) < 0.015) {
 						finish();
 						return;
 					}
 
-					srcVideo.addEventListener('seeked', onSeeked, { once: true });
+					if ('requestVideoFrameCallback' in srcVideo) {
+						const onFramePresented = (_now: DOMHighResTimeStamp, metadata: any) => {
+							if (resolved) return;
+							// Verify that the presented frame mediaTime actually matches targetTime
+							if (Math.abs(metadata.mediaTime - targetTime) < 0.04 || metadata.mediaTime >= targetTime - 0.01) {
+								finish();
+							} else {
+								rVfcId = srcVideo.requestVideoFrameCallback(onFramePresented);
+							}
+						};
+						rVfcId = srcVideo.requestVideoFrameCallback(onFramePresented);
+					} else {
+						srcVideo.addEventListener('seeked', () => {
+							requestAnimationFrame(() => requestAnimationFrame(finish));
+						}, { once: true });
+					}
+
 					srcVideo.currentTime = targetTime;
-					// Generous timeout (3500ms) for high-resolution 4K frames over network/demuxer
-					timer = setTimeout(finish, 3500);
+					fallbackTimer = setTimeout(finish, 1500);
 				});
 
 				extractCtx.drawImage(srcVideo, 0, 0, width, height);
@@ -4772,7 +4778,11 @@
 		background: #000000;
 	}
 	.codec-media-video.hidden {
-		display: none;
+		position: absolute;
+		inset: 0;
+		opacity: 0;
+		pointer-events: none;
+		z-index: 0;
 	}
 	.codec-canvas {
 		width: 100%;

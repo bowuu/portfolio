@@ -1190,6 +1190,7 @@
 			(window as any).__closeAllEasterEggs?.();
 			modal.classList.remove('hidden');
 			modal.style.display = 'flex';
+			(window as any).__pushModalHistory?.('wafer-modal', closeWaferModal);
 			if (!activeDie && dies.length) {
 				activeDie = dies[Math.floor(dies.length / 2)];
 				updateTelemetry(activeDie);
@@ -1201,6 +1202,7 @@
 			modal.classList.add('hidden');
 			modal.style.display = 'none';
 			(window as any).__updateDrawerActiveUI?.();
+			(window as any).__popModalHistory?.('wafer-modal');
 		}
 
 		closeBtn?.addEventListener('click', closeWaferModal);
@@ -3407,6 +3409,7 @@
 				multiplierModal.classList.remove('hidden');
 				multiplierModal.style.display = 'flex';
 			}
+			(window as any).__pushModalHistory?.('multiplier-modal', closeMultiplier);
 			updateDrawerActiveUI();
 			updateMultiplier(false);
 		}
@@ -3419,6 +3422,7 @@
 				multiplierModal.style.display = 'none';
 			}
 			updateDrawerActiveUI();
+			(window as any).__popModalHistory?.('multiplier-modal');
 		}
 
 		function toggleMultiplier() {
@@ -3457,9 +3461,9 @@
 				updateDrawerActiveUI();
 				extrasModal.classList.remove('hidden');
 				extrasModal.style.display = 'block';
+				(window as any).__pushModalHistory?.('lab-extras-modal', closeLabExtras);
 			} else {
-				extrasModal.classList.add('hidden');
-				extrasModal.style.display = 'none';
+				closeLabExtras();
 			}
 		};
 
@@ -3630,17 +3634,19 @@
 		});
 
 
-		extrasCloseBtn?.addEventListener('click', () => {
+		function closeLabExtras() {
 			extrasModal?.classList.add('hidden');
 			if (extrasModal) extrasModal.style.display = 'none';
-		});
+			(window as any).__popModalHistory?.('lab-extras-modal');
+		}
+
+		extrasCloseBtn?.addEventListener('click', closeLabExtras);
 
 		document.addEventListener('click', (e) => {
 			const target = e.target as HTMLElement;
 			if (extrasModal && !extrasModal.classList.contains('hidden')) {
 				if (!extrasModal.contains(target) && !target.closest('#footer-extras-btn')) {
-					extrasModal.classList.add('hidden');
-					extrasModal.style.display = 'none';
+					closeLabExtras();
 				}
 			}
 		});
@@ -4925,6 +4931,36 @@
 		}
 		:global(.mult-cols-row) {
 			gap: 2px;
+		}
+		.wafer-modal {
+			padding: 0 !important;
+			align-items: stretch !important;
+			justify-content: flex-start !important;
+		}
+		.wafer-dialog,
+		.mult-dialog {
+			width: 100vw !important;
+			max-width: 100vw !important;
+			height: 100% !important;
+			height: 100dvh !important;
+			max-height: 100dvh !important;
+			border-radius: 0 !important;
+			margin: 0 !important;
+			display: flex !important;
+			flex-direction: column !important;
+		}
+		.wafer-modal-header {
+			position: sticky !important;
+			top: 0 !important;
+			z-index: 100 !important;
+			flex-shrink: 0 !important;
+			background: #0f131a !important;
+		}
+		.wafer-modal-body,
+		.mult-body {
+			flex: 1 1 auto !important;
+			overflow-y: auto !important;
+			-webkit-overflow-scrolling: touch !important;
 		}
 	}
 </style>

@@ -177,6 +177,7 @@
 		function openTerminal() {
 			modal?.classList.add('open');
 			modal?.setAttribute('aria-hidden', 'false');
+			(window as any).__pushModalHistory?.('terminal-modal', closeTerminal);
 			setTimeout(() => {
 				input?.focus();
 				if (screen) screen.scrollTop = screen.scrollHeight;
@@ -186,6 +187,7 @@
 		function closeTerminal() {
 			modal?.classList.remove('open');
 			modal?.setAttribute('aria-hidden', 'true');
+			(window as any).__popModalHistory?.('terminal-modal');
 		}
 
 		function toggleTerminal() {

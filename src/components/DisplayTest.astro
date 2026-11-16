@@ -660,6 +660,7 @@
 			document.body.style.overflow = 'hidden';
 			currentPixelIdx = 0;
 			applyPixelColor();
+			(window as any).__pushModalHistory?.('pixel-checker-modal', closePixelChecker);
 
 			// Attempt fullscreen on modal element for true edge-to-edge inspection with 0 scrollbar
 			try {
@@ -687,6 +688,7 @@
 			document.documentElement.style.overflow = '';
 			document.body.style.overflow = '';
 			exitFs();
+			(window as any).__popModalHistory?.('pixel-checker-modal');
 		}
 
 		function onFullscreenChange() {

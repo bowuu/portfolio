@@ -378,7 +378,7 @@
 						</button>
 					</div>
 
-					<!-- ROW 2: ENGINE & SOURCE SCENE -->
+					<!-- ROW 2: ENGINE, QUALITY & SOURCE SCENE -->
 					<div class="codec-rack-row codec-rack-bottom">
 						<div class="codec-rack-group">
 							<span class="codec-ctrl-label">Engine:</span>
@@ -389,10 +389,19 @@
 						</div>
 
 						<div class="codec-rack-group">
+							<span class="codec-ctrl-label">Quality:</span>
+							<div class="codec-segmented" id="quality-selector" role="group" aria-label="Quality preset">
+								<button type="button" class="codec-seg-btn" data-quality="high" title="14 Mbps High Bitrate Archival Profile">High</button>
+								<button type="button" class="codec-seg-btn active" data-quality="med" title="4 Mbps Medium Bitrate Streaming Profile">Med</button>
+								<button type="button" class="codec-seg-btn" data-quality="low" title="800 kbps Low Bitrate Stress Test">Low</button>
+							</div>
+						</div>
+
+						<div class="codec-rack-group">
 							<span class="codec-ctrl-label">Source:</span>
 							<div class="codec-segmented" id="scene-selector" role="group" aria-label="Source frame selection">
-								<button type="button" class="codec-seg-btn active" data-scene="4k" title="Tears of Steel 4K UHD Movie Frame (Blender CC-BY)">🎬 4K Film</button>
-								<button type="button" class="codec-seg-btn" data-scene="1080p" title="Big Buck Bunny 1080p Reference Frame (Blender CC-BY)">🐰 1080p Bunny</button>
+								<button type="button" class="codec-seg-btn active" data-scene="4k" title="Tears of Steel 4K UHD Master (Blender CC-BY)">🎬 4K Film</button>
+								<button type="button" class="codec-seg-btn" data-scene="1080p" title="Big Buck Bunny 1080p Reference (Blender CC-BY)">🐰 1080p Bunny</button>
 								<button type="button" class="codec-seg-btn" data-scene="smpte" title="SMPTE BT.709 Color Calibration Pattern">📺 SMPTE Bars</button>
 							</div>
 						</div>
@@ -2090,11 +2099,13 @@
 		const pipelineSegBtns = document.querySelectorAll<HTMLButtonElement>('#pipeline-selector .codec-seg-btn');
 		const codecSegBtns = document.querySelectorAll<HTMLButtonElement>('#codec-selector .codec-seg-btn');
 		const engineSegBtns = document.querySelectorAll<HTMLButtonElement>('#engine-selector .codec-seg-btn');
+		const qualitySegBtns = document.querySelectorAll<HTMLButtonElement>('#quality-selector .codec-seg-btn');
 		const sceneSegBtns = document.querySelectorAll<HTMLButtonElement>('#scene-selector .codec-seg-btn');
 
 		let selectedPipeline: 'loopback' | 'encode' | 'decode' = 'loopback';
 		let selectedCodec: 'avc' | 'vp9' | 'av1' | 'hevc' = 'avc';
 		let selectedMode: 'prefer-hardware' | 'prefer-software' = 'prefer-hardware';
+		let selectedQuality: 'high' | 'med' | 'low' = 'med';
 		let selectedScene: '4k' | '1080p' | 'smpte' = '4k';
 		let isRunning = false;
 
@@ -2279,7 +2290,9 @@
 				const f = Math.max(0, Math.min(59, frameIdx));
 				const col = f % 8;
 				const row = Math.floor(f / 8);
-				ctx.drawImage(image4k, col * 480, row * 270, 480, 270, 0, 0, w, h);
+				const cellW = image4k.naturalWidth >= 7680 ? 960 : 480;
+				const cellH = image4k.naturalHeight >= 4320 ? 540 : 270;
+				ctx.drawImage(image4k, col * cellW, row * cellH, cellW, cellH, 0, 0, w, h);
 			} else {
 				ctx.fillStyle = '#050811';
 				ctx.fillRect(0, 0, w, h);
@@ -2341,7 +2354,9 @@
 				const f = Math.max(0, Math.min(59, frameIdx));
 				const col = f % 8;
 				const row = Math.floor(f / 8);
-				ctx.drawImage(image1080, col * 480, row * 270, 480, 270, 0, 0, w, h);
+				const cellW = image1080.naturalWidth >= 7680 ? 960 : 480;
+				const cellH = image1080.naturalHeight >= 4320 ? 540 : 270;
+				ctx.drawImage(image1080, col * cellW, row * cellH, cellW, cellH, 0, 0, w, h);
 			} else {
 				ctx.fillStyle = '#050811';
 				ctx.fillRect(0, 0, w, h);
@@ -2609,8 +2624,9 @@
 			const pipeName = selectedPipeline === 'loopback' ? 'Loopback' : (selectedPipeline === 'encode' ? 'Encoder' : 'Decoder');
 			const engineName = selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU';
 			const codecName = selectedCodec === 'avc' ? 'H.264' : selectedCodec.toUpperCase();
+			const qualityName = selectedQuality === 'high' ? 'High' : (selectedQuality === 'low' ? 'Low' : 'Med');
 
-			statusText.textContent = `Ready: ${pipeName} ▪ ${codecName} ▪ ${engineName}. Click "Start" to test.`;
+			statusText.textContent = `Ready: ${pipeName} ▪ ${codecName} ▪ ${engineName} ▪ ${qualityName} Quality. Click "Start" to test.`;
 		}
 
 		function setPipeline(mode: 'loopback' | 'encode' | 'decode') {
@@ -2710,6 +2726,16 @@
 			};
 		});
 
+		// Segmented controls: Quality Profile
+		qualitySegBtns.forEach((btn) => {
+			btn.onclick = () => {
+				qualitySegBtns.forEach((b) => b.classList.remove('active'));
+				btn.classList.add('active');
+				selectedQuality = (btn.getAttribute('data-quality') as any) || 'med';
+				updateStatusHint();
+			};
+		});
+
 		// Segmented controls: Scene
 		sceneSegBtns.forEach((btn) => {
 			btn.onclick = () => {
@@ -2763,7 +2789,19 @@
 				const height = 540;
 				const fps = 30;
 				const totalFrames = 60;
-				const bitrate = 4_000_000;
+				let bitrate = 4_000_000;
+				let latencyMode: 'quality' | 'realtime' = 'quality';
+				let bitrateMode: 'variable' | 'constant' = 'variable';
+
+				if (selectedQuality === 'low') {
+					bitrate = 800_000;
+					latencyMode = 'realtime';
+					bitrateMode = 'constant';
+				} else if (selectedQuality === 'high') {
+					bitrate = 14_000_000;
+					latencyMode = 'quality';
+					bitrateMode = 'variable';
+				}
 
 				if (!srcCanvas || !decCanvas) throw new Error('Preview canvases not found');
 				const srcCtx = srcCanvas.getContext('2d')!;
@@ -2787,6 +2825,8 @@
 								height,
 								bitrate,
 								framerate: fps,
+								latencyMode,
+								bitrateMode,
 								hardwareAcceleration: selectedMode
 							});
 							if (res && res.supported) {
@@ -2829,6 +2869,8 @@
 						height,
 						bitrate,
 						framerate: fps,
+						latencyMode,
+						bitrateMode,
 						hardwareAcceleration: selectedMode
 					});
 
@@ -2927,6 +2969,8 @@
 								height,
 								bitrate,
 								framerate: fps,
+								latencyMode,
+								bitrateMode,
 								hardwareAcceleration: encHwMode
 							});
 							if (res && res.supported) {
@@ -2987,6 +3031,8 @@
 						height,
 						bitrate,
 						framerate: fps,
+						latencyMode,
+						bitrateMode,
 						hardwareAcceleration: encHwMode
 					});
 
@@ -3111,6 +3157,8 @@
 							height,
 							bitrate,
 							framerate: fps,
+							latencyMode,
+							bitrateMode,
 							hardwareAcceleration: selectedMode
 						});
 						if (res && res.supported) {
@@ -3174,6 +3222,8 @@
 					height,
 					bitrate,
 					framerate: fps,
+					latencyMode,
+					bitrateMode,
 					hardwareAcceleration: selectedMode
 				});
 

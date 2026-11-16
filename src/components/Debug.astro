@@ -2686,10 +2686,7 @@
 			pipelineSegBtns.forEach((b) => {
 				b.classList.toggle('active', b.getAttribute('data-pipeline') === mode);
 			});
-			if (selectedPipeline === 'encode' && decPlaceholder) {
-				decPlaceholder.style.display = 'flex';
-				decPlaceholder.innerHTML = '<span>Decoder bypassed in Encode Only mode<br><span style="font-size: 0.85em; opacity: 0.75; font-weight: normal; margin-top: 4px; display: inline-block;">Select &ldquo;Both&rdquo; to decode and view video output</span></span>';
-			} else if (decPlaceholder && !decCanvas?.getAttribute('data-has-frame')) {
+			if (decPlaceholder && !decCanvas?.getAttribute('data-has-frame')) {
 				decPlaceholder.style.display = 'flex';
 				decPlaceholder.innerHTML = '<span>Awaiting verification run...</span>';
 			}
@@ -2900,18 +2897,19 @@
 						}
 					}
 
-					if (decPlaceholder) {
-						decPlaceholder.style.display = 'flex';
-						decPlaceholder.innerHTML = '<span>Decoder bypassed in Encode Only mode<br><span style="font-size: 0.85em; opacity: 0.75; font-weight: normal; margin-top: 4px; display: inline-block;">Select &ldquo;Both&rdquo; to decode and view video output</span></span>';
-					}
-
+					const encodedChunks: EncodedVideoChunk[] = [];
+					let decoderConfig: VideoDecoderConfig | null = null;
 					let totalChunkBytes = 0;
 					let chunkCount = 0;
 
 					const encoder = new VideoEncoder({
-						output: (chunk) => {
+						output: (chunk, metadata) => {
 							chunkCount++;
 							totalChunkBytes += chunk.byteLength;
+							encodedChunks.push(chunk);
+							if (metadata && metadata.decoderConfig) {
+								decoderConfig = metadata.decoderConfig;
+							}
 						},
 						error: (err) => console.error('Encoder error:', err)
 					});
@@ -2952,6 +2950,49 @@
 					const rawMb = (rawBytes / (1024 * 1024)).toFixed(1);
 					const ratioX = Math.round(rawBytes / Math.max(1, totalChunkBytes));
 
+					// Decode output frames so user can inspect encoded video quality (Handbrake output preview)
+					decodedBitmaps.forEach((b) => b.close());
+					decodedBitmaps = [];
+
+					let offCanvas: OffscreenCanvas | HTMLCanvasElement | null = null;
+					let offCtx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null = null;
+					if (typeof OffscreenCanvas !== 'undefined') {
+						offCanvas = new OffscreenCanvas(width, height);
+						offCtx = offCanvas.getContext('2d');
+					}
+
+					const previewDecoder = new VideoDecoder({
+						output: (videoFrame) => {
+							decCtx.drawImage(videoFrame, 0, 0, width, height);
+							if (offCanvas && offCtx) {
+								offCtx.drawImage(videoFrame, 0, 0, width, height);
+								if ('transferToImageBitmap' in offCanvas) {
+									decodedBitmaps.push(offCanvas.transferToImageBitmap());
+								} else if (typeof createImageBitmap !== 'undefined') {
+									createImageBitmap(offCanvas).then((bmp) => decodedBitmaps.push(bmp));
+								}
+							}
+							videoFrame.close();
+						},
+						error: (err) => console.error('Preview decoder error:', err)
+					});
+
+					const decConf: VideoDecoderConfig = {
+						...(decoderConfig || { codec: chosenCodec, codedWidth: width, codedHeight: height }),
+						hardwareAcceleration: selectedMode
+					};
+
+					try {
+						previewDecoder.configure(decConf);
+						for (const chunk of encodedChunks) {
+							previewDecoder.decode(chunk);
+						}
+						await previewDecoder.flush();
+						previewDecoder.close();
+						decCanvas.setAttribute('data-has-frame', 'true');
+						if (decPlaceholder) decPlaceholder.style.display = 'none';
+					} catch (_) {}
+
 					if (metricEngine) {
 						metricEngine.textContent = selectedMode === 'prefer-hardware' ? 'Hardware ASIC (Enc)' : 'Software CPU (Enc)';
 					}
@@ -2959,7 +3000,7 @@
 						metricEncFps.innerHTML = `${encFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${encLatency} ms)</span>`;
 					}
 					if (metricDecFps) {
-						metricDecFps.innerHTML = `Bypassed <span class="webgpu-tile-sub">(Encode Only)</span>`;
+						metricDecFps.innerHTML = `Preview <span class="webgpu-tile-sub">(Decoded)</span>`;
 					}
 					if (metricRatio) {
 						metricRatio.innerHTML = `${kbSize} <span class="webgpu-tile-sub">KB (${avgKbPerFrame} KB/fr ▪ ${ratioX}:1)</span>`;

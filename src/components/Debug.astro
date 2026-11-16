@@ -333,6 +333,14 @@
 					</div>
 				</div>
 				<div class="map-applet-header-actions">
+					<button id="codec-applet-maximize-btn" class="map-close-btn" type="button" aria-label="Toggle Fullscreen" title="Toggle Fullscreen (⛶)">
+						<svg id="codec-icon-maximize" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+						</svg>
+						<svg id="codec-icon-restore" class="hidden" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M4 14h6m0 0v6m0-6L3 21m17-7h-6m0 0v6m0-6l7 7M14 4h6m0 0v6m0-6l-7 7M4 10h6m0 0V4m0 6L3 3"></path>
+						</svg>
+					</button>
 					<button id="codec-applet-close-btn" class="map-close-btn" type="button" aria-label="Close Codec Studio" title="Close (Esc)">
 						<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
 							<line x1="18" y1="6" x2="6" y2="18"></line>
@@ -400,20 +408,36 @@
 					<span id="codec-status-text">Ready: Loopback ▪ H.264 ▪ Hardware ASIC. Click &ldquo;Start&rdquo; to test.</span>
 				</div>
 
-				<!-- CANVAS PREVIEW GRID (SOURCE VS DECODED) -->
+				<!-- CANVAS PREVIEW GRID (SOURCE VS DECODED WITH 1:1 PIXEL LOUPE) -->
 				<div class="codec-preview-grid">
 					<div class="codec-preview-box">
-						<div class="codec-preview-label">Source Frame (Input)</div>
-						<div class="codec-canvas-wrap">
+						<div class="codec-preview-header">
+							<span class="codec-preview-label">Source Frame (Input)</span>
+							<span class="codec-loupe-hint">🔍 4× Loupe Sync</span>
+						</div>
+						<div class="codec-canvas-wrap" id="codec-wrap-src">
 							<canvas id="codec-canvas-source" width="960" height="540" class="codec-canvas"></canvas>
+							<div id="codec-loupe-src" class="codec-pixel-loupe hidden" aria-hidden="true">
+								<canvas id="codec-loupe-canvas-src" width="160" height="160"></canvas>
+								<div class="codec-loupe-reticle"></div>
+								<div class="codec-loupe-tag">1:1 Raw</div>
+							</div>
 						</div>
 					</div>
 					<div class="codec-preview-box">
-						<div class="codec-preview-label">Reconstructed (Output)</div>
-						<div class="codec-canvas-wrap">
+						<div class="codec-preview-header">
+							<span class="codec-preview-label">Reconstructed (Output)</span>
+							<span class="codec-loupe-hint">Hover to inspect</span>
+						</div>
+						<div class="codec-canvas-wrap" id="codec-wrap-dec">
 							<canvas id="codec-canvas-decoded" width="960" height="540" class="codec-canvas"></canvas>
 							<div id="codec-canvas-placeholder" class="codec-canvas-placeholder">
 								<span>Awaiting verification run...</span>
+							</div>
+							<div id="codec-loupe-dec" class="codec-pixel-loupe hidden" aria-hidden="true">
+								<canvas id="codec-loupe-canvas-dec" width="160" height="160"></canvas>
+								<div class="codec-loupe-reticle"></div>
+								<div class="codec-loupe-tag">1:1 ASIC</div>
 							</div>
 						</div>
 					</div>
@@ -2055,13 +2079,136 @@
 			}
 		};
 
+		let isMaximized = false;
+		const maxBtn = document.getElementById('codec-applet-maximize-btn');
+		const iconMax = document.getElementById('codec-icon-maximize');
+		const iconRestore = document.getElementById('codec-icon-restore');
+
+		function toggleMaximize() {
+			isMaximized = !isMaximized;
+			if (codecModal) {
+				codecModal.classList.toggle('is-maximized', isMaximized);
+			}
+			if (iconMax && iconRestore) {
+				iconMax.classList.toggle('hidden', isMaximized);
+				iconRestore.classList.toggle('hidden', !isMaximized);
+			}
+			if (maxBtn) {
+				maxBtn.setAttribute('title', isMaximized ? 'Restore Window (Esc)' : 'Toggle Fullscreen (⛶)');
+				maxBtn.setAttribute('aria-label', isMaximized ? 'Restore Window' : 'Toggle Fullscreen');
+			}
+		}
+
+		if (maxBtn) maxBtn.onclick = toggleMaximize;
+
+		// 1:1 Synchronized Pixel Loupe Magnifier
+		const wrapSrc = document.getElementById('codec-wrap-src');
+		const wrapDec = document.getElementById('codec-wrap-dec');
+		const loupeSrc = document.getElementById('codec-loupe-src');
+		const loupeDec = document.getElementById('codec-loupe-dec');
+		const loupeCanvasSrc = document.getElementById('codec-loupe-canvas-src') as HTMLCanvasElement | null;
+		const loupeCanvasDec = document.getElementById('codec-loupe-canvas-dec') as HTMLCanvasElement | null;
+
+		function updateLoupe(normX: number, normY: number) {
+			if (!srcCanvas || !decCanvas || !loupeCanvasSrc || !loupeCanvasDec) return;
+
+			// 40x40 source pixels magnified 4x onto 160x160 loupe canvas
+			const cropSize = 40;
+			const centerX = normX * 960;
+			const centerY = normY * 540;
+			const cropX = Math.round(Math.max(0, Math.min(960 - cropSize, centerX - cropSize / 2)));
+			const cropY = Math.round(Math.max(0, Math.min(540 - cropSize, centerY - cropSize / 2)));
+
+			const ctxSrc = loupeCanvasSrc.getContext('2d');
+			if (ctxSrc) {
+				ctxSrc.imageSmoothingEnabled = false;
+				ctxSrc.clearRect(0, 0, 160, 160);
+				ctxSrc.drawImage(srcCanvas, cropX, cropY, cropSize, cropSize, 0, 0, 160, 160);
+			}
+
+			const ctxDec = loupeCanvasDec.getContext('2d');
+			if (ctxDec) {
+				ctxDec.imageSmoothingEnabled = false;
+				ctxDec.clearRect(0, 0, 160, 160);
+				if (decCanvas.getAttribute('data-has-frame') === 'true') {
+					ctxDec.drawImage(decCanvas, cropX, cropY, cropSize, cropSize, 0, 0, 160, 160);
+				} else {
+					ctxDec.fillStyle = '#090a0f';
+					ctxDec.fillRect(0, 0, 160, 160);
+					ctxDec.fillStyle = '#64748b';
+					ctxDec.font = '10px monospace';
+					ctxDec.textAlign = 'center';
+					ctxDec.fillText('No Output Yet', 80, 85);
+				}
+			}
+
+			// Position both loupes synchronously
+			if (wrapSrc && wrapDec && loupeSrc && loupeDec) {
+				const rectSrc = wrapSrc.getBoundingClientRect();
+				const rectDec = wrapDec.getBoundingClientRect();
+
+				const xSrc = Math.max(70, Math.min(rectSrc.width - 70, normX * rectSrc.width));
+				const ySrc = normY * rectSrc.height;
+				const xDec = Math.max(70, Math.min(rectDec.width - 70, normX * rectDec.width));
+				const yDec = normY * rectDec.height;
+
+				loupeSrc.style.left = `${xSrc}px`;
+				loupeSrc.style.top = `${ySrc}px`;
+				loupeDec.style.left = `${xDec}px`;
+				loupeDec.style.top = `${yDec}px`;
+
+				const flipY = normY < 0.32;
+				loupeSrc.classList.toggle('flipped-y', flipY);
+				loupeDec.classList.toggle('flipped-y', flipY);
+
+				loupeSrc.classList.remove('hidden');
+				loupeDec.classList.remove('hidden');
+			}
+		}
+
+		function hideLoupe() {
+			if (loupeSrc) loupeSrc.classList.add('hidden');
+			if (loupeDec) loupeDec.classList.add('hidden');
+		}
+
+		function handlePointerMove(e: PointerEvent, wrap: HTMLElement) {
+			const rect = wrap.getBoundingClientRect();
+			if (rect.width <= 0 || rect.height <= 0) return;
+			const normX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+			const normY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+			updateLoupe(normX, normY);
+		}
+
+		if (wrapSrc) {
+			wrapSrc.addEventListener('pointermove', (e) => handlePointerMove(e, wrapSrc));
+			wrapSrc.addEventListener('pointerleave', hideLoupe);
+		}
+		if (wrapDec) {
+			wrapDec.addEventListener('pointermove', (e) => handlePointerMove(e, wrapDec));
+			wrapDec.addEventListener('pointerleave', hideLoupe);
+		}
+
 		function closeCodecModal() {
 			if (codecModal) {
 				codecModal.classList.add('hidden');
 				codecModal.setAttribute('aria-hidden', 'true');
 			}
 			document.body.style.overflow = '';
+			hideLoupe();
 		}
+
+		// Global Launch Listeners (from Spotlight card & elsewhere)
+		document.addEventListener('click', (e) => {
+			const btn = (e.target as HTMLElement)?.closest('#launch-codec-spotlight-btn, [data-open-codec-studio]');
+			if (btn) {
+				e.preventDefault();
+				openCodecModal('loopback');
+			}
+		});
+
+		window.addEventListener('open-codec-studio', (e: any) => {
+			openCodecModal(e?.detail?.pipeline || 'loopback');
+		});
 
 		// 1. SCENE: 4K FILM (Tears of Steel - Blender Foundation CC-BY 3.0)
 		function draw4kScene(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, totalFrames: number) {
@@ -2883,9 +3030,28 @@
 			}
 			if (codecModal && !codecModal.classList.contains('hidden')) {
 				e.stopPropagation();
+				if (codecModal.classList.contains('is-maximized')) {
+					codecModal.classList.remove('is-maximized');
+					const iconMax = document.getElementById('codec-icon-maximize');
+					const iconRestore = document.getElementById('codec-icon-restore');
+					if (iconMax && iconRestore) {
+						iconMax.classList.remove('hidden');
+						iconRestore.classList.add('hidden');
+					}
+					const maxBtn = document.getElementById('codec-applet-maximize-btn');
+					if (maxBtn) {
+						maxBtn.setAttribute('title', 'Toggle Fullscreen (⛶)');
+						maxBtn.setAttribute('aria-label', 'Toggle Fullscreen');
+					}
+					return;
+				}
 				codecModal.classList.add('hidden');
 				codecModal.setAttribute('aria-hidden', 'true');
 				document.body.style.overflow = '';
+				const loupeSrc = document.getElementById('codec-loupe-src');
+				const loupeDec = document.getElementById('codec-loupe-dec');
+				if (loupeSrc) loupeSrc.classList.add('hidden');
+				if (loupeDec) loupeDec.classList.add('hidden');
 			}
 		}
 	});
@@ -3636,6 +3802,28 @@
 	/* CODEC STUDIO MODAL */
 	.codec-dialog {
 		width: clamp(340px, 95vw, 1040px);
+		transition: width 0.2s ease, max-width 0.2s ease, height 0.2s ease;
+	}
+	/* MODAL FULLSCREEN / MAXIMIZE */
+	#codec-applet-modal.is-maximized {
+		padding: 0 !important;
+	}
+	#codec-applet-modal.is-maximized .codec-dialog {
+		width: 100vw !important;
+		max-width: 100vw !important;
+		height: 100vh !important;
+		max-height: 100vh !important;
+		border-radius: 0 !important;
+		border: none !important;
+		margin: 0 !important;
+	}
+	#codec-applet-modal.is-maximized .codec-body-wrap {
+		max-height: calc(100vh - 105px) !important;
+		flex: 1 1 auto;
+		padding: 1em 1.5em 1.25em 1.5em;
+	}
+	#codec-applet-modal.is-maximized .codec-canvas-wrap {
+		max-height: 52vh;
 	}
 	.codec-body-wrap {
 		padding: 1.1em 1.25em 1.25em 1.25em;
@@ -3806,6 +3994,13 @@
 		gap: 0.3em;
 		min-width: 0;
 	}
+	.codec-preview-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.5em;
+		min-height: 1.4em;
+	}
 	.codec-preview-label {
 		font-size: 0.72em;
 		font-weight: 700;
@@ -3816,7 +4011,14 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		line-height: 1.4;
-		height: 1.4em;
+	}
+	.codec-loupe-hint {
+		font-size: 0.68em;
+		font-weight: 600;
+		color: rgb(var(--gray));
+		opacity: 0.8;
+		white-space: nowrap;
+		font-family: ui-monospace, monospace;
 	}
 	.codec-canvas-wrap {
 		position: relative;
@@ -3826,6 +4028,82 @@
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
 		overflow: hidden;
+		cursor: crosshair;
+	}
+	/* 1:1 SYNCHRONIZED PIXEL LOUPE */
+	.codec-pixel-loupe {
+		position: absolute;
+		width: 140px;
+		height: 140px;
+		border-radius: 12px;
+		border: 2px solid var(--accent);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.15);
+		background: #000000;
+		overflow: hidden;
+		pointer-events: none;
+		z-index: 10;
+		transform: translate(-50%, -115%);
+		transition: opacity 0.1s ease;
+	}
+	.codec-pixel-loupe.flipped-y {
+		transform: translate(-50%, 15%);
+	}
+	.codec-pixel-loupe.hidden {
+		display: none;
+	}
+	.codec-pixel-loupe canvas {
+		width: 100%;
+		height: 100%;
+		image-rendering: pixelated;
+		image-rendering: crisp-edges;
+		display: block;
+	}
+	.codec-loupe-reticle {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 14px;
+		height: 14px;
+		transform: translate(-50%, -50%);
+		border: 1px solid rgba(255, 255, 255, 0.9);
+		box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.85);
+		pointer-events: none;
+	}
+	.codec-loupe-reticle::before {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: -4px;
+		right: -4px;
+		height: 1px;
+		background: rgba(255, 255, 255, 0.7);
+	}
+	.codec-loupe-reticle::after {
+		content: '';
+		position: absolute;
+		left: 50%;
+		top: -4px;
+		bottom: -4px;
+		width: 1px;
+		background: rgba(255, 255, 255, 0.7);
+	}
+	.codec-loupe-tag {
+		position: absolute;
+		bottom: 5px;
+		left: 50%;
+		transform: translateX(-50%);
+		background: rgba(0, 0, 0, 0.75);
+		backdrop-filter: blur(4px);
+		color: #ffffff;
+		font-size: 9px;
+		font-weight: 700;
+		font-family: ui-monospace, monospace;
+		padding: 1px 6px;
+		border-radius: 4px;
+		border: 1px solid rgba(255, 255, 255, 0.25);
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		white-space: nowrap;
 	}
 	.codec-canvas {
 		width: 100%;

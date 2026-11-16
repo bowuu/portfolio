@@ -2256,18 +2256,27 @@
 				}
 			}
 
-			// Position both loupes consistently at bottom-right of crosshair, safely bounded
+			// Position both loupes consistently, safely bounded, avoiding covering user's finger/pointer
 			if (wrapSrc && wrapDec && loupeSrc && loupeDec) {
 				const rectSrc = wrapSrc.getBoundingClientRect();
 				const rectDec = wrapDec.getBoundingClientRect();
 
-				const loupeW = 140;
-				const loupeH = 140;
+				const loupeW = rectSrc.width < 380 ? 120 : 140;
+				const loupeH = rectSrc.width < 380 ? 120 : 140;
 
-				const xSrc = Math.max(4, Math.min(rectSrc.width - loupeW - 4, normX * rectSrc.width + 14));
-				const ySrc = Math.max(4, Math.min(rectSrc.height - loupeH - 4, normY * rectSrc.height + 14));
-				const xDec = Math.max(4, Math.min(rectDec.width - loupeW - 4, normX * rectDec.width + 14));
-				const yDec = Math.max(4, Math.min(rectDec.height - loupeH - 4, normY * rectDec.height + 14));
+				// Smart offset: if finger/cursor is in bottom half, show loupe above touch position;
+				// if near right edge, show loupe to the left so it stays on screen and unobscured.
+				const yOffsetSrc = normY > 0.5 ? -loupeH - 16 : 16;
+				const xOffsetSrc = normX > 0.65 ? -loupeW - 14 : 14;
+
+				const xSrc = Math.max(4, Math.min(rectSrc.width - loupeW - 4, normX * rectSrc.width + xOffsetSrc));
+				const ySrc = Math.max(4, Math.min(rectSrc.height - loupeH - 4, normY * rectSrc.height + yOffsetSrc));
+
+				const yOffsetDec = normY > 0.5 ? -loupeH - 16 : 16;
+				const xOffsetDec = normX > 0.65 ? -loupeW - 14 : 14;
+
+				const xDec = Math.max(4, Math.min(rectDec.width - loupeW - 4, normX * rectDec.width + xOffsetDec));
+				const yDec = Math.max(4, Math.min(rectDec.height - loupeH - 4, normY * rectDec.height + yOffsetDec));
 
 				loupeSrc.style.left = `${xSrc}px`;
 				loupeSrc.style.top = `${ySrc}px`;
@@ -2296,14 +2305,45 @@
 			updateLoupe(normX, normY);
 		}
 
-		if (wrapSrc) {
-			wrapSrc.addEventListener('pointermove', (e) => handlePointerMove(e, wrapSrc));
-			wrapSrc.addEventListener('pointerleave', hideLoupe);
+		function attachLoupeEvents(wrap: HTMLElement) {
+			// Disable long-press context menu on mobile so it doesn't interrupt or displace magnifier
+			wrap.addEventListener('contextmenu', (e) => e.preventDefault());
+
+			wrap.addEventListener('pointerdown', (e) => {
+				if (e.pointerType === 'touch') {
+					e.preventDefault();
+					try { wrap.setPointerCapture(e.pointerId); } catch (_) {}
+				}
+				handlePointerMove(e, wrap);
+			});
+
+			wrap.addEventListener('pointermove', (e) => {
+				handlePointerMove(e, wrap);
+			});
+
+			wrap.addEventListener('pointerup', (e) => {
+				if (e.pointerType === 'touch') {
+					try { wrap.releasePointerCapture(e.pointerId); } catch (_) {}
+					hideLoupe();
+				}
+			});
+
+			wrap.addEventListener('pointercancel', (e) => {
+				if (e.pointerType === 'touch') {
+					try { wrap.releasePointerCapture(e.pointerId); } catch (_) {}
+				}
+				hideLoupe();
+			});
+
+			wrap.addEventListener('pointerleave', (e) => {
+				if (e.pointerType !== 'touch') {
+					hideLoupe();
+				}
+			});
 		}
-		if (wrapDec) {
-			wrapDec.addEventListener('pointermove', (e) => handlePointerMove(e, wrapDec));
-			wrapDec.addEventListener('pointerleave', hideLoupe);
-		}
+
+		if (wrapSrc) attachLoupeEvents(wrapSrc);
+		if (wrapDec) attachLoupeEvents(wrapDec);
 
 		function closeCodecModal() {
 			stopPlayback();
@@ -4571,6 +4611,10 @@
 		border-radius: 8px;
 		overflow: hidden;
 		cursor: crosshair;
+		touch-action: none;
+		-webkit-touch-callout: none;
+		-webkit-user-select: none;
+		user-select: none;
 	}
 	/* 1:1 SYNCHRONIZED PIXEL LOUPE */
 	.codec-pixel-loupe {
@@ -4585,6 +4629,12 @@
 		pointer-events: none;
 		z-index: 100;
 		transition: opacity 0.1s ease;
+	}
+	@media (max-width: 480px) {
+		.codec-pixel-loupe {
+			width: 120px;
+			height: 120px;
+		}
 	}
 	.codec-pixel-loupe.hidden {
 		display: none;
@@ -4648,6 +4698,11 @@
 		height: 100%;
 		display: block;
 		object-fit: contain;
+		touch-action: none;
+		-webkit-touch-callout: none;
+		-webkit-user-select: none;
+		user-select: none;
+		pointer-events: none;
 	}
 	.codec-canvas-placeholder {
 		position: absolute;
@@ -4660,6 +4715,9 @@
 		font-size: 0.76em;
 		font-weight: 500;
 		font-family: ui-monospace, monospace;
+		pointer-events: none;
+		-webkit-user-select: none;
+		user-select: none;
 	}
 	/* PLAYBACK TIMELINE & FRAME SCRUBBER */
 	.codec-timeline-bar {

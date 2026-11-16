@@ -343,8 +343,17 @@
 			</div>
 
 			<div class="codec-body-wrap">
-				<!-- TOOLBAR: CODEC & MODE SELECTORS -->
+				<!-- TOOLBAR: PIPELINE, CODEC & ENGINE SELECTORS -->
 				<div class="codec-toolbar">
+					<div class="codec-controls-group">
+						<span class="codec-ctrl-label">Pipeline:</span>
+						<div class="codec-segmented" id="pipeline-selector" role="group" aria-label="Pipeline selection">
+							<button type="button" class="codec-seg-btn active" data-pipeline="loopback">Loopback</button>
+							<button type="button" class="codec-seg-btn" data-pipeline="encode">Encode</button>
+							<button type="button" class="codec-seg-btn" data-pipeline="decode">Decode</button>
+						</div>
+					</div>
+
 					<div class="codec-controls-group">
 						<span class="codec-ctrl-label">Codec:</span>
 						<div class="codec-segmented" id="codec-selector" role="group" aria-label="Codec selection">
@@ -363,7 +372,7 @@
 						</div>
 					</div>
 
-					<button type="button" id="codec-run-btn" class="codec-run-btn" title="Run 30-frame hardware loopback test">
+					<button type="button" id="codec-run-btn" class="codec-run-btn" title="Run video verification test">
 						<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
 						<span>Run Verification</span>
 					</button>
@@ -1999,9 +2008,11 @@
 		const metricDecFps = document.getElementById('codec-metric-dec-fps');
 		const metricRatio = document.getElementById('codec-metric-ratio');
 
+		const pipelineSegBtns = document.querySelectorAll<HTMLButtonElement>('#pipeline-selector .codec-seg-btn');
 		const codecSegBtns = document.querySelectorAll<HTMLButtonElement>('#codec-selector .codec-seg-btn');
 		const engineSegBtns = document.querySelectorAll<HTMLButtonElement>('#engine-selector .codec-seg-btn');
 
+		let selectedPipeline: 'loopback' | 'encode' | 'decode' = 'loopback';
 		let selectedCodec: 'avc' | 'vp9' | 'av1' | 'hevc' = 'avc';
 		let selectedMode: 'prefer-hardware' | 'prefer-software' = 'prefer-hardware';
 		let isRunning = false;
@@ -2055,12 +2066,56 @@
 			ctx.fillText('W3C WebCodecs VideoFrame Buffer', w * 0.5, boxY + 70);
 		}
 
-		function openCodecModal() {
+		function updateStatusHint() {
+			if (isRunning) return;
+			if (!statusText) return;
+
+			statusText.style.color = '';
+
+			if (selectedCodec === 'av1' && selectedMode === 'prefer-hardware' && selectedPipeline !== 'decode') {
+				statusText.innerHTML = `⚠️ <strong>AV1 Hardware Encode</strong> requires RTX 40 series / Intel Arc. For RTX 30 series (Ampere), select <strong>Decode</strong> pipeline to test NVDEC.`;
+				statusText.style.color = '#f97316';
+				return;
+			}
+
+			if (selectedCodec === 'hevc' && selectedMode === 'prefer-software') {
+				statusText.innerHTML = `⚠️ <strong>HEVC Software CPU</strong> is unsupported in Chromium due to MPEG licensing; select <strong>Hardware ASIC</strong>.`;
+				statusText.style.color = '#f97316';
+				return;
+			}
+
+			const pipeName = selectedPipeline === 'loopback' ? 'Loopback' : (selectedPipeline === 'encode' ? 'Encoder' : 'Decoder');
+			const engineName = selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU';
+			const codecName = selectedCodec === 'avc' ? 'H.264' : selectedCodec.toUpperCase();
+
+			statusText.textContent = `Ready: ${pipeName} ▪ ${codecName} ▪ ${engineName}. Click "Run Verification" to test.`;
+		}
+
+		function setPipeline(mode: 'loopback' | 'encode' | 'decode') {
+			selectedPipeline = mode;
+			pipelineSegBtns.forEach((b) => {
+				b.classList.toggle('active', b.getAttribute('data-pipeline') === mode);
+			});
+			if (selectedPipeline === 'encode' && decPlaceholder) {
+				decPlaceholder.style.display = 'flex';
+				decPlaceholder.innerHTML = '<span>Decoder bypassed in Encode Only mode</span>';
+			} else if (decPlaceholder && !decCanvas?.getAttribute('data-has-frame')) {
+				decPlaceholder.style.display = 'flex';
+				decPlaceholder.innerHTML = '<span>Awaiting verification run...</span>';
+			}
+			updateStatusHint();
+		}
+
+		function openCodecModal(defaultPipeline?: 'loopback' | 'encode' | 'decode') {
+			if (defaultPipeline) {
+				setPipeline(defaultPipeline);
+			}
 			if (codecModal) {
 				codecModal.classList.remove('hidden');
 				codecModal.setAttribute('aria-hidden', 'false');
 			}
 			document.body.style.overflow = 'hidden';
+			updateStatusHint();
 
 			// Draw preview frame 0 on source canvas if available
 			if (srcCanvas) {
@@ -2075,15 +2130,15 @@
 		if (openDecoderBtn) {
 			openDecoderBtn.onclick = (e) => {
 				e.stopPropagation();
-				openCodecModal();
+				openCodecModal('decode');
 			};
 		}
 		if (itemDecoder) {
-			itemDecoder.onclick = openCodecModal;
+			itemDecoder.onclick = () => openCodecModal('decode');
 			itemDecoder.onkeydown = (e) => {
 				if (e.key === 'Enter' || e.key === ' ') {
 					e.preventDefault();
-					openCodecModal();
+					openCodecModal('decode');
 				}
 			};
 		}
@@ -2091,18 +2146,26 @@
 		if (openEncoderBtn) {
 			openEncoderBtn.onclick = (e) => {
 				e.stopPropagation();
-				openCodecModal();
+				openCodecModal('encode');
 			};
 		}
 		if (itemEncoder) {
-			itemEncoder.onclick = openCodecModal;
+			itemEncoder.onclick = () => openCodecModal('encode');
 			itemEncoder.onkeydown = (e) => {
 				if (e.key === 'Enter' || e.key === ' ') {
 					e.preventDefault();
-					openCodecModal();
+					openCodecModal('encode');
 				}
 			};
 		}
+
+		// Segmented controls: Pipeline
+		pipelineSegBtns.forEach((btn) => {
+			btn.onclick = () => {
+				const p = (btn.getAttribute('data-pipeline') as any) || 'loopback';
+				setPipeline(p);
+			};
+		});
 
 		// Segmented controls: Codec
 		codecSegBtns.forEach((btn) => {
@@ -2110,6 +2173,7 @@
 				codecSegBtns.forEach((b) => b.classList.remove('active'));
 				btn.classList.add('active');
 				selectedCodec = (btn.getAttribute('data-codec') as any) || 'avc';
+				updateStatusHint();
 			};
 		});
 
@@ -2119,6 +2183,7 @@
 				engineSegBtns.forEach((b) => b.classList.remove('active'));
 				btn.classList.add('active');
 				selectedMode = (btn.getAttribute('data-mode') as any) || 'prefer-hardware';
+				updateStatusHint();
 			};
 		});
 
@@ -2135,17 +2200,12 @@
 
 			isRunning = true;
 			if (runBtn) runBtn.disabled = true;
-			if (statusText) {
-				statusText.textContent = `Initializing ${selectedCodec.toUpperCase()} encoder (${selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU'})...`;
-				statusText.style.color = '';
-			}
 
 			try {
-				let codecString = 'avc1.42001f';
-				if (selectedCodec === 'avc') codecString = 'avc1.4d001f';
-				else if (selectedCodec === 'vp9') codecString = 'vp09.00.10.08';
-				else if (selectedCodec === 'av1') codecString = 'av01.0.05M.08';
-				else if (selectedCodec === 'hevc') codecString = 'hvc1.1.6.L93.B0';
+				let codecCandidates = ['avc1.4d001f', 'avc1.42001f'];
+				if (selectedCodec === 'vp9') codecCandidates = ['vp09.00.10.08'];
+				else if (selectedCodec === 'av1') codecCandidates = ['av01.0.05M.08', 'av01.0.08M.10'];
+				else if (selectedCodec === 'hevc') codecCandidates = ['hvc1.1.6.L93.B0', 'hev1.1.6.L93.B0', 'hvc1.1.6.L120.90', 'hev1.1.6.L120.90'];
 
 				const width = 640;
 				const height = 360;
@@ -2153,22 +2213,360 @@
 				const totalFrames = 30;
 				const bitrate = 2_000_000;
 
-				const encSupport = await VideoEncoder.isConfigSupported({
-					codec: codecString,
-					width,
-					height,
-					bitrate,
-					framerate: fps,
-					hardwareAcceleration: selectedMode
-				});
-
-				if (!encSupport.supported) {
-					throw new Error(`${selectedCodec.toUpperCase()} not supported with ${selectedMode === 'prefer-hardware' ? 'Hardware Acceleration' : 'Software Fallback'}`);
-				}
-
 				if (!srcCanvas || !decCanvas) throw new Error('Preview canvases not found');
 				const srcCtx = srcCanvas.getContext('2d')!;
 				const decCtx = decCanvas.getContext('2d')!;
+
+				// 1. PIPELINE: ENCODE ONLY
+				if (selectedPipeline === 'encode') {
+					if (statusText) {
+						statusText.textContent = `Probing ${selectedCodec.toUpperCase()} encoder (${selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU'})...`;
+						statusText.style.color = '';
+					}
+
+					let chosenCodec = codecCandidates[0];
+					let encSupported = false;
+
+					for (const c of codecCandidates) {
+						try {
+							const res = await VideoEncoder.isConfigSupported({
+								codec: c,
+								width,
+								height,
+								bitrate,
+								framerate: fps,
+								hardwareAcceleration: selectedMode
+							});
+							if (res && res.supported) {
+								chosenCodec = c;
+								encSupported = true;
+								break;
+							}
+						} catch (_) {}
+					}
+
+					if (!encSupported) {
+						if (selectedCodec === 'av1' && selectedMode === 'prefer-hardware') {
+							throw new Error('AV1 Hardware Encoding requires RTX 40 series (Ada Lovelace) or Intel Arc. RTX 30 series (Ampere) supports AV1 Hardware Decode only (NVDEC). Select "Decode" pipeline to test ASIC acceleration');
+						} else if (selectedCodec === 'hevc' && selectedMode === 'prefer-software') {
+							throw new Error('HEVC Software Fallback is not supported by Chromium due to MPEG licensing (requires Hardware ASIC)');
+						} else {
+							throw new Error(`${selectedCodec.toUpperCase()} Encoder not supported with ${selectedMode === 'prefer-hardware' ? 'Hardware Acceleration' : 'Software Fallback'}`);
+						}
+					}
+
+					if (decPlaceholder) {
+						decPlaceholder.style.display = 'flex';
+						decPlaceholder.innerHTML = '<span>Decoder bypassed in Encode Only mode</span>';
+					}
+
+					let totalChunkBytes = 0;
+					let chunkCount = 0;
+
+					const encoder = new VideoEncoder({
+						output: (chunk) => {
+							chunkCount++;
+							totalChunkBytes += chunk.byteLength;
+						},
+						error: (err) => console.error('Encoder error:', err)
+					});
+
+					encoder.configure({
+						codec: chosenCodec,
+						width,
+						height,
+						bitrate,
+						framerate: fps,
+						hardwareAcceleration: selectedMode
+					});
+
+					const encStartTime = performance.now();
+					for (let i = 0; i < totalFrames; i++) {
+						drawTestPattern(srcCtx, width, height, i, totalFrames);
+						const frame = new VideoFrame(srcCanvas, {
+							timestamp: i * 33333,
+							duration: 33333
+						});
+						encoder.encode(frame, { keyFrame: i === 0 || i % 15 === 0 });
+						frame.close();
+					}
+
+					await encoder.flush();
+					const encEndTime = performance.now();
+					encoder.close();
+
+					const encDuration = Math.max(1, encEndTime - encStartTime);
+					const encFps = Math.round(totalFrames / (encDuration / 1000));
+					const encLatency = (encDuration / totalFrames).toFixed(1);
+
+					const rawBytes = width * height * 3 * totalFrames;
+					const ratio = ((1 - totalChunkBytes / rawBytes) * 100).toFixed(1);
+					const kbSize = (totalChunkBytes / 1024).toFixed(1);
+
+					if (metricEngine) {
+						metricEngine.textContent = selectedMode === 'prefer-hardware' ? 'Hardware ASIC (Enc)' : 'Software CPU (Enc)';
+					}
+					if (metricEncFps) {
+						metricEncFps.innerHTML = `${encFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${encLatency} ms)</span>`;
+					}
+					if (metricDecFps) {
+						metricDecFps.innerHTML = `Bypassed <span class="webgpu-tile-sub">(Encode Only)</span>`;
+					}
+					if (metricRatio) {
+						metricRatio.innerHTML = `${ratio}% <span class="webgpu-tile-sub">(${kbSize} KB NAL)</span>`;
+					}
+
+					if (statusText) {
+						statusText.textContent = `✓ Verification Complete: ${selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU'} encoded ${totalFrames} frames in ${encDuration.toFixed(1)}ms (${encFps} FPS).`;
+						statusText.style.color = '#22c55e';
+					}
+					return;
+				}
+
+				// 2. PIPELINE: DECODE ONLY
+				if (selectedPipeline === 'decode') {
+					if (statusText) {
+						statusText.textContent = `Verifying ${selectedCodec.toUpperCase()} decoder (${selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU'})...`;
+						statusText.style.color = '';
+					}
+
+					let chosenDecCodec = codecCandidates[0];
+					let decSupported = false;
+
+					for (const c of codecCandidates) {
+						try {
+							const res = await VideoDecoder.isConfigSupported({
+								codec: c,
+								codedWidth: width,
+								codedHeight: height,
+								hardwareAcceleration: selectedMode
+							});
+							if (res && res.supported) {
+								chosenDecCodec = c;
+								decSupported = true;
+								break;
+							}
+						} catch (_) {}
+					}
+
+					if (!decSupported) {
+						if (selectedCodec === 'hevc' && selectedMode === 'prefer-software') {
+							throw new Error('HEVC Software Decoding is not supported by Chromium due to MPEG licensing (requires Hardware ASIC)');
+						} else {
+							throw new Error(`${selectedCodec.toUpperCase()} Decoder not supported with ${selectedMode === 'prefer-hardware' ? 'Hardware Acceleration' : 'Software Fallback'}`);
+						}
+					}
+
+					// To benchmark the decoder, we generate test bitstream chunks.
+					// Probe if encoder can produce chunks using selectedMode, or fallback to software encoder.
+					let encHwMode: 'prefer-hardware' | 'prefer-software' = selectedMode;
+					let chosenEncCodec = chosenDecCodec;
+					let canEncode = false;
+
+					for (const c of codecCandidates) {
+						try {
+							const res = await VideoEncoder.isConfigSupported({
+								codec: c,
+								width,
+								height,
+								bitrate,
+								framerate: fps,
+								hardwareAcceleration: encHwMode
+							});
+							if (res && res.supported) {
+								chosenEncCodec = c;
+								canEncode = true;
+								break;
+							}
+						} catch (_) {}
+					}
+
+					if (!canEncode && selectedMode === 'prefer-hardware') {
+						encHwMode = 'prefer-software';
+						for (const c of codecCandidates) {
+							try {
+								const res = await VideoEncoder.isConfigSupported({
+									codec: c,
+									width,
+									height,
+									bitrate,
+									framerate: fps,
+									hardwareAcceleration: encHwMode
+								});
+								if (res && res.supported) {
+									chosenEncCodec = c;
+									canEncode = true;
+									break;
+								}
+							} catch (_) {}
+						}
+					}
+
+					if (!canEncode) {
+						throw new Error(`Unable to prepare test bitstream: no encoder available in browser for ${selectedCodec.toUpperCase()}`);
+					}
+
+					if (statusText) {
+						statusText.textContent = `Preparing ${selectedCodec.toUpperCase()} bitstream (${encHwMode === 'prefer-hardware' ? 'hardware encoder' : 'software encoder'})...`;
+					}
+
+					const encodedChunks: EncodedVideoChunk[] = [];
+					let decoderConfig: VideoDecoderConfig | null = null;
+					let totalChunkBytes = 0;
+
+					const prepEncoder = new VideoEncoder({
+						output: (chunk, metadata) => {
+							encodedChunks.push(chunk);
+							totalChunkBytes += chunk.byteLength;
+							if (metadata && metadata.decoderConfig) {
+								decoderConfig = metadata.decoderConfig;
+							}
+						},
+						error: (err) => console.error('Encoder error:', err)
+					});
+
+					prepEncoder.configure({
+						codec: chosenEncCodec,
+						width,
+						height,
+						bitrate,
+						framerate: fps,
+						hardwareAcceleration: encHwMode
+					});
+
+					for (let i = 0; i < totalFrames; i++) {
+						drawTestPattern(srcCtx, width, height, i, totalFrames);
+						const frame = new VideoFrame(srcCanvas, {
+							timestamp: i * 33333,
+							duration: 33333
+						});
+						prepEncoder.encode(frame, { keyFrame: i === 0 || i % 15 === 0 });
+						frame.close();
+					}
+
+					await prepEncoder.flush();
+					prepEncoder.close();
+
+					// Now execute and benchmark the VideoDecoder with selectedMode!
+					if (statusText) {
+						statusText.textContent = `Decoding 30 ${selectedCodec.toUpperCase()} frames via ${selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU'}...`;
+					}
+
+					if (decPlaceholder) decPlaceholder.style.display = 'none';
+
+					const finalDecoderConfig: VideoDecoderConfig = {
+						...(decoderConfig || { codec: chosenDecCodec, codedWidth: width, codedHeight: height }),
+						hardwareAcceleration: selectedMode
+					};
+
+					let decodedCount = 0;
+					const decoder = new VideoDecoder({
+						output: (videoFrame) => {
+							decodedCount++;
+							if (decodedCount === totalFrames || decodedCount === 1) {
+								decCtx.drawImage(videoFrame, 0, 0, width, height);
+							}
+							videoFrame.close();
+						},
+						error: (err) => console.error('Decoder error:', err)
+					});
+
+					decoder.configure(finalDecoderConfig);
+
+					const decStartTime = performance.now();
+					for (const chunk of encodedChunks) {
+						decoder.decode(chunk);
+					}
+					await decoder.flush();
+					const decEndTime = performance.now();
+					decoder.close();
+
+					decCanvas.setAttribute('data-has-frame', 'true');
+
+					const decDuration = Math.max(1, decEndTime - decStartTime);
+					const decFps = Math.round(totalFrames / (decDuration / 1000));
+					const decLatency = (decDuration / totalFrames).toFixed(1);
+
+					const rawBytes = width * height * 3 * totalFrames;
+					const ratio = ((1 - totalChunkBytes / rawBytes) * 100).toFixed(1);
+					const kbSize = (totalChunkBytes / 1024).toFixed(1);
+
+					if (metricEngine) {
+						metricEngine.textContent = selectedMode === 'prefer-hardware' ? 'Hardware ASIC (Dec)' : 'Software CPU (Dec)';
+					}
+					if (metricEncFps) {
+						metricEncFps.innerHTML = `Bypassed <span class="webgpu-tile-sub">(${encHwMode === 'prefer-hardware' ? 'HW Prep' : 'CPU Prep'})</span>`;
+					}
+					if (metricDecFps) {
+						metricDecFps.innerHTML = `${decFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${decLatency} ms)</span>`;
+					}
+					if (metricRatio) {
+						metricRatio.innerHTML = `${ratio}% <span class="webgpu-tile-sub">(${kbSize} KB NAL)</span>`;
+					}
+
+					if (statusText) {
+						statusText.textContent = `✓ Verification Complete: ${selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU'} decoded ${totalFrames} frames in ${decDuration.toFixed(1)}ms (${decFps} FPS).`;
+						statusText.style.color = '#22c55e';
+					}
+					return;
+				}
+
+				// 3. PIPELINE: LOOPBACK (DEFAULT)
+				if (statusText) {
+					statusText.textContent = `Initializing ${selectedCodec.toUpperCase()} loopback (${selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU'})...`;
+					statusText.style.color = '';
+				}
+
+				let chosenCodec = codecCandidates[0];
+				let encSupported = false;
+
+				for (const c of codecCandidates) {
+					try {
+						const res = await VideoEncoder.isConfigSupported({
+							codec: c,
+							width,
+							height,
+							bitrate,
+							framerate: fps,
+							hardwareAcceleration: selectedMode
+						});
+						if (res && res.supported) {
+							chosenCodec = c;
+							encSupported = true;
+							break;
+						}
+					} catch (_) {}
+				}
+
+				if (!encSupported) {
+					if (selectedCodec === 'av1' && selectedMode === 'prefer-hardware') {
+						throw new Error('AV1 Hardware Encoding requires RTX 40 series (Ada Lovelace) or Intel Arc. RTX 30 series (Ampere) supports AV1 Hardware Decode only (NVDEC). Select "Decode" pipeline to test ASIC acceleration');
+					} else if (selectedCodec === 'hevc' && selectedMode === 'prefer-software') {
+						throw new Error('HEVC Software Fallback is not supported by Chromium due to MPEG licensing (requires Hardware ASIC)');
+					} else {
+						throw new Error(`${selectedCodec.toUpperCase()} not supported with ${selectedMode === 'prefer-hardware' ? 'Hardware Acceleration' : 'Software Fallback'}`);
+					}
+				}
+
+				let decSupported = false;
+				for (const c of codecCandidates) {
+					try {
+						const res = await VideoDecoder.isConfigSupported({
+							codec: c,
+							codedWidth: width,
+							codedHeight: height,
+							hardwareAcceleration: selectedMode
+						});
+						if (res && res.supported) {
+							decSupported = true;
+							break;
+						}
+					} catch (_) {}
+				}
+
+				if (!decSupported) {
+					throw new Error(`${selectedCodec.toUpperCase()} Decoder not supported with ${selectedMode === 'prefer-hardware' ? 'Hardware Acceleration' : 'Software Fallback'}`);
+				}
 
 				if (decPlaceholder) decPlaceholder.style.display = 'none';
 
@@ -2188,7 +2586,7 @@
 				});
 
 				encoder.configure({
-					codec: codecString,
+					codec: chosenCodec,
 					width,
 					height,
 					bitrate,
@@ -2213,19 +2611,15 @@
 				encoder.close();
 
 				const encDuration = Math.max(1, encEndTime - encStartTime);
-				const encFps = Math.round((totalFrames / (encDuration / 1000)));
+				const encFps = Math.round(totalFrames / (encDuration / 1000));
 				const encLatency = (encDuration / totalFrames).toFixed(1);
 
 				if (statusText) statusText.textContent = `Encoded ${totalFrames} frames in ${encDuration.toFixed(1)}ms. Decoding via ASIC...`;
 
-				if (!decoderConfig) {
-					decoderConfig = {
-						codec: codecString,
-						codedWidth: width,
-						codedHeight: height,
-						hardwareAcceleration: selectedMode
-					};
-				}
+				const finalDecoderConfig: VideoDecoderConfig = {
+					...(decoderConfig || { codec: chosenCodec, codedWidth: width, codedHeight: height }),
+					hardwareAcceleration: selectedMode
+				};
 
 				let decodedCount = 0;
 				const decoder = new VideoDecoder({
@@ -2239,7 +2633,7 @@
 					error: (err) => console.error('Decoder error:', err)
 				});
 
-				decoder.configure(decoderConfig);
+				decoder.configure(finalDecoderConfig);
 
 				const decStartTime = performance.now();
 				for (const chunk of encodedChunks) {
@@ -2249,15 +2643,16 @@
 				const decEndTime = performance.now();
 				decoder.close();
 
+				decCanvas.setAttribute('data-has-frame', 'true');
+
 				const decDuration = Math.max(1, decEndTime - decStartTime);
-				const decFps = Math.round((totalFrames / (decDuration / 1000)));
+				const decFps = Math.round(totalFrames / (decDuration / 1000));
 				const decLatency = (decDuration / totalFrames).toFixed(1);
 
 				const rawBytes = width * height * 3 * totalFrames;
-				const ratio = ((1 - (totalChunkBytes / rawBytes)) * 100).toFixed(1);
+				const ratio = ((1 - totalChunkBytes / rawBytes) * 100).toFixed(1);
 				const kbSize = (totalChunkBytes / 1024).toFixed(1);
 
-				// Update metrics UI
 				if (metricEngine) {
 					metricEngine.textContent = selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU';
 				}
@@ -3060,7 +3455,7 @@
 
 	/* CODEC STUDIO MODAL */
 	.codec-dialog {
-		width: clamp(340px, 94vw, 760px);
+		width: clamp(340px, 94vw, 840px);
 	}
 	.codec-body-wrap {
 		padding: 1.1em 1.25em 1.25em 1.25em;

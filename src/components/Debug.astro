@@ -349,7 +349,7 @@
 			<div class="codec-body-wrap">
 				<!-- STUDIO CONTROL RACK (CLEAN 2-ROW GRID) -->
 				<div class="codec-rack">
-					<!-- ROW 1: PIPELINE, CODEC, QUALITY & TOP-RIGHT START BUTTON -->
+					<!-- ROW 1: PIPELINE, SOURCE & TOP-RIGHT START BUTTON -->
 					<div class="codec-rack-row codec-rack-top">
 						<div class="codec-rack-controls">
 							<div class="codec-rack-group">
@@ -362,21 +362,11 @@
 							</div>
 
 							<div class="codec-rack-group">
-								<span class="codec-ctrl-label">Codec:</span>
-								<div class="codec-segmented" id="codec-selector" role="group" aria-label="Codec selection">
-									<button type="button" class="codec-seg-btn active" data-codec="avc">H.264</button>
-									<button type="button" class="codec-seg-btn" data-codec="vp9">VP9</button>
-									<button type="button" class="codec-seg-btn" data-codec="av1">AV1</button>
-									<button type="button" class="codec-seg-btn" data-codec="hevc">HEVC</button>
-								</div>
-							</div>
-
-							<div class="codec-rack-group">
-								<span class="codec-ctrl-label">Quality:</span>
-								<div class="codec-segmented" id="quality-selector" role="group" aria-label="Quality preset">
-									<button type="button" class="codec-seg-btn" data-quality="high" title="14 Mbps High Bitrate Archival Profile">High</button>
-									<button type="button" class="codec-seg-btn active" data-quality="med" title="4 Mbps Medium Bitrate Streaming Profile">Med</button>
-									<button type="button" class="codec-seg-btn" data-quality="low" title="800 kbps Low Bitrate Stress Test">Low</button>
+								<span class="codec-ctrl-label">Source:</span>
+								<div class="codec-segmented" id="scene-selector" role="group" aria-label="Source frame selection">
+									<button type="button" class="codec-seg-btn active" data-scene="4k" title="Tears of Steel 4K UHD Master (Blender CC-BY)">🎬 4K Film</button>
+									<button type="button" class="codec-seg-btn" data-scene="1080p" title="Big Buck Bunny 1080p Reference (Blender CC-BY)">🐰 1080p Bunny</button>
+									<button type="button" class="codec-seg-btn" data-scene="smpte" title="SMPTE BT.709 Color Calibration Pattern">📺 SMPTE Bars</button>
 								</div>
 							</div>
 						</div>
@@ -387,7 +377,7 @@
 						</button>
 					</div>
 
-					<!-- ROW 2: ENGINE & SOURCE SCENE -->
+					<!-- ROW 2: ENGINE, CODEC & QUALITY -->
 					<div class="codec-rack-row codec-rack-bottom">
 						<div class="codec-rack-group">
 							<span class="codec-ctrl-label">Engine:</span>
@@ -398,11 +388,21 @@
 						</div>
 
 						<div class="codec-rack-group">
-							<span class="codec-ctrl-label">Source:</span>
-							<div class="codec-segmented" id="scene-selector" role="group" aria-label="Source frame selection">
-								<button type="button" class="codec-seg-btn active" data-scene="4k" title="Tears of Steel 4K UHD Master (Blender CC-BY)">🎬 4K Film</button>
-								<button type="button" class="codec-seg-btn" data-scene="1080p" title="Big Buck Bunny 1080p Reference (Blender CC-BY)">🐰 1080p Bunny</button>
-								<button type="button" class="codec-seg-btn" data-scene="smpte" title="SMPTE BT.709 Color Calibration Pattern">📺 SMPTE Bars</button>
+							<span class="codec-ctrl-label">Codec:</span>
+							<div class="codec-segmented" id="codec-selector" role="group" aria-label="Codec selection">
+								<button type="button" class="codec-seg-btn active" data-codec="avc">H.264</button>
+								<button type="button" class="codec-seg-btn" data-codec="vp9">VP9</button>
+								<button type="button" class="codec-seg-btn" data-codec="av1">AV1</button>
+								<button type="button" class="codec-seg-btn" data-codec="hevc">HEVC</button>
+							</div>
+						</div>
+
+						<div class="codec-rack-group">
+							<span class="codec-ctrl-label">Quality:</span>
+							<div class="codec-segmented" id="quality-selector" role="group" aria-label="Quality preset">
+								<button type="button" class="codec-seg-btn" data-quality="high" title="14 Mbps High Bitrate Archival Profile">High</button>
+								<button type="button" class="codec-seg-btn active" data-quality="med" title="4 Mbps Medium Bitrate Streaming Profile">Med</button>
+								<button type="button" class="codec-seg-btn" data-quality="low" title="800 kbps Low Bitrate Stress Test">Low</button>
 							</div>
 						</div>
 					</div>
@@ -2222,7 +2222,7 @@
 			};
 		});
 
-		function updateLoupe(normX: number, normY: number) {
+		function updateLoupe(normX: number, normY: number, isTouch = false) {
 			if (!srcCanvas || !decCanvas || !loupeCanvasSrc || !loupeCanvasDec) return;
 			lastNormX = normX;
 			lastNormY = normY;
@@ -2256,27 +2256,28 @@
 				}
 			}
 
-			// Position both loupes consistently, safely bounded, avoiding covering user's finger/pointer
+			// Position both loupes: strictly pinned to bottom-right of crosshair on desktop/non-touch
 			if (wrapSrc && wrapDec && loupeSrc && loupeDec) {
 				const rectSrc = wrapSrc.getBoundingClientRect();
 				const rectDec = wrapDec.getBoundingClientRect();
 
-				const loupeW = rectSrc.width < 380 ? 120 : 140;
-				const loupeH = rectSrc.width < 380 ? 120 : 140;
+				const loupeW = 140;
+				const loupeH = 140;
 
-				// Smart offset: if finger/cursor is in bottom half, show loupe above touch position;
-				// if near right edge, show loupe to the left so it stays on screen and unobscured.
-				const yOffsetSrc = normY > 0.5 ? -loupeH - 16 : 16;
-				const xOffsetSrc = normX > 0.65 ? -loupeW - 14 : 14;
+				// Strictly pinned to bottom-right of crosshair for desktop/non-touch platforms (+14px, +14px)
+				let xOffset = 14;
+				let yOffset = 14;
 
-				const xSrc = Math.max(4, Math.min(rectSrc.width - loupeW - 4, normX * rectSrc.width + xOffsetSrc));
-				const ySrc = Math.max(4, Math.min(rectSrc.height - loupeH - 4, normY * rectSrc.height + yOffsetSrc));
+				// Only on touch devices when finger is near the bottom edge: shift above touch point
+				if (isTouch) {
+					if (normY > 0.65) yOffset = -loupeH - 18;
+					if (normX > 0.7) xOffset = -loupeW - 14;
+				}
 
-				const yOffsetDec = normY > 0.5 ? -loupeH - 16 : 16;
-				const xOffsetDec = normX > 0.65 ? -loupeW - 14 : 14;
-
-				const xDec = Math.max(4, Math.min(rectDec.width - loupeW - 4, normX * rectDec.width + xOffsetDec));
-				const yDec = Math.max(4, Math.min(rectDec.height - loupeH - 4, normY * rectDec.height + yOffsetDec));
+				const xSrc = Math.max(4, Math.min(rectSrc.width - loupeW - 4, normX * rectSrc.width + xOffset));
+				const ySrc = Math.max(4, Math.min(rectSrc.height - loupeH - 4, normY * rectSrc.height + yOffset));
+				const xDec = Math.max(4, Math.min(rectDec.width - loupeW - 4, normX * rectDec.width + xOffset));
+				const yDec = Math.max(4, Math.min(rectDec.height - loupeH - 4, normY * rectDec.height + yOffset));
 
 				loupeSrc.style.left = `${xSrc}px`;
 				loupeSrc.style.top = `${ySrc}px`;
@@ -2302,7 +2303,8 @@
 			if (rect.width <= 0 || rect.height <= 0) return;
 			const normX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
 			const normY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
-			updateLoupe(normX, normY);
+			const isTouch = e.pointerType === 'touch';
+			updateLoupe(normX, normY, isTouch);
 		}
 
 		function attachLoupeEvents(wrap: HTMLElement) {

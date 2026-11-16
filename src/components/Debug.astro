@@ -2099,10 +2099,10 @@
 		let isRunning = false;
 
 		const image4k = new Image();
-		image4k.src = '/media/frame-4k-cinema.webp';
+		image4k.src = '/media/tos_motion_sprite.webp';
 
 		const image1080 = new Image();
-		image1080.src = '/media/frame-1080p-bunny.webp';
+		image1080.src = '/media/bbb_motion_sprite.webp';
 
 		image4k.onload = () => {
 			if (selectedScene === '4k' && srcCanvas) {
@@ -2276,22 +2276,10 @@
 		// 1. SCENE: 4K FILM (Tears of Steel - Blender Foundation CC-BY 3.0)
 		function draw4kScene(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, totalFrames: number) {
 			if (image4k.complete && image4k.naturalWidth > 0) {
-				const imgW = image4k.naturalWidth;
-				const imgH = image4k.naturalHeight;
-				const targetAspect = w / h;
-
-				// Keep full vertical height of active film frame in view at all times (zero black bars)
-				const cropH = imgH;
-				const cropW = Math.min(imgW, Math.round(cropH * targetAspect));
-				const cropY = 0;
-				const maxPanX = Math.max(0, imgW - cropW);
-
-				// Smooth cinematic horizontal camera tracking, centered on actors at start and finish
-				const progress = frameIdx / Math.max(1, totalFrames - 1);
-				const panOffset = Math.sin(progress * Math.PI * 2) * (maxPanX * 0.38);
-				const panX = Math.max(0, Math.min(maxPanX, Math.round(maxPanX * 0.5 + panOffset)));
-
-				ctx.drawImage(image4k, panX, cropY, cropW, cropH, 0, 0, w, h);
+				const f = Math.max(0, Math.min(59, frameIdx));
+				const col = f % 8;
+				const row = Math.floor(f / 8);
+				ctx.drawImage(image4k, col * 480, row * 270, 480, 270, 0, 0, w, h);
 			} else {
 				ctx.fillStyle = '#050811';
 				ctx.fillRect(0, 0, w, h);
@@ -2320,7 +2308,7 @@
 			ctx.fillStyle = '#cbd5e1';
 			const sec = Math.floor(frameIdx / 30);
 			const fSec = frameIdx % 30;
-			ctx.fillText(`TC 00:01:24:${sec < 10 ? '0' + sec : sec}:${fSec < 10 ? '0' + fSec : fSec} ▪ 3840×1600 SCOPE ▪ 30 FPS`, w - 18, 24);
+			ctx.fillText(`TC 00:01:24:${sec < 10 ? '0' + sec : sec}:${fSec < 10 ? '0' + fSec : fSec} ▪ 3840×2160 MASTER ▪ 30 FPS`, w - 18, 24);
 			ctx.shadowBlur = 0;
 
 			// Bottom Frame Counter OSD Pill (Compact, translucent pill - never covers the scene)
@@ -2350,35 +2338,10 @@
 		// 2. SCENE: 1080p BUNNY (Big Buck Bunny - Blender Foundation CC-BY 3.0)
 		function draw1080pScene(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, totalFrames: number) {
 			if (image1080.complete && image1080.naturalWidth > 0) {
-				const imgW = image1080.naturalWidth;
-				const imgH = image1080.naturalHeight;
-				const targetAspect = w / h;
-
-				// Keep full vertical height in view with zero black bars
-				const cropH = imgH;
-				const cropW = Math.min(imgW, Math.round(cropH * targetAspect));
-				const cropY = 0;
-				const maxPanX = Math.max(0, imgW - cropW);
-
-				// Smooth gentle horizontal tracking, centered on Bunny at start and end
-				const progress = frameIdx / Math.max(1, totalFrames - 1);
-				const panOffset = Math.sin(progress * Math.PI * 2) * (maxPanX * 0.4);
-				const panX = Math.max(0, Math.min(maxPanX, Math.round(maxPanX * 0.5 + panOffset)));
-
-				ctx.drawImage(image1080, panX, cropY, cropW, cropH, 0, 0, w, h);
-
-				// Floating organic spores / particles drifting across foreground
-				for (let p = 0; p < 14; p++) {
-					const seed = p * 137.5;
-					const speed = 1.6 + (p % 3) * 1.1;
-					const px = (w + 120 - ((frameIdx * speed * 7 + seed * 2.3) % (w + 160)));
-					const py = (seed * 3.7 + Math.sin(frameIdx * 0.08 + p) * 18) % (h - 80) + 35;
-					const radius = 2 + (p % 3);
-					ctx.fillStyle = 'rgba(255, 255, 220, 0.75)';
-					ctx.beginPath();
-					ctx.arc(px, py, radius, 0, Math.PI * 2);
-					ctx.fill();
-				}
+				const f = Math.max(0, Math.min(59, frameIdx));
+				const col = f % 8;
+				const row = Math.floor(f / 8);
+				ctx.drawImage(image1080, col * 480, row * 270, 480, 270, 0, 0, w, h);
 			} else {
 				ctx.fillStyle = '#050811';
 				ctx.fillRect(0, 0, w, h);
@@ -2556,6 +2519,10 @@
 
 		function startPlayback() {
 			if (isPlaying) return;
+			if (currentFrameIdx >= 59) {
+				currentFrameIdx = 0;
+				displayFrame(0);
+			}
 			isPlaying = true;
 			if (iconPlay) iconPlay.classList.add('hidden');
 			if (iconPause) iconPause.classList.remove('hidden');
@@ -2565,7 +2532,13 @@
 				if (!isPlaying) return;
 				if (now - lastPlaybackTime >= 33.33) {
 					lastPlaybackTime = now;
-					currentFrameIdx = (currentFrameIdx + 1) % 60;
+					currentFrameIdx++;
+					if (currentFrameIdx >= 60) {
+						currentFrameIdx = 59;
+						displayFrame(59);
+						stopPlayback();
+						return;
+					}
 					displayFrame(currentFrameIdx);
 				}
 				playbackRaf = requestAnimationFrame(loop);

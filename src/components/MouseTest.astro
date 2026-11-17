@@ -531,6 +531,16 @@
 					if (reactionSub) reactionSub.textContent = 'Click to test again';
 				}
 			});
+
+			pollReflexBox.addEventListener('pointercancel', () => {
+				if (reactionState === 'WAITING') {
+					clearTimeout(stateTimer);
+					reactionState = 'IDLE';
+					if (pollReflexBox) pollReflexBox.className = 'poll-reflex-box idle';
+					if (reactionHeadline) reactionHeadline.textContent = 'Click to Test Reflex';
+					if (reactionSub) reactionSub.textContent = 'Move cursor rapidly to test polling';
+				}
+			});
 		}
 
 		// ==========================================
@@ -950,7 +960,7 @@
 		overflow: hidden;
 		user-select: none;
 		-webkit-user-select: none;
-		touch-action: none;
+		touch-action: manipulation;
 		margin-bottom: 0.85em;
 		display: flex;
 		align-items: center;
@@ -1036,7 +1046,7 @@
 		overflow: hidden;
 		user-select: none;
 		-webkit-user-select: none;
-		touch-action: none;
+		touch-action: manipulation;
 		margin-bottom: 0.85em;
 		display: flex;
 		align-items: center;
@@ -1071,7 +1081,7 @@
 		display: block;
 		user-select: none;
 		-webkit-user-select: none;
-		touch-action: none;
+		touch-action: manipulation;
 	}
 
 	.part-outline {
@@ -1089,7 +1099,7 @@
 		cursor: pointer;
 		user-select: none;
 		-webkit-user-select: none;
-		touch-action: none;
+		touch-action: manipulation;
 		outline: none;
 	}
 	.interactive:hover .btn-surface,
@@ -1160,6 +1170,36 @@
 		box-sizing: border-box;
 	}
 
+	@media (max-width: 600px) {
+		.lab-col {
+			padding: 0.85em;
+		}
+
+		.metrics-row {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 0.5em;
+		}
+
+		.metrics-row .metric-mini:last-child {
+			grid-column: span 2;
+		}
+
+		.metric-mini {
+			padding: 0.6em 0.65em;
+			min-height: 74px;
+		}
+	}
+
+	@media (max-width: 360px) {
+		.metrics-row {
+			grid-template-columns: 1fr;
+		}
+
+		.metrics-row .metric-mini:last-child {
+			grid-column: span 1;
+		}
+	}
+
 	.metric-mini {
 		background: rgba(0, 0, 0, 0.03);
 		border: 1px solid var(--border-color);
@@ -1186,6 +1226,8 @@
 		letter-spacing: 0.03em;
 		margin-bottom: 0.25em;
 		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.m-val-wrap {

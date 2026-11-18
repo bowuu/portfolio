@@ -121,12 +121,17 @@
 		const COMMANDS = [
 			'help',
 			'about',
+			'audio',
 			'skills',
 			'projects',
 			'tests',
 			'network',
 			'mouse',
 			'keyboard',
+			'display',
+			'codec',
+			'video',
+			'studio',
 			'cad',
 			'debug',
 			'theme',
@@ -667,6 +672,43 @@
 <span class="term-head">DESCRIPTION</span>
     Navigate to the 104-key switch matrix, rollover test, and actuation latency lab (#keyboard-lab).`,
 
+			audio: `
+<span class="term-head">NAME</span>
+    audio - DAC pipeline, stereo isolation &amp; 20Hz-20kHz frequency sweeper
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">audio</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Navigate to the Web Audio DAC lab (#audio-lab) featuring real-time dual-trace
+    oscilloscope, phase correlation meter, 4096-point FFT spectrum analyser,
+    continuous background spectrogram waterfall, and pure tone frequency sweeper.`,
+
+			codec: `
+<span class="term-head">NAME</span>
+    codec - WebCodecs hardware accelerated video transcoder studio
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">codec</span> [loopback|encode|decode]
+
+<span class="term-head">DESCRIPTION</span>
+    Launch the interactive WebCodecs video codec studio modal (#video-codec-spotlight).
+    Profiles hardware ASIC encoding and decoding across H.264 (AVC), HEVC (H.265),
+    VP9, and AV1 with synchronized side-by-side frame inspection and bitrate telemetry.
+    Aliases: video, studio.`,
+
+			display: `
+<span class="term-head">NAME</span>
+    display - motion blur, VSYNC cadence &amp; pixel defect checker
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">display</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Navigate to the display motion lab (#display-lab) testing pursuit ghosting,
+    sample-and-hold blur, VSYNC frame intervals, dropped frame counter, and
+    full-screen stuck/dead pixel inspection.`,
+
 			debug: `
 <span class="term-head">NAME</span>
     debug - client hardware and edge telemetry inspector
@@ -852,11 +894,14 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-col">Core System &amp; Navigation</span> <span class="term-col">Description</span>
   <span class="term-dim">------------------------ ------------------------------------------------------------</span>
   <span class="term-hl">about</span>                    Hardware engineering background &amp; focus
+  <span class="term-hl">audio</span>                    Audio DAC &amp; 20Hz-20kHz spectrum lab (#audio-lab)
   <span class="term-hl">blur</span> [on|off]            Toggle background blur filter
   <span class="term-hl">cad</span> [spin|grid|slice]    3D CAD viewer controls &amp; slicer (#cad-viewer)
   <span class="term-hl">clear</span>                    Clear terminal screen output
+  <span class="term-hl">codec</span> [studio]           Launch WebCodecs video studio (#video-codec-spotlight)
   <span class="term-hl">date</span>                     Display current UTC timestamp
   <span class="term-hl">debug</span>                    Navigate to client hardware &amp; telemetry (#debug)
+  <span class="term-hl">display</span>                  Display motion blur &amp; VSYNC lab (#display-lab)
   <span class="term-hl">exit</span>                     Close terminal session window (or Esc)
   <span class="term-hl">keyboard</span>                 104-key switch matrix lab (#keyboard-lab)
   <span class="term-hl">man</span> [cmd]                Reference manual page for shell commands
@@ -970,6 +1015,31 @@ Verified Profiles:
 					scrollToSection('keyboard-lab');
 					appendOutput('<span class="term-cyan">&rarr; Navigating to 104-Key Switch Matrix (#keyboard-lab)...</span>');
 					break;
+
+				case 'display':
+				case 'screen':
+				case 'fps':
+					scrollToSection('display-lab');
+					appendOutput('<span class="term-cyan">&rarr; Navigating to Display Motion &amp; VSYNC Cadence Lab (#display-lab)...</span>');
+					break;
+
+				case 'audio':
+				case 'sound':
+				case 'dac':
+					scrollToSection('audio-lab');
+					appendOutput('<span class="term-cyan">&rarr; Navigating to Audio DAC &amp; Spectrum Lab (#audio-lab)...</span>');
+					break;
+
+				case 'codec':
+				case 'video':
+				case 'studio': {
+					const p = args[0]?.toLowerCase();
+					const pipeline = (p === 'encode' || p === 'decode' || p === 'loopback') ? p : 'loopback';
+					closeTerminal();
+					window.dispatchEvent(new CustomEvent('open-codec-studio', { detail: { pipeline } }));
+					appendOutput(`<span class="term-cyan">&rarr; Launched Video Codec Studio (${pipeline}) modal...</span>`);
+					break;
+				}
 
 				case 'cad':
 					const cadSub = args[0]?.toLowerCase();

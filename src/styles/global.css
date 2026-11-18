@@ -202,6 +202,7 @@ html {
 #benchmark,
 #display-lab,
 #audio-lab,
+#video-codec-spotlight,
 #input-lab,
 #keyboard-lab,
 #debug {
@@ -289,6 +290,9 @@ html {
   #debug,
   #lab,
   #benchmark,
+  #display-lab,
+  #audio-lab,
+  #video-codec-spotlight,
   #input-lab,
   #keyboard-lab,
   .canvas-wrapper,

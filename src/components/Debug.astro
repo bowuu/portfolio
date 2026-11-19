@@ -466,7 +466,7 @@
 					<div class="codec-timeline-row">
 						<!-- Left: Transport Controls & Frame Counter -->
 						<div class="codec-timeline-controls">
-							<button type="button" id="codec-play-btn" class="codec-time-btn" title="Play / Pause 1.0s Section (Space)" aria-label="Play / Pause">
+							<button type="button" id="codec-play-btn" class="codec-time-btn" title="Play / Pause (Space)" aria-label="Play / Pause">
 								<svg id="codec-icon-play" viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
 								<svg id="codec-icon-pause" class="hidden" viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
 							</button>
@@ -479,27 +479,27 @@
 							<span class="codec-frame-readout" id="codec-frame-readout">Frame 1 / 24</span>
 						</div>
 
-						<!-- Center: Extended Master Seekbar (2.5s clip with 1.0s window & prominent frame selector) -->
+						<!-- Center: Extended Master Seekbar (60 frames total with 24-frame benchmark window) -->
 						<div class="codec-timeline-track-wrap" id="codec-timeline-track-wrap">
 							<div class="codec-timeline-ruler">
-								<span class="codec-ruler-tick" style="left: 0%">0.0s</span>
-								<span class="codec-ruler-tick" style="left: 20%">0.5s</span>
-								<span class="codec-ruler-tick" style="left: 40%">1.0s</span>
-								<span class="codec-ruler-tick" style="left: 60%">1.5s</span>
-								<span class="codec-ruler-tick" style="left: 80%">2.0s</span>
-								<span class="codec-ruler-tick" style="left: 100%">2.5s</span>
+								<span class="codec-ruler-tick" style="left: 0%">0</span>
+								<span class="codec-ruler-tick" style="left: 20%">12</span>
+								<span class="codec-ruler-tick" style="left: 40%">24</span>
+								<span class="codec-ruler-tick" style="left: 60%">36</span>
+								<span class="codec-ruler-tick" style="left: 80%">48</span>
+								<span class="codec-ruler-tick" style="left: 100%">60</span>
 							</div>
-							<div class="codec-track-bar" id="codec-track-bar" title="Click to seek frame or reposition 1.0s window">
+							<div class="codec-track-bar" id="codec-track-bar" title="Click to seek frame or reposition 24-frame window">
 								<div class="codec-track-bg"></div>
 
-								<!-- 1.0s Active Benchmark Range Bracket -->
+								<!-- 24-Frame Active Benchmark Range Bracket -->
 								<div class="codec-range-window" id="codec-range-window" style="left: 0%; width: 40%;">
-									<div class="codec-range-edge left" title="Drag to reposition 1.0s window"></div>
-									<div class="codec-range-grip" id="codec-range-grip" title="Drag to reposition 1.0s benchmark window">
+									<div class="codec-range-edge left" title="Drag to reposition 24-frame window"></div>
+									<div class="codec-range-grip" id="codec-range-grip" title="Drag to reposition 24-frame benchmark window">
 										<svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor"><circle cx="5" cy="4" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="11" cy="12" r="1.5"/></svg>
-										<span class="codec-range-label">1.0s Window</span>
+										<span class="codec-range-label">24 Frames</span>
 									</div>
-									<div class="codec-range-edge right" title="Drag to reposition 1.0s window"></div>
+									<div class="codec-range-edge right" title="Drag to reposition 24-frame window"></div>
 								</div>
 
 								<!-- Prominent White Frame Selector (Easily Selectable & Draggable) -->
@@ -512,9 +512,9 @@
 
 						<!-- Right: Benchmark Range Badge -->
 						<div class="codec-timeline-meta">
-							<div class="codec-range-badge" id="codec-range-badge" title="Active 1.0s benchmark window (Drag bracket to move)">
+							<div class="codec-range-badge" id="codec-range-badge" title="Active 24-frame benchmark window (Drag bracket to move)">
 								<span class="codec-range-badge-dot"></span>
-								<span id="codec-range-badge-text">1.0s: 0.00s&ndash;1.00s</span>
+								<span id="codec-range-badge-text">Frames 1&ndash;24</span>
 							</div>
 						</div>
 					</div>
@@ -2601,10 +2601,10 @@
 			if (rangeWindow) {
 				rangeWindow.style.left = `${(rangeStartFrame / TOTAL_CLIP_FRAMES) * 100}%`;
 			}
+			const sFrame = rangeStartFrame + 1;
+			const eFrame = rangeStartFrame + TEST_WINDOW_FRAMES;
 			if (rangeBadgeText) {
-				const sSec = (rangeStartFrame / 24).toFixed(2);
-				const eSec = ((rangeStartFrame + TEST_WINDOW_FRAMES) / 24).toFixed(2);
-				rangeBadgeText.textContent = `1.0s: ${sSec}s \u2013 ${eSec}s`;
+				rangeBadgeText.textContent = `Frames ${sFrame}\u2013${eFrame}`;
 			}
 
 			// Invalidate prior test results since range changed
@@ -2617,9 +2617,7 @@
 			}
 			if (decPlaceholder) {
 				decPlaceholder.style.display = 'flex';
-				const sSec = (rangeStartFrame / 24).toFixed(2);
-				const eSec = ((rangeStartFrame + TEST_WINDOW_FRAMES) / 24).toFixed(2);
-				decPlaceholder.innerHTML = `<span>Selected ${sSec}s&ndash;${eSec}s. Click &ldquo;Start&rdquo; to test.</span>`;
+				decPlaceholder.innerHTML = `<span>Selected Frames ${sFrame}&ndash;${eFrame} (24 frames). Click &ldquo;Start&rdquo; to test.</span>`;
 			}
 
 			// Invalidate cached source bitmaps since range changed
@@ -2632,9 +2630,7 @@
 			syncTimelineUI(targetFrame);
 
 			if (statusText) {
-				const sSec = (rangeStartFrame / 24).toFixed(2);
-				const eSec = ((rangeStartFrame + TEST_WINDOW_FRAMES) / 24).toFixed(2);
-				statusText.textContent = `Selected 1.0s section (${sSec}s \u2013 ${eSec}s). Click "Start" to test.`;
+				statusText.textContent = `Selected Frames ${sFrame} \u2013 ${eFrame} (24 frames). Click "Start" to test.`;
 				statusText.style.color = '';
 			}
 		}
@@ -3381,8 +3377,8 @@
 						const inSize = getInputFileSize();
 						metricRatio.innerHTML = `${inSize} &rarr; ${displaySize}`;
 						metricRatio.title = selectedScene === 'smpte'
-							? `Input: Procedural vector canvas (1.0s window: 24 frames, 0 KB network download) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster in RAM: ${rawMb} MB.`
-							: `Input clip size: ${inSize} (testing 1.0s window: 24 frames) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
+							? `Input: Procedural vector canvas (24-frame window, 0 KB network download) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster in RAM: ${rawMb} MB.`
+							: `Input clip size: ${inSize} (testing 24-frame window) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
 					}
 
 					if (decPlaceholder) {
@@ -3571,8 +3567,8 @@
 						const inSize = getInputFileSize();
 						metricRatio.innerHTML = `${inSize} &rarr; ${displaySize}`;
 						metricRatio.title = selectedScene === 'smpte'
-							? `Input: Procedural vector canvas (1.0s window: 24 frames, 0 KB network download) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster in RAM: ${rawMb} MB.`
-							: `Input clip size: ${inSize} (testing 1.0s window: 24 frames) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
+							? `Input: Procedural vector canvas (24-frame window, 0 KB network download) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster in RAM: ${rawMb} MB.`
+							: `Input clip size: ${inSize} (testing 24-frame window) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
 					}
 
 					if (statusText) {
@@ -3740,8 +3736,8 @@
 					const inSize = getInputFileSize();
 					metricRatio.innerHTML = `${inSize} &rarr; ${displaySize}`;
 					metricRatio.title = selectedScene === 'smpte'
-						? `Input: Procedural vector canvas (1.0s window: 24 frames, 0 KB network download) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster in RAM: ${rawMb} MB.`
-						: `Input clip size: ${inSize} (testing 1.0s window: 24 frames) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
+						? `Input: Procedural vector canvas (24-frame window, 0 KB network download) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster in RAM: ${rawMb} MB.`
+						: `Input clip size: ${inSize} (testing 24-frame window) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
 				}
 
 				if (statusText) {

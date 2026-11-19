@@ -510,9 +510,8 @@
 							</div>
 						</div>
 
-						<!-- Right: Timecode & Range Readout -->
+						<!-- Right: Benchmark Range Badge -->
 						<div class="codec-timeline-meta">
-							<div class="codec-timecode-readout" id="codec-timecode-readout">0.0 ms (0.00s)</div>
 							<div class="codec-range-badge" id="codec-range-badge" title="Active 1.0s benchmark window (Drag bracket to move)">
 								<span class="codec-range-badge-dot"></span>
 								<span id="codec-range-badge-text">1.0s: 0.00s&ndash;1.00s</span>
@@ -2136,7 +2135,6 @@
 		const prevFrameBtn = document.getElementById('codec-prev-frame-btn');
 		const nextFrameBtn = document.getElementById('codec-next-frame-btn');
 		const frameReadout = document.getElementById('codec-frame-readout');
-		const timecodeReadout = document.getElementById('codec-timecode-readout');
 		const iconPlay = document.getElementById('codec-icon-play');
 		const iconPause = document.getElementById('codec-icon-pause');
 		const rangeBadge = document.getElementById('codec-range-badge');
@@ -2698,11 +2696,6 @@
 			const globalFrame = rangeStartFrame + currentFrameIdx;
 
 			if (frameReadout) frameReadout.textContent = `Frame ${currentFrameIdx + 1} / ${TEST_WINDOW_FRAMES}`;
-			if (timecodeReadout) {
-				const ms = (currentFrameIdx * 41.667).toFixed(1);
-				const sec = (globalFrame / 24).toFixed(2);
-				timecodeReadout.textContent = `${ms} ms (${sec}s)`;
-			}
 
 			if (playhead) {
 				playhead.style.left = `${(globalFrame / TOTAL_CLIP_FRAMES) * 100}%`;
@@ -5192,7 +5185,8 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.35em;
-		flex-shrink: 0;
+		flex: 0 0 180px;
+		width: 180px;
 	}
 	.codec-time-btn {
 		display: inline-flex;
@@ -5225,9 +5219,14 @@
 		font-size: 0.72em;
 		font-weight: 700;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		font-variant-numeric: tabular-nums;
 		color: rgb(var(--gray-dark));
-		min-width: 82px;
+		width: 90px;
+		min-width: 90px;
+		max-width: 90px;
 		white-space: nowrap;
+		text-align: left;
+		flex-shrink: 0;
 	}
 	:global(html[data-theme="dark"]) .codec-frame-readout {
 		color: #e2e8f0;
@@ -5393,21 +5392,11 @@
 		border-color: #0f172a;
 	}
 
-	/* RIGHT: TIMECODE & BADGE */
+	/* RIGHT: BENCHMARK RANGE BADGE */
 	.codec-timeline-meta {
 		display: flex;
 		align-items: center;
-		gap: 0.5em;
 		flex-shrink: 0;
-	}
-	.codec-timecode-readout {
-		font-size: 0.72em;
-		font-weight: 600;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-		color: rgb(var(--gray));
-		min-width: 95px;
-		text-align: right;
-		white-space: nowrap;
 	}
 	.codec-range-badge {
 		display: inline-flex;
@@ -5420,9 +5409,11 @@
 		font-size: 0.68em;
 		font-weight: 600;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		font-variant-numeric: tabular-nums;
 		color: var(--accent);
 		white-space: nowrap;
 		cursor: default;
+		flex-shrink: 0;
 	}
 	.codec-range-badge-dot {
 		width: 6px;
@@ -5431,15 +5422,7 @@
 		background: var(--accent);
 		box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.8);
 	}
-	@media (max-width: 820px) {
-		.codec-range-badge {
-			display: none;
-		}
-	}
 	@media (max-width: 600px) {
-		.codec-timecode-readout {
-			display: none;
-		}
 		.codec-timeline-row {
 			gap: 0.4em;
 		}

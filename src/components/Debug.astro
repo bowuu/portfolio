@@ -429,7 +429,7 @@
 							</div>
 						</div>
 						<div class="codec-canvas-wrap" id="codec-wrap-src">
-							<video id="codec-video-source" class="codec-media-video" playsinline muted preload="none">
+							<video id="codec-video-source" class="codec-media-video" playsinline muted preload="none" loop>
 								<source src="/media/charge_1080p.webm" type="video/webm">
 								<source src="/media/charge_1080p.mp4" type="video/mp4">
 							</video>
@@ -2221,7 +2221,7 @@
 
 					srcVideo.addEventListener('seeked', onSeeked, { once: true });
 					srcVideo.currentTime = targetTime;
-					fallbackTimer = setTimeout(finish, 250);
+					fallbackTimer = setTimeout(finish, is4k ? 600 : 350);
 				});
 
 				extractCtx.drawImage(srcVideo, 0, 0, width, height);
@@ -2639,11 +2639,13 @@
 			if (iconPause) iconPause.classList.remove('hidden');
 
 			if (selectedScene === 'smpte' || (sourceBitmaps.length === 60 && !!sourceBitmaps[0] && srcCanvas && !srcCanvas.classList.contains('hidden'))) {
-				lastPlaybackTime = performance.now();
+				let lastTime = 0;
 				function loop(now: number) {
 					if (!isPlaying) return;
-					if (now - lastPlaybackTime >= 41.667) {
-						lastPlaybackTime = now;
+					if (!lastTime) {
+						lastTime = now;
+					} else if (now - lastTime >= 41.667) {
+						lastTime = now - ((now - lastTime) % 41.667);
 						currentFrameIdx = (currentFrameIdx + 1) % 60;
 						syncTimelineUI(currentFrameIdx);
 					}
@@ -2710,18 +2712,10 @@
 
 		if (srcVideo) {
 			srcVideo.addEventListener('ended', () => {
-				stopPlayback();
-				syncTimelineUI(59);
-			});
-			srcVideo.addEventListener('play', () => {
-				isPlaying = true;
-				if (iconPlay) iconPlay.classList.remove('hidden');
-				if (iconPause) iconPause.classList.remove('hidden');
-			});
-			srcVideo.addEventListener('pause', () => {
-				isPlaying = false;
-				if (iconPlay) iconPlay.classList.remove('hidden');
-				if (iconPause) iconPause.classList.add('hidden');
+				if (srcCanvas && srcCanvas.classList.contains('hidden')) {
+					stopPlayback();
+					syncTimelineUI(59);
+				}
 			});
 		}
 
@@ -3149,6 +3143,7 @@
 					}
 					currentFrameIdx = 0;
 					syncTimelineUI(0);
+					startPlayback();
 					return;
 				}
 
@@ -3314,6 +3309,7 @@
 					}
 					currentFrameIdx = 0;
 					syncTimelineUI(0);
+					startPlayback();
 					return;
 				}
 
@@ -3464,6 +3460,7 @@
 
 				currentFrameIdx = 0;
 				syncTimelineUI(0);
+				startPlayback();
 			} catch (err: any) {
 				if (statusText) {
 					statusText.textContent = `Verification Notice: ${err.message || 'Codec profile unsupported'}.`;

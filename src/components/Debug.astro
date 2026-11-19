@@ -446,7 +446,7 @@
 								<span class="codec-preview-label">Reconstructed (Output)</span>
 								<span class="codec-loupe-pill" id="codec-pill-dec">4× ASIC</span>
 							</div>
-							<button type="button" id="codec-pin-hint" class="codec-loupe-hint-btn" title="Click anywhere on the video frame to pin the magnifier">Click frame to pin</button>
+							<button type="button" id="codec-pin-hint" class="codec-loupe-hint-btn" title="Click anywhere on the video frame to pin the magnifier">Click to pin</button>
 						</div>
 						<div class="codec-canvas-wrap" id="codec-wrap-dec">
 							<canvas id="codec-canvas-decoded" width="1920" height="1080" class="codec-canvas"></canvas>
@@ -2398,7 +2398,7 @@
 			}
 			if (pinHintBtn) {
 				pinHintBtn.classList.toggle('pinned', pinned);
-				pinHintBtn.textContent = pinned ? 'Loupe pinned (click to release)' : 'Click frame to pin';
+				pinHintBtn.textContent = pinned ? 'Pinned (unpin)' : 'Click to pin';
 			}
 			if (pinned) {
 				showLoupe();
@@ -4918,7 +4918,15 @@
 		justify-content: space-between;
 		align-items: center;
 		gap: 0.5em;
-		min-height: 1.4em;
+		height: 24px;
+		min-height: 24px;
+	}
+	.codec-preview-title-row {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4em;
+		min-width: 0;
+		flex-shrink: 1;
 	}
 	.codec-preview-label {
 		font-size: 0.72em;
@@ -5089,11 +5097,13 @@
 		font-weight: 600;
 		color: rgb(var(--gray));
 		font-family: ui-monospace, monospace;
-		padding: 1px 6px;
+		padding: 2px 6px;
 		border-radius: 4px;
 		cursor: pointer;
 		transition: all 0.15s ease;
-		line-height: 1.3;
+		line-height: 1.2;
+		white-space: nowrap;
+		flex-shrink: 0;
 	}
 	.codec-loupe-hint-btn:hover {
 		color: rgb(var(--black));

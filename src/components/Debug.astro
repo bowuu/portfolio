@@ -463,23 +463,59 @@
 
 				<!-- PLAYBACK TIMELINE & FRAME SCRUBBER -->
 				<div class="codec-timeline-bar" id="codec-timeline-bar">
-					<div class="codec-timeline-controls">
-						<button type="button" id="codec-play-btn" class="codec-time-btn" title="Play / Pause (Space)" aria-label="Play / Pause">
-							<svg id="codec-icon-play" viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-							<svg id="codec-icon-pause" class="hidden" viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-						</button>
-						<button type="button" id="codec-prev-frame-btn" class="codec-time-btn" title="Previous Frame (Left Arrow)" aria-label="Previous Frame">
-							<svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-						</button>
-						<button type="button" id="codec-next-frame-btn" class="codec-time-btn" title="Next Frame (Right Arrow)" aria-label="Next Frame">
-							<svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-						</button>
-						<span class="codec-frame-readout" id="codec-frame-readout">Frame 1 / 60</span>
+					<div class="codec-timeline-top">
+						<div class="codec-timeline-controls">
+							<button type="button" id="codec-play-btn" class="codec-time-btn" title="Play / Pause 1.0s Section (Space)" aria-label="Play / Pause">
+								<svg id="codec-icon-play" viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+								<svg id="codec-icon-pause" class="hidden" viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+							</button>
+							<button type="button" id="codec-prev-frame-btn" class="codec-time-btn" title="Previous Frame (Left Arrow)" aria-label="Previous Frame">
+								<svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+							</button>
+							<button type="button" id="codec-next-frame-btn" class="codec-time-btn" title="Next Frame (Right Arrow)" aria-label="Next Frame">
+								<svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+							</button>
+							<span class="codec-frame-readout" id="codec-frame-readout">Frame 1 / 24</span>
+						</div>
+
+						<div class="codec-range-badge" id="codec-range-badge" title="Draggable 1.0s benchmark test window">
+							<span class="codec-range-badge-dot"></span>
+							<span id="codec-range-badge-text">1.0s Window: 0.00s &ndash; 1.00s</span>
+						</div>
+
+						<div class="codec-timecode-readout" id="codec-timecode-readout">0.0 ms (0.00s)</div>
 					</div>
-					<div class="codec-scrubber-track">
-						<input type="range" id="codec-frame-scrubber" min="0" max="59" value="0" step="1" class="codec-scrub-slider" aria-label="Frame Scrubber">
+
+					<!-- Revamped Taller Timeline Track with Draggable 1s Window -->
+					<div class="codec-timeline-track-wrap" id="codec-timeline-track-wrap">
+						<div class="codec-timeline-ruler">
+							<span class="codec-ruler-tick" style="left: 0%">0.0s</span>
+							<span class="codec-ruler-tick" style="left: 20%">0.5s</span>
+							<span class="codec-ruler-tick" style="left: 40%">1.0s</span>
+							<span class="codec-ruler-tick" style="left: 60%">1.5s</span>
+							<span class="codec-ruler-tick" style="left: 80%">2.0s</span>
+							<span class="codec-ruler-tick" style="left: 100%">2.5s</span>
+						</div>
+						<div class="codec-track-bar" id="codec-track-bar">
+							<div class="codec-track-bg"></div>
+
+							<!-- 1.0s Active Benchmark Range Bracket -->
+							<div class="codec-range-window" id="codec-range-window" style="left: 0%; width: 40%;">
+								<div class="codec-range-edge left"></div>
+								<div class="codec-range-grip">
+									<svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor"><circle cx="5" cy="4" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="11" cy="12" r="1.5"/></svg>
+									<span class="codec-range-label">1.0s Section (Drag)</span>
+								</div>
+								<div class="codec-range-edge right"></div>
+							</div>
+
+							<!-- Playhead Needle -->
+							<div class="codec-playhead" id="codec-playhead" style="left: 0%;">
+								<div class="codec-playhead-thumb"></div>
+								<div class="codec-playhead-line"></div>
+							</div>
+						</div>
 					</div>
-					<div class="codec-timecode-readout" id="codec-timecode-readout">0.0 ms (00:00.00)</div>
 				</div>
 
 				<!-- TELEMETRY METRICS GRID (4 BALANCED CARDS) -->
@@ -2096,19 +2132,28 @@
 		const playBtn = document.getElementById('codec-play-btn');
 		const prevFrameBtn = document.getElementById('codec-prev-frame-btn');
 		const nextFrameBtn = document.getElementById('codec-next-frame-btn');
-		const frameScrubber = document.getElementById('codec-frame-scrubber') as HTMLInputElement | null;
 		const frameReadout = document.getElementById('codec-frame-readout');
 		const timecodeReadout = document.getElementById('codec-timecode-readout');
 		const iconPlay = document.getElementById('codec-icon-play');
 		const iconPause = document.getElementById('codec-icon-pause');
+		const rangeBadge = document.getElementById('codec-range-badge');
+		const rangeBadgeText = document.getElementById('codec-range-badge-text');
+		const trackBar = document.getElementById('codec-track-bar');
+		const rangeWindow = document.getElementById('codec-range-window');
+		const playhead = document.getElementById('codec-playhead');
 
-		let currentFrameIdx = 0;
+		const TOTAL_CLIP_FRAMES = 60;
+		const TEST_WINDOW_FRAMES = 24;
+		const MAX_START_FRAME = TOTAL_CLIP_FRAMES - TEST_WINDOW_FRAMES; // 36 frames = 1.5s max offset
+
+		let rangeStartFrame = 0; // 0..36
+		let currentFrameIdx = 0; // 0..23 (relative frame within 1.0s window)
 		let isPlaying = false;
 		let playbackRaf: number | null = null;
-		let lastPlaybackTime = 0;
 		let sourceBitmaps: ImageBitmap[] = [];
 		let decodedBitmaps: ImageBitmap[] = [];
 		let sourceSceneLoaded = '';
+		let sourceStartFrameLoaded = -1;
 
 		const pipelineSegBtns = document.querySelectorAll<HTMLButtonElement>('#pipeline-selector .codec-seg-btn');
 		const codecSegBtns = document.querySelectorAll<HTMLButtonElement>('#codec-selector .codec-seg-btn');
@@ -2123,31 +2168,19 @@
 		let selectedScene: '4k' | '1080p' | 'smpte' = '1080p';
 		let isRunning = false;
 
-		
 		async function ensureSourceFrames(is4k: boolean, width: number, height: number): Promise<ImageBitmap[]> {
-			if (sourceBitmaps.length === 60 && sourceBitmaps.every((b) => !!b) && sourceSceneLoaded === selectedScene) {
+			if (selectedScene === 'smpte') {
+				sourceSceneLoaded = 'smpte';
+				sourceStartFrameLoaded = rangeStartFrame;
+				return [];
+			}
+
+			if (sourceBitmaps.length === TEST_WINDOW_FRAMES && sourceBitmaps.every((b) => !!b) && sourceSceneLoaded === selectedScene && sourceStartFrameLoaded === rangeStartFrame) {
 				return sourceBitmaps;
 			}
 
 			sourceBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
-			sourceBitmaps = new Array(60);
-
-			if (selectedScene === 'smpte') {
-				const offCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(width, height) : document.createElement('canvas');
-				offCanvas.width = width;
-				offCanvas.height = height;
-				const offCtx = offCanvas.getContext('2d')!;
-				for (let i = 0; i < 60; i++) {
-					drawSmpteScene(offCtx, width, height, i, 60);
-					if ('transferToImageBitmap' in offCanvas) {
-						sourceBitmaps[i] = (offCanvas as any).transferToImageBitmap();
-					} else {
-						sourceBitmaps[i] = await createImageBitmap(offCanvas);
-					}
-				}
-				sourceSceneLoaded = 'smpte';
-				return sourceBitmaps;
-			}
+			sourceBitmaps = new Array(TEST_WINDOW_FRAMES);
 
 			if (!srcVideo) return [];
 
@@ -2190,12 +2223,13 @@
 			extractCanvas.height = height;
 			const extractCtx = extractCanvas.getContext('2d')!;
 
-			for (let i = 0; i < 60; i++) {
+			for (let i = 0; i < TEST_WINDOW_FRAMES; i++) {
 				if (!isRunning) break;
-				if (statusText && (i % 6 === 0 || i === 59)) {
-					statusText.textContent = `Extracting ${selectedScene.toUpperCase()} reference frames (${i + 1}/60)...`;
+				if (statusText && (i % 6 === 0 || i === TEST_WINDOW_FRAMES - 1)) {
+					statusText.textContent = `Extracting ${selectedScene.toUpperCase()} frames (${i + 1}/${TEST_WINDOW_FRAMES})...`;
 				}
-				const targetTime = (i + 0.5) / 24;
+				const globalFrame = rangeStartFrame + i;
+				const targetTime = (globalFrame + 0.5) / 24;
 
 				await new Promise<void>((resolve) => {
 					let resolved = false;
@@ -2210,7 +2244,6 @@
 					};
 
 					const onSeeked = () => {
-						// Video decoder frame is presented and ready for drawImage
 						requestAnimationFrame(finish);
 					};
 
@@ -2221,7 +2254,7 @@
 
 					srcVideo.addEventListener('seeked', onSeeked, { once: true });
 					srcVideo.currentTime = targetTime;
-					fallbackTimer = setTimeout(finish, is4k ? 600 : 350);
+					fallbackTimer = setTimeout(finish, is4k ? 500 : 300);
 				});
 
 				extractCtx.drawImage(srcVideo, 0, 0, width, height);
@@ -2233,6 +2266,7 @@
 			}
 
 			sourceSceneLoaded = selectedScene;
+			sourceStartFrameLoaded = rangeStartFrame;
 			return sourceBitmaps;
 		}
 
@@ -2537,6 +2571,12 @@
 		function closeCodecModal() {
 			stopPlayback();
 			if (srcVideo) srcVideo.pause();
+			sourceBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
+			sourceBitmaps = [];
+			sourceSceneLoaded = '';
+			sourceStartFrameLoaded = -1;
+			decodedBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
+			decodedBitmaps = [];
 			if (document.fullscreenElement) {
 				try {
 					if (document.exitFullscreen) document.exitFullscreen();
@@ -2552,6 +2592,50 @@
 			document.body.style.overflow = '';
 			forceHideLoupe();
 			(window as any).__popModalHistory?.('codec-modal');
+		}
+
+		function setRangeStartFrame(newStart: number) {
+			stopPlayback();
+			rangeStartFrame = Math.max(0, Math.min(MAX_START_FRAME, newStart));
+			if (rangeWindow) {
+				rangeWindow.style.left = `${(rangeStartFrame / TOTAL_CLIP_FRAMES) * 100}%`;
+			}
+			if (rangeBadgeText) {
+				const sSec = (rangeStartFrame / 24).toFixed(2);
+				const eSec = ((rangeStartFrame + TEST_WINDOW_FRAMES) / 24).toFixed(2);
+				rangeBadgeText.textContent = `1.0s Window: ${sSec}s \u2013 ${eSec}s`;
+			}
+
+			// Invalidate prior test results since range changed
+			decodedBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
+			decodedBitmaps = [];
+			if (decCanvas) {
+				decCanvas.removeAttribute('data-has-frame');
+				const dCtx = decCanvas.getContext('2d');
+				if (dCtx) dCtx.clearRect(0, 0, decCanvas.width, decCanvas.height);
+			}
+			if (decPlaceholder) {
+				decPlaceholder.style.display = 'flex';
+				const sSec = (rangeStartFrame / 24).toFixed(2);
+				const eSec = ((rangeStartFrame + TEST_WINDOW_FRAMES) / 24).toFixed(2);
+				decPlaceholder.innerHTML = `<span>Selected ${sSec}s&ndash;${eSec}s. Click &ldquo;Start&rdquo; to test.</span>`;
+			}
+
+			// Invalidate cached source bitmaps since range changed
+			sourceBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
+			sourceBitmaps = [];
+			sourceStartFrameLoaded = -1;
+
+			// Switch left view to preview the start frame
+			currentFrameIdx = 0;
+			syncTimelineUI(0);
+
+			if (statusText) {
+				const sSec = (rangeStartFrame / 24).toFixed(2);
+				const eSec = ((rangeStartFrame + TEST_WINDOW_FRAMES) / 24).toFixed(2);
+				statusText.textContent = `Selected 1.0s section (${sSec}s \u2013 ${eSec}s). Click "Start" to test.`;
+				statusText.style.color = '';
+			}
 		}
 
 		function drawSmpteScene(ctx: CanvasRenderingContext2D, w: number, h: number, frameIdx: number, totalFrames: number) {
@@ -2598,25 +2682,31 @@
 			}
 		}
 
-		function syncTimelineUI(frameIdx: number) {
-			currentFrameIdx = Math.max(0, Math.min(59, frameIdx));
-			if (frameScrubber) frameScrubber.value = String(currentFrameIdx);
-			if (frameReadout) frameReadout.textContent = `Frame ${currentFrameIdx + 1} / 60`;
+		function syncTimelineUI(relFrameIdx: number) {
+			currentFrameIdx = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, relFrameIdx));
+			const globalFrame = rangeStartFrame + currentFrameIdx;
+
+			if (frameReadout) frameReadout.textContent = `Frame ${currentFrameIdx + 1} / ${TEST_WINDOW_FRAMES}`;
 			if (timecodeReadout) {
 				const ms = (currentFrameIdx * 41.667).toFixed(1);
-				const sec = Math.floor(currentFrameIdx / 24);
-				const fSec = currentFrameIdx % 24;
-				timecodeReadout.textContent = `${ms} ms (00:0${sec}.${fSec < 10 ? '0' + fSec : fSec})`;
+				const sec = (globalFrame / 24).toFixed(2);
+				timecodeReadout.textContent = `${ms} ms (${sec}s)`;
+			}
+
+			if (playhead) {
+				playhead.style.left = `${(globalFrame / TOTAL_CLIP_FRAMES) * 100}%`;
 			}
 
 			if (selectedScene === 'smpte') {
 				if (srcCanvas) {
 					const ctx = srcCanvas.getContext('2d');
-					if (ctx) drawSmpteScene(ctx, srcCanvas.width, srcCanvas.height, currentFrameIdx, 60);
+					if (ctx) drawSmpteScene(ctx, srcCanvas.width, srcCanvas.height, globalFrame, 60);
 				}
 			} else if (sourceBitmaps[currentFrameIdx] && srcCanvas && !srcCanvas.classList.contains('hidden')) {
 				const ctx = srcCanvas.getContext('2d');
 				if (ctx) ctx.drawImage(sourceBitmaps[currentFrameIdx], 0, 0, srcCanvas.width, srcCanvas.height);
+			} else if (srcVideo && (!srcCanvas || srcCanvas.classList.contains('hidden'))) {
+				srcVideo.currentTime = (globalFrame + 0.5) / 24;
 			}
 
 			if (decCanvas && decodedBitmaps[currentFrameIdx]) {
@@ -2633,28 +2723,24 @@
 			}
 		}
 
-		function seekToFrame(frameIdx: number) {
-			currentFrameIdx = Math.max(0, Math.min(59, frameIdx));
-			if (selectedScene !== 'smpte' && srcVideo && (!srcCanvas || srcCanvas.classList.contains('hidden'))) {
-				srcVideo.currentTime = (currentFrameIdx + 0.5) / 24;
-			}
+		function seekToFrame(relFrameIdx: number) {
+			currentFrameIdx = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, relFrameIdx));
 			syncTimelineUI(currentFrameIdx);
 		}
 
 		function startPlayback(loopPlayback = false) {
 			if (isPlaying) return;
-			if (currentFrameIdx >= 59) {
+			if (currentFrameIdx >= TEST_WINDOW_FRAMES - 1) {
 				currentFrameIdx = 0;
-				if (selectedScene !== 'smpte' && srcVideo && (!srcCanvas || srcCanvas.classList.contains('hidden'))) {
-					srcVideo.currentTime = 0;
-				}
 				syncTimelineUI(0);
 			}
 			isPlaying = true;
 			if (iconPlay) iconPlay.classList.add('hidden');
 			if (iconPause) iconPause.classList.remove('hidden');
 
-			if (selectedScene === 'smpte' || (sourceBitmaps.length === 60 && !!sourceBitmaps[0] && srcCanvas && !srcCanvas.classList.contains('hidden'))) {
+			const isCanvasReady = selectedScene === 'smpte' || (srcCanvas && !srcCanvas.classList.contains('hidden') && sourceBitmaps.length === TEST_WINDOW_FRAMES);
+
+			if (isCanvasReady) {
 				let lastTime = 0;
 				function loop(now: number) {
 					if (!isPlaying) return;
@@ -2662,13 +2748,13 @@
 						lastTime = now;
 					} else if (now - lastTime >= 41.667) {
 						lastTime = now - ((now - lastTime) % 41.667);
-						if (currentFrameIdx >= 59) {
+						if (currentFrameIdx >= TEST_WINDOW_FRAMES - 1) {
 							if (loopPlayback) {
 								currentFrameIdx = 0;
 								syncTimelineUI(0);
 							} else {
-								currentFrameIdx = 59;
-								syncTimelineUI(59);
+								currentFrameIdx = TEST_WINDOW_FRAMES - 1;
+								syncTimelineUI(TEST_WINDOW_FRAMES - 1);
 								stopPlayback();
 								return;
 							}
@@ -2681,15 +2767,20 @@
 				}
 				playbackRaf = requestAnimationFrame(loop);
 			} else if (srcVideo) {
-				if (srcVideo.currentTime >= (srcVideo.duration - 0.05)) {
-					srcVideo.currentTime = 0;
+				const startTime = rangeStartFrame / 24;
+				const endTime = (rangeStartFrame + TEST_WINDOW_FRAMES) / 24;
+				if (srcVideo.currentTime >= endTime - 0.05 || srcVideo.currentTime < startTime - 0.05) {
+					srcVideo.currentTime = startTime;
 				}
 				function onVideoFrame() {
 					if (!isPlaying || !srcVideo || srcVideo.paused) return;
-					const curIdx = Math.min(59, Math.max(0, Math.round(srcVideo.currentTime * 24)));
-					syncTimelineUI(curIdx);
-					if (curIdx >= 59 && !loopPlayback) {
+					const curTime = srcVideo.currentTime;
+					const relIdx = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round((curTime - startTime) * 24)));
+					syncTimelineUI(relIdx);
+					if (curTime >= endTime - 0.04) {
 						stopPlayback();
+						srcVideo.currentTime = startTime;
+						syncTimelineUI(0);
 						return;
 					}
 					if ('requestVideoFrameCallback' in srcVideo) {
@@ -2735,20 +2826,87 @@
 			stopPlayback();
 			seekToFrame(currentFrameIdx + 1);
 		});
-		if (frameScrubber) {
-			frameScrubber.addEventListener('input', () => {
-				stopPlayback();
-				seekToFrame(parseInt(frameScrubber.value, 10) || 0);
-			});
-		}
 
-		if (srcVideo) {
-			srcVideo.addEventListener('ended', () => {
-				if (srcCanvas && srcCanvas.classList.contains('hidden')) {
-					stopPlayback();
-					syncTimelineUI(59);
+		let isDraggingRange = false;
+		let dragStartX = 0;
+		let dragStartFrame = 0;
+		let isScrubbingPlayhead = false;
+
+		if (rangeWindow && trackBar) {
+			rangeWindow.addEventListener('pointerdown', (e) => {
+				const target = e.target as HTMLElement;
+				if (target.closest('#codec-playhead, .codec-playhead, .codec-playhead-thumb')) {
+					return;
+				}
+				e.stopPropagation();
+				isDraggingRange = true;
+				dragStartX = e.clientX;
+				dragStartFrame = rangeStartFrame;
+				rangeWindow.setPointerCapture(e.pointerId);
+				rangeWindow.classList.add('is-dragging');
+			});
+
+			rangeWindow.addEventListener('pointermove', (e) => {
+				if (!isDraggingRange) return;
+				const rect = trackBar.getBoundingClientRect();
+				if (!rect.width) return;
+				const dx = e.clientX - dragStartX;
+				const dFrames = (dx / rect.width) * TOTAL_CLIP_FRAMES;
+				const newStart = Math.max(0, Math.min(MAX_START_FRAME, Math.round(dragStartFrame + dFrames)));
+				if (newStart !== rangeStartFrame) {
+					setRangeStartFrame(newStart);
 				}
 			});
+
+			const endRangeDrag = (e: PointerEvent) => {
+				if (!isDraggingRange) return;
+				isDraggingRange = false;
+				rangeWindow.classList.remove('is-dragging');
+				try { rangeWindow.releasePointerCapture(e.pointerId); } catch (_) {}
+			};
+
+			rangeWindow.addEventListener('pointerup', endRangeDrag);
+			rangeWindow.addEventListener('pointercancel', endRangeDrag);
+
+			trackBar.addEventListener('pointerdown', (e) => {
+				const target = e.target as HTMLElement;
+				if (target.closest('#codec-range-window') && !target.closest('.codec-playhead-thumb, .codec-playhead')) {
+					return;
+				}
+				const rect = trackBar.getBoundingClientRect();
+				if (!rect.width) return;
+				const clickNorm = (e.clientX - rect.left) / rect.width;
+				const clickFrame = clickNorm * TOTAL_CLIP_FRAMES;
+
+				if (clickFrame >= rangeStartFrame && clickFrame <= rangeStartFrame + TEST_WINDOW_FRAMES) {
+					isScrubbingPlayhead = true;
+					trackBar.setPointerCapture(e.pointerId);
+					stopPlayback();
+					const rel = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round(clickFrame - rangeStartFrame)));
+					seekToFrame(rel);
+				} else {
+					const newStart = Math.max(0, Math.min(MAX_START_FRAME, Math.round(clickFrame - TEST_WINDOW_FRAMES / 2)));
+					setRangeStartFrame(newStart);
+				}
+			});
+
+			trackBar.addEventListener('pointermove', (e) => {
+				if (!isScrubbingPlayhead) return;
+				const rect = trackBar.getBoundingClientRect();
+				if (!rect.width) return;
+				const clickNorm = (e.clientX - rect.left) / rect.width;
+				const clickFrame = clickNorm * TOTAL_CLIP_FRAMES;
+				const rel = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round(clickFrame - rangeStartFrame)));
+				seekToFrame(rel);
+			});
+
+			const endTrackScrub = (e: PointerEvent) => {
+				if (!isScrubbingPlayhead) return;
+				isScrubbingPlayhead = false;
+				try { trackBar.releasePointerCapture(e.pointerId); } catch (_) {}
+			};
+			trackBar.addEventListener('pointerup', endTrackScrub);
+			trackBar.addEventListener('pointercancel', endTrackScrub);
 		}
 
 		function updateStatusHint() {
@@ -2805,6 +2963,7 @@
 			sourceBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
 			sourceBitmaps = [];
 			sourceSceneLoaded = '';
+			sourceStartFrameLoaded = -1;
 			decodedBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
 			decodedBitmaps = [];
 			if (decCanvas) {
@@ -2846,7 +3005,7 @@
 				if (srcCanvas) {
 					srcCanvas.classList.remove('hidden');
 					const ctx = srcCanvas.getContext('2d');
-					if (ctx) drawSmpteScene(ctx, 1920, 1080, 0, 60);
+					if (ctx) drawSmpteScene(ctx, 1920, 1080, rangeStartFrame, 60);
 				}
 				syncTimelineUI(0);
 			} else {
@@ -2855,7 +3014,7 @@
 					srcVideo.classList.remove('hidden');
 					loadVideoForScene(scene);
 					if (srcVideo.readyState >= 1) {
-						srcVideo.currentTime = 0;
+						srcVideo.currentTime = (rangeStartFrame + 0.5) / 24;
 					}
 				}
 				syncTimelineUI(0);
@@ -2992,7 +3151,7 @@
 				const width = is4k ? 3840 : 1920;
 				const height = is4k ? 2160 : 1080;
 				const fps = 24;
-				const totalFrames = 60;
+				const totalFrames = TEST_WINDOW_FRAMES; // 24 frames = 1.0s active benchmark section
 				const frameIntervalUs = 41667;
 
 				let codecCandidates = is4k
@@ -3099,7 +3258,13 @@
 					srcCanvas.width = width;
 					srcCanvas.height = height;
 					const ctx = srcCanvas.getContext('2d');
-					if (ctx && frames[0]) ctx.drawImage(frames[0], 0, 0, width, height);
+					if (ctx) {
+						if (selectedScene === 'smpte') {
+							drawSmpteScene(ctx, width, height, rangeStartFrame, 60);
+						} else if (frames[0]) {
+							ctx.drawImage(frames[0], 0, 0, width, height);
+						}
+					}
 				}
 
 				// --- 1. PIPELINE: ENCODE ONLY ---
@@ -3132,13 +3297,29 @@
 					});
 
 					const encStartTime = performance.now();
-					for (let i = 0; i < totalFrames; i++) {
-						const frame = new VideoFrame(frames[i], {
-							timestamp: i * frameIntervalUs,
-							duration: frameIntervalUs
-						});
-						encoder.encode(frame, { keyFrame: i === 0 || i % 24 === 0 });
-						frame.close();
+					if (selectedScene === 'smpte') {
+						const offCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(width, height) : document.createElement('canvas');
+						offCanvas.width = width;
+						offCanvas.height = height;
+						const offCtx = offCanvas.getContext('2d')!;
+						for (let i = 0; i < totalFrames; i++) {
+							drawSmpteScene(offCtx, width, height, rangeStartFrame + i, 60);
+							const frame = new VideoFrame(offCanvas, {
+								timestamp: i * frameIntervalUs,
+								duration: frameIntervalUs
+							});
+							encoder.encode(frame, { keyFrame: i === 0 });
+							frame.close();
+						}
+					} else {
+						for (let i = 0; i < totalFrames; i++) {
+							const frame = new VideoFrame(frames[i], {
+								timestamp: i * frameIntervalUs,
+								duration: frameIntervalUs
+							});
+							encoder.encode(frame, { keyFrame: i === 0 });
+							frame.close();
+						}
 					}
 					await encoder.flush();
 					const encEndTime = performance.now();
@@ -3171,8 +3352,8 @@
 						const inSize = getInputFileSize();
 						metricRatio.innerHTML = `${inSize} &rarr; ${displaySize} <span class="webgpu-tile-sub">(${bitrateMbps} Mbps)</span>`;
 						metricRatio.title = selectedScene === 'smpte'
-							? `Input: Procedural vector canvas (generated in-memory, 0 KB network download) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps bitstream at 24 fps). Uncompressed 60-frame YUV 4:2:0 raster in RAM: ${rawMb} MB.`
-							: `Input clip size: ${inSize} → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
+							? `Input: Procedural vector canvas (1.0s window: 24 frames, 0 KB network download) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster in RAM: ${rawMb} MB.`
+							: `Input clip size: ${inSize} (testing 1.0s window: 24 frames) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
 					}
 
 					if (decPlaceholder) {
@@ -3247,13 +3428,29 @@
 						hardwareAcceleration: encHwMode
 					});
 
-					for (let i = 0; i < totalFrames; i++) {
-						const frame = new VideoFrame(frames[i], {
-							timestamp: i * frameIntervalUs,
-							duration: frameIntervalUs
-						});
-						encoder.encode(frame, { keyFrame: i === 0 || i % 24 === 0 });
-						frame.close();
+					if (selectedScene === 'smpte') {
+						const offCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(width, height) : document.createElement('canvas');
+						offCanvas.width = width;
+						offCanvas.height = height;
+						const offCtx = offCanvas.getContext('2d')!;
+						for (let i = 0; i < totalFrames; i++) {
+							drawSmpteScene(offCtx, width, height, rangeStartFrame + i, 60);
+							const frame = new VideoFrame(offCanvas, {
+								timestamp: i * frameIntervalUs,
+								duration: frameIntervalUs
+							});
+							encoder.encode(frame, { keyFrame: i === 0 });
+							frame.close();
+						}
+					} else {
+						for (let i = 0; i < totalFrames; i++) {
+							const frame = new VideoFrame(frames[i], {
+								timestamp: i * frameIntervalUs,
+								duration: frameIntervalUs
+							});
+							encoder.encode(frame, { keyFrame: i === 0 });
+							frame.close();
+						}
 					}
 
 					await encoder.flush();
@@ -3270,7 +3467,7 @@
 
 					const decoder = new VideoDecoder({
 						output: (videoFrame) => {
-							const fIdx = Math.min(59, Math.max(0, Math.round(videoFrame.timestamp / frameIntervalUs)));
+							const fIdx = Math.min(totalFrames - 1, Math.max(0, Math.round(videoFrame.timestamp / frameIntervalUs)));
 							if (decOffCtx) {
 								decOffCtx.drawImage(videoFrame, 0, 0, width, height);
 								if ('transferToImageBitmap' in decOffCanvas) {
@@ -3345,8 +3542,8 @@
 						const inSize = getInputFileSize();
 						metricRatio.innerHTML = `${inSize} &rarr; ${displaySize} <span class="webgpu-tile-sub">(${bitrateMbps} Mbps)</span>`;
 						metricRatio.title = selectedScene === 'smpte'
-							? `Input: Procedural vector canvas (generated in-memory, 0 KB network download) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps bitstream at 24 fps). Uncompressed 60-frame YUV 4:2:0 raster in RAM: ${rawMb} MB.`
-							: `Input clip size: ${inSize} → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
+							? `Input: Procedural vector canvas (1.0s window: 24 frames, 0 KB network download) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster in RAM: ${rawMb} MB.`
+							: `Input clip size: ${inSize} (testing 1.0s window: 24 frames) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
 					}
 
 					if (statusText) {
@@ -3382,7 +3579,7 @@
 
 				const decoder = new VideoDecoder({
 					output: (videoFrame) => {
-						const fIdx = Math.min(59, Math.max(0, Math.round(videoFrame.timestamp / frameIntervalUs)));
+						const fIdx = Math.min(totalFrames - 1, Math.max(0, Math.round(videoFrame.timestamp / frameIntervalUs)));
 						if (decOffCtx) {
 							decOffCtx.drawImage(videoFrame, 0, 0, width, height);
 							if ('transferToImageBitmap' in decOffCanvas) {
@@ -3424,13 +3621,29 @@
 
 				// --- PASS 1: HARDWARE ENCODING ---
 				const encStartTime = performance.now();
-				for (let i = 0; i < totalFrames; i++) {
-					const frame = new VideoFrame(frames[i], {
-						timestamp: i * frameIntervalUs,
-						duration: frameIntervalUs
-					});
-					encoder.encode(frame, { keyFrame: i === 0 || i % 24 === 0 });
-					frame.close();
+				if (selectedScene === 'smpte') {
+					const offCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(width, height) : document.createElement('canvas');
+					offCanvas.width = width;
+					offCanvas.height = height;
+					const offCtx = offCanvas.getContext('2d')!;
+					for (let i = 0; i < totalFrames; i++) {
+						drawSmpteScene(offCtx, width, height, rangeStartFrame + i, 60);
+						const frame = new VideoFrame(offCanvas, {
+							timestamp: i * frameIntervalUs,
+							duration: frameIntervalUs
+						});
+						encoder.encode(frame, { keyFrame: i === 0 });
+						frame.close();
+					}
+				} else {
+					for (let i = 0; i < totalFrames; i++) {
+						const frame = new VideoFrame(frames[i], {
+							timestamp: i * frameIntervalUs,
+							duration: frameIntervalUs
+						});
+						encoder.encode(frame, { keyFrame: i === 0 });
+						frame.close();
+					}
 				}
 
 				await encoder.flush();
@@ -3498,8 +3711,8 @@
 					const inSize = getInputFileSize();
 					metricRatio.innerHTML = `${inSize} &rarr; ${displaySize} <span class="webgpu-tile-sub">(${bitrateMbps} Mbps)</span>`;
 					metricRatio.title = selectedScene === 'smpte'
-						? `Input: Procedural vector canvas (generated in-memory, 0 KB network download) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps bitstream at 24 fps). Uncompressed 60-frame YUV 4:2:0 raster in RAM: ${rawMb} MB.`
-						: `Input clip size: ${inSize} → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
+						? `Input: Procedural vector canvas (1.0s window: 24 frames, 0 KB network download) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster in RAM: ${rawMb} MB.`
+						: `Input clip size: ${inSize} (testing 1.0s window: 24 frames) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
 				}
 
 				if (statusText) {
@@ -3516,7 +3729,7 @@
 					statusText.style.color = '#f97316';
 				}
 				// If verification didn't produce decoded frames, restore srcVideo so user isn't stuck on frozen canvas
-				if (decodedBitmaps.length < 60 && selectedScene !== 'smpte') {
+				if (decodedBitmaps.length < TEST_WINDOW_FRAMES && selectedScene !== 'smpte') {
 					if (srcCanvas) srcCanvas.classList.add('hidden');
 					if (srcVideo) srcVideo.classList.remove('hidden');
 				}
@@ -3530,8 +3743,7 @@
 
 		window.addEventListener('keydown', (e) => {
 			if (!codecModal || codecModal.classList.contains('hidden')) return;
-			if (e.target instanceof HTMLInputElement && e.target !== frameScrubber) return;
-			if (e.target instanceof HTMLTextAreaElement) return;
+			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
 			if (e.code === 'Space') {
 				e.preventDefault();
@@ -4886,18 +5098,24 @@
 		-webkit-user-select: none;
 		user-select: none;
 	}
-	/* PLAYBACK TIMELINE & FRAME SCRUBBER */
+	/* PLAYBACK TIMELINE & FRAME SCRUBBER (REVAMPED 1.0s SECTION SELECTOR) */
 	.codec-timeline-bar {
 		display: flex;
-		align-items: center;
-		gap: 0.65em;
+		flex-direction: column;
+		gap: 0.45em;
 		background: rgba(148, 163, 184, 0.08);
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
-		padding: 0.35em 0.7em;
+		padding: 0.5em 0.75em;
 	}
 	:global(html[data-theme="dark"]) .codec-timeline-bar {
 		background: rgba(0, 0, 0, 0.35);
+	}
+	.codec-timeline-top {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5em;
 	}
 	.codec-timeline-controls {
 		display: inline-flex;
@@ -4943,47 +5161,27 @@
 	:global(html[data-theme="dark"]) .codec-frame-readout {
 		color: #e2e8f0;
 	}
-	.codec-scrubber-track {
-		flex: 1 1 auto;
-		display: flex;
+	.codec-range-badge {
+		display: inline-flex;
 		align-items: center;
-		min-width: 80px;
+		gap: 0.4em;
+		background: rgba(var(--accent-rgb), 0.12);
+		border: 1px solid rgba(var(--accent-rgb), 0.3);
+		border-radius: 9999px;
+		padding: 0.18em 0.65em;
+		font-size: 0.7em;
+		font-weight: 600;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		color: var(--accent);
+		white-space: nowrap;
+		cursor: default;
 	}
-	.codec-scrub-slider {
-		width: 100%;
+	.codec-range-badge-dot {
+		width: 6px;
 		height: 6px;
-		-webkit-appearance: none;
-		appearance: none;
-		background: rgba(148, 163, 184, 0.25);
-		border-radius: 3px;
-		outline: none;
-		cursor: pointer;
-	}
-	:global(html[data-theme="dark"]) .codec-scrub-slider {
-		background: rgba(255, 255, 255, 0.15);
-	}
-	.codec-scrub-slider::-webkit-slider-thumb {
-		-webkit-appearance: none;
-		appearance: none;
-		width: 14px;
-		height: 14px;
 		border-radius: 50%;
 		background: var(--accent);
-		cursor: pointer;
-		box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.6);
-		transition: transform 0.1s ease;
-	}
-	.codec-scrub-slider::-webkit-slider-thumb:hover {
-		transform: scale(1.2);
-	}
-	.codec-scrub-slider::-moz-range-thumb {
-		width: 14px;
-		height: 14px;
-		border-radius: 50%;
-		background: var(--accent);
-		cursor: pointer;
-		border: none;
-		box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.6);
+		box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.8);
 	}
 	.codec-timecode-readout {
 		font-size: 0.72em;
@@ -4991,7 +5189,7 @@
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 		color: rgb(var(--gray));
 		flex-shrink: 0;
-		min-width: 105px;
+		min-width: 95px;
 		text-align: right;
 		white-space: nowrap;
 	}
@@ -4999,6 +5197,131 @@
 		.codec-timecode-readout {
 			display: none;
 		}
+	}
+
+	/* TIMELINE TRACK & RANGE SELECTOR */
+	.codec-timeline-track-wrap {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25em;
+		width: 100%;
+		position: relative;
+		user-select: none;
+		-webkit-user-select: none;
+	}
+	.codec-timeline-ruler {
+		position: relative;
+		width: 100%;
+		height: 12px;
+		font-size: 0.62em;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		color: rgb(var(--gray));
+		pointer-events: none;
+	}
+	.codec-ruler-tick {
+		position: absolute;
+		transform: translateX(-50%);
+		top: 0;
+		white-space: nowrap;
+	}
+	.codec-track-bar {
+		position: relative;
+		width: 100%;
+		height: 28px;
+		background: rgba(148, 163, 184, 0.15);
+		border-radius: 6px;
+		cursor: pointer;
+		overflow: hidden;
+		border: 1px solid rgba(148, 163, 184, 0.25);
+		touch-action: none;
+	}
+	:global(html[data-theme="dark"]) .codec-track-bar {
+		background: rgba(255, 255, 255, 0.05);
+		border-color: rgba(255, 255, 255, 0.12);
+	}
+	.codec-track-bg {
+		position: absolute;
+		inset: 0;
+		background: repeating-linear-gradient(90deg, transparent, transparent 19.5%, rgba(148, 163, 184, 0.12) 20%);
+		pointer-events: none;
+	}
+	.codec-range-window {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		background: rgba(var(--accent-rgb), 0.22);
+		border-top: 2px solid var(--accent);
+		border-bottom: 2px solid var(--accent);
+		cursor: grab;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0 4px;
+		touch-action: none;
+		box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.25);
+		transition: background 0.15s ease;
+		z-index: 2;
+	}
+	.codec-range-window:hover,
+	.codec-range-window.is-dragging {
+		background: rgba(var(--accent-rgb), 0.32);
+	}
+	.codec-range-window.is-dragging {
+		cursor: grabbing;
+	}
+	.codec-range-edge {
+		width: 3px;
+		height: 60%;
+		background: var(--accent);
+		border-radius: 2px;
+		flex-shrink: 0;
+	}
+	.codec-range-grip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35em;
+		font-size: 0.65em;
+		font-weight: 700;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		color: var(--accent);
+		pointer-events: none;
+		white-space: nowrap;
+	}
+	.codec-playhead {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 2px;
+		background: #ffffff;
+		box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+		z-index: 4;
+		pointer-events: none;
+		transform: translateX(-50%);
+	}
+	.codec-playhead-thumb {
+		position: absolute;
+		top: -2px;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 8px;
+		height: 8px;
+		background: #ffffff;
+		border-radius: 50%;
+		box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+	}
+	.codec-playhead-line {
+		position: absolute;
+		inset: 0;
+		background: #ffffff;
+	}
+	:global(html[data-theme="light"]) .codec-playhead {
+		background: #0f172a;
+	}
+	:global(html[data-theme="light"]) .codec-playhead-thumb {
+		background: #0f172a;
+	}
+	:global(html[data-theme="light"]) .codec-playhead-line {
+		background: #0f172a;
 	}
 	.codec-metrics-grid {
 		display: grid;

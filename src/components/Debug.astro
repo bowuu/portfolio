@@ -461,10 +461,10 @@
 					</div>
 				</div>
 
-				<!-- PLAYBACK TIMELINE & FRAME SCRUBBER -->
+				<!-- UNIFIED PLAYBACK TIMELINE & MASTER RANGE SELECTOR -->
 				<div class="codec-timeline-bar" id="codec-timeline-bar">
-					<!-- ROW 1: Playback Transport Controls + Frame Scrubber -->
-					<div class="codec-timeline-top">
+					<div class="codec-timeline-row">
+						<!-- Left: Transport Controls & Frame Counter -->
 						<div class="codec-timeline-controls">
 							<button type="button" id="codec-play-btn" class="codec-time-btn" title="Play / Pause 1.0s Section (Space)" aria-label="Play / Pause">
 								<svg id="codec-icon-play" viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -479,23 +479,7 @@
 							<span class="codec-frame-readout" id="codec-frame-readout">Frame 1 / 24</span>
 						</div>
 
-						<div class="codec-scrubber-track">
-							<input type="range" id="codec-frame-scrubber" min="0" max="23" value="0" step="1" class="codec-scrub-slider" aria-label="Frame Scrubber">
-						</div>
-
-						<div class="codec-timecode-readout" id="codec-timecode-readout">0.0 ms (0.00s)</div>
-					</div>
-
-					<!-- ROW 2: Master 2.5s Clip Section Selector (Draggable 1.0s window) -->
-					<div class="codec-range-track-wrap">
-						<div class="codec-range-meta">
-							<span class="codec-range-title">Clip Range Selector (2.5s master)</span>
-							<div class="codec-range-badge" id="codec-range-badge" title="Draggable 1.0s benchmark test window">
-								<span class="codec-range-badge-dot"></span>
-								<span id="codec-range-badge-text">1.0s Window: 0.00s &ndash; 1.00s (Drag bracket below to move)</span>
-							</div>
-						</div>
-
+						<!-- Center: Extended Master Seekbar (2.5s clip with 1.0s window & prominent frame selector) -->
 						<div class="codec-timeline-track-wrap" id="codec-timeline-track-wrap">
 							<div class="codec-timeline-ruler">
 								<span class="codec-ruler-tick" style="left: 0%">0.0s</span>
@@ -505,24 +489,33 @@
 								<span class="codec-ruler-tick" style="left: 80%">2.0s</span>
 								<span class="codec-ruler-tick" style="left: 100%">2.5s</span>
 							</div>
-							<div class="codec-track-bar" id="codec-track-bar" title="Click or drag to position the 1.0s benchmark window">
+							<div class="codec-track-bar" id="codec-track-bar" title="Click to seek frame or reposition 1.0s window">
 								<div class="codec-track-bg"></div>
 
 								<!-- 1.0s Active Benchmark Range Bracket -->
 								<div class="codec-range-window" id="codec-range-window" style="left: 0%; width: 40%;">
-									<div class="codec-range-edge left"></div>
-									<div class="codec-range-grip">
+									<div class="codec-range-edge left" title="Drag to reposition 1.0s window"></div>
+									<div class="codec-range-grip" id="codec-range-grip" title="Drag to reposition 1.0s benchmark window">
 										<svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor"><circle cx="5" cy="4" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="11" cy="12" r="1.5"/></svg>
-										<span class="codec-range-label">1.0s Section (Drag)</span>
+										<span class="codec-range-label">1.0s Window</span>
 									</div>
-									<div class="codec-range-edge right"></div>
+									<div class="codec-range-edge right" title="Drag to reposition 1.0s window"></div>
 								</div>
 
-								<!-- Position indicator within master clip -->
-								<div class="codec-playhead" id="codec-playhead" style="left: 0%;">
+								<!-- Prominent White Frame Selector (Easily Selectable & Draggable) -->
+								<div class="codec-playhead" id="codec-playhead" style="left: 0%;" title="Frame Selector (Drag to scrub frames)">
 									<div class="codec-playhead-thumb"></div>
 									<div class="codec-playhead-line"></div>
 								</div>
+							</div>
+						</div>
+
+						<!-- Right: Timecode & Range Readout -->
+						<div class="codec-timeline-meta">
+							<div class="codec-timecode-readout" id="codec-timecode-readout">0.0 ms (0.00s)</div>
+							<div class="codec-range-badge" id="codec-range-badge" title="Active 1.0s benchmark window (Drag bracket to move)">
+								<span class="codec-range-badge-dot"></span>
+								<span id="codec-range-badge-text">1.0s: 0.00s&ndash;1.00s</span>
 							</div>
 						</div>
 					</div>
@@ -2143,7 +2136,6 @@
 		const prevFrameBtn = document.getElementById('codec-prev-frame-btn');
 		const nextFrameBtn = document.getElementById('codec-next-frame-btn');
 		const frameReadout = document.getElementById('codec-frame-readout');
-		const frameScrubber = document.getElementById('codec-frame-scrubber') as HTMLInputElement | null;
 		const timecodeReadout = document.getElementById('codec-timecode-readout');
 		const iconPlay = document.getElementById('codec-icon-play');
 		const iconPause = document.getElementById('codec-icon-pause');
@@ -2614,7 +2606,7 @@
 			if (rangeBadgeText) {
 				const sSec = (rangeStartFrame / 24).toFixed(2);
 				const eSec = ((rangeStartFrame + TEST_WINDOW_FRAMES) / 24).toFixed(2);
-				rangeBadgeText.textContent = `1.0s Window: ${sSec}s \u2013 ${eSec}s`;
+				rangeBadgeText.textContent = `1.0s: ${sSec}s \u2013 ${eSec}s`;
 			}
 
 			// Invalidate prior test results since range changed
@@ -2647,7 +2639,6 @@
 			}
 
 			currentFrameIdx = 0;
-			if (frameScrubber) frameScrubber.value = '0';
 			syncTimelineUI(0);
 
 			if (statusText) {
@@ -2707,9 +2698,6 @@
 			const globalFrame = rangeStartFrame + currentFrameIdx;
 
 			if (frameReadout) frameReadout.textContent = `Frame ${currentFrameIdx + 1} / ${TEST_WINDOW_FRAMES}`;
-			if (frameScrubber && document.activeElement !== frameScrubber) {
-				frameScrubber.value = String(currentFrameIdx);
-			}
 			if (timecodeReadout) {
 				const ms = (currentFrameIdx * 41.667).toFixed(1);
 				const sec = (globalFrame / 24).toFixed(2);
@@ -2761,7 +2749,6 @@
 			if (isPlaying) return;
 			if (currentFrameIdx >= TEST_WINDOW_FRAMES - 1) {
 				currentFrameIdx = 0;
-				if (frameScrubber) frameScrubber.value = '0';
 				syncTimelineUI(0);
 			}
 			isPlaying = true;
@@ -2781,7 +2768,6 @@
 						if (currentFrameIdx >= TEST_WINDOW_FRAMES - 1) {
 							if (loopPlayback) {
 								currentFrameIdx = 0;
-								if (frameScrubber) frameScrubber.value = '0';
 								syncTimelineUI(0);
 							} else {
 								currentFrameIdx = TEST_WINDOW_FRAMES - 1;
@@ -2857,26 +2843,73 @@
 			seekToFrame(currentFrameIdx + 1);
 		});
 
-		if (frameScrubber) {
-			frameScrubber.addEventListener('input', () => {
-				stopPlayback();
-				const rel = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, parseInt(frameScrubber.value, 10) || 0));
-				seekToFrame(rel);
-			});
-		}
-
+		let isScrubbingPlayhead = false;
 		let isDraggingRange = false;
 		let dragStartX = 0;
 		let dragStartFrame = 0;
 
+		// 1. Prominent White Frame Selector (Playhead) Dragging & Scrubbing
+		if (playhead && trackBar) {
+			playhead.addEventListener('pointerdown', (e) => {
+				e.stopPropagation();
+				isScrubbingPlayhead = true;
+				stopPlayback();
+				playhead.setPointerCapture(e.pointerId);
+				playhead.classList.add('is-dragging');
+			});
+
+			playhead.addEventListener('pointermove', (e) => {
+				if (!isScrubbingPlayhead) return;
+				const rect = trackBar.getBoundingClientRect();
+				if (!rect.width) return;
+				const norm = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+				const frameInMaster = norm * TOTAL_CLIP_FRAMES;
+				const relFrame = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round(frameInMaster - rangeStartFrame)));
+				seekToFrame(relFrame);
+			});
+
+			const endPlayheadScrub = (e: PointerEvent) => {
+				if (!isScrubbingPlayhead) return;
+				isScrubbingPlayhead = false;
+				playhead.classList.remove('is-dragging');
+				try { playhead.releasePointerCapture(e.pointerId); } catch (_) {}
+			};
+			playhead.addEventListener('pointerup', endPlayheadScrub);
+			playhead.addEventListener('pointercancel', endPlayheadScrub);
+		}
+
+		// 2. 1.0s Range Window Dragging & Playhead Click-Seek
 		if (rangeWindow && trackBar) {
 			rangeWindow.addEventListener('pointerdown', (e) => {
+				const target = e.target as HTMLElement;
+				if (target.closest('#codec-playhead')) return;
+
+				// If clicking the grip badge or boundary edges, reposition the 1.0s benchmark window!
+				if (target.closest('#codec-range-grip, .codec-range-edge')) {
+					e.stopPropagation();
+					isDraggingRange = true;
+					dragStartX = e.clientX;
+					dragStartFrame = rangeStartFrame;
+					rangeWindow.setPointerCapture(e.pointerId);
+					rangeWindow.classList.add('is-dragging');
+					return;
+				}
+
+				// Otherwise, clicking inside the window seeks the playhead!
 				e.stopPropagation();
-				isDraggingRange = true;
-				dragStartX = e.clientX;
-				dragStartFrame = rangeStartFrame;
-				rangeWindow.setPointerCapture(e.pointerId);
-				rangeWindow.classList.add('is-dragging');
+				const rect = trackBar.getBoundingClientRect();
+				if (!rect.width) return;
+				const clickNorm = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+				const clickFrame = clickNorm * TOTAL_CLIP_FRAMES;
+				const rel = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round(clickFrame - rangeStartFrame)));
+				stopPlayback();
+				seekToFrame(rel);
+
+				isScrubbingPlayhead = true;
+				if (playhead) {
+					playhead.classList.add('is-dragging');
+					playhead.setPointerCapture(e.pointerId);
+				}
 			});
 
 			rangeWindow.addEventListener('pointermove', (e) => {
@@ -2897,29 +2930,30 @@
 				rangeWindow.classList.remove('is-dragging');
 				try { rangeWindow.releasePointerCapture(e.pointerId); } catch (_) {}
 			};
-
 			rangeWindow.addEventListener('pointerup', endRangeDrag);
 			rangeWindow.addEventListener('pointercancel', endRangeDrag);
 
-			let isTrackBarDragging = false;
+			// 3. Track Bar Interaction (Click outside 1.0s window -> move window & drag)
 			trackBar.addEventListener('pointerdown', (e) => {
 				const target = e.target as HTMLElement;
-				if (target.closest('#codec-range-window')) return;
+				if (target.closest('#codec-playhead, #codec-range-window')) return;
+
 				const rect = trackBar.getBoundingClientRect();
 				if (!rect.width) return;
 				const clickNorm = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
 				const clickFrame = clickNorm * TOTAL_CLIP_FRAMES;
+
 				const newStart = Math.max(0, Math.min(MAX_START_FRAME, Math.round(clickFrame - TEST_WINDOW_FRAMES / 2)));
 				setRangeStartFrame(newStart);
 
-				isTrackBarDragging = true;
+				isDraggingRange = true;
 				dragStartX = e.clientX;
 				dragStartFrame = newStart;
 				trackBar.setPointerCapture(e.pointerId);
 			});
 
 			trackBar.addEventListener('pointermove', (e) => {
-				if (!isTrackBarDragging) return;
+				if (!isDraggingRange || !trackBar.hasPointerCapture(e.pointerId)) return;
 				const rect = trackBar.getBoundingClientRect();
 				if (!rect.width) return;
 				const dx = e.clientX - dragStartX;
@@ -2931,8 +2965,8 @@
 			});
 
 			const endTrackBarDrag = (e: PointerEvent) => {
-				if (!isTrackBarDragging) return;
-				isTrackBarDragging = false;
+				if (!isDraggingRange) return;
+				isDraggingRange = false;
 				try { trackBar.releasePointerCapture(e.pointerId); } catch (_) {}
 			};
 			trackBar.addEventListener('pointerup', endTrackBarDrag);
@@ -3026,7 +3060,6 @@
 			}
 
 			currentFrameIdx = 0;
-			if (frameScrubber) frameScrubber.value = '0';
 
 			if (scene === 'smpte') {
 				if (srcVideo) {
@@ -3397,7 +3430,6 @@
 						statusText.style.color = '#22c55e';
 					}
 					currentFrameIdx = 0;
-					if (frameScrubber) frameScrubber.value = '0';
 					syncTimelineUI(0);
 					startPlayback();
 					return;
@@ -3583,7 +3615,6 @@
 						statusText.style.color = '#22c55e';
 					}
 					currentFrameIdx = 0;
-					if (frameScrubber) frameScrubber.value = '0';
 					syncTimelineUI(0);
 					startPlayback();
 					return;
@@ -3754,7 +3785,6 @@
 				}
 
 				currentFrameIdx = 0;
-				if (frameScrubber) frameScrubber.value = '0';
 				syncTimelineUI(0);
 				startPlayback();
 			} catch (err: any) {
@@ -5132,24 +5162,21 @@
 		-webkit-user-select: none;
 		user-select: none;
 	}
-	/* PLAYBACK TIMELINE & FRAME SCRUBBER (REVAMPED 1.0s SECTION SELECTOR) */
+	/* UNIFIED SINGLE-ROW PLAYBACK & MASTER TIMELINE */
 	.codec-timeline-bar {
-		display: flex;
-		flex-direction: column;
-		gap: 0.45em;
 		background: rgba(148, 163, 184, 0.08);
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
-		padding: 0.5em 0.75em;
+		padding: 0.45em 0.75em;
 	}
 	:global(html[data-theme="dark"]) .codec-timeline-bar {
 		background: rgba(0, 0, 0, 0.35);
 	}
-	.codec-timeline-top {
+	.codec-timeline-row {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		gap: 0.5em;
+		gap: 0.75em;
+		width: 100%;
 	}
 	.codec-timeline-controls {
 		display: inline-flex;
@@ -5189,145 +5216,20 @@
 		font-weight: 700;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 		color: rgb(var(--gray-dark));
-		min-width: 80px;
+		min-width: 82px;
 		white-space: nowrap;
 	}
 	:global(html[data-theme="dark"]) .codec-frame-readout {
 		color: #e2e8f0;
 	}
-	.codec-range-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4em;
-		background: rgba(var(--accent-rgb), 0.12);
-		border: 1px solid rgba(var(--accent-rgb), 0.3);
-		border-radius: 9999px;
-		padding: 0.18em 0.65em;
-		font-size: 0.7em;
-		font-weight: 600;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-		color: var(--accent);
-		white-space: nowrap;
-		cursor: default;
-	}
-	.codec-range-badge-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: var(--accent);
-		box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.8);
-	}
-	.codec-timecode-readout {
-		font-size: 0.72em;
-		font-weight: 600;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-		color: rgb(var(--gray));
-		flex-shrink: 0;
-		min-width: 95px;
-		text-align: right;
-		white-space: nowrap;
-	}
-	@media (max-width: 600px) {
-		.codec-timecode-readout {
-			display: none;
-		}
-	}
 
-	.codec-scrubber-track {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		min-width: 80px;
-		padding: 0 0.5em;
-	}
-	.codec-scrub-slider {
-		-webkit-appearance: none;
-		appearance: none;
-		width: 100%;
-		height: 6px;
-		background: rgba(148, 163, 184, 0.25);
-		border-radius: 9999px;
-		outline: none;
-		cursor: pointer;
-		transition: background 0.15s ease;
-		margin: 0;
-	}
-	:global(html[data-theme="dark"]) .codec-scrub-slider {
-		background: rgba(255, 255, 255, 0.16);
-	}
-	.codec-scrub-slider:hover {
-		background: rgba(var(--accent-rgb), 0.35);
-	}
-	.codec-scrub-slider::-webkit-slider-thumb {
-		-webkit-appearance: none;
-		appearance: none;
-		width: 14px;
-		height: 14px;
-		border-radius: 50%;
-		background: var(--accent);
-		border: 2px solid #ffffff;
-		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
-		cursor: grab;
-		transition: transform 0.1s ease, box-shadow 0.1s ease;
-	}
-	.codec-scrub-slider::-webkit-slider-thumb:hover,
-	.codec-scrub-slider::-webkit-slider-thumb:active {
-		transform: scale(1.2);
-		box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.8);
-		cursor: grabbing;
-	}
-	.codec-scrub-slider::-moz-range-thumb {
-		width: 14px;
-		height: 14px;
-		border-radius: 50%;
-		background: var(--accent);
-		border: 2px solid #ffffff;
-		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
-		cursor: grab;
-		transition: transform 0.1s ease, box-shadow 0.1s ease;
-	}
-	.codec-scrub-slider::-moz-range-thumb:hover,
-	.codec-scrub-slider::-moz-range-thumb:active {
-		transform: scale(1.2);
-		box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.8);
-		cursor: grabbing;
-	}
-
-	.codec-range-track-wrap {
-		display: flex;
-		flex-direction: column;
-		gap: 0.3em;
-		padding-top: 0.4em;
-		border-top: 1px dashed rgba(148, 163, 184, 0.25);
-		margin-top: 0.15em;
-	}
-	:global(html[data-theme="dark"]) .codec-range-track-wrap {
-		border-top-color: rgba(255, 255, 255, 0.1);
-	}
-	.codec-range-meta {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.5em;
-		flex-wrap: wrap;
-	}
-	.codec-range-title {
-		font-size: 0.68em;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: rgb(var(--gray));
-	}
-	:global(html[data-theme="dark"]) .codec-range-title {
-		color: #94a3b8;
-	}
-
-	/* TIMELINE TRACK & RANGE SELECTOR */
+	/* MASTER TIMELINE TRACK (CENTER FLEX) */
 	.codec-timeline-track-wrap {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25em;
-		width: 100%;
+		gap: 0.15em;
+		flex: 1;
+		min-width: 140px;
 		position: relative;
 		user-select: none;
 		-webkit-user-select: none;
@@ -5335,8 +5237,8 @@
 	.codec-timeline-ruler {
 		position: relative;
 		width: 100%;
-		height: 12px;
-		font-size: 0.62em;
+		height: 11px;
+		font-size: 0.6em;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 		color: rgb(var(--gray));
 		pointer-events: none;
@@ -5350,11 +5252,11 @@
 	.codec-track-bar {
 		position: relative;
 		width: 100%;
-		height: 28px;
+		height: 32px;
 		background: rgba(148, 163, 184, 0.15);
 		border-radius: 6px;
 		cursor: pointer;
-		overflow: hidden;
+		overflow: visible;
 		border: 1px solid rgba(148, 163, 184, 0.25);
 		touch-action: none;
 	}
@@ -5365,8 +5267,10 @@
 	.codec-track-bg {
 		position: absolute;
 		inset: 0;
+		border-radius: 5px;
 		background: repeating-linear-gradient(90deg, transparent, transparent 19.5%, rgba(148, 163, 184, 0.12) 20%);
 		pointer-events: none;
+		overflow: hidden;
 	}
 	.codec-range-window {
 		position: absolute;
@@ -5393,11 +5297,12 @@
 		cursor: grabbing;
 	}
 	.codec-range-edge {
-		width: 3px;
-		height: 60%;
+		width: 4px;
+		height: 70%;
 		background: var(--accent);
 		border-radius: 2px;
 		flex-shrink: 0;
+		cursor: grab;
 	}
 	.codec-range-grip {
 		display: inline-flex;
@@ -5407,44 +5312,127 @@
 		font-weight: 700;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 		color: var(--accent);
-		pointer-events: none;
+		cursor: grab;
 		white-space: nowrap;
+		padding: 0.18em 0.45em;
+		border-radius: 4px;
+		background: rgba(var(--accent-rgb), 0.12);
+		border: 1px solid rgba(var(--accent-rgb), 0.25);
+		user-select: none;
+		-webkit-user-select: none;
 	}
+	.codec-range-grip:hover {
+		background: rgba(var(--accent-rgb), 0.22);
+	}
+
+	/* PROMINENT WHITE FRAME SELECTOR (PLAYHEAD) */
 	.codec-playhead {
 		position: absolute;
-		top: 0;
+		top: -7px;
 		bottom: 0;
-		width: 2px;
-		background: #ffffff;
-		box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
-		z-index: 4;
-		pointer-events: none;
+		width: 26px; /* Generous hit target */
+		z-index: 10;
+		cursor: grab;
 		transform: translateX(-50%);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		touch-action: none;
+		user-select: none;
+		-webkit-user-select: none;
+	}
+	.codec-playhead:hover,
+	.codec-playhead.is-dragging {
+		cursor: grabbing;
 	}
 	.codec-playhead-thumb {
-		position: absolute;
-		top: -2px;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 8px;
-		height: 8px;
+		width: 14px;
+		height: 16px;
 		background: #ffffff;
-		border-radius: 50%;
-		box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+		border-radius: 4px 4px 6px 6px;
+		border: 1.5px solid rgba(15, 23, 42, 0.85);
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.3);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		transition: transform 0.12s ease, box-shadow 0.12s ease;
+		position: relative;
+	}
+	.codec-playhead-thumb::after {
+		content: '';
+		width: 3px;
+		height: 7px;
+		background: var(--accent);
+		border-radius: 2px;
+	}
+	.codec-playhead:hover .codec-playhead-thumb,
+	.codec-playhead.is-dragging .codec-playhead-thumb {
+		transform: scale(1.18);
+		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6), 0 0 10px rgba(var(--accent-rgb), 0.85);
+		border-color: var(--accent);
 	}
 	.codec-playhead-line {
-		position: absolute;
-		inset: 0;
+		width: 2px;
+		flex: 1;
 		background: #ffffff;
-	}
-	:global(html[data-theme="light"]) .codec-playhead {
-		background: #0f172a;
+		box-shadow: 0 0 4px rgba(0, 0, 0, 0.85);
+		border-radius: 1px;
 	}
 	:global(html[data-theme="light"]) .codec-playhead-thumb {
-		background: #0f172a;
+		border-color: #0f172a;
 	}
-	:global(html[data-theme="light"]) .codec-playhead-line {
-		background: #0f172a;
+
+	/* RIGHT: TIMECODE & BADGE */
+	.codec-timeline-meta {
+		display: flex;
+		align-items: center;
+		gap: 0.5em;
+		flex-shrink: 0;
+	}
+	.codec-timecode-readout {
+		font-size: 0.72em;
+		font-weight: 600;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		color: rgb(var(--gray));
+		min-width: 95px;
+		text-align: right;
+		white-space: nowrap;
+	}
+	.codec-range-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35em;
+		background: rgba(var(--accent-rgb), 0.12);
+		border: 1px solid rgba(var(--accent-rgb), 0.3);
+		border-radius: 9999px;
+		padding: 0.18em 0.55em;
+		font-size: 0.68em;
+		font-weight: 600;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		color: var(--accent);
+		white-space: nowrap;
+		cursor: default;
+	}
+	.codec-range-badge-dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--accent);
+		box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.8);
+	}
+	@media (max-width: 820px) {
+		.codec-range-badge {
+			display: none;
+		}
+	}
+	@media (max-width: 600px) {
+		.codec-timecode-readout {
+			display: none;
+		}
+		.codec-timeline-row {
+			gap: 0.4em;
+		}
 	}
 	.codec-metrics-grid {
 		display: grid;

@@ -463,6 +463,7 @@
 
 				<!-- PLAYBACK TIMELINE & FRAME SCRUBBER -->
 				<div class="codec-timeline-bar" id="codec-timeline-bar">
+					<!-- ROW 1: Playback Transport Controls + Frame Scrubber -->
 					<div class="codec-timeline-top">
 						<div class="codec-timeline-controls">
 							<button type="button" id="codec-play-btn" class="codec-time-btn" title="Play / Pause 1.0s Section (Space)" aria-label="Play / Pause">
@@ -478,41 +479,50 @@
 							<span class="codec-frame-readout" id="codec-frame-readout">Frame 1 / 24</span>
 						</div>
 
-						<div class="codec-range-badge" id="codec-range-badge" title="Draggable 1.0s benchmark test window">
-							<span class="codec-range-badge-dot"></span>
-							<span id="codec-range-badge-text">1.0s Window: 0.00s &ndash; 1.00s</span>
+						<div class="codec-scrubber-track">
+							<input type="range" id="codec-frame-scrubber" min="0" max="23" value="0" step="1" class="codec-scrub-slider" aria-label="Frame Scrubber">
 						</div>
 
 						<div class="codec-timecode-readout" id="codec-timecode-readout">0.0 ms (0.00s)</div>
 					</div>
 
-					<!-- Revamped Taller Timeline Track with Draggable 1s Window -->
-					<div class="codec-timeline-track-wrap" id="codec-timeline-track-wrap">
-						<div class="codec-timeline-ruler">
-							<span class="codec-ruler-tick" style="left: 0%">0.0s</span>
-							<span class="codec-ruler-tick" style="left: 20%">0.5s</span>
-							<span class="codec-ruler-tick" style="left: 40%">1.0s</span>
-							<span class="codec-ruler-tick" style="left: 60%">1.5s</span>
-							<span class="codec-ruler-tick" style="left: 80%">2.0s</span>
-							<span class="codec-ruler-tick" style="left: 100%">2.5s</span>
-						</div>
-						<div class="codec-track-bar" id="codec-track-bar">
-							<div class="codec-track-bg"></div>
-
-							<!-- 1.0s Active Benchmark Range Bracket -->
-							<div class="codec-range-window" id="codec-range-window" style="left: 0%; width: 40%;">
-								<div class="codec-range-edge left"></div>
-								<div class="codec-range-grip">
-									<svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor"><circle cx="5" cy="4" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="11" cy="12" r="1.5"/></svg>
-									<span class="codec-range-label">1.0s Section (Drag)</span>
-								</div>
-								<div class="codec-range-edge right"></div>
+					<!-- ROW 2: Master 2.5s Clip Section Selector (Draggable 1.0s window) -->
+					<div class="codec-range-track-wrap">
+						<div class="codec-range-meta">
+							<span class="codec-range-title">Clip Range Selector (2.5s master)</span>
+							<div class="codec-range-badge" id="codec-range-badge" title="Draggable 1.0s benchmark test window">
+								<span class="codec-range-badge-dot"></span>
+								<span id="codec-range-badge-text">1.0s Window: 0.00s &ndash; 1.00s (Drag bracket below to move)</span>
 							</div>
+						</div>
 
-							<!-- Playhead Needle -->
-							<div class="codec-playhead" id="codec-playhead" style="left: 0%;">
-								<div class="codec-playhead-thumb"></div>
-								<div class="codec-playhead-line"></div>
+						<div class="codec-timeline-track-wrap" id="codec-timeline-track-wrap">
+							<div class="codec-timeline-ruler">
+								<span class="codec-ruler-tick" style="left: 0%">0.0s</span>
+								<span class="codec-ruler-tick" style="left: 20%">0.5s</span>
+								<span class="codec-ruler-tick" style="left: 40%">1.0s</span>
+								<span class="codec-ruler-tick" style="left: 60%">1.5s</span>
+								<span class="codec-ruler-tick" style="left: 80%">2.0s</span>
+								<span class="codec-ruler-tick" style="left: 100%">2.5s</span>
+							</div>
+							<div class="codec-track-bar" id="codec-track-bar" title="Click or drag to position the 1.0s benchmark window">
+								<div class="codec-track-bg"></div>
+
+								<!-- 1.0s Active Benchmark Range Bracket -->
+								<div class="codec-range-window" id="codec-range-window" style="left: 0%; width: 40%;">
+									<div class="codec-range-edge left"></div>
+									<div class="codec-range-grip">
+										<svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor"><circle cx="5" cy="4" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="11" cy="12" r="1.5"/></svg>
+										<span class="codec-range-label">1.0s Section (Drag)</span>
+									</div>
+									<div class="codec-range-edge right"></div>
+								</div>
+
+								<!-- Position indicator within master clip -->
+								<div class="codec-playhead" id="codec-playhead" style="left: 0%;">
+									<div class="codec-playhead-thumb"></div>
+									<div class="codec-playhead-line"></div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -2133,6 +2143,7 @@
 		const prevFrameBtn = document.getElementById('codec-prev-frame-btn');
 		const nextFrameBtn = document.getElementById('codec-next-frame-btn');
 		const frameReadout = document.getElementById('codec-frame-readout');
+		const frameScrubber = document.getElementById('codec-frame-scrubber') as HTMLInputElement | null;
 		const timecodeReadout = document.getElementById('codec-timecode-readout');
 		const iconPlay = document.getElementById('codec-icon-play');
 		const iconPause = document.getElementById('codec-icon-pause');
@@ -2465,7 +2476,7 @@
 			ctxSrc.imageSmoothingEnabled = false;
 			ctxDec.imageSmoothingEnabled = false;
 
-			const isSrcCanvasActive = selectedScene === 'smpte' || (sourceBitmaps.length === 60 && !!sourceBitmaps[0] && srcCanvas && !srcCanvas.classList.contains('hidden'));
+			const isSrcCanvasActive = selectedScene === 'smpte' || (sourceBitmaps.length === TEST_WINDOW_FRAMES && !!sourceBitmaps[0] && srcCanvas && !srcCanvas.classList.contains('hidden'));
 			const activeSrcEl: HTMLCanvasElement | HTMLVideoElement = isSrcCanvasActive ? srcCanvas! : (srcVideo || srcCanvas!);
 			const srcW = activeSrcEl instanceof HTMLVideoElement ? (activeSrcEl.videoWidth || (selectedScene === '4k' ? 3840 : 1920)) : activeSrcEl.width;
 			const srcH = activeSrcEl instanceof HTMLVideoElement ? (activeSrcEl.videoHeight || (selectedScene === '4k' ? 2160 : 1080)) : activeSrcEl.height;
@@ -2627,7 +2638,16 @@
 			sourceStartFrameLoaded = -1;
 
 			// Switch left view to preview the start frame
+			if (selectedScene !== 'smpte') {
+				if (srcCanvas) srcCanvas.classList.add('hidden');
+				if (srcVideo) {
+					srcVideo.classList.remove('hidden');
+					srcVideo.currentTime = (rangeStartFrame + 0.5) / 24;
+				}
+			}
+
 			currentFrameIdx = 0;
+			if (frameScrubber) frameScrubber.value = '0';
 			syncTimelineUI(0);
 
 			if (statusText) {
@@ -2687,6 +2707,9 @@
 			const globalFrame = rangeStartFrame + currentFrameIdx;
 
 			if (frameReadout) frameReadout.textContent = `Frame ${currentFrameIdx + 1} / ${TEST_WINDOW_FRAMES}`;
+			if (frameScrubber && document.activeElement !== frameScrubber) {
+				frameScrubber.value = String(currentFrameIdx);
+			}
 			if (timecodeReadout) {
 				const ms = (currentFrameIdx * 41.667).toFixed(1);
 				const sec = (globalFrame / 24).toFixed(2);
@@ -2698,14 +2721,20 @@
 			}
 
 			if (selectedScene === 'smpte') {
+				if (srcVideo) srcVideo.classList.add('hidden');
 				if (srcCanvas) {
+					srcCanvas.classList.remove('hidden');
 					const ctx = srcCanvas.getContext('2d');
 					if (ctx) drawSmpteScene(ctx, srcCanvas.width, srcCanvas.height, globalFrame, 60);
 				}
 			} else if (sourceBitmaps[currentFrameIdx] && srcCanvas && !srcCanvas.classList.contains('hidden')) {
 				const ctx = srcCanvas.getContext('2d');
 				if (ctx) ctx.drawImage(sourceBitmaps[currentFrameIdx], 0, 0, srcCanvas.width, srcCanvas.height);
-			} else if (srcVideo && (!srcCanvas || srcCanvas.classList.contains('hidden'))) {
+			} else if (srcVideo) {
+				if (srcCanvas && !srcCanvas.classList.contains('hidden') && !sourceBitmaps[currentFrameIdx]) {
+					srcCanvas.classList.add('hidden');
+					srcVideo.classList.remove('hidden');
+				}
 				srcVideo.currentTime = (globalFrame + 0.5) / 24;
 			}
 
@@ -2732,6 +2761,7 @@
 			if (isPlaying) return;
 			if (currentFrameIdx >= TEST_WINDOW_FRAMES - 1) {
 				currentFrameIdx = 0;
+				if (frameScrubber) frameScrubber.value = '0';
 				syncTimelineUI(0);
 			}
 			isPlaying = true;
@@ -2751,6 +2781,7 @@
 						if (currentFrameIdx >= TEST_WINDOW_FRAMES - 1) {
 							if (loopPlayback) {
 								currentFrameIdx = 0;
+								if (frameScrubber) frameScrubber.value = '0';
 								syncTimelineUI(0);
 							} else {
 								currentFrameIdx = TEST_WINDOW_FRAMES - 1;
@@ -2778,9 +2809,8 @@
 					const relIdx = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round((curTime - startTime) * 24)));
 					syncTimelineUI(relIdx);
 					if (curTime >= endTime - 0.04) {
+						syncTimelineUI(TEST_WINDOW_FRAMES - 1);
 						stopPlayback();
-						srcVideo.currentTime = startTime;
-						syncTimelineUI(0);
 						return;
 					}
 					if ('requestVideoFrameCallback' in srcVideo) {
@@ -2827,17 +2857,20 @@
 			seekToFrame(currentFrameIdx + 1);
 		});
 
+		if (frameScrubber) {
+			frameScrubber.addEventListener('input', () => {
+				stopPlayback();
+				const rel = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, parseInt(frameScrubber.value, 10) || 0));
+				seekToFrame(rel);
+			});
+		}
+
 		let isDraggingRange = false;
 		let dragStartX = 0;
 		let dragStartFrame = 0;
-		let isScrubbingPlayhead = false;
 
 		if (rangeWindow && trackBar) {
 			rangeWindow.addEventListener('pointerdown', (e) => {
-				const target = e.target as HTMLElement;
-				if (target.closest('#codec-playhead, .codec-playhead, .codec-playhead-thumb')) {
-					return;
-				}
 				e.stopPropagation();
 				isDraggingRange = true;
 				dragStartX = e.clientX;
@@ -2868,45 +2901,42 @@
 			rangeWindow.addEventListener('pointerup', endRangeDrag);
 			rangeWindow.addEventListener('pointercancel', endRangeDrag);
 
+			let isTrackBarDragging = false;
 			trackBar.addEventListener('pointerdown', (e) => {
 				const target = e.target as HTMLElement;
-				if (target.closest('#codec-range-window') && !target.closest('.codec-playhead-thumb, .codec-playhead')) {
-					return;
-				}
+				if (target.closest('#codec-range-window')) return;
 				const rect = trackBar.getBoundingClientRect();
 				if (!rect.width) return;
-				const clickNorm = (e.clientX - rect.left) / rect.width;
+				const clickNorm = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
 				const clickFrame = clickNorm * TOTAL_CLIP_FRAMES;
+				const newStart = Math.max(0, Math.min(MAX_START_FRAME, Math.round(clickFrame - TEST_WINDOW_FRAMES / 2)));
+				setRangeStartFrame(newStart);
 
-				if (clickFrame >= rangeStartFrame && clickFrame <= rangeStartFrame + TEST_WINDOW_FRAMES) {
-					isScrubbingPlayhead = true;
-					trackBar.setPointerCapture(e.pointerId);
-					stopPlayback();
-					const rel = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round(clickFrame - rangeStartFrame)));
-					seekToFrame(rel);
-				} else {
-					const newStart = Math.max(0, Math.min(MAX_START_FRAME, Math.round(clickFrame - TEST_WINDOW_FRAMES / 2)));
+				isTrackBarDragging = true;
+				dragStartX = e.clientX;
+				dragStartFrame = newStart;
+				trackBar.setPointerCapture(e.pointerId);
+			});
+
+			trackBar.addEventListener('pointermove', (e) => {
+				if (!isTrackBarDragging) return;
+				const rect = trackBar.getBoundingClientRect();
+				if (!rect.width) return;
+				const dx = e.clientX - dragStartX;
+				const dFrames = (dx / rect.width) * TOTAL_CLIP_FRAMES;
+				const newStart = Math.max(0, Math.min(MAX_START_FRAME, Math.round(dragStartFrame + dFrames)));
+				if (newStart !== rangeStartFrame) {
 					setRangeStartFrame(newStart);
 				}
 			});
 
-			trackBar.addEventListener('pointermove', (e) => {
-				if (!isScrubbingPlayhead) return;
-				const rect = trackBar.getBoundingClientRect();
-				if (!rect.width) return;
-				const clickNorm = (e.clientX - rect.left) / rect.width;
-				const clickFrame = clickNorm * TOTAL_CLIP_FRAMES;
-				const rel = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round(clickFrame - rangeStartFrame)));
-				seekToFrame(rel);
-			});
-
-			const endTrackScrub = (e: PointerEvent) => {
-				if (!isScrubbingPlayhead) return;
-				isScrubbingPlayhead = false;
+			const endTrackBarDrag = (e: PointerEvent) => {
+				if (!isTrackBarDragging) return;
+				isTrackBarDragging = false;
 				try { trackBar.releasePointerCapture(e.pointerId); } catch (_) {}
 			};
-			trackBar.addEventListener('pointerup', endTrackScrub);
-			trackBar.addEventListener('pointercancel', endTrackScrub);
+			trackBar.addEventListener('pointerup', endTrackBarDrag);
+			trackBar.addEventListener('pointercancel', endTrackBarDrag);
 		}
 
 		function updateStatusHint() {
@@ -2996,6 +3026,7 @@
 			}
 
 			currentFrameIdx = 0;
+			if (frameScrubber) frameScrubber.value = '0';
 
 			if (scene === 'smpte') {
 				if (srcVideo) {
@@ -3366,6 +3397,7 @@
 						statusText.style.color = '#22c55e';
 					}
 					currentFrameIdx = 0;
+					if (frameScrubber) frameScrubber.value = '0';
 					syncTimelineUI(0);
 					startPlayback();
 					return;
@@ -3551,6 +3583,7 @@
 						statusText.style.color = '#22c55e';
 					}
 					currentFrameIdx = 0;
+					if (frameScrubber) frameScrubber.value = '0';
 					syncTimelineUI(0);
 					startPlayback();
 					return;
@@ -3721,6 +3754,7 @@
 				}
 
 				currentFrameIdx = 0;
+				if (frameScrubber) frameScrubber.value = '0';
 				syncTimelineUI(0);
 				startPlayback();
 			} catch (err: any) {
@@ -5197,6 +5231,95 @@
 		.codec-timecode-readout {
 			display: none;
 		}
+	}
+
+	.codec-scrubber-track {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		min-width: 80px;
+		padding: 0 0.5em;
+	}
+	.codec-scrub-slider {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 100%;
+		height: 6px;
+		background: rgba(148, 163, 184, 0.25);
+		border-radius: 9999px;
+		outline: none;
+		cursor: pointer;
+		transition: background 0.15s ease;
+		margin: 0;
+	}
+	:global(html[data-theme="dark"]) .codec-scrub-slider {
+		background: rgba(255, 255, 255, 0.16);
+	}
+	.codec-scrub-slider:hover {
+		background: rgba(var(--accent-rgb), 0.35);
+	}
+	.codec-scrub-slider::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: var(--accent);
+		border: 2px solid #ffffff;
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+		cursor: grab;
+		transition: transform 0.1s ease, box-shadow 0.1s ease;
+	}
+	.codec-scrub-slider::-webkit-slider-thumb:hover,
+	.codec-scrub-slider::-webkit-slider-thumb:active {
+		transform: scale(1.2);
+		box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.8);
+		cursor: grabbing;
+	}
+	.codec-scrub-slider::-moz-range-thumb {
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: var(--accent);
+		border: 2px solid #ffffff;
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+		cursor: grab;
+		transition: transform 0.1s ease, box-shadow 0.1s ease;
+	}
+	.codec-scrub-slider::-moz-range-thumb:hover,
+	.codec-scrub-slider::-moz-range-thumb:active {
+		transform: scale(1.2);
+		box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.8);
+		cursor: grabbing;
+	}
+
+	.codec-range-track-wrap {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3em;
+		padding-top: 0.4em;
+		border-top: 1px dashed rgba(148, 163, 184, 0.25);
+		margin-top: 0.15em;
+	}
+	:global(html[data-theme="dark"]) .codec-range-track-wrap {
+		border-top-color: rgba(255, 255, 255, 0.1);
+	}
+	.codec-range-meta {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5em;
+		flex-wrap: wrap;
+	}
+	.codec-range-title {
+		font-size: 0.68em;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: rgb(var(--gray));
+	}
+	:global(html[data-theme="dark"]) .codec-range-title {
+		color: #94a3b8;
 	}
 
 	/* TIMELINE TRACK & RANGE SELECTOR */

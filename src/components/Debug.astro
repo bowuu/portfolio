@@ -2627,17 +2627,9 @@
 			sourceBitmaps = [];
 			sourceStartFrameLoaded = -1;
 
-			// Switch left view to preview the start frame
-			if (selectedScene !== 'smpte') {
-				if (srcCanvas) srcCanvas.classList.add('hidden');
-				if (srcVideo) {
-					srcVideo.classList.remove('hidden');
-					srcVideo.currentTime = (rangeStartFrame + 0.5) / 24;
-				}
-			}
-
-			currentFrameIdx = 0;
-			syncTimelineUI(0);
+			// Keep slider at current frame where it was left; video position follows slider
+			const targetFrame = isNaN(currentFrameIdx) ? 0 : Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, currentFrameIdx));
+			syncTimelineUI(targetFrame);
 
 			if (statusText) {
 				const sSec = (rangeStartFrame / 24).toFixed(2);

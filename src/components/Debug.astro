@@ -429,7 +429,7 @@
 							</div>
 						</div>
 						<div class="codec-canvas-wrap" id="codec-wrap-src">
-							<video id="codec-video-source" class="codec-media-video" playsinline muted preload="none" loop>
+							<video id="codec-video-source" class="codec-media-video" playsinline muted preload="none">
 								<source src="/media/charge_1080p.webm" type="video/webm">
 								<source src="/media/charge_1080p.mp4" type="video/mp4">
 							</video>
@@ -2632,8 +2632,15 @@
 			syncTimelineUI(currentFrameIdx);
 		}
 
-		function startPlayback() {
+		function startPlayback(loopPlayback = false) {
 			if (isPlaying) return;
+			if (currentFrameIdx >= 59) {
+				currentFrameIdx = 0;
+				if (selectedScene !== 'smpte' && srcVideo && (!srcCanvas || srcCanvas.classList.contains('hidden'))) {
+					srcVideo.currentTime = 0;
+				}
+				syncTimelineUI(0);
+			}
 			isPlaying = true;
 			if (iconPlay) iconPlay.classList.add('hidden');
 			if (iconPause) iconPause.classList.remove('hidden');
@@ -2646,8 +2653,20 @@
 						lastTime = now;
 					} else if (now - lastTime >= 41.667) {
 						lastTime = now - ((now - lastTime) % 41.667);
-						currentFrameIdx = (currentFrameIdx + 1) % 60;
-						syncTimelineUI(currentFrameIdx);
+						if (currentFrameIdx >= 59) {
+							if (loopPlayback) {
+								currentFrameIdx = 0;
+								syncTimelineUI(0);
+							} else {
+								currentFrameIdx = 59;
+								syncTimelineUI(59);
+								stopPlayback();
+								return;
+							}
+						} else {
+							currentFrameIdx++;
+							syncTimelineUI(currentFrameIdx);
+						}
 					}
 					playbackRaf = requestAnimationFrame(loop);
 				}
@@ -2660,6 +2679,10 @@
 					if (!isPlaying || !srcVideo || srcVideo.paused) return;
 					const curIdx = Math.min(59, Math.max(0, Math.round(srcVideo.currentTime * 24)));
 					syncTimelineUI(curIdx);
+					if (curIdx >= 59 && !loopPlayback) {
+						stopPlayback();
+						return;
+					}
 					if ('requestVideoFrameCallback' in srcVideo) {
 						srcVideo.requestVideoFrameCallback(onVideoFrame);
 					} else {

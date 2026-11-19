@@ -497,8 +497,8 @@
 						<div class="webgpu-tile-val mono" id="codec-metric-dec-fps">-- <span class="webgpu-tile-sub">FPS</span></div>
 					</div>
 					<div class="webgpu-tile">
-						<div class="webgpu-tile-label">Payload & Bitrate</div>
-						<div class="webgpu-tile-val mono" id="codec-metric-ratio">-- <span class="webgpu-tile-sub">KB</span></div>
+						<div class="webgpu-tile-label">Input / Output Size</div>
+						<div class="webgpu-tile-val mono" id="codec-metric-ratio">-- &rarr; --</div>
 					</div>
 				</div>
 			</div>
@@ -2251,6 +2251,15 @@
 			}
 		}
 
+		function getInputFileSize(): string {
+			if (selectedScene === 'smpte') return '187 MB';
+			const is4k = selectedScene === '4k';
+			const src = srcVideo?.currentSrc || '';
+			const isWebm = src.includes('.webm');
+			if (is4k) return isWebm ? '17.5 MB' : '17.2 MB';
+			return isWebm ? '4.5 MB' : '2.8 MB';
+		}
+
 		let isMaximized = false;
 		const minBtn = document.getElementById('codec-applet-min-btn');
 		const maxBtn = document.getElementById('codec-applet-maximize-btn');
@@ -2808,6 +2817,14 @@
 				decPlaceholder.innerHTML = '<span>Awaiting verification run... Click &ldquo;Start&rdquo; to test.</span>';
 			}
 
+			if (metricEngine) metricEngine.textContent = 'Ready';
+			if (metricEncFps) metricEncFps.innerHTML = '-- <span class="webgpu-tile-sub">FPS</span>';
+			if (metricDecFps) metricDecFps.innerHTML = '-- <span class="webgpu-tile-sub">FPS</span>';
+			if (metricRatio) {
+				metricRatio.innerHTML = '-- &rarr; --';
+				metricRatio.title = '';
+			}
+
 			const targetW = scene === '4k' ? 3840 : 1920;
 			const targetH = scene === '4k' ? 2160 : 1080;
 			if (decCanvas) {
@@ -3151,8 +3168,9 @@
 						metricDecFps.innerHTML = 'Bypassed <span class="webgpu-tile-sub">(Encode Only)</span>';
 					}
 					if (metricRatio) {
-						metricRatio.innerHTML = `${displaySize} <span class="webgpu-tile-sub">(${bitrateMbps} Mbps ▪ ${avgKbPerFrame} KB/fr)</span>`;
-						metricRatio.title = `Bitstream: ${displaySize} (${bitrateMbps} Mbps average at 24 fps). Uncompressed YUV 4:2:0 baseband raster: ${rawMb} MB (${ratioX}:1 reduction vs raw uncompressed HDMI/SDI baseband).`;
+						const inSize = getInputFileSize();
+						metricRatio.innerHTML = `${inSize} &rarr; ${displaySize} <span class="webgpu-tile-sub">(${bitrateMbps} Mbps)</span>`;
+						metricRatio.title = `Input clip size: ${inSize} → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
 					}
 
 					if (decPlaceholder) {
@@ -3322,8 +3340,9 @@
 						metricDecFps.innerHTML = `${decFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${decLatency} ms)</span>`;
 					}
 					if (metricRatio) {
-						metricRatio.innerHTML = `${displaySize} <span class="webgpu-tile-sub">(${bitrateMbps} Mbps ▪ ${avgKbPerFrame} KB/fr)</span>`;
-						metricRatio.title = `Bitstream: ${displaySize} (${bitrateMbps} Mbps average at 24 fps). Uncompressed YUV 4:2:0 baseband raster: ${rawMb} MB (${ratioX}:1 reduction vs raw uncompressed HDMI/SDI baseband).`;
+						const inSize = getInputFileSize();
+						metricRatio.innerHTML = `${inSize} &rarr; ${displaySize} <span class="webgpu-tile-sub">(${bitrateMbps} Mbps)</span>`;
+						metricRatio.title = `Input clip size: ${inSize} → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
 					}
 
 					if (statusText) {
@@ -3472,8 +3491,9 @@
 					metricDecFps.innerHTML = `${decFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${decLatency} ms)</span>`;
 				}
 				if (metricRatio) {
-					metricRatio.innerHTML = `${displaySize} <span class="webgpu-tile-sub">(${bitrateMbps} Mbps ▪ ${avgKbPerFrame} KB/fr)</span>`;
-					metricRatio.title = `Bitstream: ${displaySize} (${bitrateMbps} Mbps average at 24 fps). Uncompressed YUV 4:2:0 baseband raster: ${rawMb} MB (${ratioX}:1 reduction vs raw uncompressed HDMI/SDI baseband).`;
+					const inSize = getInputFileSize();
+					metricRatio.innerHTML = `${inSize} &rarr; ${displaySize} <span class="webgpu-tile-sub">(${bitrateMbps} Mbps)</span>`;
+					metricRatio.title = `Input clip size: ${inSize} → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
 				}
 
 				if (statusText) {

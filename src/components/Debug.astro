@@ -5364,11 +5364,14 @@
 	.codec-timeline-meta {
 		display: flex;
 		align-items: center;
-		flex-shrink: 0;
+		justify-content: flex-end;
+		flex: 0 0 114px;
+		width: 114px;
 	}
 	.codec-range-badge {
 		display: inline-flex;
 		align-items: center;
+		justify-content: center;
 		gap: 0.35em;
 		background: rgba(var(--accent-rgb), 0.12);
 		border: 1px solid rgba(var(--accent-rgb), 0.3);
@@ -5381,7 +5384,15 @@
 		color: var(--accent);
 		white-space: nowrap;
 		cursor: default;
+		width: 114px;
+		min-width: 114px;
+		max-width: 114px;
+		box-sizing: border-box;
 		flex-shrink: 0;
+	}
+	#codec-range-badge-text {
+		display: inline-block;
+		text-align: center;
 	}
 	.codec-range-badge-dot {
 		width: 6px;
@@ -5389,6 +5400,7 @@
 		border-radius: 50%;
 		background: var(--accent);
 		box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.8);
+		flex-shrink: 0;
 	}
 	@media (max-width: 600px) {
 		.codec-timeline-row {

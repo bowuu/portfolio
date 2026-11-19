@@ -3379,7 +3379,7 @@
 					}
 					if (metricRatio) {
 						const inSize = getInputFileSize();
-						metricRatio.innerHTML = `${inSize} &rarr; ${displaySize} <span class="webgpu-tile-sub">(${bitrateMbps} Mbps)</span>`;
+						metricRatio.innerHTML = `${inSize} &rarr; ${displaySize}`;
 						metricRatio.title = selectedScene === 'smpte'
 							? `Input: Procedural vector canvas (1.0s window: 24 frames, 0 KB network download) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster in RAM: ${rawMb} MB.`
 							: `Input clip size: ${inSize} (testing 1.0s window: 24 frames) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
@@ -3391,7 +3391,7 @@
 					}
 
 					if (statusText) {
-						statusText.textContent = `✓ Encoded ${totalFrames} frames in ${encDuration.toFixed(0)}ms ▪ ${encFps.toLocaleString()} FPS (${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'})`;
+						statusText.textContent = `✓ Encoded ${totalFrames} frames in ${encDuration.toFixed(0)}ms ▪ ${encFps.toLocaleString()} FPS (${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'}) ▪ ${bitrateMbps} Mbps`;
 						statusText.style.color = '#22c55e';
 					}
 					currentFrameIdx = 0;
@@ -3569,14 +3569,14 @@
 					}
 					if (metricRatio) {
 						const inSize = getInputFileSize();
-						metricRatio.innerHTML = `${inSize} &rarr; ${displaySize} <span class="webgpu-tile-sub">(${bitrateMbps} Mbps)</span>`;
+						metricRatio.innerHTML = `${inSize} &rarr; ${displaySize}`;
 						metricRatio.title = selectedScene === 'smpte'
 							? `Input: Procedural vector canvas (1.0s window: 24 frames, 0 KB network download) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster in RAM: ${rawMb} MB.`
 							: `Input clip size: ${inSize} (testing 1.0s window: 24 frames) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
 					}
 
 					if (statusText) {
-						statusText.textContent = `✓ Decoded ${totalFrames} frames in ${decDuration.toFixed(0)}ms ▪ ${decFps.toLocaleString()} FPS (${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'})`;
+						statusText.textContent = `✓ Decoded ${totalFrames} frames in ${decDuration.toFixed(0)}ms ▪ ${decFps.toLocaleString()} FPS (${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'}) ▪ ${bitrateMbps} Mbps`;
 						statusText.style.color = '#22c55e';
 					}
 					currentFrameIdx = 0;
@@ -3738,14 +3738,14 @@
 				}
 				if (metricRatio) {
 					const inSize = getInputFileSize();
-					metricRatio.innerHTML = `${inSize} &rarr; ${displaySize} <span class="webgpu-tile-sub">(${bitrateMbps} Mbps)</span>`;
+					metricRatio.innerHTML = `${inSize} &rarr; ${displaySize}`;
 					metricRatio.title = selectedScene === 'smpte'
 						? `Input: Procedural vector canvas (1.0s window: 24 frames, 0 KB network download) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster in RAM: ${rawMb} MB.`
 						: `Input clip size: ${inSize} (testing 1.0s window: 24 frames) → Transcoded output: ${displaySize} (${bitrateMbps} Mbps average bitstream at 24 fps). Uncompressed 24-frame YUV 4:2:0 raster: ${rawMb} MB (${ratioX}:1 reduction).`;
 				}
 
 				if (statusText) {
-					statusText.textContent = `✓ Verified ${totalFrames} frames in ${(encDuration + decDuration).toFixed(0)}ms ▪ ${encFps.toLocaleString()} FPS enc / ${decFps.toLocaleString()} FPS dec`;
+					statusText.textContent = `✓ Verified ${totalFrames} frames in ${(encDuration + decDuration).toFixed(0)}ms ▪ ${encFps.toLocaleString()} FPS enc / ${decFps.toLocaleString()} FPS dec ▪ ${bitrateMbps} Mbps`;
 					statusText.style.color = '#22c55e';
 				}
 
@@ -5403,6 +5403,11 @@
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
 		gap: 0.65em;
+	}
+	.codec-metrics-grid .webgpu-tile-val {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	@media (max-width: 640px) {
 		.codec-metrics-grid {

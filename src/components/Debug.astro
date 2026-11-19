@@ -2871,38 +2871,18 @@
 			playhead.addEventListener('pointercancel', endPlayheadScrub);
 		}
 
-		// 2. 1.0s Range Window Dragging & Playhead Click-Seek
+		// 2. 1.0s Range Window Dragging
 		if (rangeWindow && trackBar) {
 			rangeWindow.addEventListener('pointerdown', (e) => {
 				const target = e.target as HTMLElement;
 				if (target.closest('#codec-playhead')) return;
 
-				// If clicking the grip badge or boundary edges, reposition the 1.0s benchmark window!
-				if (target.closest('#codec-range-grip, .codec-range-edge')) {
-					e.stopPropagation();
-					isDraggingRange = true;
-					dragStartX = e.clientX;
-					dragStartFrame = rangeStartFrame;
-					rangeWindow.setPointerCapture(e.pointerId);
-					rangeWindow.classList.add('is-dragging');
-					return;
-				}
-
-				// Otherwise, clicking inside the window seeks the playhead!
 				e.stopPropagation();
-				const rect = trackBar.getBoundingClientRect();
-				if (!rect.width) return;
-				const clickNorm = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-				const clickFrame = clickNorm * TOTAL_CLIP_FRAMES;
-				const rel = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round(clickFrame - rangeStartFrame)));
-				stopPlayback();
-				seekToFrame(rel);
-
-				isScrubbingPlayhead = true;
-				if (playhead) {
-					playhead.classList.add('is-dragging');
-					playhead.setPointerCapture(e.pointerId);
-				}
+				isDraggingRange = true;
+				dragStartX = e.clientX;
+				dragStartFrame = rangeStartFrame;
+				rangeWindow.setPointerCapture(e.pointerId);
+				rangeWindow.classList.add('is-dragging');
 			});
 
 			rangeWindow.addEventListener('pointermove', (e) => {
@@ -5339,7 +5319,7 @@
 		position: absolute;
 		top: -7px;
 		bottom: 0;
-		width: 26px; /* Generous hit target */
+		width: 14px; /* Snug hit target matching thumb width */
 		z-index: 10;
 		cursor: grab;
 		transform: translateX(-50%);

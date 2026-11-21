@@ -2796,7 +2796,7 @@
 			syncTimelineUI(currentFrameIdx);
 		}
 
-		function startPlayback(loopPlayback = true) {
+		function startPlayback(loopPlayback = false) {
 			if (isPlaying) return;
 			if (currentFrameIdx >= TEST_WINDOW_FRAMES - 1) {
 				currentFrameIdx = 0;
@@ -2886,7 +2886,7 @@
 
 		function togglePlayback() {
 			if (isPlaying) stopPlayback();
-			else startPlayback();
+			else startPlayback(false);
 		}
 
 		if (playBtn) playBtn.addEventListener('click', togglePlayback);
@@ -2939,30 +2939,23 @@
 			playhead.addEventListener('pointerdown', startPlayheadScrub);
 		}
 
-		// 2. 1.0s Range Window Dragging & In-Range Scrubbing
+		// 2. 1.0s Range Window Dragging (Repositioning 24-Frame Benchmark Window)
 		if (rangeWindow && trackBar) {
 			rangeWindow.addEventListener('pointerdown', (e) => {
 				const target = e.target as HTMLElement;
 				if (target.closest('#codec-playhead')) return;
 
-				// If clicking or dragging the bracket side edges -> prepare to drag the 24-frame window
-				if (target.closest('.codec-range-edge')) {
-					e.stopPropagation();
-					e.preventDefault();
-					isDraggingRange = true;
-					isScrubbingPlayhead = false;
-					dragHasMoved = false;
-					stopPlayback();
-					dragStartX = e.clientX;
-					dragStartFrame = rangeStartFrame;
-					rangeWindow.classList.add('is-dragging');
-					activeDragTarget = rangeWindow;
-					try { rangeWindow.setPointerCapture(e.pointerId); } catch (_) {}
-					return;
-				}
-
-				// Clicking or dragging anywhere inside the active benchmark bracket seeks & scrubs the playhead directly!
-				startPlayheadScrub(e);
+				e.stopPropagation();
+				e.preventDefault();
+				isDraggingRange = true;
+				isScrubbingPlayhead = false;
+				dragHasMoved = false;
+				stopPlayback();
+				dragStartX = e.clientX;
+				dragStartFrame = rangeStartFrame;
+				rangeWindow.classList.add('is-dragging');
+				activeDragTarget = rangeWindow;
+				try { rangeWindow.setPointerCapture(e.pointerId); } catch (_) {}
 			});
 
 			// 3. Track Bar Interaction (Click outside 1.0s window -> move window & seek playhead)
@@ -3022,11 +3015,6 @@
 				}
 			}
 			if (isDraggingRange) {
-				// If user clicked without dragging on the bracket grip, seek to clicked position
-				if (!dragHasMoved) {
-					const { relFrame } = getFrameFromClientX(e.clientX);
-					seekToFrame(relFrame);
-				}
 				isDraggingRange = false;
 				if (rangeWindow) {
 					rangeWindow.classList.remove('is-dragging');
@@ -3544,7 +3532,7 @@
 					decodedSceneLoaded = '';
 					currentFrameIdx = 0;
 					syncTimelineUI(0);
-					startPlayback();
+					startPlayback(false);
 					return;
 				}
 
@@ -3731,7 +3719,7 @@
 					decodedSceneLoaded = selectedScene;
 					currentFrameIdx = 0;
 					syncTimelineUI(0);
-					startPlayback();
+					startPlayback(false);
 					return;
 				}
 
@@ -3903,7 +3891,7 @@
 				decodedSceneLoaded = selectedScene;
 				currentFrameIdx = 0;
 				syncTimelineUI(0);
-				startPlayback();
+				startPlayback(false);
 			} catch (err: any) {
 				if (statusText) {
 					statusText.textContent = `Verification Notice: ${err.message || 'Codec profile unsupported'}.`;
@@ -5452,6 +5440,7 @@
 		font-weight: 700;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 		color: var(--accent);
+		cursor: grab;
 		white-space: nowrap;
 		padding: 0.18em 0.45em;
 		border-radius: 4px;
@@ -5459,7 +5448,9 @@
 		border: 1px solid rgba(var(--accent-rgb), 0.25);
 		user-select: none;
 		-webkit-user-select: none;
-		pointer-events: none; /* Never intercept playhead scrubbing or touch dragging */
+	}
+	.codec-range-grip:hover {
+		background: rgba(var(--accent-rgb), 0.22);
 	}
 
 	/* PROMINENT WHITE FRAME SELECTOR (PLAYHEAD) */
@@ -5467,7 +5458,7 @@
 		position: absolute;
 		top: -7px;
 		bottom: 0;
-		width: 24px; /* Comfortable hit target with pointer & touch hit padding */
+		width: 14px; /* Snug hit target matching thumb width so dragging orange bar never catches playhead */
 		z-index: 10;
 		cursor: grab;
 		transform: translateX(-50%);

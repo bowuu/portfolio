@@ -2155,6 +2155,8 @@
 		let decodedBitmaps: ImageBitmap[] = [];
 		let sourceSceneLoaded = '';
 		let sourceStartFrameLoaded = -1;
+		let decodedSceneLoaded = '';
+		let decodedStartFrameLoaded = -1;
 
 		const pipelineSegBtns = document.querySelectorAll<HTMLButtonElement>('#pipeline-selector .codec-seg-btn');
 		const codecSegBtns = document.querySelectorAll<HTMLButtonElement>('#codec-selector .codec-seg-btn');
@@ -2586,6 +2588,8 @@
 			sourceStartFrameLoaded = -1;
 			decodedBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
 			decodedBitmaps = [];
+			decodedSceneLoaded = '';
+			decodedStartFrameLoaded = -1;
 			if (document.fullscreenElement) {
 				try {
 					if (document.exitFullscreen) document.exitFullscreen();
@@ -2615,30 +2619,16 @@
 				rangeBadgeText.textContent = `Frames ${sFrame}\u2013${eFrame}`;
 			}
 
-			// Invalidate prior test results since range changed
-			decodedBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
-			decodedBitmaps = [];
-			if (decCanvas) {
-				decCanvas.removeAttribute('data-has-frame');
-				const dCtx = decCanvas.getContext('2d');
-				if (dCtx) dCtx.clearRect(0, 0, decCanvas.width, decCanvas.height);
-			}
-			if (decPlaceholder) {
-				decPlaceholder.style.display = 'flex';
-				decPlaceholder.innerHTML = `<span>Selected Frames ${sFrame}&ndash;${eFrame} (24 frames). Click &ldquo;Start&rdquo; to test.</span>`;
-			}
-
-			// Invalidate cached source bitmaps since range changed
-			sourceBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
-			sourceBitmaps = [];
-			sourceStartFrameLoaded = -1;
-
-			// Keep slider at current frame where it was left; video position follows slider
+			// Keep existing transcode frames in memory; video position and decoded display follow playhead
 			const targetFrame = isNaN(currentFrameIdx) ? 0 : Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, currentFrameIdx));
 			syncTimelineUI(targetFrame);
 
 			if (statusText) {
-				statusText.textContent = `Selected Frames ${sFrame} \u2013 ${eFrame} (24 frames). Click "Start" to test.`;
+				if (decodedStartFrameLoaded >= 0 && (rangeStartFrame !== decodedStartFrameLoaded || selectedScene !== decodedSceneLoaded)) {
+					statusText.textContent = `Selected Frames ${sFrame} \u2013 ${eFrame} (24 frames). Click "Start" to transcode new range.`;
+				} else if (decodedStartFrameLoaded < 0) {
+					statusText.textContent = `Selected Frames ${sFrame} \u2013 ${eFrame} (24 frames). Click "Start" to test.`;
+				}
 				statusText.style.color = '';
 			}
 		}
@@ -2697,6 +2687,12 @@
 				playhead.style.left = `${(globalFrame / TOTAL_CLIP_FRAMES) * 100}%`;
 			}
 
+			// 1. Source (Left) Side
+			const cachedSrcIdx = (selectedScene === sourceSceneLoaded && sourceStartFrameLoaded >= 0)
+				? globalFrame - sourceStartFrameLoaded
+				: -1;
+			const hasCachedSource = cachedSrcIdx >= 0 && cachedSrcIdx < TEST_WINDOW_FRAMES && !!sourceBitmaps[cachedSrcIdx];
+
 			if (selectedScene === 'smpte') {
 				if (srcVideo) srcVideo.classList.add('hidden');
 				if (srcCanvas) {
@@ -2704,23 +2700,45 @@
 					const ctx = srcCanvas.getContext('2d');
 					if (ctx) drawSmpteScene(ctx, srcCanvas.width, srcCanvas.height, globalFrame, 60);
 				}
-			} else if (sourceBitmaps[currentFrameIdx] && srcCanvas && !srcCanvas.classList.contains('hidden')) {
+			} else if (hasCachedSource && srcCanvas && !srcCanvas.classList.contains('hidden')) {
 				const ctx = srcCanvas.getContext('2d');
-				if (ctx) ctx.drawImage(sourceBitmaps[currentFrameIdx], 0, 0, srcCanvas.width, srcCanvas.height);
+				if (ctx) ctx.drawImage(sourceBitmaps[cachedSrcIdx], 0, 0, srcCanvas.width, srcCanvas.height);
 			} else if (srcVideo) {
-				if (srcCanvas && !srcCanvas.classList.contains('hidden') && !sourceBitmaps[currentFrameIdx]) {
+				if (srcCanvas && !srcCanvas.classList.contains('hidden') && !hasCachedSource) {
 					srcCanvas.classList.add('hidden');
 					srcVideo.classList.remove('hidden');
 				}
 				srcVideo.currentTime = (globalFrame + 0.5) / 24;
 			}
 
-			if (decCanvas && decodedBitmaps[currentFrameIdx]) {
+			// 2. Decoded (Right) Side
+			const cachedDecIdx = (selectedScene === decodedSceneLoaded && decodedStartFrameLoaded >= 0)
+				? globalFrame - decodedStartFrameLoaded
+				: -1;
+			const hasCachedDecoded = cachedDecIdx >= 0 && cachedDecIdx < TEST_WINDOW_FRAMES && !!decodedBitmaps[cachedDecIdx];
+
+			if (hasCachedDecoded && decCanvas) {
 				const ctx = decCanvas.getContext('2d');
 				if (ctx) {
-					ctx.drawImage(decodedBitmaps[currentFrameIdx], 0, 0, decCanvas.width, decCanvas.height);
+					ctx.drawImage(decodedBitmaps[cachedDecIdx], 0, 0, decCanvas.width, decCanvas.height);
 					decCanvas.setAttribute('data-has-frame', 'true');
 					if (decPlaceholder) decPlaceholder.style.display = 'none';
+				}
+			} else if (decCanvas) {
+				// Out of range from what was originally processed -> right side goes black
+				decCanvas.removeAttribute('data-has-frame');
+				const ctx = decCanvas.getContext('2d');
+				if (ctx) {
+					ctx.fillStyle = '#000000';
+					ctx.fillRect(0, 0, decCanvas.width, decCanvas.height);
+				}
+				if (decPlaceholder) {
+					decPlaceholder.style.display = 'flex';
+					if (decodedBitmaps.length > 0 && decodedStartFrameLoaded >= 0) {
+						decPlaceholder.innerHTML = `<span>Frame ${globalFrame + 1} outside transcode range (Frames ${decodedStartFrameLoaded + 1}&ndash;${decodedStartFrameLoaded + TEST_WINDOW_FRAMES}). Click &ldquo;Start&rdquo; to test.</span>`;
+					} else {
+						decPlaceholder.innerHTML = `<span>Awaiting verification run... Click &ldquo;Start&rdquo; to test.</span>`;
+					}
 				}
 			}
 
@@ -2999,6 +3017,8 @@
 			sourceStartFrameLoaded = -1;
 			decodedBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
 			decodedBitmaps = [];
+			decodedSceneLoaded = '';
+			decodedStartFrameLoaded = -1;
 			if (decCanvas) {
 				decCanvas.removeAttribute('data-has-frame');
 				const dCtx = decCanvas.getContext('2d');
@@ -3178,6 +3198,15 @@
 			if (runBtn) runBtn.disabled = true;
 			const btnLabel = document.getElementById('codec-btn-label');
 			if (btnLabel) btnLabel.textContent = 'Testing...';
+
+			// Release prior transcode frames from memory on new test start
+			decodedBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
+			decodedBitmaps = [];
+			decodedStartFrameLoaded = -1;
+			decodedSceneLoaded = '';
+			if (decCanvas) {
+				decCanvas.removeAttribute('data-has-frame');
+			}
 
 			try {
 				const is4k = selectedScene === '4k';
@@ -3398,6 +3427,8 @@
 						statusText.textContent = `✓ Encoded ${totalFrames} frames in ${encDuration.toFixed(0)}ms ▪ ${encFps.toLocaleString()} FPS (${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'}) ▪ ${bitrateMbps} Mbps`;
 						statusText.style.color = '#22c55e';
 					}
+					decodedStartFrameLoaded = -1;
+					decodedSceneLoaded = '';
 					currentFrameIdx = 0;
 					syncTimelineUI(0);
 					startPlayback();
@@ -3583,6 +3614,8 @@
 						statusText.textContent = `✓ Decoded ${totalFrames} frames in ${decDuration.toFixed(0)}ms ▪ ${decFps.toLocaleString()} FPS (${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'}) ▪ ${bitrateMbps} Mbps`;
 						statusText.style.color = '#22c55e';
 					}
+					decodedStartFrameLoaded = rangeStartFrame;
+					decodedSceneLoaded = selectedScene;
 					currentFrameIdx = 0;
 					syncTimelineUI(0);
 					startPlayback();
@@ -3753,6 +3786,8 @@
 					statusText.style.color = '#22c55e';
 				}
 
+				decodedStartFrameLoaded = rangeStartFrame;
+				decodedSceneLoaded = selectedScene;
 				currentFrameIdx = 0;
 				syncTimelineUI(0);
 				startPlayback();

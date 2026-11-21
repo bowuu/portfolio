@@ -423,6 +423,7 @@
 							</div>
 							<div class="codec-loupe-zoom-wrap" role="group" aria-label="Magnifier Zoom">
 								<span class="codec-zoom-label">Loupe:</span>
+								<button type="button" class="codec-zoom-btn" data-zoom="1">1×</button>
 								<button type="button" class="codec-zoom-btn" data-zoom="2">2×</button>
 								<button type="button" class="codec-zoom-btn active" data-zoom="4">4×</button>
 								<button type="button" class="codec-zoom-btn" data-zoom="8">8×</button>
@@ -2399,12 +2400,14 @@
 		const loupeCanvasDec = document.getElementById('codec-loupe-canvas-dec') as HTMLCanvasElement | null;
 		const wrapSrc = document.getElementById('codec-wrap-src');
 		const wrapDec = document.getElementById('codec-wrap-dec');
+		const previewGrid = document.querySelector('.codec-preview-grid') as HTMLElement | null;
 		const zoomBtns = document.querySelectorAll<HTMLButtonElement>('.codec-zoom-btn');
 		const pinHintBtn = document.getElementById('codec-pin-hint');
 		const pillSrc = document.getElementById('codec-pill-src');
 		const pillDec = document.getElementById('codec-pill-dec');
 
 		let currentZoom = 4;
+		const ZOOM_LEVELS = [1, 2, 4, 8];
 		let isLoupePinned = false;
 		let pinnedNormX = 0.5;
 		let pinnedNormY = 0.5;
@@ -2418,20 +2421,88 @@
 			if (pillDec) pillDec.textContent = `${label} ${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'}`;
 		}
 
+		function setLoupeZoom(targetZoom: number) {
+			if (!ZOOM_LEVELS.includes(targetZoom)) return;
+			currentZoom = targetZoom;
+			zoomBtns.forEach((b) => {
+				const z = parseInt(b.getAttribute('data-zoom') || '4', 10);
+				b.classList.toggle('active', z === currentZoom);
+			});
+			updateLoupePills();
+			if (isLoupePinned || isPointerOver) {
+				const nx = isLoupePinned ? pinnedNormX : (lastNormX ?? 0.5);
+				const ny = isLoupePinned ? pinnedNormY : (lastNormY ?? 0.5);
+				updateLoupe(nx, ny);
+			}
+		}
+
+		function stepLoupeZoom(direction: 'in' | 'out') {
+			const curIdx = ZOOM_LEVELS.indexOf(currentZoom);
+			if (curIdx === -1) return;
+			if (direction === 'in') {
+				if (curIdx < ZOOM_LEVELS.length - 1) {
+					setLoupeZoom(ZOOM_LEVELS[curIdx + 1]);
+				}
+			} else {
+				if (curIdx > 0) {
+					setLoupeZoom(ZOOM_LEVELS[curIdx - 1]);
+				}
+			}
+		}
+
 		zoomBtns.forEach((btn) => {
 			btn.addEventListener('click', (e) => {
 				e.stopPropagation();
-				zoomBtns.forEach((b) => b.classList.remove('active'));
-				btn.classList.add('active');
-				currentZoom = parseInt(btn.getAttribute('data-zoom') || '4', 10);
-				updateLoupePills();
-				if (isLoupePinned || isPointerOver) {
-					const nx = isLoupePinned ? pinnedNormX : (lastNormX ?? 0.5);
-					const ny = isLoupePinned ? pinnedNormY : (lastNormY ?? 0.5);
-					updateLoupe(nx, ny);
-				}
+				const z = parseInt(btn.getAttribute('data-zoom') || '4', 10);
+				setLoupeZoom(z);
 			});
 		});
+
+		let wheelAccumulator = 0;
+		let wheelDecayTimer: number | null = null;
+
+		function handleLoupeWheel(e: WheelEvent) {
+			e.preventDefault();
+			e.stopPropagation();
+
+			if (wheelDecayTimer !== null) {
+				window.clearTimeout(wheelDecayTimer);
+			}
+			wheelDecayTimer = window.setTimeout(() => {
+				wheelAccumulator = 0;
+				wheelDecayTimer = null;
+			}, 200);
+
+			let delta = e.deltaY;
+			if (e.deltaMode === 1) delta *= 30; // DOM_DELTA_LINE
+			else if (e.deltaMode === 2) delta *= 300; // DOM_DELTA_PAGE
+
+			if ((wheelAccumulator > 0 && delta < 0) || (wheelAccumulator < 0 && delta > 0)) {
+				wheelAccumulator = 0;
+			}
+
+			wheelAccumulator += delta;
+
+			if (wheelAccumulator <= -35) {
+				stepLoupeZoom('in');
+				wheelAccumulator = 0;
+			} else if (wheelAccumulator >= 35) {
+				stepLoupeZoom('out');
+				wheelAccumulator = 0;
+			}
+
+			const targetWrap = (e.target as HTMLElement)?.closest?.('.codec-canvas-wrap') as HTMLElement | null;
+			if (targetWrap && !isLoupePinned) {
+				const wrapRect = targetWrap.getBoundingClientRect();
+				const normX = Math.max(0, Math.min(1, (e.clientX - wrapRect.left) / wrapRect.width));
+				const normY = Math.max(0, Math.min(1, (e.clientY - wrapRect.top) / wrapRect.height));
+				lastNormX = normX;
+				lastNormY = normY;
+				isPointerOver = true;
+				showLoupe();
+				updateLoupe(normX, normY);
+			}
+		}
 
 		function setLoupePinned(pinned: boolean, normX?: number, normY?: number) {
 			isLoupePinned = pinned;
@@ -2613,11 +2684,25 @@
 			});
 		}
 
-		if (wrapSrc) attachLoupeEvents(wrapSrc);
-		if (wrapDec) attachLoupeEvents(wrapDec);
+		if (wrapSrc) {
+			attachLoupeEvents(wrapSrc);
+			wrapSrc.addEventListener('wheel', handleLoupeWheel, { passive: false });
+		}
+		if (wrapDec) {
+			attachLoupeEvents(wrapDec);
+			wrapDec.addEventListener('wheel', handleLoupeWheel, { passive: false });
+		}
+		if (previewGrid) {
+			previewGrid.addEventListener('wheel', handleLoupeWheel, { passive: false });
+		}
 
 		function closeCodecModal() {
 			stopPlayback();
+			if (wheelDecayTimer !== null) {
+				window.clearTimeout(wheelDecayTimer);
+				wheelDecayTimer = null;
+			}
+			wheelAccumulator = 0;
 			isScrubbingPlayhead = false;
 			isDraggingRange = false;
 			if (playhead) playhead.classList.remove('is-dragging');

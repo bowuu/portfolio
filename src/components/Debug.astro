@@ -2796,7 +2796,7 @@
 			syncTimelineUI(currentFrameIdx);
 		}
 
-		function startPlayback(loopPlayback = false) {
+		function startPlayback(loopPlayback = true) {
 			if (isPlaying) return;
 			if (currentFrameIdx >= TEST_WINDOW_FRAMES - 1) {
 				currentFrameIdx = 0;
@@ -2846,9 +2846,14 @@
 					const relIdx = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round((curTime - startTime) * 24)));
 					syncTimelineUI(relIdx);
 					if (curTime >= endTime - 0.04) {
-						syncTimelineUI(TEST_WINDOW_FRAMES - 1);
-						stopPlayback();
-						return;
+						if (loopPlayback) {
+							srcVideo.currentTime = startTime;
+							syncTimelineUI(0);
+						} else {
+							syncTimelineUI(TEST_WINDOW_FRAMES - 1);
+							stopPlayback();
+							return;
+						}
 					}
 					if ('requestVideoFrameCallback' in srcVideo) {
 						srcVideo.requestVideoFrameCallback(onVideoFrame);
@@ -2940,8 +2945,8 @@
 				const target = e.target as HTMLElement;
 				if (target.closest('#codec-playhead')) return;
 
-				// If clicking or dragging the bracket grip handle or side edges -> prepare to drag the 24-frame window
-				if (target.closest('#codec-range-grip, .codec-range-edge')) {
+				// If clicking or dragging the bracket side edges -> prepare to drag the 24-frame window
+				if (target.closest('.codec-range-edge')) {
 					e.stopPropagation();
 					e.preventDefault();
 					isDraggingRange = true;
@@ -2956,7 +2961,7 @@
 					return;
 				}
 
-				// Clicking anywhere else inside the active benchmark bracket seeks & scrubs the playhead directly!
+				// Clicking or dragging anywhere inside the active benchmark bracket seeks & scrubs the playhead directly!
 				startPlayheadScrub(e);
 			});
 
@@ -4986,25 +4991,27 @@
 		background: rgba(148, 163, 184, 0.08);
 		border: 1px solid var(--border-color);
 		border-radius: 6px;
-		padding: 0.3em 0.85em;
+		padding: 0.35em 0.85em;
 		font-size: 0.74em;
+		line-height: 1.4;
 		color: rgb(var(--gray-dark));
-		display: flex;
-		align-items: center;
+		display: block;
+		flex-shrink: 0;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-		height: 30px;
-		min-height: 30px;
-		max-height: 30px;
-		overflow: hidden;
-		white-space: nowrap;
-		text-overflow: ellipsis;
+		min-height: 32px;
+		height: auto;
+		max-height: none;
+		overflow: visible;
+		box-sizing: border-box;
 	}
 	#codec-status-text {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		overflow: visible;
+		text-overflow: clip;
+		white-space: normal;
 		display: block;
 		width: 100%;
+		line-height: 1.4;
+		word-break: break-word;
 	}
 	:global(html[data-theme="dark"]) .codec-status-bar {
 		background: rgba(255, 255, 255, 0.02);
@@ -5445,7 +5452,6 @@
 		font-weight: 700;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 		color: var(--accent);
-		cursor: grab;
 		white-space: nowrap;
 		padding: 0.18em 0.45em;
 		border-radius: 4px;
@@ -5453,9 +5459,7 @@
 		border: 1px solid rgba(var(--accent-rgb), 0.25);
 		user-select: none;
 		-webkit-user-select: none;
-	}
-	.codec-range-grip:hover {
-		background: rgba(var(--accent-rgb), 0.22);
+		pointer-events: none; /* Never intercept playhead scrubbing or touch dragging */
 	}
 
 	/* PROMINENT WHITE FRAME SELECTOR (PLAYHEAD) */
@@ -5463,7 +5467,7 @@
 		position: absolute;
 		top: -7px;
 		bottom: 0;
-		width: 18px; /* Snug hit target with comfortable pointer hit padding */
+		width: 24px; /* Comfortable hit target with pointer & touch hit padding */
 		z-index: 10;
 		cursor: grab;
 		transform: translateX(-50%);
@@ -5681,20 +5685,25 @@
 		}
 		/* STATUS BAR ON MOBILE - MULTI-LINE WRAP TO AVOID CLIPPING */
 		.codec-status-bar {
+			display: block !important;
+			flex-shrink: 0 !important;
 			height: auto !important;
-			min-height: auto !important;
+			min-height: 34px !important;
 			max-height: none !important;
-			padding: 0.4em 0.7em !important;
+			padding: 0.45em 0.75em !important;
 			white-space: normal !important;
-			line-height: 1.35 !important;
+			line-height: 1.4 !important;
 			font-size: 0.72em !important;
+			overflow: visible !important;
+			box-sizing: border-box !important;
 		}
 		#codec-status-text {
+			display: block !important;
 			white-space: normal !important;
 			overflow: visible !important;
 			text-overflow: clip !important;
 			word-break: break-word !important;
-			line-height: 1.35 !important;
+			line-height: 1.4 !important;
 		}
 		/* PREVIEW CANVAS WRAP ON MOBILE */
 		.codec-preview-grid {

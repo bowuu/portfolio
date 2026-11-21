@@ -2193,17 +2193,15 @@
 			srcVideo.classList.remove('hidden');
 			if (srcCanvas) srcCanvas.classList.add('hidden');
 
-			// Ensure correct scene video is loaded without redundant reload
-			loadVideoForScene(selectedScene === '4k' ? '4k' : '1080p');
+			if (statusText) {
+				statusText.textContent = `Buffering ${selectedScene === '4k' ? '4K UHD' : '1080p'} master...`;
+				statusText.style.color = '';
+			}
+
+			// Preload master video as an in-memory Blob to eliminate range-request stalls and enable 15ms RAM seeks
+			await loadVideoForScene(selectedScene === '4k' ? '4k' : '1080p', true);
 
 			if (srcVideo.readyState < 3) {
-				if (statusText) {
-					statusText.textContent = `Buffering ${selectedScene === '4k' ? '4K UHD' : '1080p'} master...`;
-					statusText.style.color = '';
-				}
-				if (srcVideo.readyState === 0) {
-					srcVideo.load();
-				}
 				await new Promise<void>((resolve) => {
 					if (srcVideo.readyState >= 3) {
 						resolve();
@@ -2223,7 +2221,7 @@
 						srcVideo.removeEventListener('canplay', onReady);
 						srcVideo.removeEventListener('canplaythrough', onReady);
 						resolve();
-					}, 8000);
+					}, 5000);
 				});
 			}
 
@@ -2255,12 +2253,7 @@
 					};
 
 					const onSeeked = () => {
-						if ('requestVideoFrameCallback' in srcVideo) {
-							try {
-								(srcVideo as any).requestVideoFrameCallback(() => finish());
-								return;
-							} catch (_) {}
-						}
+						// Wait 2 animation frames so Chromium compositor commits the seeked frame texture before drawImage
 						requestAnimationFrame(() => {
 							requestAnimationFrame(finish);
 						});
@@ -2275,7 +2268,7 @@
 
 					srcVideo.addEventListener('seeked', onSeeked, { once: true });
 					srcVideo.currentTime = targetTime;
-					fallbackTimer = setTimeout(finish, is4k ? 1200 : 800);
+					fallbackTimer = setTimeout(finish, is4k ? 400 : 250);
 				});
 
 				extractCtx.drawImage(srcVideo, 0, 0, width, height);
@@ -2287,13 +2280,49 @@
 			return sourceBitmaps;
 		}
 
-		function loadVideoForScene(scene: '4k' | '1080p') {
+		const videoBlobCache: Record<string, string> = {};
+
+		async function getBlobUrlForScene(scene: '4k' | '1080p'): Promise<string> {
+			if (videoBlobCache[scene]) return videoBlobCache[scene];
+			const target = scene === '4k' ? '/media/dog_4k.mp4' : '/media/charge_1080p.mp4';
+			try {
+				const res = await fetch(target);
+				if (!res.ok) throw new Error(`HTTP ${res.status}`);
+				const blob = await res.blob();
+				const url = URL.createObjectURL(blob);
+				videoBlobCache[scene] = url;
+				return url;
+			} catch (_) {
+				return target;
+			}
+		}
+
+		async function loadVideoForScene(scene: '4k' | '1080p', preferBlob = false) {
 			if (!srcVideo) return;
 			const targetWebm = scene === '4k' ? '/media/dog_4k.webm' : '/media/charge_1080p.webm';
 			const targetMp4 = scene === '4k' ? '/media/dog_4k.mp4' : '/media/charge_1080p.mp4';
-			const activeSrc = srcVideo.querySelector('source')?.getAttribute('src') || srcVideo.currentSrc || '';
+
+			if (preferBlob) {
+				const blobUrl = await getBlobUrlForScene(scene);
+				if (srcVideo.src !== blobUrl) {
+					srcVideo.src = blobUrl;
+					srcVideo.load();
+				}
+				return;
+			}
+
+			if (videoBlobCache[scene]) {
+				if (srcVideo.src !== videoBlobCache[scene]) {
+					srcVideo.src = videoBlobCache[scene];
+					srcVideo.load();
+				}
+				return;
+			}
+
+			const activeSrc = srcVideo.querySelector('source')?.getAttribute('src') || srcVideo.currentSrc || srcVideo.src || '';
 			const matches = scene === '4k' ? activeSrc.includes('dog_4k') : activeSrc.includes('charge_1080p');
 			if (!matches) {
+				srcVideo.removeAttribute('src');
 				srcVideo.innerHTML = `
 					<source src="${targetMp4}" type="video/mp4">
 					<source src="${targetWebm}" type="video/webm">
@@ -2307,7 +2336,7 @@
 		function getInputFileSize(): string {
 			if (selectedScene === 'smpte') return 'Procedural';
 			const is4k = selectedScene === '4k';
-			const src = srcVideo?.currentSrc || '';
+			const src = srcVideo?.currentSrc || srcVideo?.src || '';
 			const isWebm = src.includes('.webm');
 			if (is4k) return isWebm ? '17.5 MB' : '17.2 MB';
 			return isWebm ? '4.5 MB' : '2.8 MB';

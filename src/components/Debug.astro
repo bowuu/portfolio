@@ -4139,16 +4139,17 @@
 		padding: 0.4em 0.55em;
 		border-radius: 7px;
 		border: 1px solid transparent;
-		transition: background 0.08s ease-out, border-color 0.08s ease-out;
-		will-change: background, border-color;
+		transition: background 0.12s ease-out, border-color 0.12s ease-out;
 	}
 	.telemetry-item:hover {
 		background: rgba(0, 0, 0, 0.045);
 		border-color: rgba(var(--accent-rgb), 0.38);
+		transition: none;
 	}
 	:global(html[data-theme="dark"]) .telemetry-item:hover {
 		background: rgba(255, 255, 255, 0.05);
 		border-color: rgba(var(--accent-rgb), 0.42);
+		transition: none;
 	}
 
 	/* CLICKABLE TELEMETRY TILES */
@@ -4159,6 +4160,7 @@
 	}
 	.telemetry-item-clickable:hover {
 		border-color: rgba(var(--accent-rgb), 0.55);
+		transition: none;
 	}
 	.telemetry-item-clickable:focus-visible {
 		outline: 2px solid var(--accent);
@@ -4170,6 +4172,7 @@
 		border-color: var(--accent);
 		transform: translateY(-1px);
 		box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.3);
+		transition: none;
 	}
 	.telemetry-item-clickable:hover .loc-clickable,
 	.telemetry-item-clickable:hover .clickable-val {

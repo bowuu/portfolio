@@ -305,7 +305,7 @@
 			const target = e.target as HTMLElement | null;
 			const isTyping = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') && target !== input;
 
-			if ((e.key === '`' || e.key === '~') && !isTyping) {
+			if ((e.code === 'Backquote' || e.key === '`' || e.key === '~') && !isTyping) {
 				e.preventDefault();
 				toggleTerminal();
 			} else if ((e.key === 'Escape' || e.key === 'Esc') && modal.classList.contains('open')) {

@@ -1509,7 +1509,7 @@
 				specHistoryCanvas = document.createElement('canvas');
 				specHistoryCanvas.width = w;
 				specHistoryCanvas.height = waterfallH;
-				specHistoryCtx = specHistoryCanvas.getContext('2d', { willReadFrequently: true });
+				specHistoryCtx = specHistoryCanvas.getContext('2d');
 				if (specHistoryCtx) {
 					specHistoryCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
 					specHistoryCtx.fillRect(0, 0, w, waterfallH);
@@ -1517,6 +1517,10 @@
 			}
 
 			if (!specHistoryCtx || !specHistoryCanvas) return;
+
+			const isProducingSound = activeMode !== 'none' || isSweeping || !!micStream;
+			const shouldRecordWaterfall = isProducingSound || spectrumDecayFactor > 0 || activeHeroMode === 'spectrogram';
+			if (!shouldRecordWaterfall) return;
 
 			const now = performance.now();
 			const dt = now - lastSpecTime;

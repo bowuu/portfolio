@@ -225,6 +225,19 @@
 			renderer.render(scene, camera);
 		});
 
+		// WebGL context loss recovery (e.g. mobile app backgrounding / memory purge)
+		canvas.addEventListener('webglcontextlost', (e) => {
+			e.preventDefault();
+			if (animationFrameId !== null) {
+				cancelAnimationFrame(animationFrameId);
+				animationFrameId = null;
+			}
+		}, false);
+		canvas.addEventListener('webglcontextrestored', () => {
+			isViewerInitialized = false;
+			startCadScene();
+		}, false);
+
 		// Lighting
 		const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
 		scene.add(ambientLight);
@@ -1174,6 +1187,10 @@
 		}
 		.canvas-wrapper {
 			height: 350px;
+			touch-action: pan-y;
+		}
+		#cad-canvas {
+			touch-action: pan-y;
 		}
 		.cad-viewer-footer {
 			flex-direction: column;

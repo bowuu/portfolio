@@ -430,8 +430,8 @@
 						</div>
 						<div class="codec-canvas-wrap" id="codec-wrap-src">
 							<video id="codec-video-source" class="codec-media-video" playsinline muted preload="none">
-								<source src="/media/charge_1080p.webm" type="video/webm">
 								<source src="/media/charge_1080p.mp4" type="video/mp4">
+								<source src="/media/charge_1080p.webm" type="video/webm">
 							</video>
 							<canvas id="codec-canvas-source" width="1920" height="1080" class="codec-canvas hidden"></canvas>
 							<div id="codec-loupe-src" class="codec-pixel-loupe hidden" aria-hidden="true">
@@ -1103,6 +1103,8 @@
 						: `Hardware GPU: ${gpuString}. WebGPU backend: ${backendName}. Click box to inspect compute limits.`;
 				}
 			}).catch(() => {});
+		} else if (openWebgpuBtn) {
+			openWebgpuBtn.title = 'WebGPU is unavailable or disabled in this browser (supported in Chrome, Edge, Safari 18+)';
 		}
 
 		// 2. Instant Client Detection: OS
@@ -2289,8 +2291,8 @@
 			const matches = scene === '4k' ? activeSrc.includes('dog_4k') : activeSrc.includes('charge_1080p');
 			if (!matches) {
 				srcVideo.innerHTML = `
-					<source src="${targetWebm}" type="video/webm">
 					<source src="${targetMp4}" type="video/mp4">
+					<source src="${targetWebm}" type="video/webm">
 				`;
 				srcVideo.load();
 			}
@@ -2966,8 +2968,25 @@
 
 			statusText.style.color = '';
 
+			const isFirefox = typeof navigator !== 'undefined' && /firefox/i.test(navigator.userAgent);
+			const isSafari = typeof navigator !== 'undefined' && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+			const isMobileDevice = typeof window !== 'undefined' && (window.innerWidth <= 768 || (typeof navigator !== 'undefined' && (navigator.maxTouchPoints > 1 && /Android|iPhone|iPad/i.test(navigator.userAgent))));
+
 			if (typeof VideoEncoder === 'undefined' || typeof VideoDecoder === 'undefined') {
-				statusText.innerHTML = `⚠️ <strong>WebCodecs API</strong> not available in this browser. Use Chrome/Edge/Safari.`;
+				if (isFirefox) {
+					statusText.innerHTML = `⚠️ <strong>WebCodecs API</strong> is disabled by default in Firefox. Use Chrome or Edge.`;
+				} else if (isSafari) {
+					statusText.innerHTML = `⚠️ <strong>WebCodecs API</strong> is limited in Safari. Recommended: Chrome or Edge for full ASIC testing.`;
+				} else {
+					statusText.innerHTML = `⚠️ <strong>WebCodecs API</strong> not available in this browser. Use Chrome or Edge.`;
+				}
+				statusText.style.color = '#f97316';
+				if (runBtn) runBtn.disabled = true;
+				return;
+			}
+
+			if (isSafari && (selectedCodec === 'vp9' || selectedCodec === 'av1')) {
+				statusText.innerHTML = `⚠️ <strong>${selectedCodec.toUpperCase()}</strong> is not supported by Safari's WebCodecs. Select <strong>H.264</strong> or <strong>HEVC</strong>.`;
 				statusText.style.color = '#f97316';
 				if (runBtn) runBtn.disabled = true;
 				return;
@@ -2976,21 +2995,26 @@
 			if (selectedCodec === 'av1' && selectedMode === 'prefer-hardware' && selectedPipeline !== 'decode') {
 				statusText.innerHTML = `⚠️ <strong>AV1 HW Encode</strong> requires RTX 40 / Arc; select <strong>Decode</strong> to test NVDEC.`;
 				statusText.style.color = '#f97316';
+				if (runBtn) runBtn.disabled = false;
 				return;
 			}
 
 			if (selectedCodec === 'hevc' && selectedMode === 'prefer-software') {
 				statusText.innerHTML = `⚠️ <strong>HEVC Software CPU</strong> is unsupported in browser; select <strong>Hardware ASIC</strong>.`;
 				statusText.style.color = '#f97316';
+				if (runBtn) runBtn.disabled = true;
 				return;
 			}
+
+			if (runBtn) runBtn.disabled = false;
 
 			const pipeName = selectedPipeline === 'loopback' ? 'Both' : (selectedPipeline === 'encode' ? 'Encoder' : 'Decoder');
 			const engineName = selectedMode === 'prefer-hardware' ? 'Hardware' : 'Software';
 			const codecName = selectedCodec === 'avc' ? 'H.264' : selectedCodec.toUpperCase();
 			const qualityName = selectedQuality === 'high' ? 'High' : (selectedQuality === 'low' ? 'Low' : 'Med');
+			const mobileTag = (isMobileDevice && selectedScene === '4k') ? ' (4K Mobile Profile)' : '';
 
-			statusText.textContent = `Ready: ${pipeName} ▪ ${codecName} ▪ ${engineName} ▪ ${qualityName} Quality. Click "Start" to test.`;
+			statusText.textContent = `Ready: ${pipeName} ▪ ${codecName} ▪ ${engineName} ▪ ${qualityName} Quality${mobileTag}. Click "Start" to test.`;
 		}
 
 		function setPipeline(mode: 'loopback' | 'encode' | 'decode') {
@@ -3037,8 +3061,9 @@
 				metricRatio.title = '';
 			}
 
-			const targetW = scene === '4k' ? 3840 : 1920;
-			const targetH = scene === '4k' ? 2160 : 1080;
+			const isMobileDevice = typeof window !== 'undefined' && (window.innerWidth <= 768 || (typeof navigator !== 'undefined' && (navigator.maxTouchPoints > 1 && /Android|iPhone|iPad/i.test(navigator.userAgent))));
+			const targetW = (isMobileDevice && scene === '4k') ? 1920 : (scene === '4k' ? 3840 : 1920);
+			const targetH = (isMobileDevice && scene === '4k') ? 1080 : (scene === '4k' ? 2160 : 1080);
 			if (decCanvas) {
 				decCanvas.width = targetW;
 				decCanvas.height = targetH;
@@ -3209,9 +3234,10 @@
 			}
 
 			try {
+				const isMobileDevice = typeof window !== 'undefined' && (window.innerWidth <= 768 || (typeof navigator !== 'undefined' && (navigator.maxTouchPoints > 1 && /Android|iPhone|iPad/i.test(navigator.userAgent))));
 				const is4k = selectedScene === '4k';
-				const width = is4k ? 3840 : 1920;
-				const height = is4k ? 2160 : 1080;
+				const width = (isMobileDevice && is4k) ? 1920 : (is4k ? 3840 : 1920);
+				const height = (isMobileDevice && is4k) ? 1080 : (is4k ? 2160 : 1080);
 				const fps = 24;
 				const totalFrames = TEST_WINDOW_FRAMES; // 24 frames = 1.0s active benchmark section
 				const frameIntervalUs = 41667;
@@ -5510,7 +5536,7 @@
 			z-index: 100 !important;
 			flex-shrink: 0 !important;
 			background: var(--bg-card) !important;
-			padding: 0.6em 0.85em !important;
+			padding: 0.5em 0.75em !important;
 			border-bottom: 1px solid var(--border-color) !important;
 		}
 		.wm-btn {
@@ -5527,8 +5553,8 @@
 			height: auto !important;
 			overflow-y: auto !important;
 			-webkit-overflow-scrolling: touch !important;
-			padding: 0.75em 0.75em 3.5em 0.75em !important;
-			gap: 0.75em !important;
+			padding: 0.65em 0.65em 4.5em 0.65em !important;
+			gap: 0.65em !important;
 		}
 		.webgpu-body-wrap {
 			flex: 1 1 auto !important;
@@ -5536,44 +5562,143 @@
 			height: auto !important;
 			overflow-y: auto !important;
 			-webkit-overflow-scrolling: touch !important;
-			padding: 0.75em 0.75em 3.5em 0.75em !important;
+			padding: 0.75em 0.75em 4.5em 0.75em !important;
 		}
 		.map-applet-frame-wrap {
 			flex: 1 1 auto !important;
 			height: auto !important;
 		}
 		.codec-rack {
-			padding: 0.65em 0.75em !important;
-			gap: 0.6em !important;
+			padding: 0.55em 0.65em !important;
+			gap: 0.5em !important;
 		}
 		.codec-rack-controls {
-			gap: 0.6em !important;
+			gap: 0.5em !important;
+			flex-wrap: wrap !important;
 		}
 		.codec-rack-bottom {
-			gap: 0.6em !important;
+			gap: 0.5em !important;
+			flex-wrap: wrap !important;
 		}
 		.codec-ctrl-label {
-			font-size: 0.7em !important;
+			font-size: 0.68em !important;
 		}
 		.codec-seg-btn {
-			padding: 0.3em 0.55em !important;
-			font-size: 0.74em !important;
+			padding: 0.28em 0.5em !important;
+			font-size: 0.72em !important;
 		}
 		.codec-run-btn {
 			width: 100% !important;
-			min-height: 42px !important;
+			min-height: 40px !important;
 			font-size: 0.88em !important;
-			margin-top: 0.25em !important;
+			margin-top: 0.2em !important;
+		}
+		/* STATUS BAR ON MOBILE - MULTI-LINE WRAP TO AVOID CLIPPING */
+		.codec-status-bar {
+			height: auto !important;
+			min-height: auto !important;
+			max-height: none !important;
+			padding: 0.4em 0.7em !important;
+			white-space: normal !important;
+			line-height: 1.35 !important;
+			font-size: 0.72em !important;
+		}
+		#codec-status-text {
+			white-space: normal !important;
+			overflow: visible !important;
+			text-overflow: clip !important;
+			word-break: break-word !important;
+			line-height: 1.35 !important;
+		}
+		/* PREVIEW CANVAS WRAP ON MOBILE */
+		.codec-preview-grid {
+			grid-template-columns: minmax(0, 1fr) !important;
+			gap: 0.6em !important;
+		}
+		.codec-canvas-wrap {
+			max-height: 26vh !important;
 		}
 		.codec-preview-header {
 			flex-wrap: wrap !important;
-			gap: 0.35em !important;
+			gap: 0.3em !important;
+			height: auto !important;
+			min-height: auto !important;
+			margin-bottom: 0.15em !important;
 		}
 		.codec-preview-label {
-			font-size: 0.72em !important;
+			font-size: 0.7em !important;
+		}
+		.codec-loupe-zoom-wrap {
+			padding: 1px 3px !important;
+			gap: 2px !important;
+		}
+		.codec-zoom-label {
+			font-size: 0.62em !important;
+		}
+		.codec-zoom-btn {
+			padding: 1px 4px !important;
+			font-size: 0.62em !important;
 		}
 		.codec-loupe-hint-btn {
-			display: none !important;
+			display: inline-flex !important;
+			font-size: 0.64em !important;
+			padding: 1px 5px !important;
+		}
+		/* TIMELINE 2-ROW GRID ON MOBILE (CONTROLS & RANGE BADGE ON TOP, TRACK ON BOTTOM) */
+		.codec-timeline-bar {
+			padding: 0.4em 0.55em !important;
+		}
+		.codec-timeline-row {
+			display: grid !important;
+			grid-template-columns: 1fr auto !important;
+			grid-template-areas: "ctrl meta" "track track" !important;
+			gap: 0.45em !important;
+			width: 100% !important;
+		}
+		.codec-timeline-controls {
+			grid-area: ctrl !important;
+			width: auto !important;
+			flex: none !important;
+			gap: 0.25em !important;
+		}
+		.codec-frame-readout {
+			font-size: 0.68em !important;
+			width: auto !important;
+			min-width: 0 !important;
+			max-width: none !important;
+		}
+		.codec-timeline-meta {
+			grid-area: meta !important;
+			width: auto !important;
+			flex: none !important;
+			justify-content: flex-end !important;
+		}
+		.codec-range-badge {
+			width: auto !important;
+			min-width: 0 !important;
+			max-width: none !important;
+			padding: 0.15em 0.5em !important;
+			font-size: 0.66em !important;
+		}
+		.codec-timeline-track-wrap {
+			grid-area: track !important;
+			width: 100% !important;
+			min-width: 0 !important;
+		}
+		/* METRICS TILES ON MOBILE */
+		.codec-metrics-grid {
+			grid-template-columns: repeat(2, 1fr) !important;
+			gap: 0.45em !important;
+			margin-bottom: 1rem !important;
+		}
+		.codec-metrics-grid .webgpu-tile {
+			padding: 0.5em 0.65em !important;
+		}
+		.codec-metrics-grid .webgpu-tile-label {
+			font-size: 0.64em !important;
+		}
+		.codec-metrics-grid .webgpu-tile-val {
+			font-size: 0.85em !important;
 		}
 	}
 </style>

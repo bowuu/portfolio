@@ -43,7 +43,7 @@
 			<span class="b-tile-label">Download Speed</span>
 			<div class="b-tile-value-wrap">
 				<span id="speed-down" class="b-tile-num mono">--</span>
-				<span class="b-tile-unit">Mbps</span>
+				<span id="speed-down-unit" class="b-tile-unit">Mbps</span>
 			</div>
 			<span id="speed-down-sub" class="b-tile-sub">Edge Throughput</span>
 		</div>
@@ -52,7 +52,7 @@
 			<span class="b-tile-label">Upload Speed</span>
 			<div class="b-tile-value-wrap">
 				<span id="speed-up" class="b-tile-num mono">--</span>
-				<span class="b-tile-unit">Mbps</span>
+				<span id="speed-up-unit" class="b-tile-unit">Mbps</span>
 			</div>
 			<span id="speed-up-sub" class="b-tile-sub">Return Pipeline</span>
 		</div>
@@ -202,8 +202,10 @@
 
 		const pingEl = document.getElementById('speed-ping');
 		const downEl = document.getElementById('speed-down');
+		const downUnitEl = document.getElementById('speed-down-unit');
 		const downSubEl = document.getElementById('speed-down-sub');
 		const upEl = document.getElementById('speed-up');
+		const upUnitEl = document.getElementById('speed-up-unit');
 		const upSubEl = document.getElementById('speed-up-sub');
 		const lossEl = document.getElementById('speed-loss');
 		const lossSubEl = document.getElementById('speed-loss-sub');
@@ -219,8 +221,10 @@
 		if (pingEl) pingEl.textContent = '--';
 		updateColoTargetUI('--');
 		if (downEl) downEl.textContent = '--';
+		if (downUnitEl) downUnitEl.style.display = '';
 		if (downSubEl) downSubEl.textContent = 'Measuring...';
 		if (upEl) upEl.textContent = '--';
+		if (upUnitEl) upUnitEl.style.display = '';
 		if (upSubEl) upSubEl.textContent = 'Queued';
 		if (lossEl) lossEl.textContent = '--';
 		if (lossSubEl) lossSubEl.textContent = 'Probing...';
@@ -408,9 +412,16 @@
 
 			const finalDownElapsed = downSteadyStartTime > 0 ? (performance.now() - downSteadyStartTime) / 1000 : (performance.now() - d0) / 1000;
 			const finalDownMbps = (downSteadyBytes * 8) / (Math.max(finalDownElapsed, 0.001) * 1_000_000);
-			if (downEl) downEl.textContent = finalDownMbps.toFixed(1);
-			const downSecDisplay = Math.max(1, Math.round((performance.now() - d0) / 1000));
-			if (downSubEl) downSubEl.textContent = `Sustained (${(downTotalBytes / (1024 * 1024)).toFixed(1)} MB / ${downSecDisplay}s)`;
+			if (downTotalBytes === 0) {
+				if (downEl) downEl.textContent = 'Blocked';
+				if (downUnitEl) downUnitEl.style.display = 'none';
+				if (downSubEl) downSubEl.textContent = 'speed.cloudflare.com unreachable';
+			} else {
+				if (downEl) downEl.textContent = finalDownMbps.toFixed(1);
+				if (downUnitEl) downUnitEl.style.display = '';
+				const downSecDisplay = Math.max(1, Math.round((performance.now() - d0) / 1000));
+				if (downSubEl) downSubEl.textContent = `Sustained (${(downTotalBytes / (1024 * 1024)).toFixed(1)} MB / ${downSecDisplay}s)`;
+			}
 			if (progressBar) progressBar.style.width = '63%';
 
 			// ==========================================
@@ -494,9 +505,16 @@
 			const finalUpElapsed = upSteadyStartTime > 0 ? (performance.now() - upSteadyStartTime) / 1000 : (performance.now() - u0) / 1000;
 			const upBytesToCount = upSteadyBytes > 0 ? upSteadyBytes : upTotalBytes;
 			const finalUpMbps = (upBytesToCount * 8) / (Math.max(finalUpElapsed, 0.001) * 1_000_000);
-			if (upEl) upEl.textContent = finalUpMbps > 0 ? finalUpMbps.toFixed(1) : '--';
-			const upSecDisplay = Math.max(1, Math.round((performance.now() - u0) / 1000));
-			if (upSubEl) upSubEl.textContent = `Sustained (${(upTotalBytes / (1024 * 1024)).toFixed(1)} MB / ${upSecDisplay}s)`;
+			if (upTotalBytes === 0) {
+				if (upEl) upEl.textContent = 'Blocked';
+				if (upUnitEl) upUnitEl.style.display = 'none';
+				if (upSubEl) upSubEl.textContent = 'speed.cloudflare.com unreachable';
+			} else {
+				if (upEl) upEl.textContent = finalUpMbps > 0 ? finalUpMbps.toFixed(1) : '--';
+				if (upUnitEl) upUnitEl.style.display = '';
+				const upSecDisplay = Math.max(1, Math.round((performance.now() - u0) / 1000));
+				if (upSubEl) upSubEl.textContent = `Sustained (${(upTotalBytes / (1024 * 1024)).toFixed(1)} MB / ${upSecDisplay}s)`;
+			}
 
 			// ==========================================
 			// STAGE 4: BUFFERBLOAT & FIBER OPTIC METRICS
@@ -529,9 +547,13 @@
 			}
 
 			if (progressBar) progressBar.style.width = '100%';
-			const targetSummary = detectedColo ? ` via Cloudflare ${detectedColo} Edge (${detectedCity})` : ' via Cloudflare Anycast';
-			const physicsSummary = distanceKm > 0 ? ` ▪ ~${distanceKm} km (fiber limit: ~${fiberRttMs} ms RTT)` : '';
-			if (statusText) statusText.innerHTML = `Test complete${targetSummary}${physicsSummary}.`;
+			if (downTotalBytes === 0 && upTotalBytes === 0) {
+				if (statusText) statusText.innerHTML = '<span style="color: rgb(239, 68, 68); font-weight: 600;">Notice:</span> speed.cloudflare.com throughput test blocked by ad-blocker or firewall policy. Edge ping &amp; latency succeeded.';
+			} else {
+				const targetSummary = detectedColo ? ` via Cloudflare ${detectedColo} Edge (${detectedCity})` : ' via Cloudflare Anycast';
+				const physicsSummary = distanceKm > 0 ? ` ▪ ~${distanceKm} km (fiber limit: ~${fiberRttMs} ms RTT)` : '';
+				if (statusText) statusText.innerHTML = `Test complete${targetSummary}${physicsSummary}.`;
+			}
 
 		} catch (err: any) {
 			console.error('Speedtest encountered error:', err);

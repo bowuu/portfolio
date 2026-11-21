@@ -2224,6 +2224,9 @@
 			extractCanvas.height = height;
 			const extractCtx = extractCanvas.getContext('2d')!;
 
+			// Pre-seek slightly prior to first frame so frame 0 executes a fresh forward seek & compositor commit
+			srcVideo.currentTime = Math.max(0, (rangeStartFrame / 24) - 0.04);
+
 			for (let i = 0; i < TEST_WINDOW_FRAMES; i++) {
 				if (!isRunning) break;
 				if (statusText && (i % 6 === 0 || i === TEST_WINDOW_FRAMES - 1)) {
@@ -2245,17 +2248,22 @@
 					};
 
 					const onSeeked = () => {
-						requestAnimationFrame(finish);
+						// Wait 2 animation frames so Chromium compositor commits the seeked frame texture before drawImage
+						requestAnimationFrame(() => {
+							requestAnimationFrame(finish);
+						});
 					};
 
-					if (Math.abs(srcVideo.currentTime - targetTime) < 0.015) {
-						finish();
+					if (Math.abs(srcVideo.currentTime - targetTime) < 0.005) {
+						requestAnimationFrame(() => {
+							requestAnimationFrame(finish);
+						});
 						return;
 					}
 
 					srcVideo.addEventListener('seeked', onSeeked, { once: true });
 					srcVideo.currentTime = targetTime;
-					fallbackTimer = setTimeout(finish, is4k ? 500 : 300);
+					fallbackTimer = setTimeout(finish, is4k ? 800 : 450);
 				});
 
 				extractCtx.drawImage(srcVideo, 0, 0, width, height);

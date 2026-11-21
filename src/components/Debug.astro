@@ -2201,6 +2201,9 @@
 					statusText.textContent = `Buffering ${selectedScene === '4k' ? '4K UHD' : '1080p'} master...`;
 					statusText.style.color = '';
 				}
+				if (srcVideo.readyState === 0) {
+					srcVideo.load();
+				}
 				await new Promise<void>((resolve) => {
 					if (srcVideo.readyState >= 3) {
 						resolve();
@@ -2208,16 +2211,19 @@
 					}
 					let timer: any;
 					const onReady = () => {
+						if (srcVideo.readyState < 3) return;
 						clearTimeout(timer);
 						srcVideo.removeEventListener('canplay', onReady);
 						srcVideo.removeEventListener('canplaythrough', onReady);
-						srcVideo.removeEventListener('loadeddata', onReady);
 						resolve();
 					};
-					srcVideo.addEventListener('canplay', onReady, { once: true });
-					srcVideo.addEventListener('canplaythrough', onReady, { once: true });
-					srcVideo.addEventListener('loadeddata', onReady, { once: true });
-					timer = setTimeout(onReady, 8000);
+					srcVideo.addEventListener('canplay', onReady);
+					srcVideo.addEventListener('canplaythrough', onReady);
+					timer = setTimeout(() => {
+						srcVideo.removeEventListener('canplay', onReady);
+						srcVideo.removeEventListener('canplaythrough', onReady);
+						resolve();
+					}, 8000);
 				});
 			}
 
@@ -2227,9 +2233,6 @@
 			extractCanvas.width = width;
 			extractCanvas.height = height;
 			const extractCtx = extractCanvas.getContext('2d')!;
-
-			// Pre-seek slightly prior to first frame so frame 0 executes a fresh forward seek & compositor commit
-			srcVideo.currentTime = Math.max(0, (rangeStartFrame / 24) - 0.04);
 
 			for (let i = 0; i < TEST_WINDOW_FRAMES; i++) {
 				if (!isRunning) break;
@@ -2252,7 +2255,12 @@
 					};
 
 					const onSeeked = () => {
-						// Wait 2 animation frames so Chromium compositor commits the seeked frame texture before drawImage
+						if ('requestVideoFrameCallback' in srcVideo) {
+							try {
+								(srcVideo as any).requestVideoFrameCallback(() => finish());
+								return;
+							} catch (_) {}
+						}
 						requestAnimationFrame(() => {
 							requestAnimationFrame(finish);
 						});
@@ -2267,15 +2275,11 @@
 
 					srcVideo.addEventListener('seeked', onSeeked, { once: true });
 					srcVideo.currentTime = targetTime;
-					fallbackTimer = setTimeout(finish, is4k ? 800 : 450);
+					fallbackTimer = setTimeout(finish, is4k ? 1200 : 800);
 				});
 
 				extractCtx.drawImage(srcVideo, 0, 0, width, height);
-				if ('transferToImageBitmap' in extractCanvas) {
-					sourceBitmaps[i] = (extractCanvas as any).transferToImageBitmap();
-				} else {
-					sourceBitmaps[i] = await createImageBitmap(extractCanvas);
-				}
+				sourceBitmaps[i] = await createImageBitmap(extractCanvas);
 			}
 
 			sourceSceneLoaded = selectedScene;
@@ -2294,6 +2298,8 @@
 					<source src="${targetMp4}" type="video/mp4">
 					<source src="${targetWebm}" type="video/webm">
 				`;
+				srcVideo.load();
+			} else if (srcVideo.readyState === 0) {
 				srcVideo.load();
 			}
 		}
@@ -2583,6 +2589,11 @@
 
 		function closeCodecModal() {
 			stopPlayback();
+			isScrubbingPlayhead = false;
+			isDraggingRange = false;
+			if (playhead) playhead.classList.remove('is-dragging');
+			if (rangeWindow) rangeWindow.classList.remove('is-dragging');
+			if (trackBar) trackBar.classList.remove('is-dragging');
 			if (srcVideo) srcVideo.pause();
 			sourceBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
 			sourceBitmaps = [];
@@ -2702,14 +2713,16 @@
 					const ctx = srcCanvas.getContext('2d');
 					if (ctx) drawSmpteScene(ctx, srcCanvas.width, srcCanvas.height, globalFrame, 60);
 				}
-			} else if (hasCachedSource && srcCanvas && !srcCanvas.classList.contains('hidden')) {
+			} else if (hasCachedSource && srcCanvas) {
+				if (srcVideo && !srcVideo.classList.contains('hidden')) srcVideo.classList.add('hidden');
+				srcCanvas.classList.remove('hidden');
 				const ctx = srcCanvas.getContext('2d');
 				if (ctx) ctx.drawImage(sourceBitmaps[cachedSrcIdx], 0, 0, srcCanvas.width, srcCanvas.height);
 			} else if (srcVideo) {
-				if (srcCanvas && !srcCanvas.classList.contains('hidden') && !hasCachedSource) {
+				if (srcCanvas && !srcCanvas.classList.contains('hidden')) {
 					srcCanvas.classList.add('hidden');
-					srcVideo.classList.remove('hidden');
 				}
+				srcVideo.classList.remove('hidden');
 				srcVideo.currentTime = (globalFrame + 0.5) / 24;
 			}
 
@@ -2856,77 +2869,74 @@
 		let isDraggingRange = false;
 		let dragStartX = 0;
 		let dragStartFrame = 0;
+		let dragHasMoved = false;
+		let activeDragTarget: HTMLElement | null = null;
+
+		function getFrameFromClientX(clientX: number): { relFrame: number; frameInMaster: number } {
+			if (!trackBar) return { relFrame: 0, frameInMaster: 0 };
+			const rect = trackBar.getBoundingClientRect();
+			if (!rect.width) return { relFrame: 0, frameInMaster: 0 };
+			const norm = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+			const frameInMaster = norm * TOTAL_CLIP_FRAMES;
+			const relFrame = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round(frameInMaster - rangeStartFrame)));
+			return { relFrame, frameInMaster };
+		}
+
+		function startPlayheadScrub(e: PointerEvent) {
+			e.stopPropagation();
+			e.preventDefault();
+			isScrubbingPlayhead = true;
+			isDraggingRange = false;
+			dragHasMoved = false;
+			stopPlayback();
+			if (playhead) {
+				playhead.classList.add('is-dragging');
+			}
+			activeDragTarget = (e.currentTarget as HTMLElement) || (e.target as HTMLElement);
+			if (activeDragTarget) {
+				try { activeDragTarget.setPointerCapture(e.pointerId); } catch (_) {}
+			}
+			const { relFrame } = getFrameFromClientX(e.clientX);
+			seekToFrame(relFrame);
+		}
 
 		// 1. Prominent White Frame Selector (Playhead) Dragging & Scrubbing
 		if (playhead && trackBar) {
-			playhead.addEventListener('pointerdown', (e) => {
-				e.stopPropagation();
-				isScrubbingPlayhead = true;
-				stopPlayback();
-				playhead.setPointerCapture(e.pointerId);
-				playhead.classList.add('is-dragging');
-			});
-
-			playhead.addEventListener('pointermove', (e) => {
-				if (!isScrubbingPlayhead) return;
-				const rect = trackBar.getBoundingClientRect();
-				if (!rect.width) return;
-				const norm = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-				const frameInMaster = norm * TOTAL_CLIP_FRAMES;
-				const relFrame = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round(frameInMaster - rangeStartFrame)));
-				seekToFrame(relFrame);
-			});
-
-			const endPlayheadScrub = (e: PointerEvent) => {
-				if (!isScrubbingPlayhead) return;
-				isScrubbingPlayhead = false;
-				playhead.classList.remove('is-dragging');
-				try { playhead.releasePointerCapture(e.pointerId); } catch (_) {}
-			};
-			playhead.addEventListener('pointerup', endPlayheadScrub);
-			playhead.addEventListener('pointercancel', endPlayheadScrub);
+			playhead.addEventListener('pointerdown', startPlayheadScrub);
 		}
 
-		// 2. 1.0s Range Window Dragging
+		// 2. 1.0s Range Window Dragging & In-Range Scrubbing
 		if (rangeWindow && trackBar) {
 			rangeWindow.addEventListener('pointerdown', (e) => {
 				const target = e.target as HTMLElement;
 				if (target.closest('#codec-playhead')) return;
 
-				e.stopPropagation();
-				isDraggingRange = true;
-				dragStartX = e.clientX;
-				dragStartFrame = rangeStartFrame;
-				rangeWindow.setPointerCapture(e.pointerId);
-				rangeWindow.classList.add('is-dragging');
-			});
-
-			rangeWindow.addEventListener('pointermove', (e) => {
-				if (!isDraggingRange) return;
-				const rect = trackBar.getBoundingClientRect();
-				if (!rect.width) return;
-				const dx = e.clientX - dragStartX;
-				const dFrames = (dx / rect.width) * TOTAL_CLIP_FRAMES;
-				const newStart = Math.max(0, Math.min(MAX_START_FRAME, Math.round(dragStartFrame + dFrames)));
-				if (newStart !== rangeStartFrame) {
-					setRangeStartFrame(newStart);
+				// If clicking or dragging the bracket grip handle or side edges -> prepare to drag the 24-frame window
+				if (target.closest('#codec-range-grip, .codec-range-edge')) {
+					e.stopPropagation();
+					e.preventDefault();
+					isDraggingRange = true;
+					isScrubbingPlayhead = false;
+					dragHasMoved = false;
+					stopPlayback();
+					dragStartX = e.clientX;
+					dragStartFrame = rangeStartFrame;
+					rangeWindow.classList.add('is-dragging');
+					activeDragTarget = rangeWindow;
+					try { rangeWindow.setPointerCapture(e.pointerId); } catch (_) {}
+					return;
 				}
+
+				// Clicking anywhere else inside the active benchmark bracket seeks & scrubs the playhead directly!
+				startPlayheadScrub(e);
 			});
 
-			const endRangeDrag = (e: PointerEvent) => {
-				if (!isDraggingRange) return;
-				isDraggingRange = false;
-				rangeWindow.classList.remove('is-dragging');
-				try { rangeWindow.releasePointerCapture(e.pointerId); } catch (_) {}
-			};
-			rangeWindow.addEventListener('pointerup', endRangeDrag);
-			rangeWindow.addEventListener('pointercancel', endRangeDrag);
-
-			// 3. Track Bar Interaction (Click outside 1.0s window -> move window & drag)
+			// 3. Track Bar Interaction (Click outside 1.0s window -> move window & seek playhead)
 			trackBar.addEventListener('pointerdown', (e) => {
 				const target = e.target as HTMLElement;
 				if (target.closest('#codec-playhead, #codec-range-window')) return;
 
+				e.preventDefault();
 				const rect = trackBar.getBoundingClientRect();
 				if (!rect.width) return;
 				const clickNorm = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
@@ -2935,14 +2945,30 @@
 				const newStart = Math.max(0, Math.min(MAX_START_FRAME, Math.round(clickFrame - TEST_WINDOW_FRAMES / 2)));
 				setRangeStartFrame(newStart);
 
+				const relFrame = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round(clickFrame - newStart)));
+				seekToFrame(relFrame);
+
 				isDraggingRange = true;
+				isScrubbingPlayhead = false;
+				dragHasMoved = false;
 				dragStartX = e.clientX;
 				dragStartFrame = newStart;
-				trackBar.setPointerCapture(e.pointerId);
+				trackBar.classList.add('is-dragging');
+				activeDragTarget = trackBar;
+				try { trackBar.setPointerCapture(e.pointerId); } catch (_) {}
 			});
+		}
 
-			trackBar.addEventListener('pointermove', (e) => {
-				if (!isDraggingRange || !trackBar.hasPointerCapture(e.pointerId)) return;
+		// Global pointermove and pointerup listeners so dragging never loses capture or freezes in Chrome
+		window.addEventListener('pointermove', (e) => {
+			if (isScrubbingPlayhead) {
+				dragHasMoved = true;
+				const { relFrame } = getFrameFromClientX(e.clientX);
+				seekToFrame(relFrame);
+			} else if (isDraggingRange && trackBar) {
+				if (Math.abs(e.clientX - dragStartX) > 2) {
+					dragHasMoved = true;
+				}
 				const rect = trackBar.getBoundingClientRect();
 				if (!rect.width) return;
 				const dx = e.clientX - dragStartX;
@@ -2951,16 +2977,38 @@
 				if (newStart !== rangeStartFrame) {
 					setRangeStartFrame(newStart);
 				}
-			});
+			}
+		});
 
-			const endTrackBarDrag = (e: PointerEvent) => {
-				if (!isDraggingRange) return;
+		const endAllDrags = (e: PointerEvent) => {
+			if (isScrubbingPlayhead) {
+				isScrubbingPlayhead = false;
+				if (playhead) {
+					playhead.classList.remove('is-dragging');
+				}
+			}
+			if (isDraggingRange) {
+				// If user clicked without dragging on the bracket grip, seek to clicked position
+				if (!dragHasMoved) {
+					const { relFrame } = getFrameFromClientX(e.clientX);
+					seekToFrame(relFrame);
+				}
 				isDraggingRange = false;
-				try { trackBar.releasePointerCapture(e.pointerId); } catch (_) {}
-			};
-			trackBar.addEventListener('pointerup', endTrackBarDrag);
-			trackBar.addEventListener('pointercancel', endTrackBarDrag);
-		}
+				if (rangeWindow) {
+					rangeWindow.classList.remove('is-dragging');
+				}
+				if (trackBar) {
+					trackBar.classList.remove('is-dragging');
+				}
+			}
+			if (activeDragTarget) {
+				try { activeDragTarget.releasePointerCapture(e.pointerId); } catch (_) {}
+				activeDragTarget = null;
+			}
+		};
+
+		window.addEventListener('pointerup', endAllDrags);
+		window.addEventListener('pointercancel', endAllDrags);
 
 		function updateStatusHint() {
 			if (isRunning) return;
@@ -3101,7 +3149,12 @@
 		}
 
 		function openCodecModal(defaultPipeline?: 'loopback' | 'encode' | 'decode') {
-			if (srcVideo) srcVideo.preload = 'auto';
+			if (srcVideo) {
+				srcVideo.preload = 'auto';
+				if (srcVideo.readyState === 0) {
+					srcVideo.load();
+				}
+			}
 			if (defaultPipeline) setPipeline(defaultPipeline);
 			if (codecModal) {
 				codecModal.classList.remove('hidden');
@@ -5308,6 +5361,8 @@
 		overflow: visible;
 		border: 1px solid rgba(148, 163, 184, 0.25);
 		touch-action: none;
+		user-select: none;
+		-webkit-user-select: none;
 	}
 	:global(html[data-theme="dark"]) .codec-track-bar {
 		background: rgba(255, 255, 255, 0.05);
@@ -5379,7 +5434,7 @@
 		position: absolute;
 		top: -7px;
 		bottom: 0;
-		width: 14px; /* Snug hit target matching thumb width */
+		width: 18px; /* Snug hit target with comfortable pointer hit padding */
 		z-index: 10;
 		cursor: grab;
 		transform: translateX(-50%);
@@ -5407,6 +5462,7 @@
 		flex-shrink: 0;
 		transition: transform 0.12s ease, box-shadow 0.12s ease;
 		position: relative;
+		pointer-events: none;
 	}
 	.codec-playhead-thumb::after {
 		content: '';
@@ -5427,6 +5483,7 @@
 		background: #ffffff;
 		box-shadow: 0 0 4px rgba(0, 0, 0, 0.85);
 		border-radius: 1px;
+		pointer-events: none;
 	}
 	:global(html[data-theme="light"]) .codec-playhead-thumb {
 		border-color: #0f172a;

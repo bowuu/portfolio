@@ -419,13 +419,13 @@
 						<div class="codec-preview-header">
 							<div class="codec-preview-title-row">
 								<span class="codec-preview-label">Source Frame (Input)</span>
-								<span class="codec-loupe-pill" id="codec-pill-src">4× Raw</span>
+								<span class="codec-loupe-pill" id="codec-pill-src">2× Raw</span>
 							</div>
 							<div class="codec-loupe-zoom-wrap" role="group" aria-label="Magnifier Zoom">
 								<span class="codec-zoom-label">Loupe:</span>
 								<button type="button" class="codec-zoom-btn" data-zoom="1">1×</button>
-								<button type="button" class="codec-zoom-btn" data-zoom="2">2×</button>
-								<button type="button" class="codec-zoom-btn active" data-zoom="4">4×</button>
+								<button type="button" class="codec-zoom-btn active" data-zoom="2">2×</button>
+								<button type="button" class="codec-zoom-btn" data-zoom="4">4×</button>
 								<button type="button" class="codec-zoom-btn" data-zoom="8">8×</button>
 							</div>
 						</div>
@@ -445,7 +445,7 @@
 						<div class="codec-preview-header">
 							<div class="codec-preview-title-row">
 								<span class="codec-preview-label">Reconstructed (Output)</span>
-								<span class="codec-loupe-pill" id="codec-pill-dec">4× ASIC</span>
+								<span class="codec-loupe-pill" id="codec-pill-dec">2× ASIC</span>
 							</div>
 							<button type="button" id="codec-pin-hint" class="codec-loupe-hint-btn" title="Click anywhere on the video frame to pin the magnifier">Click to pin</button>
 						</div>
@@ -2406,7 +2406,7 @@
 		const pillSrc = document.getElementById('codec-pill-src');
 		const pillDec = document.getElementById('codec-pill-dec');
 
-		let currentZoom = 4;
+		let currentZoom = 2;
 		const ZOOM_LEVELS = [1, 2, 4, 8];
 		let isLoupePinned = false;
 		let pinnedNormX = 0.5;
@@ -2425,7 +2425,7 @@
 			if (!ZOOM_LEVELS.includes(targetZoom)) return;
 			currentZoom = targetZoom;
 			zoomBtns.forEach((b) => {
-				const z = parseInt(b.getAttribute('data-zoom') || '4', 10);
+				const z = parseInt(b.getAttribute('data-zoom') || '2', 10);
 				b.classList.toggle('active', z === currentZoom);
 			});
 			updateLoupePills();
@@ -2453,7 +2453,7 @@
 		zoomBtns.forEach((btn) => {
 			btn.addEventListener('click', (e) => {
 				e.stopPropagation();
-				const z = parseInt(btn.getAttribute('data-zoom') || '4', 10);
+				const z = parseInt(btn.getAttribute('data-zoom') || '2', 10);
 				setLoupeZoom(z);
 			});
 		});

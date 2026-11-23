@@ -384,7 +384,9 @@
 								<button type="button" class="codec-seg-btn" data-scene="smpte" title="SMPTE BT.709 color calibration &amp; alignment pattern">Test</button>
 								<button type="button" class="codec-seg-btn active" data-scene="1080p" title="Blender 'Charge' sci-fi action master (1920×1080)">1080</button>
 								<button type="button" class="codec-seg-btn" data-scene="4k" title="Chief Morale Officer (Samoyed) 4K UHD Master (3840×2160)">4K</button>
+								<button type="button" class="codec-seg-btn" data-scene="custom" id="codec-source-custom-btn" title="Drop or select local video clip (Zero Egress)">Custom</button>
 							</div>
+							<input type="file" id="codec-custom-file-input" accept="video/mp4,video/webm,video/quicktime,video/x-matroska" class="hidden" aria-hidden="true" style="display: none;" />
 						</div>
 
 						<div class="codec-rack-group">
@@ -446,6 +448,13 @@
 							<div class="codec-preview-title-row">
 								<span class="codec-preview-label">Reconstructed (Output)</span>
 								<span class="codec-loupe-pill" id="codec-pill-dec">2× ASIC</span>
+								<span class="codec-metric-pill hidden" id="codec-pill-quality" title="Per-frame PSNR &amp; SSIM quality">-- dB</span>
+							</div>
+							<div class="codec-view-mode-wrap" role="group" aria-label="Reconstruction View Mode">
+								<span class="codec-zoom-label">View:</span>
+								<button type="button" class="codec-view-btn active" data-view="normal" title="Standard reconstructed output">Normal</button>
+								<button type="button" class="codec-view-btn" data-view="diff" title="Amplified difference: |Source - Output| × 8">Diff (8×)</button>
+								<button type="button" class="codec-view-btn" data-view="heatmap" title="False-color thermal error heatmap">Heatmap</button>
 							</div>
 							<button type="button" id="codec-pin-hint" class="codec-loupe-hint-btn" title="Click anywhere on the video frame to pin the magnifier">Click to pin</button>
 						</div>
@@ -482,6 +491,12 @@
 
 						<!-- Center: Extended Master Seekbar (60 frames total with 24-frame benchmark window) -->
 						<div class="codec-timeline-track-wrap" id="codec-timeline-track-wrap">
+							<!-- 24-Frame GOP Bitrate & Frame-Size Sparkline -->
+							<div class="codec-sparkline-wrap" id="codec-sparkline-wrap">
+								<canvas id="codec-sparkline-canvas" width="480" height="26" class="codec-sparkline-canvas" title="Compressed frame size distribution (I-Frames vs P-Frames)"></canvas>
+								<div id="codec-sparkline-tooltip" class="codec-sparkline-tooltip hidden"></div>
+							</div>
+
 							<div class="codec-timeline-ruler">
 								<span class="codec-ruler-tick" style="left: 0%">0</span>
 								<span class="codec-ruler-tick" style="left: 20%">12</span>
@@ -521,7 +536,7 @@
 					</div>
 				</div>
 
-				<!-- TELEMETRY METRICS GRID (4 BALANCED CARDS) -->
+				<!-- TELEMETRY METRICS GRID (5 BALANCED CARDS) -->
 				<div class="codec-metrics-grid">
 					<div class="webgpu-tile">
 						<div class="webgpu-tile-label">ASIC Acceleration</div>
@@ -534,6 +549,10 @@
 					<div class="webgpu-tile">
 						<div class="webgpu-tile-label">Decode Rate</div>
 						<div class="webgpu-tile-val mono" id="codec-metric-dec-fps">-- <span class="webgpu-tile-sub">FPS</span></div>
+					</div>
+					<div class="webgpu-tile">
+						<div class="webgpu-tile-label">Quality (PSNR / SSIM)</div>
+						<div class="webgpu-tile-val mono" id="codec-metric-quality">-- <span class="webgpu-tile-sub">dB</span></div>
 					</div>
 					<div class="webgpu-tile">
 						<div class="webgpu-tile-label">Input / Output Size</div>
@@ -2132,7 +2151,43 @@
 		const metricEngine = document.getElementById('codec-metric-engine');
 		const metricEncFps = document.getElementById('codec-metric-enc-fps');
 		const metricDecFps = document.getElementById('codec-metric-dec-fps');
+		const metricQuality = document.getElementById('codec-metric-quality');
 		const metricRatio = document.getElementById('codec-metric-ratio');
+		const pillQuality = document.getElementById('codec-pill-quality');
+
+		const viewModeBtns = document.querySelectorAll<HTMLButtonElement>('.codec-view-btn');
+		let currentViewMode: 'normal' | 'diff' | 'heatmap' = 'normal';
+
+		const sparklineCanvas = document.getElementById('codec-sparkline-canvas') as HTMLCanvasElement | null;
+		const sparklineTooltip = document.getElementById('codec-sparkline-tooltip');
+		let sparklineChunks: Array<{ type: 'key' | 'delta'; size: number; timestamp: number }> = [];
+
+		const customFileInput = document.getElementById('codec-custom-file-input') as HTMLInputElement | null;
+		const customBtn = document.getElementById('codec-source-custom-btn');
+		let customVideoUrl: string | null = null;
+		let customFileName = '';
+
+		interface FrameQuality {
+			psnr: number;
+			ssim: number;
+		}
+		let frameQualityMetrics: FrameQuality[] = [];
+		let avgPsnr = 0;
+		let avgSsim = 0;
+
+		interface CodecCap {
+			encHw: boolean;
+			encSw: boolean;
+			decHw: boolean;
+			decSw: boolean;
+		}
+		const codecCapabilities: Record<string, CodecCap> = {
+			avc: { encHw: false, encSw: false, decHw: false, decSw: false },
+			vp9: { encHw: false, encSw: false, decHw: false, decSw: false },
+			hevc: { encHw: false, encSw: false, decHw: false, decSw: false },
+			av1: { encHw: false, encSw: false, decHw: false, decSw: false }
+		};
+		let capabilityProbed = false;
 
 		const playBtn = document.getElementById('codec-play-btn');
 		const prevFrameBtn = document.getElementById('codec-prev-frame-btn');
@@ -2171,7 +2226,7 @@
 		let selectedCodec: 'avc' | 'vp9' | 'av1' | 'hevc' = 'avc';
 		let selectedMode: 'prefer-hardware' | 'prefer-software' = 'prefer-hardware';
 		let selectedQuality: 'high' | 'med' | 'low' = 'med';
-		let selectedScene: '4k' | '1080p' | 'smpte' = '1080p';
+		let selectedScene: '4k' | '1080p' | 'smpte' | 'custom' = '1080p';
 		let isRunning = false;
 
 		async function ensureSourceFrames(is4k: boolean, width: number, height: number): Promise<ImageBitmap[]> {
@@ -2195,12 +2250,15 @@
 			if (srcCanvas) srcCanvas.classList.add('hidden');
 
 			if (statusText) {
-				statusText.textContent = `Buffering ${selectedScene === '4k' ? '4K UHD' : '1080p'} master...`;
+				const sceneLabel = selectedScene === 'custom' ? (customFileName || 'Custom clip') : (selectedScene === '4k' ? '4K UHD' : '1080p');
+				statusText.textContent = `Buffering ${sceneLabel} master...`;
 				statusText.style.color = '';
 			}
 
 			// Preload master video as an in-memory Blob to eliminate range-request stalls and enable 15ms RAM seeks
-			await loadVideoForScene(selectedScene === '4k' ? '4k' : '1080p', true);
+			if (selectedScene !== 'custom') {
+				await loadVideoForScene(selectedScene === '4k' ? '4k' : '1080p', true);
+			}
 
 			if (srcVideo.readyState < 3) {
 				await new Promise<void>((resolve) => {
@@ -2336,6 +2394,13 @@
 
 		function getInputFileSize(): string {
 			if (selectedScene === 'smpte') return 'Procedural';
+			if (selectedScene === 'custom') {
+				if (customFileInput?.files?.[0]) {
+					const mb = (customFileInput.files[0].size / (1024 * 1024)).toFixed(1);
+					return `${mb} MB (Local)`;
+				}
+				return 'Custom (Local)';
+			}
 			const is4k = selectedScene === '4k';
 			const src = srcVideo?.currentSrc || srcVideo?.src || '';
 			const isWebm = src.includes('.webm');
@@ -2418,7 +2483,11 @@
 		function updateLoupePills() {
 			const label = `${currentZoom}×`;
 			if (pillSrc) pillSrc.textContent = `${label} RAW`;
-			if (pillDec) pillDec.textContent = `${label} ${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'}`;
+			if (pillDec) {
+				const pipeStr = selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU';
+				const viewStr = currentViewMode === 'normal' ? pipeStr : (currentViewMode === 'diff' ? 'Diff' : 'Heatmap');
+				pillDec.textContent = `${label} ${viewStr}`;
+			}
 		}
 
 		function setLoupeZoom(targetZoom: number) {
@@ -2696,6 +2765,502 @@
 			previewGrid.addEventListener('wheel', handleLoupeWheel, { passive: false });
 		}
 
+		async function probeCodecCapabilities() {
+			if (capabilityProbed || typeof VideoEncoder === 'undefined' || typeof VideoDecoder === 'undefined') return;
+			capabilityProbed = true;
+
+			const probeList: Record<string, string[]> = {
+				avc: ['avc1.640028', 'avc1.4d0028', 'avc1.420028'],
+				vp9: ['vp09.00.40.08', 'vp09.00.41.08'],
+				hevc: ['hvc1.1.6.L120.B0', 'hev1.1.6.L120.B0'],
+				av1: ['av01.0.08M.08', 'av01.0.05M.08']
+			};
+
+			for (const [codecKey, candidates] of Object.entries(probeList)) {
+				for (const c of candidates) {
+					try {
+						const res = await VideoEncoder.isConfigSupported({
+							codec: c,
+							width: 1920,
+							height: 1080,
+							bitrate: 6_000_000,
+							framerate: 24,
+							hardwareAcceleration: 'prefer-hardware'
+						});
+						if (res && res.supported) {
+							codecCapabilities[codecKey].encHw = true;
+							break;
+						}
+					} catch (_) {}
+				}
+				for (const c of candidates) {
+					try {
+						const res = await VideoEncoder.isConfigSupported({
+							codec: c,
+							width: 1920,
+							height: 1080,
+							bitrate: 6_000_000,
+							framerate: 24,
+							hardwareAcceleration: 'prefer-software'
+						});
+						if (res && res.supported) {
+							codecCapabilities[codecKey].encSw = true;
+							break;
+						}
+					} catch (_) {}
+				}
+				for (const c of candidates) {
+					try {
+						const res = await VideoDecoder.isConfigSupported({
+							codec: c,
+							codedWidth: 1920,
+							codedHeight: 1080,
+							hardwareAcceleration: 'prefer-hardware'
+						});
+						if (res && res.supported) {
+							codecCapabilities[codecKey].decHw = true;
+							break;
+						}
+					} catch (_) {}
+				}
+				for (const c of candidates) {
+					try {
+						const res = await VideoDecoder.isConfigSupported({
+							codec: c,
+							codedWidth: 1920,
+							codedHeight: 1080,
+							hardwareAcceleration: 'prefer-software'
+						});
+						if (res && res.supported) {
+							codecCapabilities[codecKey].decSw = true;
+							break;
+						}
+					} catch (_) {}
+				}
+			}
+
+			renderCapabilityBadges();
+			updateStatusHint();
+		}
+
+		function renderCapabilityBadges() {
+			codecSegBtns.forEach((btn) => {
+				const cKey = btn.getAttribute('data-codec');
+				if (!cKey || !codecCapabilities[cKey]) return;
+				const cap = codecCapabilities[cKey];
+				btn.querySelector('.codec-badge-dot')?.remove();
+
+				const dot = document.createElement('span');
+				dot.className = 'codec-badge-dot';
+
+				if (cap.encHw && cap.decHw) {
+					dot.classList.add('hw');
+					dot.title = 'Full Hardware ASIC acceleration supported (Encode + Decode)';
+				} else if (cap.decHw) {
+					dot.classList.add('hw');
+					dot.title = 'Hardware Decode supported (NVDEC/VDU); Encode via CPU/SW';
+				} else if (cap.encSw || cap.decSw) {
+					dot.classList.add('sw');
+					dot.title = 'Software CPU fallback only (No hardware ASIC detected)';
+				} else {
+					dot.classList.add('na');
+					dot.title = 'Unsupported in this browser';
+					btn.classList.add('unsupported');
+				}
+				btn.appendChild(dot);
+			});
+		}
+
+		function turboColormap(t: number): [number, number, number] {
+			if (t <= 0) return [15, 23, 42];
+			if (t < 0.25) {
+				const f = t / 0.25;
+				return [Math.round(15 + f * (6 - 15)), Math.round(23 + f * (182 - 23)), Math.round(42 + f * (212 - 42))];
+			} else if (t < 0.5) {
+				const f = (t - 0.25) / 0.25;
+				return [Math.round(6 + f * (34 - 6)), Math.round(182 + f * (197 - 182)), Math.round(212 + f * (94 - 212))];
+			} else if (t < 0.75) {
+				const f = (t - 0.5) / 0.25;
+				return [Math.round(34 + f * (234 - 34)), Math.round(197 + f * (179 - 197)), Math.round(94 + f * (8 - 94))];
+			} else {
+				const f = Math.min(1, (t - 0.75) / 0.25);
+				return [Math.round(234 + f * (239 - 234)), Math.round(179 + f * (68 - 179)), Math.round(8 + f * (68 - 8))];
+			}
+		}
+
+		function computePsnrAndSsim(srcImgData: ImageData, decImgData: ImageData): FrameQuality {
+			const sData = srcImgData.data;
+			const dData = decImgData.data;
+			const len = sData.length;
+			let sumSqDiff = 0;
+
+			let sumSrcY = 0;
+			let sumDecY = 0;
+			let sumSqSrcY = 0;
+			let sumSqDecY = 0;
+			let sumSrcDecY = 0;
+
+			const stride = len > 4_000_000 ? 4 : 2;
+			let samples = 0;
+
+			for (let i = 0; i < len; i += 4 * stride) {
+				const sr = sData[i];
+				const sg = sData[i + 1];
+				const sb = sData[i + 2];
+
+				const dr = dData[i];
+				const dg = dData[i + 1];
+				const db = dData[i + 2];
+
+				const diffR = sr - dr;
+				const diffG = sg - dg;
+				const diffB = sb - db;
+				sumSqDiff += (diffR * diffR + diffG * diffG + diffB * diffB);
+
+				const sy = 0.2126 * sr + 0.7152 * sg + 0.0722 * sb;
+				const dy = 0.2126 * dr + 0.7152 * dg + 0.0722 * db;
+
+				sumSrcY += sy;
+				sumDecY += dy;
+				sumSqSrcY += sy * sy;
+				sumSqDecY += dy * dy;
+				sumSrcDecY += sy * dy;
+				samples++;
+			}
+
+			const mse = sumSqDiff / (samples * 3);
+			const psnr = mse === 0 ? 99.9 : Math.min(99.9, Math.round((10 * Math.log10((255 * 255) / mse)) * 10) / 10);
+
+			const muX = sumSrcY / samples;
+			const muY = sumDecY / samples;
+			const varX = (sumSqSrcY / samples) - (muX * muX);
+			const varY = (sumSqDecY / samples) - (muY * muY);
+			const covXY = (sumSrcDecY / samples) - (muX * muY);
+
+			const c1 = (0.01 * 255) ** 2;
+			const c2 = (0.03 * 255) ** 2;
+
+			const ssimNum = (2 * muX * muY + c1) * (2 * covXY + c2);
+			const ssimDen = (muX * muX + muY * muY + c1) * (varX + varY + c2);
+			let ssim = ssimDen === 0 ? 1.0 : ssimNum / ssimDen;
+			ssim = Math.max(0, Math.min(1.0, Math.round(ssim * 1000) / 1000));
+
+			return { psnr, ssim };
+		}
+
+		const diffOffCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(1920, 1080) : document.createElement('canvas');
+		const diffSrcOffCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(1920, 1080) : document.createElement('canvas');
+
+		function renderDiffFrame(
+			targetCanvas: HTMLCanvasElement,
+			srcSource: ImageBitmap | HTMLCanvasElement,
+			decBitmap: ImageBitmap,
+			width: number,
+			height: number,
+			mode: 'diff' | 'heatmap'
+		) {
+			if (diffOffCanvas.width !== width || diffOffCanvas.height !== height) {
+				diffOffCanvas.width = width;
+				diffOffCanvas.height = height;
+				diffSrcOffCanvas.width = width;
+				diffSrcOffCanvas.height = height;
+			}
+
+			const sCtx = diffSrcOffCanvas.getContext('2d') as (CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null);
+			const dCtx = diffOffCanvas.getContext('2d') as (CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null);
+			const tCtx = targetCanvas.getContext('2d');
+			if (!sCtx || !dCtx || !tCtx) return;
+
+			sCtx.drawImage(srcSource as any, 0, 0, width, height);
+			dCtx.drawImage(decBitmap, 0, 0, width, height);
+
+			const sData = sCtx.getImageData(0, 0, width, height);
+			const dData = dCtx.getImageData(0, 0, width, height);
+			const outImg = tCtx.createImageData(width, height);
+			const sPix = sData.data;
+			const dPix = dData.data;
+			const outPix = outImg.data;
+			const len = sPix.length;
+
+			if (mode === 'diff') {
+				for (let i = 0; i < len; i += 4) {
+					outPix[i] = Math.min(255, Math.abs(sPix[i] - dPix[i]) * 8);
+					outPix[i + 1] = Math.min(255, Math.abs(sPix[i + 1] - dPix[i + 1]) * 8);
+					outPix[i + 2] = Math.min(255, Math.abs(sPix[i + 2] - dPix[i + 2]) * 8);
+					outPix[i + 3] = 255;
+				}
+			} else {
+				for (let i = 0; i < len; i += 4) {
+					const dr = sPix[i] - dPix[i];
+					const dg = sPix[i + 1] - dPix[i + 1];
+					const db = sPix[i + 2] - dPix[i + 2];
+					const err = Math.sqrt((dr * dr + dg * dg + db * db) / 3);
+					const t = Math.min(1.0, (err * 8) / 255);
+					const [cr, cg, cb] = turboColormap(t);
+					outPix[i] = cr;
+					outPix[i + 1] = cg;
+					outPix[i + 2] = cb;
+					outPix[i + 3] = 255;
+				}
+			}
+			tCtx.putImageData(outImg, 0, 0);
+		}
+
+		function drawGopSparkline() {
+			if (!sparklineCanvas) return;
+			const ctx = sparklineCanvas.getContext('2d');
+			if (!ctx) return;
+
+			const dpr = window.devicePixelRatio || 1;
+			const rect = sparklineCanvas.getBoundingClientRect();
+			const w = rect.width || 480;
+			const h = rect.height || 26;
+
+			if (sparklineCanvas.width !== Math.round(w * dpr) || sparklineCanvas.height !== Math.round(h * dpr)) {
+				sparklineCanvas.width = Math.round(w * dpr);
+				sparklineCanvas.height = Math.round(h * dpr);
+			}
+			ctx.resetTransform();
+			ctx.scale(dpr, dpr);
+			ctx.clearRect(0, 0, w, h);
+
+			if (sparklineChunks.length === 0) {
+				ctx.fillStyle = 'rgba(148, 163, 184, 0.4)';
+				ctx.font = '9px ui-monospace, monospace';
+				ctx.textAlign = 'center';
+				ctx.textBaseline = 'middle';
+				ctx.fillText('GOP Frame Size Distribution (Awaiting run)', w / 2, h / 2);
+				return;
+			}
+
+			const n = sparklineChunks.length;
+			const maxSize = Math.max(...sparklineChunks.map((c) => c.size), 1);
+			const gap = 2;
+			const barW = Math.max(2, (w - (n - 1) * gap) / n);
+
+			for (let i = 0; i < n; i++) {
+				const chunk = sparklineChunks[i];
+				const barH = Math.max(3, (chunk.size / maxSize) * (h - 6));
+				const bx = i * (barW + gap);
+				const by = h - barH - 2;
+
+				const isCurrent = i === currentFrameIdx;
+				const isKey = chunk.type === 'key';
+
+				if (isKey) {
+					ctx.fillStyle = isCurrent ? '#ea580c' : '#f97316';
+				} else {
+					ctx.fillStyle = isCurrent ? '#94a3b8' : '#475569';
+				}
+
+				ctx.fillRect(bx, by, barW, barH);
+
+				if (isCurrent) {
+					ctx.strokeStyle = '#ffffff';
+					ctx.lineWidth = 1.5;
+					ctx.strokeRect(bx - 0.5, by - 0.5, barW + 1, barH + 1);
+				}
+
+				if (isKey) {
+					ctx.fillStyle = '#38bdf8';
+					ctx.fillRect(bx, by - 2, barW, 2);
+				}
+			}
+		}
+
+		function computeAllQualityMetrics(totalFrames: number, width: number, height: number) {
+			frameQualityMetrics = [];
+			let sumPsnr = 0;
+			let sumSsim = 0;
+			let validFrames = 0;
+
+			const sampleW = Math.min(width, 960);
+			const sampleH = Math.min(height, 540);
+			const sCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(sampleW, sampleH) : document.createElement('canvas');
+			sCanvas.width = sampleW;
+			sCanvas.height = sampleH;
+			const sCtx = sCanvas.getContext('2d') as (CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null);
+
+			const dCanvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(sampleW, sampleH) : document.createElement('canvas');
+			dCanvas.width = sampleW;
+			dCanvas.height = sampleH;
+			const dCtx = dCanvas.getContext('2d') as (CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null);
+
+			if (!sCtx || !dCtx) return;
+
+			for (let i = 0; i < totalFrames; i++) {
+				if (!decodedBitmaps[i]) continue;
+
+				if (selectedScene === 'smpte') {
+					drawSmpteScene(sCtx as any, sampleW, sampleH, rangeStartFrame + i, 60);
+				} else if (sourceBitmaps[i]) {
+					sCtx.drawImage(sourceBitmaps[i], 0, 0, sampleW, sampleH);
+				} else {
+					continue;
+				}
+
+				dCtx.drawImage(decodedBitmaps[i], 0, 0, sampleW, sampleH);
+
+				const sData = sCtx.getImageData(0, 0, sampleW, sampleH);
+				const dData = dCtx.getImageData(0, 0, sampleW, sampleH);
+
+				const metric = computePsnrAndSsim(sData, dData);
+				frameQualityMetrics[i] = metric;
+				sumPsnr += metric.psnr;
+				sumSsim += metric.ssim;
+				validFrames++;
+			}
+
+			if (validFrames > 0) {
+				avgPsnr = Math.round((sumPsnr / validFrames) * 10) / 10;
+				avgSsim = Math.round((sumSsim / validFrames) * 1000) / 1000;
+				if (metricQuality) {
+					metricQuality.innerHTML = `${avgPsnr.toFixed(1)} <span class="webgpu-tile-sub">dB (${avgSsim.toFixed(3)} SSIM)</span>`;
+					metricQuality.title = `Average quality across ${validFrames} frames: ${avgPsnr.toFixed(1)} dB PSNR, ${avgSsim.toFixed(3)} SSIM.`;
+				}
+				if (pillQuality && frameQualityMetrics[currentFrameIdx]) {
+					pillQuality.classList.remove('hidden');
+					pillQuality.textContent = `${frameQualityMetrics[currentFrameIdx].psnr.toFixed(1)} dB · ${frameQualityMetrics[currentFrameIdx].ssim.toFixed(3)}`;
+				}
+			}
+		}
+
+		function handleCustomClipFile(file: File) {
+			if (!file.type.startsWith('video/') && !file.name.match(/\.(mp4|webm|mov|mkv)$/i)) {
+				if (statusText) {
+					statusText.textContent = 'Unsupported file format. Please drop an MP4, WebM, or MOV video file.';
+					statusText.style.color = '#f97316';
+				}
+				return;
+			}
+
+			if (customVideoUrl) {
+				try { URL.revokeObjectURL(customVideoUrl); } catch (_) {}
+			}
+
+			customVideoUrl = URL.createObjectURL(file);
+			customFileName = file.name;
+			selectedScene = 'custom';
+			sceneSegBtns.forEach((b) => b.classList.toggle('active', b.getAttribute('data-scene') === 'custom'));
+
+			sourceBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
+			sourceBitmaps = [];
+			sourceSceneLoaded = '';
+			sourceStartFrameLoaded = -1;
+			decodedBitmaps.forEach((b) => { try { b?.close(); } catch (_) {} });
+			decodedBitmaps = [];
+			decodedSceneLoaded = '';
+			decodedStartFrameLoaded = -1;
+			sparklineChunks = [];
+			frameQualityMetrics = [];
+			drawGopSparkline();
+
+			if (srcVideo) {
+				srcVideo.classList.remove('hidden');
+				srcVideo.src = customVideoUrl;
+				srcVideo.load();
+			}
+			if (srcCanvas) srcCanvas.classList.add('hidden');
+			if (decCanvas) {
+				decCanvas.removeAttribute('data-has-frame');
+				const dCtx = decCanvas.getContext('2d');
+				if (dCtx) dCtx.clearRect(0, 0, decCanvas.width, decCanvas.height);
+			}
+			if (decPlaceholder) {
+				decPlaceholder.style.display = 'flex';
+				decPlaceholder.innerHTML = `<span>Loaded local clip: <strong>${customFileName}</strong> (${(file.size / (1024 * 1024)).toFixed(1)} MB). Click &ldquo;Start&rdquo; to test.</span>`;
+			}
+			if (statusText) {
+				statusText.textContent = `Custom clip loaded: ${customFileName} (Zero egress in memory). Click "Start" to test.`;
+				statusText.style.color = '#22c55e';
+			}
+			syncTimelineUI(0);
+		}
+
+		function attachDropzone(wrap: HTMLElement) {
+			wrap.addEventListener('dragover', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				wrap.classList.add('drag-over');
+			});
+			wrap.addEventListener('dragleave', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				wrap.classList.remove('drag-over');
+			});
+			wrap.addEventListener('drop', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				wrap.classList.remove('drag-over');
+				if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+					handleCustomClipFile(e.dataTransfer.files[0]);
+				}
+			});
+		}
+		if (wrapSrc) attachDropzone(wrapSrc);
+		if (wrapDec) attachDropzone(wrapDec);
+
+		if (customFileInput) {
+			customFileInput.addEventListener('change', () => {
+				if (customFileInput.files && customFileInput.files[0]) {
+					handleCustomClipFile(customFileInput.files[0]);
+				}
+			});
+		}
+		if (customBtn) {
+			customBtn.addEventListener('click', () => {
+				if (selectedScene === 'custom' && customVideoUrl) {
+					setScene('custom');
+				} else {
+					customFileInput?.click();
+				}
+			});
+		}
+
+		viewModeBtns.forEach((btn) => {
+			btn.onclick = () => {
+				const mode = (btn.getAttribute('data-view') as any) || 'normal';
+				currentViewMode = mode;
+				viewModeBtns.forEach((b) => b.classList.toggle('active', b.getAttribute('data-view') === mode));
+				updateLoupePills();
+				syncTimelineUI(currentFrameIdx);
+			};
+		});
+
+		if (sparklineCanvas) {
+			sparklineCanvas.addEventListener('mousemove', (e) => {
+				if (sparklineChunks.length === 0) return;
+				const rect = sparklineCanvas.getBoundingClientRect();
+				const mx = e.clientX - rect.left;
+				const n = sparklineChunks.length;
+				const gap = 2;
+				const barW = (rect.width - (n - 1) * gap) / n;
+				const idx = Math.max(0, Math.min(n - 1, Math.floor(mx / (barW + gap))));
+				const chunk = sparklineChunks[idx];
+				if (sparklineTooltip && chunk) {
+					sparklineTooltip.classList.remove('hidden');
+					const kb = (chunk.size / 1024).toFixed(1);
+					const qStr = frameQualityMetrics[idx] ? ` · ${frameQualityMetrics[idx].psnr.toFixed(1)} dB` : '';
+					sparklineTooltip.textContent = `Frame ${idx + 1}: ${kb} KB (${chunk.type === 'key' ? 'I-Frame Key' : 'P-Frame'})${qStr}`;
+					const tipX = Math.max(40, Math.min(rect.width - 40, mx));
+					sparklineTooltip.style.left = `${tipX}px`;
+				}
+			});
+			sparklineCanvas.addEventListener('mouseleave', () => {
+				if (sparklineTooltip) sparklineTooltip.classList.add('hidden');
+			});
+			sparklineCanvas.addEventListener('click', (e) => {
+				if (sparklineChunks.length === 0) return;
+				const rect = sparklineCanvas.getBoundingClientRect();
+				const mx = e.clientX - rect.left;
+				const n = sparklineChunks.length;
+				const gap = 2;
+				const barW = (rect.width - (n - 1) * gap) / n;
+				const idx = Math.max(0, Math.min(n - 1, Math.floor(mx / (barW + gap))));
+				seekToFrame(idx);
+			});
+		}
+
 		function closeCodecModal() {
 			stopPlayback();
 			if (wheelDecayTimer !== null) {
@@ -2717,6 +3282,14 @@
 			decodedBitmaps = [];
 			decodedSceneLoaded = '';
 			decodedStartFrameLoaded = -1;
+			if (customVideoUrl) {
+				try { URL.revokeObjectURL(customVideoUrl); } catch (_) {}
+				customVideoUrl = null;
+			}
+			sparklineChunks = [];
+			frameQualityMetrics = [];
+			if (sparklineTooltip) sparklineTooltip.classList.add('hidden');
+			if (pillQuality) pillQuality.classList.add('hidden');
 			if (document.fullscreenElement) {
 				try {
 					if (document.exitFullscreen) document.exitFullscreen();
@@ -2814,6 +3387,15 @@
 				playhead.style.left = `${(globalFrame / TOTAL_CLIP_FRAMES) * 100}%`;
 			}
 
+			// Update Sparkline playhead highlight
+			drawGopSparkline();
+
+			// Update per-frame quality pill
+			if (frameQualityMetrics[currentFrameIdx] && pillQuality) {
+				pillQuality.classList.remove('hidden');
+				pillQuality.textContent = `${frameQualityMetrics[currentFrameIdx].psnr.toFixed(1)} dB · ${frameQualityMetrics[currentFrameIdx].ssim.toFixed(3)}`;
+			}
+
 			// 1. Source (Left) Side
 			const cachedSrcIdx = (selectedScene === sourceSceneLoaded && sourceStartFrameLoaded >= 0)
 				? globalFrame - sourceStartFrameLoaded
@@ -2849,7 +3431,14 @@
 			if (hasCachedDecoded && decCanvas) {
 				const ctx = decCanvas.getContext('2d');
 				if (ctx) {
-					ctx.drawImage(decodedBitmaps[cachedDecIdx], 0, 0, decCanvas.width, decCanvas.height);
+					if (currentViewMode === 'normal') {
+						ctx.drawImage(decodedBitmaps[cachedDecIdx], 0, 0, decCanvas.width, decCanvas.height);
+					} else {
+						const srcImg = selectedScene === 'smpte'
+							? srcCanvas!
+							: (hasCachedSource ? sourceBitmaps[cachedSrcIdx] : (srcCanvas || srcVideo!));
+						renderDiffFrame(decCanvas, srcImg as any, decodedBitmaps[cachedDecIdx], decCanvas.width, decCanvas.height, currentViewMode);
+					}
 					decCanvas.setAttribute('data-has-frame', 'true');
 					if (decPlaceholder) decPlaceholder.style.display = 'none';
 				}
@@ -3168,8 +3757,27 @@
 			const codecName = selectedCodec === 'avc' ? 'H.264' : selectedCodec.toUpperCase();
 			const qualityName = selectedQuality === 'high' ? 'High' : (selectedQuality === 'low' ? 'Low' : 'Med');
 			const mobileTag = (isMobileDevice && selectedScene === '4k') ? ' (4K Mobile Profile)' : '';
+			const sceneTag = selectedScene === 'custom' ? ` ▪ Custom (${customFileName || 'Local'})` : '';
 
-			statusText.textContent = `Ready: ${pipeName} ▪ ${codecName} ▪ ${engineName} ▪ ${qualityName} Quality${mobileTag}. Click "Start" to test.`;
+			statusText.textContent = `Ready: ${pipeName} ▪ ${codecName} ▪ ${engineName} ▪ ${qualityName} Quality${mobileTag}${sceneTag}. Click "Start" to test.`;
+
+			if (capabilityProbed) {
+				const cap = codecCapabilities[selectedCodec];
+				if (cap) {
+					if (selectedPipeline !== 'decode' && selectedMode === 'prefer-hardware' && !cap.encHw) {
+						if (selectedCodec === 'av1') {
+							statusText.innerHTML = `⚠️ <strong>AV1 HW Encode</strong> requires RTX 40 / Intel Arc / RDNA3. Select <strong>Decode</strong> or switch to <strong>Software</strong>.`;
+							statusText.style.color = '#f97316';
+						} else {
+							statusText.innerHTML = `⚠️ <strong>${codecName} HW Encode</strong> not detected on this GPU. Switch Engine to <strong>Software</strong>.`;
+							statusText.style.color = '#f97316';
+						}
+					} else if (selectedPipeline !== 'encode' && selectedMode === 'prefer-hardware' && !cap.decHw) {
+						statusText.innerHTML = `⚠️ <strong>${codecName} HW Decode</strong> not detected on this GPU. Switch Engine to <strong>Software</strong>.`;
+						statusText.style.color = '#f97316';
+					}
+				}
+			}
 		}
 
 		function setPipeline(mode: 'loopback' | 'encode' | 'decode') {
@@ -3185,7 +3793,7 @@
 			updateStatusHint();
 		}
 
-		function setScene(scene: '4k' | '1080p' | 'smpte') {
+		function setScene(scene: '4k' | '1080p' | 'smpte' | 'custom') {
 			stopPlayback();
 			selectedScene = scene;
 			sceneSegBtns.forEach((b) => b.classList.toggle('active', b.getAttribute('data-scene') === scene));
@@ -3198,6 +3806,12 @@
 			decodedBitmaps = [];
 			decodedSceneLoaded = '';
 			decodedStartFrameLoaded = -1;
+			sparklineChunks = [];
+			frameQualityMetrics = [];
+			drawGopSparkline();
+			if (pillQuality) pillQuality.classList.add('hidden');
+			if (metricQuality) metricQuality.innerHTML = '-- <span class="webgpu-tile-sub">dB</span>';
+
 			if (decCanvas) {
 				decCanvas.removeAttribute('data-has-frame');
 				const dCtx = decCanvas.getContext('2d');
@@ -3241,6 +3855,17 @@
 					if (ctx) drawSmpteScene(ctx, 1920, 1080, rangeStartFrame, 60);
 				}
 				syncTimelineUI(0);
+			} else if (scene === 'custom') {
+				if (srcCanvas) srcCanvas.classList.add('hidden');
+				if (srcVideo && customVideoUrl) {
+					srcVideo.classList.remove('hidden');
+					srcVideo.src = customVideoUrl;
+					srcVideo.load();
+					if (srcVideo.readyState >= 1) {
+						srcVideo.currentTime = (rangeStartFrame + 0.5) / 24;
+					}
+				}
+				syncTimelineUI(0);
 			} else {
 				if (srcCanvas) srcCanvas.classList.add('hidden');
 				if (srcVideo) {
@@ -3269,6 +3894,7 @@
 			}
 			document.body.style.overflow = 'hidden';
 			setScene(selectedScene);
+			probeCodecCapabilities();
 			updateStatusHint();
 			updateLoupePills();
 			(window as any).__pushModalHistory?.('codec-modal', closeCodecModal);
@@ -3352,7 +3978,11 @@
 			btn.onclick = () => {
 				if (isRunning) return;
 				const s = (btn.getAttribute('data-scene') as any) || '1080p';
-				setScene(s);
+				if (s === 'custom' && !customVideoUrl) {
+					customFileInput?.click();
+				} else {
+					setScene(s);
+				}
 			};
 		});
 
@@ -3522,6 +4152,7 @@
 						statusText.style.color = '';
 					}
 
+					sparklineChunks = [];
 					const encodedChunks: EncodedVideoChunk[] = [];
 					let totalChunkBytes = 0;
 
@@ -3529,6 +4160,11 @@
 						output: (chunk) => {
 							totalChunkBytes += chunk.byteLength;
 							encodedChunks.push(chunk);
+							sparklineChunks.push({
+								type: chunk.type,
+								size: chunk.byteLength,
+								timestamp: chunk.timestamp
+							});
 						},
 						error: (err) => console.error('Encoder error:', err)
 					});
@@ -3556,8 +4192,11 @@
 								timestamp: i * frameIntervalUs,
 								duration: frameIntervalUs
 							});
-							encoder.encode(frame, { keyFrame: i === 0 });
-							frame.close();
+							try {
+								encoder.encode(frame, { keyFrame: i === 0 });
+							} finally {
+								frame.close();
+							}
 						}
 					} else {
 						for (let i = 0; i < totalFrames; i++) {
@@ -3565,8 +4204,11 @@
 								timestamp: i * frameIntervalUs,
 								duration: frameIntervalUs
 							});
-							encoder.encode(frame, { keyFrame: i === 0 });
-							frame.close();
+							try {
+								encoder.encode(frame, { keyFrame: i === 0 });
+							} finally {
+								frame.close();
+							}
 						}
 					}
 					await encoder.flush();
@@ -3596,6 +4238,9 @@
 					if (metricDecFps) {
 						metricDecFps.innerHTML = 'Bypassed <span class="webgpu-tile-sub">(Encode Only)</span>';
 					}
+					if (metricQuality) {
+						metricQuality.innerHTML = 'Bypassed <span class="webgpu-tile-sub">(Encode Only)</span>';
+					}
 					if (metricRatio) {
 						const inSize = getInputFileSize();
 						metricRatio.innerHTML = `${inSize} &rarr; ${displaySize}`;
@@ -3616,6 +4261,7 @@
 					decodedStartFrameLoaded = -1;
 					decodedSceneLoaded = '';
 					currentFrameIdx = 0;
+					drawGopSparkline();
 					syncTimelineUI(0);
 					startPlayback(false);
 					return;
@@ -3649,6 +4295,7 @@
 						throw new Error(`${selectedCodec.toUpperCase()} Decoder not supported with ${selectedMode === 'prefer-hardware' ? 'Hardware Acceleration' : 'Software Fallback'}`);
 					}
 
+					sparklineChunks = [];
 					const encodedChunks: EncodedVideoChunk[] = [];
 					let decoderConfig: VideoDecoderConfig | null = null;
 					let totalChunkBytes = 0;
@@ -3662,6 +4309,11 @@
 						output: (chunk, metadata) => {
 							totalChunkBytes += chunk.byteLength;
 							encodedChunks.push(chunk);
+							sparklineChunks.push({
+								type: chunk.type,
+								size: chunk.byteLength,
+								timestamp: chunk.timestamp
+							});
 							if (metadata && metadata.decoderConfig) decoderConfig = metadata.decoderConfig;
 						},
 						error: (err) => console.error('Prep encoder error:', err)
@@ -3689,8 +4341,11 @@
 								timestamp: i * frameIntervalUs,
 								duration: frameIntervalUs
 							});
-							encoder.encode(frame, { keyFrame: i === 0 });
-							frame.close();
+							try {
+								encoder.encode(frame, { keyFrame: i === 0 });
+							} finally {
+								frame.close();
+							}
 						}
 					} else {
 						for (let i = 0; i < totalFrames; i++) {
@@ -3698,8 +4353,11 @@
 								timestamp: i * frameIntervalUs,
 								duration: frameIntervalUs
 							});
-							encoder.encode(frame, { keyFrame: i === 0 });
-							frame.close();
+							try {
+								encoder.encode(frame, { keyFrame: i === 0 });
+							} finally {
+								frame.close();
+							}
 						}
 					}
 
@@ -3717,20 +4375,23 @@
 
 					const decoder = new VideoDecoder({
 						output: (videoFrame) => {
-							const fIdx = Math.min(totalFrames - 1, Math.max(0, Math.round(videoFrame.timestamp / frameIntervalUs)));
-							if (decOffCtx) {
-								decOffCtx.drawImage(videoFrame, 0, 0, width, height);
-								if ('transferToImageBitmap' in decOffCanvas) {
-									decodedBitmaps[fIdx] = (decOffCanvas as any).transferToImageBitmap();
-								} else {
-									decBmpPromises.push(
-										createImageBitmap(decOffCanvas).then((bmp) => {
-											decodedBitmaps[fIdx] = bmp;
-										})
-									);
+							try {
+								const fIdx = Math.min(totalFrames - 1, Math.max(0, Math.round(videoFrame.timestamp / frameIntervalUs)));
+								if (decOffCtx) {
+									decOffCtx.drawImage(videoFrame, 0, 0, width, height);
+									if ('transferToImageBitmap' in decOffCanvas) {
+										decodedBitmaps[fIdx] = (decOffCanvas as any).transferToImageBitmap();
+									} else {
+										decBmpPromises.push(
+											createImageBitmap(decOffCanvas).then((bmp) => {
+												decodedBitmaps[fIdx] = bmp;
+											})
+										);
+									}
 								}
+							} finally {
+								videoFrame.close();
 							}
-							videoFrame.close();
 						},
 						error: (err) => console.error('Decoder error:', err)
 					});
@@ -3803,6 +4464,8 @@
 					decodedStartFrameLoaded = rangeStartFrame;
 					decodedSceneLoaded = selectedScene;
 					currentFrameIdx = 0;
+					computeAllQualityMetrics(totalFrames, width, height);
+					drawGopSparkline();
 					syncTimelineUI(0);
 					startPlayback(false);
 					return;
@@ -3816,6 +4479,7 @@
 
 				if (decPlaceholder) decPlaceholder.style.display = 'none';
 
+				sparklineChunks = [];
 				const encodedChunks: EncodedVideoChunk[] = [];
 				let decoderConfig: VideoDecoderConfig | null = null;
 				let totalChunkBytes = 0;
@@ -3831,20 +4495,23 @@
 
 				const decoder = new VideoDecoder({
 					output: (videoFrame) => {
-						const fIdx = Math.min(totalFrames - 1, Math.max(0, Math.round(videoFrame.timestamp / frameIntervalUs)));
-						if (decOffCtx) {
-							decOffCtx.drawImage(videoFrame, 0, 0, width, height);
-							if ('transferToImageBitmap' in decOffCanvas) {
-								decodedBitmaps[fIdx] = (decOffCanvas as any).transferToImageBitmap();
-							} else {
-								decBmpPromises.push(
-									createImageBitmap(decOffCanvas).then((bmp) => {
-										decodedBitmaps[fIdx] = bmp;
-									})
-								);
+						try {
+							const fIdx = Math.min(totalFrames - 1, Math.max(0, Math.round(videoFrame.timestamp / frameIntervalUs)));
+							if (decOffCtx) {
+								decOffCtx.drawImage(videoFrame, 0, 0, width, height);
+								if ('transferToImageBitmap' in decOffCanvas) {
+									decodedBitmaps[fIdx] = (decOffCanvas as any).transferToImageBitmap();
+								} else {
+									decBmpPromises.push(
+										createImageBitmap(decOffCanvas).then((bmp) => {
+											decodedBitmaps[fIdx] = bmp;
+										})
+									);
+								}
 							}
+						} finally {
+							videoFrame.close();
 						}
-						videoFrame.close();
 					},
 					error: (err) => console.error('Decoder error:', err)
 				});
@@ -3853,6 +4520,11 @@
 					output: (chunk, metadata) => {
 						totalChunkBytes += chunk.byteLength;
 						encodedChunks.push(chunk);
+						sparklineChunks.push({
+							type: chunk.type,
+							size: chunk.byteLength,
+							timestamp: chunk.timestamp
+						});
 						if (metadata && metadata.decoderConfig && !decoderConfig) {
 							decoderConfig = metadata.decoderConfig;
 						}
@@ -3884,8 +4556,11 @@
 							timestamp: i * frameIntervalUs,
 							duration: frameIntervalUs
 						});
-						encoder.encode(frame, { keyFrame: i === 0 });
-						frame.close();
+						try {
+							encoder.encode(frame, { keyFrame: i === 0 });
+						} finally {
+							frame.close();
+						}
 					}
 				} else {
 					for (let i = 0; i < totalFrames; i++) {
@@ -3893,8 +4568,11 @@
 							timestamp: i * frameIntervalUs,
 							duration: frameIntervalUs
 						});
-						encoder.encode(frame, { keyFrame: i === 0 });
-						frame.close();
+						try {
+							encoder.encode(frame, { keyFrame: i === 0 });
+						} finally {
+							frame.close();
+						}
 					}
 				}
 
@@ -3975,6 +4653,8 @@
 				decodedStartFrameLoaded = rangeStartFrame;
 				decodedSceneLoaded = selectedScene;
 				currentFrameIdx = 0;
+				computeAllQualityMetrics(totalFrames, width, height);
+				drawGopSparkline();
 				syncTimelineUI(0);
 				startPlayback(false);
 			} catch (err: any) {
@@ -4014,6 +4694,7 @@
 		});
 
 		if (runBtn) runBtn.onclick = runVerification;
+		probeCodecCapabilities();
 	}
 
 	window.addEventListener('keydown', (e) => {
@@ -5178,6 +5859,130 @@
 		color: #ffffff;
 		border-color: var(--accent);
 	}
+	.codec-view-mode-wrap {
+		display: inline-flex;
+		align-items: center;
+		gap: 2px;
+		background: rgba(0, 0, 0, 0.25);
+		padding: 2px 4px;
+		border-radius: 6px;
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		margin-left: auto;
+	}
+	:global(html[data-theme="light"]) .codec-view-mode-wrap {
+		background: rgba(0, 0, 0, 0.04);
+		border-color: rgba(0, 0, 0, 0.08);
+	}
+	.codec-view-btn {
+		background: transparent;
+		border: 1px solid transparent;
+		color: rgb(var(--gray));
+		font-size: 0.68em;
+		font-weight: 700;
+		font-family: ui-monospace, monospace;
+		padding: 1px 6px;
+		border-radius: 4px;
+		cursor: pointer;
+		line-height: 1.2;
+		transition: all 0.15s ease;
+	}
+	.codec-view-btn:hover {
+		color: rgb(var(--black));
+	}
+	:global(html[data-theme="dark"]) .codec-view-btn:hover {
+		color: #ffffff;
+	}
+	.codec-view-btn.active {
+		background: var(--accent);
+		color: #ffffff;
+		border-color: var(--accent);
+	}
+	.codec-metric-pill {
+		display: inline-flex;
+		align-items: center;
+		font-size: 0.68em;
+		font-family: ui-monospace, monospace;
+		font-weight: 700;
+		color: #22c55e;
+		background: rgba(34, 197, 94, 0.12);
+		border: 1px solid rgba(34, 197, 94, 0.3);
+		padding: 1px 5px;
+		border-radius: 4px;
+		letter-spacing: 0.02em;
+	}
+	:global(html[data-theme="dark"]) .codec-metric-pill {
+		color: #4ade80;
+		background: rgba(34, 197, 94, 0.18);
+		border-color: rgba(34, 197, 94, 0.4);
+	}
+	.codec-badge-dot {
+		display: inline-block;
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		margin-left: 3px;
+		vertical-align: middle;
+	}
+	.codec-badge-dot.hw {
+		background: #22c55e;
+		box-shadow: 0 0 4px #22c55e;
+	}
+	.codec-badge-dot.sw {
+		background: #38bdf8;
+	}
+	.codec-badge-dot.na {
+		background: #ef4444;
+		opacity: 0.8;
+	}
+	.codec-seg-btn.unsupported {
+		opacity: 0.45;
+		text-decoration: line-through;
+	}
+	.codec-sparkline-wrap {
+		position: relative;
+		width: 100%;
+		height: 26px;
+		margin-bottom: 3px;
+		border-radius: 4px;
+		background: rgba(0, 0, 0, 0.22);
+		border: 1px solid rgba(255, 255, 255, 0.06);
+		overflow: visible;
+		display: flex;
+		align-items: center;
+	}
+	:global(html[data-theme="light"]) .codec-sparkline-wrap {
+		background: rgba(0, 0, 0, 0.04);
+		border-color: rgba(0, 0, 0, 0.08);
+	}
+	.codec-sparkline-canvas {
+		width: 100%;
+		height: 100%;
+		display: block;
+		cursor: pointer;
+		border-radius: 3px;
+	}
+	.codec-sparkline-tooltip {
+		position: absolute;
+		bottom: calc(100% + 5px);
+		left: 50%;
+		transform: translateX(-50%);
+		background: rgba(15, 23, 42, 0.95);
+		border: 1px solid rgba(249, 115, 22, 0.5);
+		color: #ffffff;
+		padding: 2px 7px;
+		border-radius: 4px;
+		font-size: 0.68em;
+		font-family: ui-monospace, monospace;
+		white-space: nowrap;
+		pointer-events: none;
+		z-index: 30;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+	}
+	.codec-canvas-wrap.drag-over {
+		outline: 2px dashed var(--accent);
+		outline-offset: -4px;
+		background: rgba(var(--accent-rgb), 0.12) !important;
+	}
 	.codec-loupe-hint {
 		font-size: 0.68em;
 		font-weight: 600;
@@ -5647,13 +6452,18 @@
 	}
 	.codec-metrics-grid {
 		display: grid;
-		grid-template-columns: repeat(4, 1fr);
+		grid-template-columns: repeat(5, 1fr);
 		gap: 0.65em;
 	}
 	.codec-metrics-grid .webgpu-tile-val {
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+	@media (max-width: 860px) {
+		.codec-metrics-grid {
+			grid-template-columns: repeat(3, 1fr);
+		}
 	}
 	@media (max-width: 640px) {
 		.codec-metrics-grid {
@@ -5807,6 +6617,14 @@
 			font-size: 0.62em !important;
 		}
 		.codec-zoom-btn {
+			padding: 1px 4px !important;
+			font-size: 0.62em !important;
+		}
+		.codec-view-mode-wrap {
+			padding: 1px 3px !important;
+			gap: 2px !important;
+		}
+		.codec-view-btn {
 			padding: 1px 4px !important;
 			font-size: 0.62em !important;
 		}

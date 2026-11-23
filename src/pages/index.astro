@@ -203,6 +203,9 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 				document.querySelectorAll('.card-header-summary button, .card-header-summary a, .card-header-summary input, .card-header-summary select, .card-header-summary .segmented-control').forEach((el) => {
 					el.addEventListener('click', (e) => {
 						if (!el.classList.contains('card-chevron-btn')) {
+							if (el.id === 'launch-codec-spotlight-btn' || el.closest('#launch-codec-spotlight-btn')) {
+								window.dispatchEvent(new CustomEvent('open-codec-studio', { detail: { pipeline: 'loopback' } }));
+							}
 							e.stopPropagation();
 						}
 					});

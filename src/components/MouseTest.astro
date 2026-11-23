@@ -2,7 +2,7 @@
 // MouseTest.astro - Real-Time Mouse Polling Rate, Switch Debounce & Click Latency Inspector
 ---
 
-<details class="card section-accordion input-card" id="input-lab" open>
+<details class="card section-accordion input-card" id="input-lab">
 	<summary class="card-header-summary">
 		<div class="card-summary-left">
 			<span class="card-chevron-btn" title="Toggle Mouse Test section">
@@ -784,6 +784,13 @@
 
 		drawSparkline();
 		window.addEventListener('resize', drawSparkline);
+
+		const inputLabDetails = document.getElementById('input-lab');
+		inputLabDetails?.addEventListener('toggle', () => {
+			if ((inputLabDetails as HTMLDetailsElement).open) {
+				requestAnimationFrame(() => drawSparkline());
+			}
+		});
 
 		// Instantly redraw canvas when theme toggles
 		const themeObserver = new MutationObserver((mutations) => {

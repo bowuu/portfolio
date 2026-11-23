@@ -2,7 +2,7 @@
 // CodecSpotlight.astro - WebCodecs Video Codec Transcoder Spotlight Banner
 ---
 
-<details class="card section-accordion codec-spotlight-card" id="video-codec-spotlight" open aria-labelledby="codec-spotlight-title">
+<details class="card section-accordion codec-spotlight-card" id="video-codec-spotlight" aria-labelledby="codec-spotlight-title">
 	<summary class="card-header-summary">
 		<div class="card-summary-left">
 			<span class="card-chevron-btn" title="Toggle Video Codec Studio section">
@@ -172,3 +172,17 @@
 		}
 	}
 </style>
+
+<script>
+	function setupCodecSpotlight() {
+		const launchBtn = document.getElementById('launch-codec-spotlight-btn');
+		launchBtn?.addEventListener('click', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			window.dispatchEvent(new CustomEvent('open-codec-studio', { detail: { pipeline: 'loopback' } }));
+		});
+	}
+
+	setupCodecSpotlight();
+	document.addEventListener('astro:page-load', setupCodecSpotlight);
+</script>

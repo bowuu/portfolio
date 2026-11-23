@@ -3041,13 +3041,14 @@
 
 			// Underline for processed active transcode span
 			const isWindowAligned = rangeStartFrame === processedStartFrameLoaded;
-			ctx.fillStyle = isWindowAligned ? 'rgba(56, 189, 248, 0.45)' : 'rgba(56, 189, 248, 0.2)';
+			ctx.fillStyle = isWindowAligned ? 'rgba(56, 189, 248, 0.45)' : 'rgba(56, 189, 248, 0.25)';
 			ctx.fillRect(startX, h - 1, spanWidth, 1);
 
 			const n = sparklineChunks.length;
 			const maxSize = Math.max(...sparklineChunks.map((c) => c.size), 1);
 			const gap = 1.5;
 			const barW = Math.max(2, (spanWidth - (n - 1) * gap) / n);
+			const sliderGlobalFrame = rangeStartFrame + currentFrameIdx;
 
 			for (let i = 0; i < n; i++) {
 				const chunk = sparklineChunks[i];
@@ -3055,25 +3056,27 @@
 				const bx = startX + i * (barW + gap);
 				const by = h - barH - 1;
 
-				const isCurrent = isWindowAligned && i === currentFrameIdx;
+				const barGlobalFrame = processedStartFrameLoaded + i;
+				const isUnderSlider = barGlobalFrame === sliderGlobalFrame;
+				const isInsideActiveWindow = barGlobalFrame >= rangeStartFrame && barGlobalFrame < rangeStartFrame + TEST_WINDOW_FRAMES;
 				const isKey = chunk.type === 'key';
 
 				if (isKey) {
-					ctx.fillStyle = isCurrent ? '#ea580c' : (isWindowAligned ? '#f97316' : 'rgba(249, 115, 22, 0.45)');
+					ctx.fillStyle = isUnderSlider ? '#ea580c' : (isInsideActiveWindow ? '#f97316' : 'rgba(249, 115, 22, 0.45)');
 				} else {
-					ctx.fillStyle = isCurrent ? '#ffffff' : (isWindowAligned ? 'rgba(148, 163, 184, 0.65)' : 'rgba(148, 163, 184, 0.35)');
+					ctx.fillStyle = isUnderSlider ? '#ffffff' : (isInsideActiveWindow ? 'rgba(148, 163, 184, 0.65)' : 'rgba(148, 163, 184, 0.35)');
 				}
 
 				ctx.fillRect(bx, by, barW, barH);
 
-				if (isCurrent) {
+				if (isUnderSlider) {
 					ctx.strokeStyle = '#ffffff';
 					ctx.lineWidth = 1.5;
 					ctx.strokeRect(bx - 0.5, by - 0.5, barW + 1, barH + 1);
 				}
 
 				if (isKey) {
-					ctx.fillStyle = isWindowAligned ? '#38bdf8' : 'rgba(56, 189, 248, 0.45)';
+					ctx.fillStyle = isInsideActiveWindow ? '#38bdf8' : 'rgba(56, 189, 248, 0.45)';
 					ctx.fillRect(bx, by - 1.5, barW, 1.5);
 				}
 			}
@@ -3408,8 +3411,12 @@
 		function syncTimelineUI(relFrameIdx: number) {
 			currentFrameIdx = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, relFrameIdx));
 			const globalFrame = rangeStartFrame + currentFrameIdx;
-			const isTranscodeCurrent = (selectedScene === decodedSceneLoaded && decodedStartFrameLoaded === rangeStartFrame && decodedStartFrameLoaded >= 0);
-			const curQ = isTranscodeCurrent ? frameQualityMetrics[currentFrameIdx] : null;
+
+			const cachedDecIdx = (selectedScene === decodedSceneLoaded && decodedStartFrameLoaded >= 0)
+				? globalFrame - decodedStartFrameLoaded
+				: -1;
+			const hasCachedDecoded = cachedDecIdx >= 0 && cachedDecIdx < TEST_WINDOW_FRAMES && !!decodedBitmaps[cachedDecIdx];
+			const curQ = hasCachedDecoded ? frameQualityMetrics[cachedDecIdx] : null;
 
 			if (frameReadout) {
 				frameReadout.textContent = `Frame ${currentFrameIdx + 1} / ${TEST_WINDOW_FRAMES}`;
@@ -3423,7 +3430,7 @@
 			if (metricQuality) {
 				if (curQ && avgPsnr > 0) {
 					metricQuality.innerHTML = `${avgPsnr.toFixed(1)} <span class="webgpu-tile-sub">dB (F${currentFrameIdx + 1}: ${curQ.psnr.toFixed(1)} dB)</span>`;
-				} else if (decodedStartFrameLoaded >= 0 && !isTranscodeCurrent) {
+				} else if (decodedStartFrameLoaded >= 0 && !hasCachedDecoded) {
 					metricQuality.innerHTML = `-- <span class="webgpu-tile-sub">(Pending transcode)</span>`;
 				}
 			}

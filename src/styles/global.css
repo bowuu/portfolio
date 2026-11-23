@@ -291,6 +291,35 @@ details.card.section-accordion:not([open]) > summary.card-header-summary {
 details.card.section-accordion:not([open]) {
   padding-top: clamp(0.9em, 2vw, 1.2em);
   padding-bottom: clamp(0.9em, 2vw, 1.2em);
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+/* Collapsed Header Hover Lighting Effect (matches Debug telemetry box glow) */
+details.card.section-accordion:not([open]):hover {
+  border-color: rgba(var(--accent-rgb), 0.38);
+  box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.08), var(--box-shadow);
+}
+
+details.card.section-accordion:not([open]):hover::before {
+  opacity: 1;
+}
+
+details.card.section-accordion:not([open]):hover .card-chevron-btn {
+  color: var(--accent);
+  border-color: rgba(var(--accent-rgb), 0.35);
+  background: rgba(var(--accent-rgb), 0.08);
+}
+
+html[data-theme="dark"] details.card.section-accordion:not([open]):hover {
+  border-color: rgba(var(--accent-rgb), 0.45);
+  box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.12), var(--box-shadow);
+}
+
+html[data-theme="dark"] details.card.section-accordion:not([open]):hover .card-chevron-btn {
+  color: var(--accent);
+  border-color: rgba(var(--accent-rgb), 0.42);
+  background: rgba(var(--accent-rgb), 0.12);
 }
 
 .card-summary-left {

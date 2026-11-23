@@ -12,7 +12,6 @@
 				</svg>
 				Audio Test
 			</h2>
-			<span class="section-summary-badge">DAC Pipeline · Phase · 20Hz–20kHz</span>
 
 			<!-- Telemetry HUD Badge -->
 			<div class="header-hud-badge" id="hero-hud-overlay">
@@ -110,157 +109,124 @@
 
 		<!-- COLUMN 2: HARDWARE TEST CONTROLS -->
 		<div class="audio-col controls-col">
-			<!-- SUB-DRAWER SWITCHER -->
-			<div class="audio-drawer-nav" role="tablist" aria-label="Audio Controls Mode">
-				<button class="audio-drawer-tab active" data-audio-drawer="sweep" type="button" role="tab" aria-selected="true" aria-controls="drawer-sweep">
-					<span>Sweep &amp; Scrub</span>
-				</button>
-				<button class="audio-drawer-tab" data-audio-drawer="presets" type="button" role="tab" aria-selected="false" aria-controls="drawer-presets">
-					<span>Presets</span>
-				</button>
-				<button class="audio-drawer-tab" data-audio-drawer="stereo" type="button" role="tab" aria-selected="false" aria-controls="drawer-stereo">
-					<span>Stereo &amp; Noise</span>
-				</button>
-			</div>
+			<!-- SECTION 1: TONE GENERATOR & SWEEPER -->
+			<div class="control-group">
+				<div class="group-header">
+					<div class="group-header-left">
+						<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="group-icon">
+							<path d="M2 12h4l3 8 4-16 3 8h6"/>
+						</svg>
+						<span class="group-title">Tone Generator &amp; Sweeper</span>
+					</div>
+				</div>
 
-			<!-- DRAWER 1: SWEEP & SINE SCRUB -->
-			<div class="audio-drawer active" id="drawer-sweep" data-drawer-panel="sweep" role="tabpanel">
-				<div class="control-group">
-					<div class="group-header">
-						<div class="group-header-left">
-							<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="group-icon">
+				<!-- SINE TONE & SWEEPER SECTION -->
+				<div class="tone-controls-section">
+					<!-- SWEEP ACTIONS -->
+					<div class="sweep-actions-row">
+						<button id="run-sweep-btn" class="sweep-btn" type="button" title="Run 10-second frequency sweep (20 Hz–20,000 Hz)">
+							<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" class="sweep-icon">
 								<path d="M2 18l6-6 4 4 10-10"/>
 								<polyline points="16 6 22 6 22 12"/>
 							</svg>
-							<span class="group-title">Frequency Sweep &amp; Sine Scrub</span>
-						</div>
+							<span id="run-sweep-text">Auto Frequency Sweep (10s)</span>
+						</button>
 					</div>
 
-					<div class="tone-controls-section">
-						<!-- SWEEP ACTIONS -->
-						<div class="sweep-actions-row">
-							<button id="run-sweep-btn" class="sweep-btn" type="button" title="Run 10-second frequency sweep (20 Hz–20,000 Hz)">
-								<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" class="sweep-icon">
-									<path d="M2 18l6-6 4 4 10-10"/>
-									<polyline points="16 6 22 6 22 12"/>
+					<!-- SCRUB SLIDER -->
+					<div class="slider-row">
+						<div class="slider-header-info">
+							<span class="slider-hint">Sine Frequency Scrub</span>
+							<span class="slider-hz-val mono" id="slider-hz-display">1,000 Hz</span>
+						</div>
+						<div class="slider-input-wrap">
+							<button id="btn-play-tone" class="slider-play-btn" type="button" title="Play or Stop Sine Tone" aria-label="Play or Stop Sine Tone">
+								<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" class="play-icon" id="play-tone-icon">
+									<polygon points="6 4 20 12 6 20 6 4"/>
 								</svg>
-								<span id="run-sweep-text">Auto Frequency Sweep (10s)</span>
+								<span id="tone-play-text">Play</span>
 							</button>
+							<input type="range" id="freq-slider" min="20" max="20000" step="1" value="11335" class="freq-slider" aria-label="Frequency Slider" aria-valuenow="1000" aria-valuetext="1,000 Hz" />
 						</div>
+					</div>
 
-						<!-- SCRUB SLIDER -->
-						<div class="slider-row">
-							<div class="slider-header-info">
-								<span class="slider-hint">Sine Frequency Scrub</span>
-								<span class="slider-hz-val mono" id="slider-hz-display">1,000 Hz</span>
-							</div>
-							<div class="slider-input-wrap">
-								<button id="btn-play-tone" class="slider-play-btn" type="button" title="Play or Stop Sine Tone" aria-label="Play or Stop Sine Tone">
-									<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" class="play-icon" id="play-tone-icon">
-										<polygon points="6 4 20 12 6 20 6 4"/>
-									</svg>
-									<span id="tone-play-text">Play</span>
-								</button>
-								<input type="range" id="freq-slider" min="20" max="20000" step="1" value="11335" class="freq-slider" aria-label="Frequency Slider" aria-valuenow="1000" aria-valuetext="1,000 Hz" />
-							</div>
-						</div>
+					<!-- PRESET BUTTONS (Compact 3-Column Grid) -->
+					<div class="freq-buttons-grid">
+						<button class="tone-btn freq-btn" data-hz="20" type="button">
+							<span class="tone-pill mono">20 Hz</span>
+							<span class="tone-name">Sub</span>
+						</button>
+
+						<button class="tone-btn freq-btn" data-hz="60" type="button">
+							<span class="tone-pill mono">60 Hz</span>
+							<span class="tone-name">Bass</span>
+						</button>
+
+						<button class="tone-btn freq-btn" data-hz="250" type="button">
+							<span class="tone-pill mono">250 Hz</span>
+							<span class="tone-name">Mid</span>
+						</button>
+
+						<button class="tone-btn freq-btn" data-hz="1000" type="button">
+							<span class="tone-pill mono">1 kHz</span>
+							<span class="tone-name">Ref</span>
+						</button>
+
+						<button class="tone-btn freq-btn" data-hz="8000" type="button">
+							<span class="tone-pill mono">8 kHz</span>
+							<span class="tone-name">Pres</span>
+						</button>
+
+						<button class="tone-btn freq-btn" data-hz="16000" type="button">
+							<span class="tone-pill mono">16 kHz</span>
+							<span class="tone-name">Treble</span>
+						</button>
 					</div>
 				</div>
 			</div>
 
-			<!-- DRAWER 2: FREQUENCY PRESETS -->
-			<div class="audio-drawer hidden" id="drawer-presets" data-drawer-panel="presets" role="tabpanel">
-				<div class="control-group">
-					<div class="group-header">
-						<div class="group-header-left">
-							<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="group-icon">
-								<path d="M2 12h4l3 8 4-16 3 8h6"/>
-							</svg>
-							<span class="group-title">Frequency Presets (20 Hz &ndash; 16 kHz)</span>
-						</div>
-					</div>
-
-					<div class="tone-controls-section">
-						<!-- PRESET BUTTONS (Compact 3-Column Grid) -->
-						<div class="freq-buttons-grid">
-							<button class="tone-btn freq-btn" data-hz="20" type="button">
-								<span class="tone-pill mono">20 Hz</span>
-								<span class="tone-name">Sub</span>
-							</button>
-
-							<button class="tone-btn freq-btn" data-hz="60" type="button">
-								<span class="tone-pill mono">60 Hz</span>
-								<span class="tone-name">Bass</span>
-							</button>
-
-							<button class="tone-btn freq-btn" data-hz="250" type="button">
-								<span class="tone-pill mono">250 Hz</span>
-								<span class="tone-name">Mid</span>
-							</button>
-
-							<button class="tone-btn freq-btn" data-hz="1000" type="button">
-								<span class="tone-pill mono">1 kHz</span>
-								<span class="tone-name">Ref</span>
-							</button>
-
-							<button class="tone-btn freq-btn" data-hz="8000" type="button">
-								<span class="tone-pill mono">8 kHz</span>
-								<span class="tone-name">Pres</span>
-							</button>
-
-							<button class="tone-btn freq-btn" data-hz="16000" type="button">
-								<span class="tone-pill mono">16 kHz</span>
-								<span class="tone-name">Treble</span>
-							</button>
-						</div>
+			<!-- SECTION 2: STEREO, POLARITY & NOISE -->
+			<div class="control-group">
+				<div class="group-header">
+					<div class="group-header-left">
+						<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="group-icon">
+							<circle cx="12" cy="12" r="10"/>
+							<line x1="12" y1="2" x2="12" y2="22"/>
+						</svg>
+						<span class="group-title">Stereo ▪ Polarity ▪ Noise</span>
 					</div>
 				</div>
-			</div>
 
-			<!-- DRAWER 3: STEREO, POLARITY & NOISE -->
-			<div class="audio-drawer hidden" id="drawer-stereo" data-drawer-panel="stereo" role="tabpanel">
-				<div class="control-group">
-					<div class="group-header">
-						<div class="group-header-left">
-							<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="group-icon">
-								<circle cx="12" cy="12" r="10"/>
-								<line x1="12" y1="2" x2="12" y2="22"/>
-							</svg>
-							<span class="group-title">Stereo ▪ Polarity ▪ Noise</span>
-						</div>
-					</div>
+				<div class="tone-buttons-grid">
+					<button class="tone-btn" id="btn-tone-left" type="button">
+						<span class="tone-pill cyan">L</span>
+						<span class="tone-name">Left Channel</span>
+					</button>
 
-					<div class="tone-buttons-grid">
-						<button class="tone-btn" id="btn-tone-left" type="button">
-							<span class="tone-pill cyan">L</span>
-							<span class="tone-name">Left Channel</span>
-						</button>
+					<button class="tone-btn" id="btn-tone-right" type="button">
+						<span class="tone-pill amber">R</span>
+						<span class="tone-name">Right Channel</span>
+					</button>
 
-						<button class="tone-btn" id="btn-tone-right" type="button">
-							<span class="tone-pill amber">R</span>
-							<span class="tone-name">Right Channel</span>
-						</button>
+					<button class="tone-btn" id="btn-tone-inphase" type="button">
+						<span class="tone-pill green">0&deg;</span>
+						<span class="tone-name">Center Channel</span>
+					</button>
 
-						<button class="tone-btn" id="btn-tone-inphase" type="button">
-							<span class="tone-pill green">0&deg;</span>
-							<span class="tone-name">Center Channel</span>
-						</button>
+					<button class="tone-btn" id="btn-tone-outphase" type="button">
+						<span class="tone-pill warn">180&deg;</span>
+						<span class="tone-name">Out-of-Phase</span>
+					</button>
 
-						<button class="tone-btn" id="btn-tone-outphase" type="button">
-							<span class="tone-pill warn">180&deg;</span>
-							<span class="tone-name">Out-of-Phase</span>
-						</button>
+					<button class="tone-btn" id="btn-noise-pink" data-noise="pink" type="button">
+						<span class="tone-pill pink">P</span>
+						<span class="tone-name">Pink Noise</span>
+					</button>
 
-						<button class="tone-btn" id="btn-noise-pink" data-noise="pink" type="button">
-							<span class="tone-pill pink">P</span>
-							<span class="tone-name">Pink Noise</span>
-						</button>
-
-						<button class="tone-btn" id="btn-noise-white" data-noise="white" type="button">
-							<span class="tone-pill white">W</span>
-							<span class="tone-name">White Noise</span>
-						</button>
-					</div>
+					<button class="tone-btn" id="btn-noise-white" data-noise="white" type="button">
+						<span class="tone-pill white">W</span>
+						<span class="tone-name">White Noise</span>
+					</button>
 				</div>
 			</div>
 		</div>
@@ -493,24 +459,6 @@
 			freqSlider.setAttribute('aria-valuetext', `${Math.round(currentToneHz).toLocaleString()} Hz`);
 		}
 
-		// Progressive Disclosure Sub-Drawers
-		const drawerTabs = document.querySelectorAll<HTMLButtonElement>('.audio-drawer-tab');
-		const drawers = document.querySelectorAll<HTMLElement>('.audio-drawer');
-		drawerTabs.forEach((tab) => {
-			tab.addEventListener('click', () => {
-				const target = tab.getAttribute('data-audio-drawer');
-				drawerTabs.forEach((t) => {
-					const isMatch = t.getAttribute('data-audio-drawer') === target;
-					t.classList.toggle('active', isMatch);
-					t.setAttribute('aria-selected', String(isMatch));
-				});
-				drawers.forEach((d) => {
-					const isMatch = d.getAttribute('data-drawer-panel') === target;
-					d.classList.toggle('active', isMatch);
-					d.classList.toggle('hidden', !isMatch);
-				});
-			});
-		});
 
 		const freqBtns = document.querySelectorAll('.freq-btn');
 		const btnNoisePink = document.getElementById('btn-noise-pink');
@@ -2071,25 +2019,23 @@
 		background: var(--bg-card);
 	}
 
-	.card-header-wrap {
+	/* CARD HEADER SUMMARY */
+	.audio-test-card > summary.card-header-summary {
 		display: flex;
-		justify-content: space-between;
 		align-items: center;
-		flex-wrap: wrap;
-		gap: 0.8em;
-		padding-bottom: 0.8em;
-		margin-bottom: 0.8em;
-		border-bottom: 1.5px solid var(--border-color);
+		justify-content: space-between;
+		flex-wrap: nowrap;
+		gap: 0.85em;
 	}
 
-	.card-header-left {
-		display: flex;
+	.audio-test-card .card-summary-left {
+		display: inline-flex;
 		align-items: center;
 		gap: 0.75em;
-		flex-wrap: wrap;
+		flex-shrink: 0;
 	}
 
-	.card-header-wrap .card-title {
+	.audio-test-card .card-summary-left .card-title {
 		font-size: clamp(1.2em, 2.5vw, 1.35em);
 		font-weight: 700;
 		margin: 0;
@@ -2109,13 +2055,17 @@
 		align-items: center;
 	}
 
-	.header-actions {
-		display: flex;
+	.audio-test-card .card-summary-right {
+		display: inline-flex;
 		align-items: center;
-		gap: 0.6em;
-		flex-shrink: 1;
-		min-width: 0;
-		flex-wrap: wrap;
+		gap: 0.65em;
+		flex-shrink: 0;
+	}
+
+	/* When collapsed, keep audio header minimal */
+	details.audio-test-card:not([open]) .source-control,
+	details.audio-test-card:not([open]) .volume-control-wrap {
+		display: none !important;
 	}
 
 	.source-mic-icon {
@@ -2562,63 +2512,6 @@
 		padding: 1.1em;
 	}
 
-	.audio-drawer-nav {
-		display: flex;
-		align-items: center;
-		gap: 0.35em;
-		background: rgba(0, 0, 0, 0.04);
-		border: 1px solid var(--border-color);
-		padding: 0.25em;
-		border-radius: 8px;
-		margin-bottom: 0.5em;
-	}
-
-	:global(html[data-theme="dark"]) .audio-drawer-nav {
-		background: rgba(255, 255, 255, 0.03);
-	}
-
-	.audio-drawer-tab {
-		flex: 1;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0.45em 0.6em;
-		border-radius: 6px;
-		border: 1px solid transparent;
-		background: transparent;
-		color: rgb(var(--gray));
-		font-family: inherit;
-		font-size: 0.82em;
-		font-weight: 600;
-		cursor: pointer;
-		white-space: nowrap;
-		transition: all 0.15s ease;
-		user-select: none;
-	}
-
-	.audio-drawer-tab:hover {
-		color: rgb(var(--black));
-	}
-
-	.audio-drawer-tab.active {
-		color: var(--accent);
-		background: var(--bg-card);
-		border-color: rgba(var(--accent-rgb), 0.3);
-		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-	}
-
-	:global(html[data-theme="dark"]) .audio-drawer-tab.active {
-		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
-	}
-
-	.audio-drawer {
-		animation: drawerFade 0.18s ease-out;
-	}
-
-	@keyframes drawerFade {
-		from { opacity: 0; transform: translateY(3px); }
-		to { opacity: 1; transform: translateY(0); }
-	}
 
 	.control-group {
 		background: rgba(148, 163, 184, 0.06);
@@ -3000,23 +2893,49 @@
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 	}
 
-	@media (max-width: 380px) {
-		.card-header-wrap {
+	@media (max-width: 680px) {
+		.audio-test-card > summary.card-header-summary {
+			display: grid;
+			grid-template-columns: 1fr auto;
+			row-gap: 0.65em;
+			column-gap: 0.5em;
+			align-items: center;
+		}
+		.audio-test-card .card-summary-left {
+			grid-column: 1 / 2;
+			grid-row: 1 / 2;
 			flex-wrap: wrap;
+			gap: 0.5em;
 		}
-		.header-actions {
-			width: 100%;
+		.audio-test-card .card-summary-right {
+			display: contents;
 		}
-		.volume-control-wrap {
-			width: 100%;
-			justify-content: space-between;
+		.audio-test-card .source-control {
+			grid-column: 1 / 2;
+			grid-row: 2 / 3;
+			justify-self: start;
 		}
-		.vol-slider {
-			flex: 1;
-			width: auto;
-			max-width: none;
+		.audio-test-card .volume-control-wrap {
+			grid-column: 2 / 3;
+			grid-row: 2 / 3;
+			justify-self: end;
 		}
-		.tone-buttons-grid {
+		.audio-test-card .card-chevron-btn {
+			grid-column: 2 / 3;
+			grid-row: 1 / 2;
+			justify-self: end;
+		}
+	}
+
+	@media (max-width: 440px) {
+		.audio-test-card .source-control .seg-btn {
+			padding: 0.25em 0.45em;
+			font-size: 0.74em;
+		}
+		.audio-test-card .vol-slider {
+			width: 65px;
+		}
+		.audio-test-card .tone-buttons-grid {
 			grid-template-columns: 1fr;
 		}
 	}

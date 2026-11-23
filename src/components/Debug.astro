@@ -3019,39 +3019,30 @@
 			ctx.scale(dpr, dpr);
 			ctx.clearRect(0, 0, w, h);
 
-			const windowStartX = (rangeStartFrame / TOTAL_CLIP_FRAMES) * w;
-			const windowWidth = (TEST_WINDOW_FRAMES / TOTAL_CLIP_FRAMES) * w;
-
 			if (sparklineChunks.length === 0) {
 				ctx.fillStyle = 'rgba(148, 163, 184, 0.15)';
-				ctx.fillRect(0, h - 2, w, 1);
-				ctx.fillStyle = 'rgba(249, 115, 22, 0.25)';
-				ctx.fillRect(windowStartX, h - 2, windowWidth, 2);
-				ctx.fillStyle = 'rgba(148, 163, 184, 0.4)';
+				ctx.fillRect(0, h - 1, w, 1);
+				ctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
 				ctx.font = '9px ui-monospace, monospace';
 				ctx.textAlign = 'center';
 				ctx.textBaseline = 'middle';
-				ctx.fillText('24-Frame Bitrate Sparkline', windowStartX + windowWidth / 2, h / 2);
+				ctx.fillText('24-Frame Bitrate Distribution (Awaiting test run)', w / 2, h / 2);
 				return;
 			}
 
-			// Subtle track guideline across full 60 frames
-			ctx.fillStyle = 'rgba(148, 163, 184, 0.12)';
-			ctx.fillRect(0, h - 2, w, 1);
-
-			// Active window guideline
-			ctx.fillStyle = 'rgba(249, 115, 22, 0.3)';
-			ctx.fillRect(windowStartX, h - 2, windowWidth, 2);
+			// Subtle track guideline across full width
+			ctx.fillStyle = 'rgba(148, 163, 184, 0.15)';
+			ctx.fillRect(0, h - 1, w, 1);
 
 			const n = sparklineChunks.length;
 			const maxSize = Math.max(...sparklineChunks.map((c) => c.size), 1);
-			const gap = 1.5;
-			const barW = Math.max(2, (windowWidth - (n - 1) * gap) / n);
+			const gap = 2;
+			const barW = Math.max(2, (w - (n - 1) * gap) / n);
 
 			for (let i = 0; i < n; i++) {
 				const chunk = sparklineChunks[i];
 				const barH = Math.max(3, (chunk.size / maxSize) * (h - 4));
-				const bx = windowStartX + i * (barW + gap);
+				const bx = i * (barW + gap);
 				const by = h - barH - 1;
 
 				const isCurrent = i === currentFrameIdx;
@@ -3238,20 +3229,10 @@
 				if (sparklineChunks.length === 0) return;
 				const rect = sparklineCanvas.getBoundingClientRect();
 				const mx = e.clientX - rect.left;
-				const w = rect.width;
-				const windowStartX = (rangeStartFrame / TOTAL_CLIP_FRAMES) * w;
-				const windowWidth = (TEST_WINDOW_FRAMES / TOTAL_CLIP_FRAMES) * w;
-
-				if (mx < windowStartX || mx > windowStartX + windowWidth) {
-					if (sparklineTooltip) sparklineTooltip.classList.add('hidden');
-					return;
-				}
-
 				const n = sparklineChunks.length;
-				const gap = 1.5;
-				const barW = Math.max(2, (windowWidth - (n - 1) * gap) / n);
-				const relX = mx - windowStartX;
-				const idx = Math.max(0, Math.min(n - 1, Math.floor(relX / (barW + gap))));
+				const gap = 2;
+				const barW = (rect.width - (n - 1) * gap) / n;
+				const idx = Math.max(0, Math.min(n - 1, Math.floor(mx / (barW + gap))));
 				const chunk = sparklineChunks[idx];
 				if (sparklineTooltip && chunk) {
 					sparklineTooltip.classList.remove('hidden');
@@ -3269,18 +3250,11 @@
 				if (sparklineChunks.length === 0) return;
 				const rect = sparklineCanvas.getBoundingClientRect();
 				const mx = e.clientX - rect.left;
-				const w = rect.width;
-				const windowStartX = (rangeStartFrame / TOTAL_CLIP_FRAMES) * w;
-				const windowWidth = (TEST_WINDOW_FRAMES / TOTAL_CLIP_FRAMES) * w;
-
-				if (mx >= windowStartX && mx <= windowStartX + windowWidth) {
-					const n = sparklineChunks.length;
-					const gap = 1.5;
-					const barW = Math.max(2, (windowWidth - (n - 1) * gap) / n);
-					const relX = mx - windowStartX;
-					const idx = Math.max(0, Math.min(n - 1, Math.floor(relX / (barW + gap))));
-					seekToFrame(idx);
-				}
+				const n = sparklineChunks.length;
+				const gap = 2;
+				const barW = (rect.width - (n - 1) * gap) / n;
+				const idx = Math.max(0, Math.min(n - 1, Math.floor(mx / (barW + gap))));
+				seekToFrame(idx);
 			});
 		}
 

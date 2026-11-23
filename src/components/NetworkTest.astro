@@ -666,12 +666,15 @@
 		min-width: 68px;
 	}
 	.benchmark-btn:hover:not(:disabled) {
-		background: #c2410c;
-		transform: translateY(-1px);
-		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+		background: #ff6b18;
+		border-color: rgba(255, 255, 255, 0.4);
+		transform: translateY(-1.5px);
+		box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.75), 0 2px 8px rgba(0, 0, 0, 0.35);
+		color: #ffffff;
 	}
 	.benchmark-btn:active:not(:disabled) {
 		transform: translateY(0);
+		box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.5);
 	}
 	.benchmark-btn:disabled {
 		opacity: 0.6;

@@ -867,6 +867,10 @@
 		box-sizing: border-box;
 	}
 
+	.telemetry-btn svg {
+		flex-shrink: 0;
+	}
+
 	:global(html[data-theme="dark"]) .telemetry-btn {
 		background: rgba(255, 255, 255, 0.05);
 		color: rgba(255, 255, 255, 0.85);
@@ -875,7 +879,9 @@
 	.telemetry-btn:hover {
 		border-color: var(--accent);
 		color: var(--accent);
-		background: rgba(var(--accent-rgb), 0.08);
+		background: rgba(var(--accent-rgb), 0.12);
+		box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.35);
+		transform: translateY(-1px);
 	}
 
 	.benchmark-desc {

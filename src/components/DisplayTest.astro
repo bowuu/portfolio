@@ -854,16 +854,16 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.5em;
-		background: rgba(148, 163, 184, 0.18);
-		border: 1px solid rgba(148, 163, 184, 0.35);
-		color: rgb(var(--black));
-		padding: 0 11px;
+		gap: 0.45em;
+		background: rgba(148, 163, 184, 0.12);
+		border: 1px solid var(--border-color);
+		color: rgb(var(--gray-dark));
+		padding: 0 10px;
 		height: 31px;
 		border-radius: 8px;
 		font-family: inherit;
 		font-size: 0.78em;
-		font-weight: 700;
+		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.15s ease;
 		line-height: 1;
@@ -871,16 +871,21 @@
 		box-sizing: border-box;
 	}
 
+	.telemetry-btn svg {
+		flex-shrink: 0;
+	}
+
 	:global(html[data-theme="dark"]) .telemetry-btn {
-		background: rgba(255, 255, 255, 0.08);
-		border: 1px solid rgba(255, 255, 255, 0.16);
-		color: #ffffff;
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid var(--border-color);
+		color: rgba(255, 255, 255, 0.85);
 	}
 
 	.telemetry-btn:hover {
 		border-color: var(--accent);
 		color: var(--accent);
 		background: rgba(var(--accent-rgb), 0.12);
+		box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.35);
 		transform: translateY(-1px);
 	}
 
@@ -908,13 +913,16 @@
 	}
 
 	.benchmark-btn:hover:not(:disabled) {
-		background: #c2410c;
-		transform: translateY(-1px);
-		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+		background: #ff6b18;
+		border-color: rgba(255, 255, 255, 0.4);
+		transform: translateY(-1.5px);
+		box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.75), 0 2px 8px rgba(0, 0, 0, 0.35);
+		color: #ffffff;
 	}
 
 	.benchmark-btn:active:not(:disabled) {
 		transform: translateY(0);
+		box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.5);
 	}
 
 	.benchmark-btn:disabled {
@@ -943,10 +951,6 @@
 	#toggle-display-icon-stop,
 	#toggle-display-icon-play {
 		color: #ffffff;
-	}
-
-	#open-pixel-checker-btn svg {
-		color: var(--accent);
 	}
 
 	.benchmark-desc {

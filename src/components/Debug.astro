@@ -2210,6 +2210,7 @@
 		let sourceStartFrameLoaded = -1;
 		let decodedSceneLoaded = '';
 		let decodedStartFrameLoaded = -1;
+		let processedStartFrameLoaded = -1;
 
 		const pipelineSegBtns = document.querySelectorAll<HTMLButtonElement>('#pipeline-selector .codec-seg-btn');
 		const codecSegBtns = document.querySelectorAll<HTMLButtonElement>('#codec-selector .codec-seg-btn');
@@ -3019,30 +3020,38 @@
 			ctx.scale(dpr, dpr);
 			ctx.clearRect(0, 0, w, h);
 
-			if (sparklineChunks.length === 0) {
+			if (sparklineChunks.length === 0 || processedStartFrameLoaded < 0) {
 				ctx.fillStyle = 'rgba(148, 163, 184, 0.15)';
 				ctx.fillRect(0, h - 1, w, 1);
 				ctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
 				ctx.font = '9px ui-monospace, monospace';
 				ctx.textAlign = 'center';
 				ctx.textBaseline = 'middle';
-				ctx.fillText('24-Frame Bitrate Distribution (Awaiting test run)', w / 2, h / 2);
+				ctx.fillText('Compressed Bitstream (Click "Start" to transcode)', w / 2, h / 2);
 				return;
 			}
 
 			// Subtle track guideline across full width
-			ctx.fillStyle = 'rgba(148, 163, 184, 0.15)';
+			ctx.fillStyle = 'rgba(148, 163, 184, 0.12)';
 			ctx.fillRect(0, h - 1, w, 1);
+
+			// Position bars strictly over the PROCESSED transcode window
+			const startX = (processedStartFrameLoaded / TOTAL_CLIP_FRAMES) * w;
+			const spanWidth = (TEST_WINDOW_FRAMES / TOTAL_CLIP_FRAMES) * w;
+
+			// Underline for processed active transcode span
+			ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+			ctx.fillRect(startX, h - 1, spanWidth, 1);
 
 			const n = sparklineChunks.length;
 			const maxSize = Math.max(...sparklineChunks.map((c) => c.size), 1);
-			const gap = 2;
-			const barW = Math.max(2, (w - (n - 1) * gap) / n);
+			const gap = 1.5;
+			const barW = Math.max(2, (spanWidth - (n - 1) * gap) / n);
 
 			for (let i = 0; i < n; i++) {
 				const chunk = sparklineChunks[i];
 				const barH = Math.max(3, (chunk.size / maxSize) * (h - 4));
-				const bx = i * (barW + gap);
+				const bx = startX + i * (barW + gap);
 				const by = h - barH - 1;
 
 				const isCurrent = i === currentFrameIdx;
@@ -3051,7 +3060,7 @@
 				if (isKey) {
 					ctx.fillStyle = isCurrent ? '#ea580c' : '#f97316';
 				} else {
-					ctx.fillStyle = isCurrent ? '#94a3b8' : 'rgba(148, 163, 184, 0.45)';
+					ctx.fillStyle = isCurrent ? '#94a3b8' : 'rgba(148, 163, 184, 0.55)';
 				}
 
 				ctx.fillRect(bx, by, barW, barH);
@@ -3148,6 +3157,7 @@
 			decodedBitmaps = [];
 			decodedSceneLoaded = '';
 			decodedStartFrameLoaded = -1;
+			processedStartFrameLoaded = -1;
 			sparklineChunks = [];
 			frameQualityMetrics = [];
 			drawGopSparkline();
@@ -3226,19 +3236,29 @@
 
 		if (sparklineCanvas) {
 			sparklineCanvas.addEventListener('mousemove', (e) => {
-				if (sparklineChunks.length === 0) return;
+				if (sparklineChunks.length === 0 || processedStartFrameLoaded < 0) return;
 				const rect = sparklineCanvas.getBoundingClientRect();
 				const mx = e.clientX - rect.left;
+				const w = rect.width;
+				const startX = (processedStartFrameLoaded / TOTAL_CLIP_FRAMES) * w;
+				const spanWidth = (TEST_WINDOW_FRAMES / TOTAL_CLIP_FRAMES) * w;
+
+				if (mx < startX || mx > startX + spanWidth) {
+					if (sparklineTooltip) sparklineTooltip.classList.add('hidden');
+					return;
+				}
+
 				const n = sparklineChunks.length;
-				const gap = 2;
-				const barW = (rect.width - (n - 1) * gap) / n;
-				const idx = Math.max(0, Math.min(n - 1, Math.floor(mx / (barW + gap))));
+				const gap = 1.5;
+				const barW = Math.max(2, (spanWidth - (n - 1) * gap) / n);
+				const relX = mx - startX;
+				const idx = Math.max(0, Math.min(n - 1, Math.floor(relX / (barW + gap))));
 				const chunk = sparklineChunks[idx];
 				if (sparklineTooltip && chunk) {
 					sparklineTooltip.classList.remove('hidden');
 					const kb = (chunk.size / 1024).toFixed(1);
 					const qStr = frameQualityMetrics[idx] ? ` · ${frameQualityMetrics[idx].psnr.toFixed(1)} dB` : '';
-					sparklineTooltip.textContent = `Frame ${idx + 1}: ${kb} KB (${chunk.type === 'key' ? 'I-Frame Key' : 'P-Frame'})${qStr}`;
+					sparklineTooltip.textContent = `Frame ${processedStartFrameLoaded + idx + 1}: ${kb} KB (${chunk.type === 'key' ? 'I-Frame Key' : 'P-Frame'})${qStr}`;
 					const tipX = Math.max(40, Math.min(rect.width - 40, mx));
 					sparklineTooltip.style.left = `${tipX}px`;
 				}
@@ -3247,14 +3267,21 @@
 				if (sparklineTooltip) sparklineTooltip.classList.add('hidden');
 			});
 			sparklineCanvas.addEventListener('click', (e) => {
-				if (sparklineChunks.length === 0) return;
+				if (sparklineChunks.length === 0 || processedStartFrameLoaded < 0) return;
 				const rect = sparklineCanvas.getBoundingClientRect();
 				const mx = e.clientX - rect.left;
-				const n = sparklineChunks.length;
-				const gap = 2;
-				const barW = (rect.width - (n - 1) * gap) / n;
-				const idx = Math.max(0, Math.min(n - 1, Math.floor(mx / (barW + gap))));
-				seekToFrame(idx);
+				const w = rect.width;
+				const startX = (processedStartFrameLoaded / TOTAL_CLIP_FRAMES) * w;
+				const spanWidth = (TEST_WINDOW_FRAMES / TOTAL_CLIP_FRAMES) * w;
+
+				if (mx >= startX && mx <= startX + spanWidth) {
+					const n = sparklineChunks.length;
+					const gap = 1.5;
+					const barW = Math.max(2, (spanWidth - (n - 1) * gap) / n);
+					const relX = mx - startX;
+					const idx = Math.max(0, Math.min(n - 1, Math.floor(relX / (barW + gap))));
+					seekToFrame(idx);
+				}
 			});
 		}
 
@@ -3279,6 +3306,7 @@
 			decodedBitmaps = [];
 			decodedSceneLoaded = '';
 			decodedStartFrameLoaded = -1;
+			processedStartFrameLoaded = -1;
 			if (customVideoUrl) {
 				try { URL.revokeObjectURL(customVideoUrl); } catch (_) {}
 				customVideoUrl = null;
@@ -3375,7 +3403,8 @@
 
 		function syncTimelineUI(relFrameIdx: number) {
 			currentFrameIdx = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, relFrameIdx));
-			const globalFrame = rangeStartFrame + currentFrameIdx;
+			const activeBase = processedStartFrameLoaded >= 0 ? processedStartFrameLoaded : rangeStartFrame;
+			const globalFrame = activeBase + currentFrameIdx;
 			const curQ = frameQualityMetrics[currentFrameIdx];
 
 			if (frameReadout) {
@@ -3808,6 +3837,7 @@
 			decodedBitmaps = [];
 			decodedSceneLoaded = '';
 			decodedStartFrameLoaded = -1;
+			processedStartFrameLoaded = -1;
 			sparklineChunks = [];
 			frameQualityMetrics = [];
 			drawGopSparkline();
@@ -4255,6 +4285,7 @@
 						statusText.textContent = `✓ Encoded ${totalFrames} frames in ${encDuration.toFixed(0)}ms ▪ ${encFps.toLocaleString()} FPS (${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'}) ▪ ${bitrateMbps} Mbps`;
 						statusText.style.color = '#22c55e';
 					}
+					processedStartFrameLoaded = rangeStartFrame;
 					decodedStartFrameLoaded = -1;
 					decodedSceneLoaded = '';
 					currentFrameIdx = 0;
@@ -4455,6 +4486,7 @@
 						statusText.textContent = `✓ Decoded ${totalFrames} frames in ${decDuration.toFixed(0)}ms ▪ ${decFps.toLocaleString()} FPS (${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'}) ▪ ${bitrateMbps} Mbps`;
 						statusText.style.color = '#22c55e';
 					}
+					processedStartFrameLoaded = rangeStartFrame;
 					decodedStartFrameLoaded = rangeStartFrame;
 					decodedSceneLoaded = selectedScene;
 					currentFrameIdx = 0;
@@ -4641,6 +4673,7 @@
 					statusText.style.color = '#22c55e';
 				}
 
+				processedStartFrameLoaded = rangeStartFrame;
 				decodedStartFrameLoaded = rangeStartFrame;
 				decodedSceneLoaded = selectedScene;
 				currentFrameIdx = 0;

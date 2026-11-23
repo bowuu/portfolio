@@ -420,7 +420,7 @@
 					<div class="codec-preview-box">
 						<div class="codec-preview-header">
 							<div class="codec-preview-title-row">
-								<span class="codec-preview-label">Source Frame (Input)</span>
+								<span class="codec-preview-label">Source Frame</span>
 								<span class="codec-loupe-pill" id="codec-pill-src">2× Raw</span>
 							</div>
 							<div class="codec-loupe-zoom-wrap" role="group" aria-label="Magnifier Zoom">
@@ -429,6 +429,9 @@
 								<button type="button" class="codec-zoom-btn active" data-zoom="2">2×</button>
 								<button type="button" class="codec-zoom-btn" data-zoom="4">4×</button>
 								<button type="button" class="codec-zoom-btn" data-zoom="8">8×</button>
+								<button type="button" id="codec-pin-btn" class="codec-pin-icon-btn" title="Pin magnifier (P) at cursor location" aria-label="Pin magnifier">
+									<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 2v4a3 3 0 0 0 1.5 2.6L11 12H5l1-5h12l1 5h-6l.5-3.4A3 3 0 0 0 15 6V2z"/></svg>
+								</button>
 							</div>
 						</div>
 						<div class="codec-canvas-wrap" id="codec-wrap-src">
@@ -446,9 +449,8 @@
 					<div class="codec-preview-box">
 						<div class="codec-preview-header">
 							<div class="codec-preview-title-row">
-								<span class="codec-preview-label">Reconstructed (Output)</span>
+								<span class="codec-preview-label">Reconstructed</span>
 								<span class="codec-loupe-pill" id="codec-pill-dec">2× ASIC</span>
-								<span class="codec-metric-pill hidden" id="codec-pill-quality" title="Per-frame PSNR &amp; SSIM quality">-- dB</span>
 							</div>
 							<div class="codec-view-mode-wrap" role="group" aria-label="Reconstruction View Mode">
 								<span class="codec-zoom-label">View:</span>
@@ -456,7 +458,6 @@
 								<button type="button" class="codec-view-btn" data-view="diff" title="Amplified difference: |Source - Output| × 8">Diff (8×)</button>
 								<button type="button" class="codec-view-btn" data-view="heatmap" title="False-color thermal error heatmap">Heatmap</button>
 							</div>
-							<button type="button" id="codec-pin-hint" class="codec-loupe-hint-btn" title="Click anywhere on the video frame to pin the magnifier">Click to pin</button>
 						</div>
 						<div class="codec-canvas-wrap" id="codec-wrap-dec">
 							<canvas id="codec-canvas-decoded" width="1920" height="1080" class="codec-canvas"></canvas>
@@ -493,7 +494,7 @@
 						<div class="codec-timeline-track-wrap" id="codec-timeline-track-wrap">
 							<!-- 24-Frame GOP Bitrate & Frame-Size Sparkline -->
 							<div class="codec-sparkline-wrap" id="codec-sparkline-wrap">
-								<canvas id="codec-sparkline-canvas" width="480" height="26" class="codec-sparkline-canvas" title="Compressed frame size distribution (I-Frames vs P-Frames)"></canvas>
+								<canvas id="codec-sparkline-canvas" width="480" height="16" class="codec-sparkline-canvas" title="Compressed frame size distribution (I-Frames vs P-Frames)"></canvas>
 								<div id="codec-sparkline-tooltip" class="codec-sparkline-tooltip hidden"></div>
 							</div>
 
@@ -536,12 +537,8 @@
 					</div>
 				</div>
 
-				<!-- TELEMETRY METRICS GRID (5 BALANCED CARDS) -->
+				<!-- TELEMETRY METRICS GRID (4 BALANCED CARDS) -->
 				<div class="codec-metrics-grid">
-					<div class="webgpu-tile">
-						<div class="webgpu-tile-label">ASIC Acceleration</div>
-						<div class="webgpu-tile-val" id="codec-metric-engine">Ready</div>
-					</div>
 					<div class="webgpu-tile">
 						<div class="webgpu-tile-label">Encode Rate</div>
 						<div class="webgpu-tile-val mono" id="codec-metric-enc-fps">-- <span class="webgpu-tile-sub">FPS</span></div>
@@ -555,7 +552,7 @@
 						<div class="webgpu-tile-val mono" id="codec-metric-quality">-- <span class="webgpu-tile-sub">dB</span></div>
 					</div>
 					<div class="webgpu-tile">
-						<div class="webgpu-tile-label">Input / Output Size</div>
+						<div class="webgpu-tile-label">Bitstream &amp; Ratio</div>
 						<div class="webgpu-tile-val mono" id="codec-metric-ratio">-- &rarr; --</div>
 					</div>
 				</div>
@@ -2148,12 +2145,10 @@
 		const decCanvas = document.getElementById('codec-canvas-decoded') as HTMLCanvasElement | null;
 		const decPlaceholder = document.getElementById('codec-canvas-placeholder');
 
-		const metricEngine = document.getElementById('codec-metric-engine');
 		const metricEncFps = document.getElementById('codec-metric-enc-fps');
 		const metricDecFps = document.getElementById('codec-metric-dec-fps');
 		const metricQuality = document.getElementById('codec-metric-quality');
 		const metricRatio = document.getElementById('codec-metric-ratio');
-		const pillQuality = document.getElementById('codec-pill-quality');
 
 		const viewModeBtns = document.querySelectorAll<HTMLButtonElement>('.codec-view-btn');
 		let currentViewMode: 'normal' | 'diff' | 'heatmap' = 'normal';
@@ -2467,7 +2462,7 @@
 		const wrapDec = document.getElementById('codec-wrap-dec');
 		const previewGrid = document.querySelector('.codec-preview-grid') as HTMLElement | null;
 		const zoomBtns = document.querySelectorAll<HTMLButtonElement>('.codec-zoom-btn');
-		const pinHintBtn = document.getElementById('codec-pin-hint');
+		const pinBtn = document.getElementById('codec-pin-btn');
 		const pillSrc = document.getElementById('codec-pill-src');
 		const pillDec = document.getElementById('codec-pill-dec');
 
@@ -2581,9 +2576,9 @@
 				lastNormX = normX;
 				lastNormY = normY;
 			}
-			if (pinHintBtn) {
-				pinHintBtn.classList.toggle('pinned', pinned);
-				pinHintBtn.textContent = pinned ? 'Pinned (unpin)' : 'Click to pin';
+			if (pinBtn) {
+				pinBtn.classList.toggle('active', pinned);
+				pinBtn.title = pinned ? 'Unpin magnifier (P)' : 'Pin magnifier (P) at cursor location';
 			}
 			if (pinned) {
 				showLoupe();
@@ -2593,8 +2588,8 @@
 			}
 		}
 
-		if (pinHintBtn) {
-			pinHintBtn.addEventListener('click', (e) => {
+		if (pinBtn) {
+			pinBtn.addEventListener('click', (e) => {
 				e.stopPropagation();
 				if (isLoupePinned) {
 					setLoupePinned(false);
@@ -3014,7 +3009,7 @@
 			const dpr = window.devicePixelRatio || 1;
 			const rect = sparklineCanvas.getBoundingClientRect();
 			const w = rect.width || 480;
-			const h = rect.height || 26;
+			const h = rect.height || 16;
 
 			if (sparklineCanvas.width !== Math.round(w * dpr) || sparklineCanvas.height !== Math.round(h * dpr)) {
 				sparklineCanvas.width = Math.round(w * dpr);
@@ -3024,25 +3019,40 @@
 			ctx.scale(dpr, dpr);
 			ctx.clearRect(0, 0, w, h);
 
+			const windowStartX = (rangeStartFrame / TOTAL_CLIP_FRAMES) * w;
+			const windowWidth = (TEST_WINDOW_FRAMES / TOTAL_CLIP_FRAMES) * w;
+
 			if (sparklineChunks.length === 0) {
+				ctx.fillStyle = 'rgba(148, 163, 184, 0.15)';
+				ctx.fillRect(0, h - 2, w, 1);
+				ctx.fillStyle = 'rgba(249, 115, 22, 0.25)';
+				ctx.fillRect(windowStartX, h - 2, windowWidth, 2);
 				ctx.fillStyle = 'rgba(148, 163, 184, 0.4)';
 				ctx.font = '9px ui-monospace, monospace';
 				ctx.textAlign = 'center';
 				ctx.textBaseline = 'middle';
-				ctx.fillText('GOP Frame Size Distribution (Awaiting run)', w / 2, h / 2);
+				ctx.fillText('24-Frame Bitrate Sparkline', windowStartX + windowWidth / 2, h / 2);
 				return;
 			}
 
+			// Subtle track guideline across full 60 frames
+			ctx.fillStyle = 'rgba(148, 163, 184, 0.12)';
+			ctx.fillRect(0, h - 2, w, 1);
+
+			// Active window guideline
+			ctx.fillStyle = 'rgba(249, 115, 22, 0.3)';
+			ctx.fillRect(windowStartX, h - 2, windowWidth, 2);
+
 			const n = sparklineChunks.length;
 			const maxSize = Math.max(...sparklineChunks.map((c) => c.size), 1);
-			const gap = 2;
-			const barW = Math.max(2, (w - (n - 1) * gap) / n);
+			const gap = 1.5;
+			const barW = Math.max(2, (windowWidth - (n - 1) * gap) / n);
 
 			for (let i = 0; i < n; i++) {
 				const chunk = sparklineChunks[i];
-				const barH = Math.max(3, (chunk.size / maxSize) * (h - 6));
-				const bx = i * (barW + gap);
-				const by = h - barH - 2;
+				const barH = Math.max(3, (chunk.size / maxSize) * (h - 4));
+				const bx = windowStartX + i * (barW + gap);
+				const by = h - barH - 1;
 
 				const isCurrent = i === currentFrameIdx;
 				const isKey = chunk.type === 'key';
@@ -3050,7 +3060,7 @@
 				if (isKey) {
 					ctx.fillStyle = isCurrent ? '#ea580c' : '#f97316';
 				} else {
-					ctx.fillStyle = isCurrent ? '#94a3b8' : '#475569';
+					ctx.fillStyle = isCurrent ? '#94a3b8' : 'rgba(148, 163, 184, 0.45)';
 				}
 
 				ctx.fillRect(bx, by, barW, barH);
@@ -3063,7 +3073,7 @@
 
 				if (isKey) {
 					ctx.fillStyle = '#38bdf8';
-					ctx.fillRect(bx, by - 2, barW, 2);
+					ctx.fillRect(bx, by - 1.5, barW, 1.5);
 				}
 			}
 		}
@@ -3117,10 +3127,6 @@
 				if (metricQuality) {
 					metricQuality.innerHTML = `${avgPsnr.toFixed(1)} <span class="webgpu-tile-sub">dB (${avgSsim.toFixed(3)} SSIM)</span>`;
 					metricQuality.title = `Average quality across ${validFrames} frames: ${avgPsnr.toFixed(1)} dB PSNR, ${avgSsim.toFixed(3)} SSIM.`;
-				}
-				if (pillQuality && frameQualityMetrics[currentFrameIdx]) {
-					pillQuality.classList.remove('hidden');
-					pillQuality.textContent = `${frameQualityMetrics[currentFrameIdx].psnr.toFixed(1)} dB · ${frameQualityMetrics[currentFrameIdx].ssim.toFixed(3)}`;
 				}
 			}
 		}
@@ -3232,10 +3238,20 @@
 				if (sparklineChunks.length === 0) return;
 				const rect = sparklineCanvas.getBoundingClientRect();
 				const mx = e.clientX - rect.left;
+				const w = rect.width;
+				const windowStartX = (rangeStartFrame / TOTAL_CLIP_FRAMES) * w;
+				const windowWidth = (TEST_WINDOW_FRAMES / TOTAL_CLIP_FRAMES) * w;
+
+				if (mx < windowStartX || mx > windowStartX + windowWidth) {
+					if (sparklineTooltip) sparklineTooltip.classList.add('hidden');
+					return;
+				}
+
 				const n = sparklineChunks.length;
-				const gap = 2;
-				const barW = (rect.width - (n - 1) * gap) / n;
-				const idx = Math.max(0, Math.min(n - 1, Math.floor(mx / (barW + gap))));
+				const gap = 1.5;
+				const barW = Math.max(2, (windowWidth - (n - 1) * gap) / n);
+				const relX = mx - windowStartX;
+				const idx = Math.max(0, Math.min(n - 1, Math.floor(relX / (barW + gap))));
 				const chunk = sparklineChunks[idx];
 				if (sparklineTooltip && chunk) {
 					sparklineTooltip.classList.remove('hidden');
@@ -3253,11 +3269,18 @@
 				if (sparklineChunks.length === 0) return;
 				const rect = sparklineCanvas.getBoundingClientRect();
 				const mx = e.clientX - rect.left;
-				const n = sparklineChunks.length;
-				const gap = 2;
-				const barW = (rect.width - (n - 1) * gap) / n;
-				const idx = Math.max(0, Math.min(n - 1, Math.floor(mx / (barW + gap))));
-				seekToFrame(idx);
+				const w = rect.width;
+				const windowStartX = (rangeStartFrame / TOTAL_CLIP_FRAMES) * w;
+				const windowWidth = (TEST_WINDOW_FRAMES / TOTAL_CLIP_FRAMES) * w;
+
+				if (mx >= windowStartX && mx <= windowStartX + windowWidth) {
+					const n = sparklineChunks.length;
+					const gap = 1.5;
+					const barW = Math.max(2, (windowWidth - (n - 1) * gap) / n);
+					const relX = mx - windowStartX;
+					const idx = Math.max(0, Math.min(n - 1, Math.floor(relX / (barW + gap))));
+					seekToFrame(idx);
+				}
 			});
 		}
 
@@ -3289,7 +3312,6 @@
 			sparklineChunks = [];
 			frameQualityMetrics = [];
 			if (sparklineTooltip) sparklineTooltip.classList.add('hidden');
-			if (pillQuality) pillQuality.classList.add('hidden');
 			if (document.fullscreenElement) {
 				try {
 					if (document.exitFullscreen) document.exitFullscreen();
@@ -3380,8 +3402,21 @@
 		function syncTimelineUI(relFrameIdx: number) {
 			currentFrameIdx = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, relFrameIdx));
 			const globalFrame = rangeStartFrame + currentFrameIdx;
+			const curQ = frameQualityMetrics[currentFrameIdx];
 
-			if (frameReadout) frameReadout.textContent = `Frame ${currentFrameIdx + 1} / ${TEST_WINDOW_FRAMES}`;
+			if (frameReadout) {
+				const qStr = curQ ? ` · ${curQ.psnr.toFixed(1)} dB` : '';
+				frameReadout.textContent = `Frame ${currentFrameIdx + 1} / ${TEST_WINDOW_FRAMES}${qStr}`;
+				if (curQ) {
+					frameReadout.title = `Frame ${currentFrameIdx + 1}: ${curQ.psnr.toFixed(1)} dB PSNR · ${curQ.ssim.toFixed(3)} SSIM`;
+				} else {
+					frameReadout.title = '';
+				}
+			}
+
+			if (metricQuality && curQ && avgPsnr > 0) {
+				metricQuality.innerHTML = `${avgPsnr.toFixed(1)} <span class="webgpu-tile-sub">dB (F${currentFrameIdx + 1}: ${curQ.psnr.toFixed(1)} dB)</span>`;
+			}
 
 			if (playhead) {
 				playhead.style.left = `${(globalFrame / TOTAL_CLIP_FRAMES) * 100}%`;
@@ -3389,12 +3424,6 @@
 
 			// Update Sparkline playhead highlight
 			drawGopSparkline();
-
-			// Update per-frame quality pill
-			if (frameQualityMetrics[currentFrameIdx] && pillQuality) {
-				pillQuality.classList.remove('hidden');
-				pillQuality.textContent = `${frameQualityMetrics[currentFrameIdx].psnr.toFixed(1)} dB · ${frameQualityMetrics[currentFrameIdx].ssim.toFixed(3)}`;
-			}
 
 			// 1. Source (Left) Side
 			const cachedSrcIdx = (selectedScene === sourceSceneLoaded && sourceStartFrameLoaded >= 0)
@@ -3809,7 +3838,6 @@
 			sparklineChunks = [];
 			frameQualityMetrics = [];
 			drawGopSparkline();
-			if (pillQuality) pillQuality.classList.add('hidden');
 			if (metricQuality) metricQuality.innerHTML = '-- <span class="webgpu-tile-sub">dB</span>';
 
 			if (decCanvas) {
@@ -3822,7 +3850,6 @@
 				decPlaceholder.innerHTML = '<span>Awaiting verification run... Click &ldquo;Start&rdquo; to test.</span>';
 			}
 
-			if (metricEngine) metricEngine.textContent = 'Ready';
 			if (metricEncFps) metricEncFps.innerHTML = '-- <span class="webgpu-tile-sub">FPS</span>';
 			if (metricDecFps) metricDecFps.innerHTML = '-- <span class="webgpu-tile-sub">FPS</span>';
 			if (metricRatio) {
@@ -4229,11 +4256,8 @@
 					const rawMb = Math.round(rawBytes / (1024 * 1024));
 					const ratioX = Math.round(rawBytes / Math.max(1, totalChunkBytes));
 
-					if (metricEngine) {
-						metricEngine.textContent = selectedMode === 'prefer-hardware' ? 'Hardware ASIC (Enc)' : 'Software CPU (Enc)';
-					}
 					if (metricEncFps) {
-						metricEncFps.innerHTML = `${encFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${encLatency} ms)</span>`;
+						metricEncFps.innerHTML = `${encFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${encLatency} ms · ${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'})</span>`;
 					}
 					if (metricDecFps) {
 						metricDecFps.innerHTML = 'Bypassed <span class="webgpu-tile-sub">(Encode Only)</span>';
@@ -4440,14 +4464,11 @@
 					const rawMb = Math.round(rawBytes / (1024 * 1024));
 					const ratioX = Math.round(rawBytes / Math.max(1, totalChunkBytes));
 
-					if (metricEngine) {
-						metricEngine.textContent = selectedMode === 'prefer-hardware' ? 'Hardware ASIC (Dec)' : 'Software CPU (Dec)';
-					}
 					if (metricEncFps) {
 						metricEncFps.innerHTML = `Bypassed <span class="webgpu-tile-sub">(${encHwMode === 'prefer-hardware' ? 'HW Prep' : 'CPU Prep'})</span>`;
 					}
 					if (metricDecFps) {
-						metricDecFps.innerHTML = `${decFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${decLatency} ms)</span>`;
+						metricDecFps.innerHTML = `${decFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${decLatency} ms · ${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'})</span>`;
 					}
 					if (metricRatio) {
 						const inSize = getInputFileSize();
@@ -4628,14 +4649,11 @@
 				const rawMb = Math.round(rawBytes / (1024 * 1024));
 				const ratioX = Math.round(rawBytes / Math.max(1, totalChunkBytes));
 
-				if (metricEngine) {
-					metricEngine.textContent = selectedMode === 'prefer-hardware' ? 'Hardware ASIC' : 'Software CPU';
-				}
 				if (metricEncFps) {
-					metricEncFps.innerHTML = `${encFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${encLatency} ms)</span>`;
+					metricEncFps.innerHTML = `${encFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${encLatency} ms · ${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'})</span>`;
 				}
 				if (metricDecFps) {
-					metricDecFps.innerHTML = `${decFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${decLatency} ms)</span>`;
+					metricDecFps.innerHTML = `${decFps.toLocaleString()} <span class="webgpu-tile-sub">FPS (${decLatency} ms · ${selectedMode === 'prefer-hardware' ? 'ASIC' : 'CPU'})</span>`;
 				}
 				if (metricRatio) {
 					const inSize = getInputFileSize();
@@ -4690,6 +4708,13 @@
 				e.preventDefault();
 				stopPlayback();
 				seekToFrame(currentFrameIdx + 1);
+			} else if (e.code === 'KeyP') {
+				e.preventDefault();
+				if (isLoupePinned) {
+					setLoupePinned(false);
+				} else {
+					setLoupePinned(true, lastNormX ?? 0.5, lastNormY ?? 0.5);
+				}
 			}
 		});
 
@@ -4736,9 +4761,9 @@
 					} catch (_) {}
 					return;
 				}
-				const pinHint = document.getElementById('codec-pin-hint');
-				if (pinHint && pinHint.classList.contains('pinned')) {
-					pinHint.click();
+				const pinBtn = document.getElementById('codec-pin-btn');
+				if (pinBtn && pinBtn.classList.contains('active')) {
+					pinBtn.click();
 					return;
 				}
 				if (codecModal.classList.contains('is-maximized')) {
@@ -5859,6 +5884,33 @@
 		color: #ffffff;
 		border-color: var(--accent);
 	}
+	.codec-pin-icon-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		background: transparent;
+		border: 1px solid transparent;
+		color: rgb(var(--gray));
+		padding: 1px 4px;
+		border-radius: 4px;
+		cursor: pointer;
+		line-height: 1;
+		transition: all 0.15s ease;
+		margin-left: 2px;
+		border-left: 1px solid rgba(148, 163, 184, 0.25);
+		padding-left: 5px;
+	}
+	.codec-pin-icon-btn:hover {
+		color: rgb(var(--black));
+	}
+	:global(html[data-theme="dark"]) .codec-pin-icon-btn:hover {
+		color: #ffffff;
+	}
+	.codec-pin-icon-btn.active {
+		background: var(--accent);
+		color: #ffffff;
+		border-color: var(--accent);
+	}
 	.codec-view-mode-wrap {
 		display: inline-flex;
 		align-items: center;
@@ -5897,24 +5949,6 @@
 		color: #ffffff;
 		border-color: var(--accent);
 	}
-	.codec-metric-pill {
-		display: inline-flex;
-		align-items: center;
-		font-size: 0.68em;
-		font-family: ui-monospace, monospace;
-		font-weight: 700;
-		color: #22c55e;
-		background: rgba(34, 197, 94, 0.12);
-		border: 1px solid rgba(34, 197, 94, 0.3);
-		padding: 1px 5px;
-		border-radius: 4px;
-		letter-spacing: 0.02em;
-	}
-	:global(html[data-theme="dark"]) .codec-metric-pill {
-		color: #4ade80;
-		background: rgba(34, 197, 94, 0.18);
-		border-color: rgba(34, 197, 94, 0.4);
-	}
 	.codec-badge-dot {
 		display: inline-block;
 		width: 5px;
@@ -5941,18 +5975,18 @@
 	.codec-sparkline-wrap {
 		position: relative;
 		width: 100%;
-		height: 26px;
-		margin-bottom: 3px;
-		border-radius: 4px;
-		background: rgba(0, 0, 0, 0.22);
-		border: 1px solid rgba(255, 255, 255, 0.06);
+		height: 16px;
+		margin-bottom: 2px;
+		border-radius: 0;
+		background: transparent;
+		border: none;
 		overflow: visible;
 		display: flex;
 		align-items: center;
 	}
 	:global(html[data-theme="light"]) .codec-sparkline-wrap {
-		background: rgba(0, 0, 0, 0.04);
-		border-color: rgba(0, 0, 0, 0.08);
+		background: transparent;
+		border-color: transparent;
 	}
 	.codec-sparkline-canvas {
 		width: 100%;
@@ -6452,7 +6486,7 @@
 	}
 	.codec-metrics-grid {
 		display: grid;
-		grid-template-columns: repeat(5, 1fr);
+		grid-template-columns: repeat(4, 1fr);
 		gap: 0.65em;
 	}
 	.codec-metrics-grid .webgpu-tile-val {
@@ -6461,11 +6495,6 @@
 		text-overflow: ellipsis;
 	}
 	@media (max-width: 860px) {
-		.codec-metrics-grid {
-			grid-template-columns: repeat(3, 1fr);
-		}
-	}
-	@media (max-width: 640px) {
 		.codec-metrics-grid {
 			grid-template-columns: repeat(2, 1fr);
 		}
@@ -6628,10 +6657,8 @@
 			padding: 1px 4px !important;
 			font-size: 0.62em !important;
 		}
-		.codec-loupe-hint-btn {
-			display: inline-flex !important;
-			font-size: 0.64em !important;
-			padding: 1px 5px !important;
+		.codec-pin-icon-btn {
+			padding: 1px 3px !important;
 		}
 		/* TIMELINE 2-ROW GRID ON MOBILE (CONTROLS & RANGE BADGE ON TOP, TRACK ON BOTTOM) */
 		.codec-timeline-bar {

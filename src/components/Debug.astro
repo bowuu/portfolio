@@ -474,8 +474,8 @@
 
 				<!-- UNIFIED PLAYBACK TIMELINE & MASTER RANGE SELECTOR -->
 				<div class="codec-timeline-bar" id="codec-timeline-bar">
-					<div class="codec-timeline-row">
-						<!-- Left: Transport Controls & Frame Counter -->
+					<!-- Top Row: Transport controls & Active Range metadata -->
+					<div class="codec-timeline-header-row">
 						<div class="codec-timeline-controls">
 							<button type="button" id="codec-play-btn" class="codec-time-btn" title="Play / Pause (Space)" aria-label="Play / Pause">
 								<svg id="codec-icon-play" viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -490,48 +490,48 @@
 							<span class="codec-frame-readout" id="codec-frame-readout">Frame 1 / 24</span>
 						</div>
 
-						<!-- Center: Extended Master Seekbar (60 frames total with 24-frame benchmark window) -->
-						<div class="codec-timeline-track-wrap" id="codec-timeline-track-wrap">
-							<!-- 24-Frame GOP Bitrate & Frame-Size Sparkline -->
-							<div class="codec-sparkline-wrap" id="codec-sparkline-wrap">
-								<canvas id="codec-sparkline-canvas" width="480" height="16" class="codec-sparkline-canvas" title="Compressed frame size distribution (I-Frames vs P-Frames)"></canvas>
-								<div id="codec-sparkline-tooltip" class="codec-sparkline-tooltip hidden"></div>
-							</div>
-
-							<div class="codec-timeline-ruler">
-								<span class="codec-ruler-tick" style="left: 0%">0</span>
-								<span class="codec-ruler-tick" style="left: 20%">12</span>
-								<span class="codec-ruler-tick" style="left: 40%">24</span>
-								<span class="codec-ruler-tick" style="left: 60%">36</span>
-								<span class="codec-ruler-tick" style="left: 80%">48</span>
-								<span class="codec-ruler-tick" style="left: 100%">60</span>
-							</div>
-							<div class="codec-track-bar" id="codec-track-bar" title="Click to seek frame or reposition 24-frame window">
-								<div class="codec-track-bg"></div>
-
-								<!-- 24-Frame Active Benchmark Range Bracket -->
-								<div class="codec-range-window" id="codec-range-window" style="left: 0%; width: 40%;">
-									<div class="codec-range-edge left" title="Drag to reposition 24-frame window"></div>
-									<div class="codec-range-grip" id="codec-range-grip" title="Drag to reposition 24-frame benchmark window">
-										<svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor"><circle cx="5" cy="4" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="11" cy="12" r="1.5"/></svg>
-										<span class="codec-range-label">24 Frames</span>
-									</div>
-									<div class="codec-range-edge right" title="Drag to reposition 24-frame window"></div>
-								</div>
-
-								<!-- Prominent White Frame Selector (Easily Selectable & Draggable) -->
-								<div class="codec-playhead" id="codec-playhead" style="left: 0%;" title="Frame Selector (Drag to scrub frames)">
-									<div class="codec-playhead-thumb"></div>
-									<div class="codec-playhead-line"></div>
-								</div>
-							</div>
-						</div>
-
 						<!-- Right: Benchmark Range Badge -->
 						<div class="codec-timeline-meta">
 							<div class="codec-range-badge" id="codec-range-badge" title="Active 24-frame benchmark window (Drag bracket to move)">
 								<span class="codec-range-badge-dot"></span>
 								<span id="codec-range-badge-text">Frames 1&ndash;24</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- Bottom Row: Extended Master Seekbar (60 frames total with 24-frame benchmark window) -->
+					<div class="codec-timeline-track-wrap" id="codec-timeline-track-wrap">
+						<!-- 24-Frame GOP Bitrate & Frame-Size Sparkline -->
+						<div class="codec-sparkline-wrap" id="codec-sparkline-wrap">
+							<canvas id="codec-sparkline-canvas" width="480" height="16" class="codec-sparkline-canvas" title="Compressed frame size distribution (I-Frames vs P-Frames)"></canvas>
+							<div id="codec-sparkline-tooltip" class="codec-sparkline-tooltip hidden"></div>
+						</div>
+
+						<div class="codec-timeline-ruler">
+							<span class="codec-ruler-tick" style="left: 0%">0</span>
+							<span class="codec-ruler-tick" style="left: 20%">12</span>
+							<span class="codec-ruler-tick" style="left: 40%">24</span>
+							<span class="codec-ruler-tick" style="left: 60%">36</span>
+							<span class="codec-ruler-tick" style="left: 80%">48</span>
+							<span class="codec-ruler-tick" style="left: 100%">60</span>
+						</div>
+						<div class="codec-track-bar" id="codec-track-bar" title="Click to seek frame or reposition 24-frame window">
+							<div class="codec-track-bg"></div>
+
+							<!-- 24-Frame Active Benchmark Range Bracket -->
+							<div class="codec-range-window" id="codec-range-window" style="left: 0%; width: 40%;">
+								<div class="codec-range-edge left" title="Drag to reposition 24-frame window"></div>
+								<div class="codec-range-grip" id="codec-range-grip" title="Drag to reposition 24-frame benchmark window">
+									<svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor"><circle cx="5" cy="4" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="11" cy="4" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="11" cy="12" r="1.5"/></svg>
+									<span class="codec-range-label">24 Frames</span>
+								</div>
+								<div class="codec-range-edge right" title="Drag to reposition 24-frame window"></div>
+							</div>
+
+							<!-- Prominent White Frame Selector (Easily Selectable & Draggable) -->
+							<div class="codec-playhead" id="codec-playhead" style="left: 0%;" title="Frame Selector (Drag to scrub frames)">
+								<div class="codec-playhead-thumb"></div>
+								<div class="codec-playhead-line"></div>
 							</div>
 						</div>
 					</div>
@@ -3405,8 +3405,7 @@
 			const curQ = frameQualityMetrics[currentFrameIdx];
 
 			if (frameReadout) {
-				const qStr = curQ ? ` · ${curQ.psnr.toFixed(1)} dB` : '';
-				frameReadout.textContent = `Frame ${currentFrameIdx + 1} / ${TEST_WINDOW_FRAMES}${qStr}`;
+				frameReadout.textContent = `Frame ${currentFrameIdx + 1} / ${TEST_WINDOW_FRAMES}`;
 				if (curQ) {
 					frameReadout.title = `Frame ${currentFrameIdx + 1}: ${curQ.psnr.toFixed(1)} dB PSNR · ${curQ.ssim.toFixed(3)} SSIM`;
 				} else {
@@ -6211,23 +6210,25 @@
 		background: rgba(148, 163, 184, 0.08);
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
-		padding: 0.45em 0.75em;
+		padding: 0.5em 0.85em;
+		display: flex;
+		flex-direction: column;
+		gap: 0.45em;
 	}
 	:global(html[data-theme="dark"]) .codec-timeline-bar {
 		background: rgba(0, 0, 0, 0.35);
 	}
-	.codec-timeline-row {
+	.codec-timeline-header-row {
 		display: flex;
 		align-items: center;
-		gap: 0.75em;
+		justify-content: space-between;
 		width: 100%;
+		gap: 0.5em;
 	}
 	.codec-timeline-controls {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.35em;
-		flex: 0 0 180px;
-		width: 180px;
+		gap: 0.4em;
 	}
 	.codec-time-btn {
 		display: inline-flex;
@@ -6257,29 +6258,24 @@
 		color: #ffffff;
 	}
 	.codec-frame-readout {
-		font-size: 0.72em;
+		font-size: 0.74em;
 		font-weight: 700;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 		font-variant-numeric: tabular-nums;
 		color: rgb(var(--gray-dark));
-		width: 90px;
-		min-width: 90px;
-		max-width: 90px;
 		white-space: nowrap;
-		text-align: left;
-		flex-shrink: 0;
+		margin-left: 0.3em;
 	}
 	:global(html[data-theme="dark"]) .codec-frame-readout {
 		color: #e2e8f0;
 	}
 
-	/* MASTER TIMELINE TRACK (CENTER FLEX) */
+	/* MASTER TIMELINE TRACK (FULL WIDTH) */
 	.codec-timeline-track-wrap {
 		display: flex;
 		flex-direction: column;
 		gap: 0.15em;
-		flex: 1;
-		min-width: 140px;
+		width: 100%;
 		position: relative;
 		user-select: none;
 		-webkit-user-select: none;
@@ -6442,8 +6438,6 @@
 		display: flex;
 		align-items: center;
 		justify-content: flex-end;
-		flex: 0 0 114px;
-		width: 114px;
 	}
 	.codec-range-badge {
 		display: inline-flex;
@@ -6660,46 +6654,23 @@
 		.codec-pin-icon-btn {
 			padding: 1px 3px !important;
 		}
-		/* TIMELINE 2-ROW GRID ON MOBILE (CONTROLS & RANGE BADGE ON TOP, TRACK ON BOTTOM) */
+		/* TIMELINE 2-ROW ON MOBILE */
 		.codec-timeline-bar {
 			padding: 0.4em 0.55em !important;
+			gap: 0.35em !important;
 		}
-		.codec-timeline-row {
-			display: grid !important;
-			grid-template-columns: 1fr auto !important;
-			grid-template-areas: "ctrl meta" "track track" !important;
-			gap: 0.45em !important;
-			width: 100% !important;
+		.codec-timeline-header-row {
+			gap: 0.35em !important;
 		}
 		.codec-timeline-controls {
-			grid-area: ctrl !important;
-			width: auto !important;
-			flex: none !important;
 			gap: 0.25em !important;
 		}
 		.codec-frame-readout {
 			font-size: 0.68em !important;
-			width: auto !important;
-			min-width: 0 !important;
-			max-width: none !important;
-		}
-		.codec-timeline-meta {
-			grid-area: meta !important;
-			width: auto !important;
-			flex: none !important;
-			justify-content: flex-end !important;
 		}
 		.codec-range-badge {
-			width: auto !important;
-			min-width: 0 !important;
-			max-width: none !important;
 			padding: 0.15em 0.5em !important;
 			font-size: 0.66em !important;
-		}
-		.codec-timeline-track-wrap {
-			grid-area: track !important;
-			width: 100% !important;
-			min-width: 0 !important;
 		}
 		/* METRICS TILES ON MOBILE */
 		.codec-metrics-grid {

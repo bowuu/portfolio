@@ -35,8 +35,58 @@
 
 	<div class="section-content">
 		<p class="codec-spotlight-desc">
-			Benchmark real-time video encoding and decoding across H.264, VP9, HEVC, and AV1 with synchronized side-by-side frame inspection.
+			Interactive WebCodecs benchmarking workbench for evaluating real-time hardware ASIC transcoders against multi-threaded software pipelines. Profile compression efficiency, frame-by-frame encoding and decoding latencies, and reconstruction fidelity across modern video compression standards (AVC / H.264, VP9, HEVC / H.265, and AV1). Features synchronized dual-stream playback, split-view slider inspection, 4× loupe magnification, and frame-accurate timing telemetry across 1080p, 4K UHD, SMPTE color calibration targets, or custom local video files with 100% zero network egress.
 		</p>
+
+		<!-- SYSTEM RESOURCE WARNING & FULLSCREEN RECOMMENDATION BANNER -->
+		<div class="codec-warning-box">
+			<div class="codec-warning-header">
+				<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" class="codec-warning-icon" aria-hidden="true">
+					<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+					<line x1="12" y1="9" x2="12" y2="13"/>
+					<line x1="12" y1="17" x2="12.01" y2="17"/>
+				</svg>
+				<span class="codec-warning-title">Important System Resource Notice &amp; Recommended Setup</span>
+			</div>
+
+			<div class="codec-warning-body">
+				<div class="codec-warning-row">
+					<div class="codec-warning-badge-wrap">
+						<span class="codec-warn-pill warn-pill-amber">
+							<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2">
+								<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+							</svg>
+							High Resource Usage
+						</span>
+					</div>
+					<div class="codec-warning-desc">
+						Real-time video encoding and decoding—particularly at <strong>1080p or 4K UHD</strong> resolutions or in <strong>Software (CPU) fallback mode</strong>—utilizes considerable system resources across the GPU, CPU, and memory. <strong>On mobile devices, laptops on battery, or low-power hardware</strong>, running active sessions can cause heavy battery drain and thermal throttling.
+					</div>
+				</div>
+
+				<div class="codec-warning-row">
+					<div class="codec-warning-badge-wrap">
+						<span class="codec-warn-pill warn-pill-blue">
+							<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2">
+								<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+							</svg>
+							Recommended View
+						</span>
+					</div>
+					<div class="codec-warning-desc">
+						For optimal workspace visibility, side-by-side comparison displays, and live telemetry racks, the studio applet is <strong>best used in maximized / fullscreen mode</strong>. Click the distinct middle button
+						<span class="wm-preview-group" title="Middle window button (Maximize / Fullscreen)">
+							<span class="wm-preview-btn">—</span>
+							<span class="wm-preview-btn wm-preview-max" title="Maximize button">
+								<svg viewBox="0 0 10 10" width="10" height="10"><rect x="1.5" y="1.5" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+							</span>
+							<span class="wm-preview-btn">✕</span>
+						</span>
+						in the top-right window controls when the applet is opened.
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 </details>
 
@@ -104,13 +154,161 @@
 	}
 	.codec-spotlight-desc {
 		margin: 0;
-		font-size: 0.85em;
-		line-height: 1.45;
+		font-size: 0.88em;
+		line-height: 1.55;
 		color: rgb(var(--gray-dark));
-		max-width: 620px;
+		max-width: none;
 	}
 	:global(html[data-theme="dark"]) .codec-spotlight-desc {
 		color: #94a3b8;
+	}
+
+	/* WARNING & FULLSCREEN RECOMMENDATION BANNER */
+	.codec-warning-box {
+		margin-top: 1.15em;
+		background: rgba(245, 158, 11, 0.08);
+		border: 1.5px solid rgba(245, 158, 11, 0.42);
+		border-radius: 9px;
+		padding: 0.95em 1.15em;
+		box-shadow: 0 2px 10px rgba(245, 158, 11, 0.06);
+		transition: all 0.2s ease;
+	}
+	:global(html[data-theme="dark"]) .codec-warning-box {
+		background: rgba(245, 158, 11, 0.10);
+		border-color: rgba(245, 158, 11, 0.45);
+		box-shadow: 0 3px 14px rgba(245, 158, 11, 0.10);
+	}
+	.codec-warning-box:hover {
+		border-color: rgba(245, 158, 11, 0.65);
+		box-shadow: 0 4px 16px rgba(245, 158, 11, 0.14);
+	}
+	.codec-warning-header {
+		display: flex;
+		align-items: center;
+		gap: 0.55em;
+		margin-bottom: 0.75em;
+		padding-bottom: 0.55em;
+		border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+	}
+	.codec-warning-icon {
+		color: #d97706;
+		flex-shrink: 0;
+	}
+	:global(html[data-theme="dark"]) .codec-warning-icon {
+		color: #fbbf24;
+	}
+	.codec-warning-title {
+		font-size: 0.88em;
+		font-weight: 700;
+		color: #92400e;
+		letter-spacing: 0.01em;
+	}
+	:global(html[data-theme="dark"]) .codec-warning-title {
+		color: #fde68a;
+	}
+	.codec-warning-body {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75em;
+	}
+	.codec-warning-row {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.9em;
+		font-size: 0.85em;
+		line-height: 1.5;
+	}
+	.codec-warning-badge-wrap {
+		flex-shrink: 0;
+		padding-top: 0.1em;
+	}
+	.codec-warn-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4em;
+		font-size: 0.72em;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		padding: 0.22em 0.65em;
+		border-radius: 6px;
+		white-space: nowrap;
+	}
+	.warn-pill-amber {
+		background: rgba(245, 158, 11, 0.18);
+		color: #b45309;
+		border: 1px solid rgba(217, 119, 6, 0.4);
+	}
+	:global(html[data-theme="dark"]) .warn-pill-amber {
+		background: rgba(245, 158, 11, 0.24);
+		color: #fbbf24;
+		border-color: rgba(245, 158, 11, 0.5);
+	}
+	.warn-pill-blue {
+		background: rgba(var(--accent-rgb), 0.14);
+		color: var(--accent);
+		border: 1px solid rgba(var(--accent-rgb), 0.4);
+	}
+	:global(html[data-theme="dark"]) .warn-pill-blue {
+		background: rgba(var(--accent-rgb), 0.20);
+		color: var(--accent);
+		border-color: rgba(var(--accent-rgb), 0.5);
+	}
+	.codec-warning-desc {
+		color: rgb(var(--gray-dark));
+		flex: 1;
+	}
+	:global(html[data-theme="dark"]) .codec-warning-desc {
+		color: #cbd5e1;
+	}
+	.codec-warning-desc strong {
+		color: rgb(var(--black));
+	}
+	:global(html[data-theme="dark"]) .codec-warning-desc strong {
+		color: #ffffff;
+	}
+	.wm-preview-group {
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+		padding: 2px 5px;
+		background: rgba(0, 0, 0, 0.07);
+		border: 1px solid rgba(0, 0, 0, 0.14);
+		border-radius: 5px;
+		vertical-align: middle;
+		margin: 0 0.25em;
+	}
+	:global(html[data-theme="dark"]) .wm-preview-group {
+		background: rgba(0, 0, 0, 0.38);
+		border-color: rgba(255, 255, 255, 0.12);
+	}
+	.wm-preview-btn {
+		width: 18px;
+		height: 16px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 10px;
+		color: #94a3b8;
+		border-radius: 3px;
+		line-height: 1;
+	}
+	.wm-preview-max {
+		color: var(--accent);
+		background: rgba(var(--accent-rgb), 0.16);
+		border: 1px solid rgba(var(--accent-rgb), 0.5);
+		box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.25);
+	}
+	:global(html[data-theme="dark"]) .wm-preview-max {
+		background: rgba(var(--accent-rgb), 0.25);
+		border-color: rgba(var(--accent-rgb), 0.65);
+		box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.4);
+	}
+	@media (max-width: 640px) {
+		.codec-warning-row {
+			flex-direction: column;
+			gap: 0.35em;
+		}
 	}
 	.codec-spotlight-action-wrap {
 		flex-shrink: 0;

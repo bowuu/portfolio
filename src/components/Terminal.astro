@@ -1721,9 +1721,13 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 
 		function scrollToSection(id: string) {
 			closeTerminal();
+			(window as any).__switchTestTab?.(id);
 			const el = document.getElementById(id);
 			if (el) {
 				el.scrollIntoView({ behavior: 'smooth' });
+			} else {
+				const lab = document.getElementById('lab');
+				lab?.scrollIntoView({ behavior: 'smooth' });
 			}
 		}
 

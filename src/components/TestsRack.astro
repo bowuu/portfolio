@@ -1,0 +1,502 @@
+---
+// TestsRack.astro - Unified Instrument Rack & Focused Workbench for Hardware & Network Tests
+import NetworkTest from './NetworkTest.astro';
+import DisplayTest from './DisplayTest.astro';
+import AudioTest from './AudioTest.astro';
+import CodecSpotlight from './CodecSpotlight.astro';
+import MouseTest from './MouseTest.astro';
+import KeyboardTest from './KeyboardTest.astro';
+---
+
+<section class="card instrument-rack-card" id="lab" aria-label="Hardware & Network Tests">
+	<!-- RACK TOP BAR -->
+	<div class="rack-header">
+		<div class="rack-header-left">
+			<h2 class="card-title rack-title">
+				<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+					<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+				</svg>
+				Tests
+			</h2>
+			<div class="rack-status-pill">
+				<span class="rack-status-dot"></span>
+				<span id="rack-active-label" class="rack-active-name mono">Network Test</span>
+			</div>
+		</div>
+
+		<div class="rack-header-actions">
+			<button id="rack-focus-btn" class="telemetry-btn focus-toggle-btn" type="button" title="Expand active instrument into focused fullscreen workbench (⤢)">
+				<svg class="focus-icon-expand" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+					<polyline points="15 3 21 3 21 9"></polyline>
+					<polyline points="9 21 3 21 3 15"></polyline>
+					<line x1="21" y1="3" x2="14" y2="10"></line>
+					<line x1="3" y1="21" x2="10" y2="14"></line>
+				</svg>
+				<svg class="focus-icon-collapse hidden" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+					<polyline points="4 14 10 14 10 20"></polyline>
+					<polyline points="20 10 14 10 14 4"></polyline>
+					<line x1="14" y1="10" x2="21" y2="3"></line>
+					<line x1="3" y1="21" x2="10" y2="14"></line>
+				</svg>
+				<span id="focus-btn-text">Focus Bench</span>
+			</button>
+		</div>
+	</div>
+
+	<!-- TABBED INSTRUMENT SELECTOR -->
+	<div class="rack-tab-container">
+		<div class="rack-tab-bar" role="tablist" aria-label="Hardware Test Bench Selector">
+			<button class="rack-tab active" data-tab="network" role="tab" aria-selected="true" aria-controls="panel-network" id="tab-network">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="tab-svg">
+					<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+				</svg>
+				<span>Network</span>
+			</button>
+
+			<button class="rack-tab" data-tab="display" role="tab" aria-selected="false" aria-controls="panel-display" id="tab-display">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="tab-svg">
+					<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+					<line x1="8" y1="21" x2="16" y2="21"/>
+					<line x1="12" y1="17" x2="12" y2="21"/>
+				</svg>
+				<span>Display</span>
+			</button>
+
+			<button class="rack-tab" data-tab="audio" role="tab" aria-selected="false" aria-controls="panel-audio" id="tab-audio">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="tab-svg">
+					<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+					<path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+				</svg>
+				<span>Audio</span>
+			</button>
+
+			<button class="rack-tab" data-tab="codec" role="tab" aria-selected="false" aria-controls="panel-codec" id="tab-codec">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="tab-svg">
+					<polygon points="23 7 16 12 23 17 23 7"></polygon>
+					<rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+				</svg>
+				<span>Video Codec</span>
+			</button>
+
+			<button class="rack-tab" data-tab="mouse" role="tab" aria-selected="false" aria-controls="panel-mouse" id="tab-mouse">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="tab-svg">
+					<rect x="5" y="2" width="14" height="20" rx="7"/>
+					<line x1="12" y1="6" x2="12" y2="10"/>
+				</svg>
+				<span>Mouse</span>
+				<span class="peripheral-tag" title="Designed for physical mouse desktop testing">Desktop</span>
+			</button>
+
+			<button class="rack-tab" data-tab="keyboard" role="tab" aria-selected="false" aria-controls="panel-keyboard" id="tab-keyboard">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="tab-svg">
+					<rect x="2" y="4" width="20" height="16" rx="2.5"/>
+					<path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M7 16h10"/>
+				</svg>
+				<span>Keyboard</span>
+				<span class="peripheral-tag" title="Designed for physical 104-key ANSI desktop testing">Desktop</span>
+			</button>
+		</div>
+	</div>
+
+	<!-- WORKBENCH PANELS CONTAINER -->
+	<div class="rack-panels">
+		<!-- 1. NETWORK -->
+		<div class="rack-panel active" id="panel-network" data-panel="network" role="tabpanel" aria-labelledby="tab-network">
+			<NetworkTest />
+		</div>
+
+		<!-- 2. DISPLAY -->
+		<div class="rack-panel hidden" id="panel-display" data-panel="display" role="tabpanel" aria-labelledby="tab-display">
+			<DisplayTest />
+		</div>
+
+		<!-- 3. AUDIO -->
+		<div class="rack-panel hidden" id="panel-audio" data-panel="audio" role="tabpanel" aria-labelledby="tab-audio">
+			<AudioTest />
+		</div>
+
+		<!-- 4. VIDEO CODEC SPOTLIGHT -->
+		<div class="rack-panel hidden" id="panel-codec" data-panel="codec" role="tabpanel" aria-labelledby="tab-codec">
+			<CodecSpotlight />
+		</div>
+
+		<!-- 5. MOUSE -->
+		<div class="rack-panel hidden" id="panel-mouse" data-panel="mouse" role="tabpanel" aria-labelledby="tab-mouse">
+			<MouseTest />
+		</div>
+
+		<!-- 6. KEYBOARD -->
+		<div class="rack-panel hidden" id="panel-keyboard" data-panel="keyboard" role="tabpanel" aria-labelledby="tab-keyboard">
+			<KeyboardTest />
+		</div>
+	</div>
+</section>
+
+<!-- FULLSCREEN FOCUS BENCH BACKDROP -->
+<div id="rack-focus-backdrop" class="rack-focus-backdrop hidden" aria-hidden="true"></div>
+
+<style>
+	/* INSTRUMENT RACK CONTAINER */
+	.instrument-rack-card {
+		position: relative;
+		padding: clamp(1.2em, 2.5vw, 1.8em);
+		margin-top: 1.8em;
+		transition: all 0.25s ease;
+	}
+
+	/* TOP HEADER */
+	.rack-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1em;
+		padding-bottom: 0.9em;
+		margin-bottom: 1em;
+		border-bottom: 1.5px solid var(--border-color);
+		flex-wrap: wrap;
+	}
+
+	.rack-header-left {
+		display: flex;
+		align-items: center;
+		gap: 0.85em;
+		flex-wrap: wrap;
+	}
+
+	.rack-title {
+		margin: 0 !important;
+		padding: 0 !important;
+		border: none !important;
+		font-size: clamp(1.2em, 2.5vw, 1.35em);
+		font-weight: 700;
+	}
+
+	.rack-status-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45em;
+		padding: 0.25em 0.7em;
+		border-radius: 999px;
+		background: rgba(var(--accent-rgb), 0.1);
+		border: 1px solid rgba(var(--accent-rgb), 0.25);
+		font-size: 0.82em;
+		color: var(--accent);
+	}
+
+	.rack-status-dot {
+		width: 7px;
+		height: 7px;
+		border-radius: 50%;
+		background: var(--accent);
+		box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.6);
+		animation: rackPulse 2s infinite ease-in-out;
+	}
+
+	@keyframes rackPulse {
+		0%, 100% { opacity: 1; transform: scale(1); }
+		50% { opacity: 0.4; transform: scale(0.85); }
+	}
+
+	.rack-header-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.5em;
+	}
+
+	.focus-toggle-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45em;
+		font-size: 0.82em;
+		font-weight: 600;
+		padding: 0.4em 0.8em;
+	}
+
+	/* TAB SELECTOR BAR */
+	.rack-tab-container {
+		width: 100%;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-width: none;
+		margin-bottom: 1.25em;
+		padding-bottom: 2px;
+	}
+
+	.rack-tab-container::-webkit-scrollbar {
+		display: none;
+	}
+
+	.rack-tab-bar {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35em;
+		background: rgba(0, 0, 0, 0.04);
+		border: 1px solid var(--border-color);
+		padding: 0.3em;
+		border-radius: 10px;
+		min-width: 100%;
+	}
+
+	html[data-theme="dark"] .rack-tab-bar {
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.rack-tab {
+		flex: 1 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.45em;
+		padding: 0.5em 0.9em;
+		border-radius: 7px;
+		border: 1px solid transparent;
+		background: transparent;
+		color: rgb(var(--gray));
+		font-family: inherit;
+		font-size: 0.85em;
+		font-weight: 600;
+		cursor: pointer;
+		white-space: nowrap;
+		transition: all 0.18s ease;
+		user-select: none;
+	}
+
+	.rack-tab:hover {
+		color: rgb(var(--black));
+		background: rgba(var(--accent-rgb), 0.06);
+	}
+
+	.rack-tab.active {
+		color: var(--accent);
+		background: var(--bg-card);
+		border-color: rgba(var(--accent-rgb), 0.3);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+	}
+
+	html[data-theme="dark"] .rack-tab.active {
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+	}
+
+	.tab-svg {
+		flex-shrink: 0;
+	}
+
+	.peripheral-tag {
+		font-size: 0.72em;
+		font-weight: 500;
+		padding: 0.1em 0.4em;
+		border-radius: 4px;
+		background: rgba(0, 0, 0, 0.06);
+		color: rgb(var(--gray));
+	}
+
+	html[data-theme="dark"] .peripheral-tag {
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	/* STRIP REDUNDANT CARD STYLING ON EMBEDDED COMPONENTS */
+	.rack-panels :global(.card) {
+		border: none !important;
+		box-shadow: none !important;
+		margin-top: 0 !important;
+		padding: 0.25rem 0 0 0 !important;
+		background: transparent !important;
+	}
+
+	.rack-panels :global(.card::before) {
+		display: none !important;
+	}
+
+	.rack-panel {
+		animation: panelFadeIn 0.2s ease-out;
+	}
+
+	@keyframes panelFadeIn {
+		from { opacity: 0; transform: translateY(4px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+
+	/* FULLSCREEN FOCUS BENCH MODE */
+	.instrument-rack-card.focus-bench-active {
+		position: fixed !important;
+		top: clamp(10px, 2.5vh, 24px) !important;
+		bottom: clamp(10px, 2.5vh, 24px) !important;
+		left: clamp(10px, 3vw, 32px) !important;
+		right: clamp(10px, 3vw, 32px) !important;
+		max-width: none !important;
+		width: auto !important;
+		z-index: 1000 !important;
+		margin: 0 !important;
+		overflow-y: auto !important;
+		box-shadow: 0 25px 80px rgba(0, 0, 0, 0.75) !important;
+		border: 1px solid rgba(var(--accent-rgb), 0.4) !important;
+		background: var(--bg-card) !important;
+	}
+
+	.rack-focus-backdrop {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.7);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		z-index: 999;
+		transition: opacity 0.2s ease;
+	}
+
+	@media (max-width: 768px) {
+		.rack-header {
+			flex-direction: row;
+			align-items: center;
+		}
+
+		.rack-tab {
+			padding: 0.45em 0.75em;
+			font-size: 0.8em;
+		}
+	}
+</style>
+
+<script>
+	function setupTestsRack() {
+		const rack = document.getElementById('lab');
+		if (!rack) return;
+
+		const tabs = rack.querySelectorAll<HTMLButtonElement>('.rack-tab');
+		const panels = rack.querySelectorAll<HTMLElement>('.rack-panel');
+		const activeLabel = document.getElementById('rack-active-label');
+		const focusBtn = document.getElementById('rack-focus-btn');
+		const focusBackdrop = document.getElementById('rack-focus-backdrop');
+		const focusText = document.getElementById('focus-btn-text');
+		const iconExpand = rack.querySelector('.focus-icon-expand');
+		const iconCollapse = rack.querySelector('.focus-icon-collapse');
+
+		const labelMap: Record<string, string> = {
+			network: 'Network Test',
+			display: 'Display Test',
+			audio: 'Audio Test',
+			codec: 'Video Codec Studio',
+			mouse: 'Mouse Test',
+			keyboard: 'Keyboard Test'
+		};
+
+		const anchorMap: Record<string, string> = {
+			benchmark: 'network',
+			'network-lab': 'network',
+			'display-lab': 'display',
+			'audio-lab': 'audio',
+			'video-codec-spotlight': 'codec',
+			'input-lab': 'mouse',
+			'keyboard-lab': 'keyboard'
+		};
+
+		function switchTab(tabKey: string, options: { scroll?: boolean; updateUrl?: boolean } = {}) {
+			const targetKey = anchorMap[tabKey] || tabKey;
+			let matchingTab: HTMLButtonElement | null = null;
+
+			tabs.forEach((t) => {
+				const isMatch = t.getAttribute('data-tab') === targetKey;
+				t.classList.toggle('active', isMatch);
+				t.setAttribute('aria-selected', String(isMatch));
+				if (isMatch) matchingTab = t;
+			});
+
+			panels.forEach((p) => {
+				const isMatch = p.getAttribute('data-panel') === targetKey;
+				p.classList.toggle('active', isMatch);
+				p.classList.toggle('hidden', !isMatch);
+			});
+
+			if (activeLabel && labelMap[targetKey]) {
+				activeLabel.textContent = labelMap[targetKey];
+			}
+
+			// Smooth scroll tab button into view in horizontal strip if needed
+			if (matchingTab) {
+				(matchingTab as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+			}
+
+			// Fire window resize so active canvases recalibrate layout
+			window.dispatchEvent(new Event('resize'));
+
+			if (options.scroll) {
+				rack?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			}
+		}
+
+		// Click listener for tabs
+		tabs.forEach((tab) => {
+			tab.addEventListener('click', () => {
+				const key = tab.getAttribute('data-tab') || 'network';
+				switchTab(key);
+			});
+		});
+
+		// Focus / Fullscreen Mode
+		function closeFocusBench() {
+			rack?.classList.remove('focus-bench-active');
+			focusBackdrop?.classList.add('hidden');
+			iconExpand?.classList.remove('hidden');
+			iconCollapse?.classList.add('hidden');
+			if (focusText) focusText.textContent = 'Focus Bench';
+			document.body.style.overflow = '';
+			(window as any).__popModalHistory?.('focus-bench');
+			window.dispatchEvent(new Event('resize'));
+		}
+
+		function openFocusBench() {
+			rack?.classList.add('focus-bench-active');
+			focusBackdrop?.classList.remove('hidden');
+			iconExpand?.classList.add('hidden');
+			iconCollapse?.classList.remove('hidden');
+			if (focusText) focusText.textContent = 'Exit Focus';
+			document.body.style.overflow = 'hidden';
+			(window as any).__pushModalHistory?.('focus-bench', closeFocusBench);
+			window.dispatchEvent(new Event('resize'));
+		}
+
+		function toggleFocusBench() {
+			if (rack?.classList.contains('focus-bench-active')) {
+				closeFocusBench();
+			} else {
+				openFocusBench();
+			}
+		}
+
+		focusBtn?.addEventListener('click', toggleFocusBench);
+		focusBackdrop?.addEventListener('click', closeFocusBench);
+
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape' && rack?.classList.contains('focus-bench-active')) {
+				closeFocusBench();
+			}
+		});
+
+		// Listen to custom switch event from Terminal or deep links
+		window.addEventListener('switch-test-tab', (e: any) => {
+			const target = e?.detail?.tab;
+			if (target) {
+				switchTab(target, { scroll: true });
+			}
+		});
+
+		(window as any).__switchTestTab = (tabId: string) => {
+			switchTab(tabId, { scroll: true });
+		};
+
+		// Check initial URL hash on mount
+		const hash = window.location.hash.replace('#', '');
+		if (hash && (anchorMap[hash] || labelMap[hash])) {
+			switchTab(hash);
+		}
+
+		window.addEventListener('hashchange', () => {
+			const h = window.location.hash.replace('#', '');
+			if (h && (anchorMap[h] || labelMap[h])) {
+				switchTab(h);
+			}
+		});
+	}
+
+	setupTestsRack();
+	document.addEventListener('astro:page-load', setupTestsRack);
+</script>

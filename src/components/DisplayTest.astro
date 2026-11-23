@@ -956,17 +956,22 @@
 		margin-bottom: 0.85em;
 	}
 
-	@media (max-width: 480px) {
+	@media (max-width: 640px) {
 		.motion-toolbar {
-			gap: 0.5em;
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 0.45em;
 		}
 
 		.motion-toolbar .segmented-control {
 			width: 100%;
+			margin: 0;
 		}
 
 		.motion-toolbar .seg-btn {
 			flex: 1;
+			padding: 0.35em 0.4em;
+			font-size: 0.76em;
 		}
 	}
 
@@ -1025,7 +1030,21 @@
 
 	@media (max-width: 480px) {
 		.display-telemetry-hud {
-			grid-template-columns: 1fr;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 0.6em;
+		}
+
+		.hud-item {
+			padding: 0.65em 0.75em;
+			min-height: 74px;
+		}
+
+		.hud-val {
+			font-size: 1.15em;
+		}
+
+		.hud-sub {
+			font-size: 0.72em;
 		}
 	}
 

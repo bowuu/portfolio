@@ -2077,8 +2077,7 @@
 		padding: 0 0.65em;
 		height: 31px;
 		box-sizing: border-box;
-		flex-shrink: 1;
-		min-width: 0;
+		flex-shrink: 0;
 	}
 
 	:global(html[data-theme="dark"]) .volume-control-wrap {
@@ -2091,11 +2090,10 @@
 	}
 
 	.vol-slider {
-		width: clamp(65px, 14vw, 120px);
+		width: 65px;
 		accent-color: var(--accent);
 		cursor: pointer;
-		flex-shrink: 1;
-		min-width: 50px;
+		flex-shrink: 0;
 	}
 
 	.vol-text {
@@ -2910,8 +2908,7 @@
 			flex-shrink: 0;
 		}
 		.audio-test-card .volume-control-wrap {
-			flex: 1;
-			min-width: 120px;
+			flex-shrink: 0;
 		}
 	}
 

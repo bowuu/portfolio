@@ -3469,11 +3469,6 @@
 			}
 
 			// 2. Decoded (Right) Side
-			const cachedDecIdx = (selectedScene === decodedSceneLoaded && decodedStartFrameLoaded >= 0)
-				? globalFrame - decodedStartFrameLoaded
-				: -1;
-			const hasCachedDecoded = cachedDecIdx >= 0 && cachedDecIdx < TEST_WINDOW_FRAMES && !!decodedBitmaps[cachedDecIdx];
-
 			if (hasCachedDecoded && decCanvas) {
 				const ctx = decCanvas.getContext('2d');
 				if (ctx) {

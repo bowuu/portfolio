@@ -3540,8 +3540,9 @@
 				}
 				playbackRaf = requestAnimationFrame(loop);
 			} else if (srcVideo) {
-				const startTime = rangeStartFrame / 24;
-				const endTime = (rangeStartFrame + TEST_WINDOW_FRAMES) / 24;
+				const activeBase = processedStartFrameLoaded >= 0 ? processedStartFrameLoaded : rangeStartFrame;
+				const startTime = activeBase / 24;
+				const endTime = (activeBase + TEST_WINDOW_FRAMES) / 24;
 				if (srcVideo.currentTime >= endTime - 0.05 || srcVideo.currentTime < startTime - 0.05) {
 					srcVideo.currentTime = startTime;
 				}
@@ -3617,7 +3618,8 @@
 			if (!rect.width) return { relFrame: 0, frameInMaster: 0 };
 			const norm = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
 			const frameInMaster = norm * TOTAL_CLIP_FRAMES;
-			const relFrame = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round(frameInMaster - rangeStartFrame)));
+			const baseFrame = processedStartFrameLoaded >= 0 ? processedStartFrameLoaded : rangeStartFrame;
+			const relFrame = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round(frameInMaster - baseFrame)));
 			return { relFrame, frameInMaster };
 		}
 

@@ -2,17 +2,20 @@
 // MouseTest.astro - Real-Time Mouse Polling Rate, Switch Debounce & Click Latency Inspector
 ---
 
-<section class="card input-card" id="input-lab">
-	<div class="card-header-wrap">
-		<h2 class="card-title">
-			<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
-				<rect x="5" y="2" width="14" height="20" rx="7"/>
-				<line x1="12" y1="6" x2="12" y2="10"/>
-			</svg>
-			Mouse Test
-		</h2>
+<details class="card section-accordion input-card" id="input-lab" open>
+	<summary class="card-header-summary">
+		<div class="card-summary-left">
+			<h2 class="card-title">
+				<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+					<rect x="5" y="2" width="14" height="20" rx="7"/>
+					<line x1="12" y1="6" x2="12" y2="10"/>
+				</svg>
+				Mouse Test
+			</h2>
+			<span class="section-summary-badge">USB Polling Oscilloscope · Chatter</span>
+		</div>
 
-		<div class="header-actions">
+		<div class="card-summary-right">
 			<button id="reset-input-lab-btn" class="telemetry-btn" title="Reset all polling, reflex, and mouse button measurements">
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
 					<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
@@ -20,8 +23,13 @@
 				</svg>
 				<span>Reset Metrics</span>
 			</button>
+			<span class="card-chevron-btn" title="Toggle Mouse Test section">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+			</span>
 		</div>
-	</div>
+	</summary>
+
+	<div class="section-content">
 
 	<p class="benchmark-desc">
 		Measure real-time USB mouse polling frequency, display-to-click visual reaction latency, and test mouse buttons and scroll wheel.
@@ -219,7 +227,8 @@
 			</div>
 		</div>
 	</div>
-</section>
+	</div>
+</details>
 
 <script>
 	function initInputLatencyLab() {

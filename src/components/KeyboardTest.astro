@@ -2,19 +2,22 @@
 // KeyboardTest.astro - Full 104-Key Switch Matrix, N-Key Rollover (NKRO), Input Latency & Switch Chatter Lab
 ---
 
-<section class="card keyboard-card" id="keyboard-lab">
-	<div class="card-header-wrap">
-		<h2 class="card-title">
-			<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
-				<rect x="2" y="4" width="20" height="16" rx="2.5"/>
-				<path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01"/>
-				<path d="M6 12h.01M10 12h.01M14 12h.01M18 12h.01"/>
-				<path d="M7 16h10"/>
-			</svg>
-			Keyboard Test
-		</h2>
+<details class="card section-accordion keyboard-card" id="keyboard-lab" open>
+	<summary class="card-header-summary">
+		<div class="card-summary-left">
+			<h2 class="card-title">
+				<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+					<rect x="2" y="4" width="20" height="16" rx="2.5"/>
+					<path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01"/>
+					<path d="M6 12h.01M10 12h.01M14 12h.01M18 12h.01"/>
+					<path d="M7 16h10"/>
+				</svg>
+				Keyboard Test
+			</h2>
+			<span class="section-summary-badge">104-Key ANSI Matrix · NKRO · Latency</span>
+		</div>
 
-		<div class="header-actions">
+		<div class="card-summary-right">
 			<button id="kb-sound-btn" class="telemetry-btn" type="button" title="Toggle switch sound (On / Off)">
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
 					<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
@@ -31,8 +34,13 @@
 				</svg>
 				<span>Reset Matrix</span>
 			</button>
+			<span class="card-chevron-btn" title="Toggle Keyboard Test section">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+			</span>
 		</div>
-	</div>
+	</summary>
+
+	<div class="section-content">
 
 	<p class="benchmark-desc">
 		Audit 104-key ANSI matrix, N-Key Rollover (NKRO), dispatch latency, and switch chatter.
@@ -341,7 +349,8 @@
 			</div>
 		</div>
 	</details>
-</section>
+	</div>
+</details>
 
 <script>
 	// -------------------------------------------------------------

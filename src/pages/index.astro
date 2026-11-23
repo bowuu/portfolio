@@ -3,7 +3,12 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import CadModelViewer from '../components/CadModelViewer.astro';
-import TestsRack from '../components/TestsRack.astro';
+import NetworkTest from '../components/NetworkTest.astro';
+import DisplayTest from '../components/DisplayTest.astro';
+import AudioTest from '../components/AudioTest.astro';
+import CodecSpotlight from '../components/CodecSpotlight.astro';
+import MouseTest from '../components/MouseTest.astro';
+import KeyboardTest from '../components/KeyboardTest.astro';
 import Debug from '../components/Debug.astro';
 import Terminal from '../components/Terminal.astro';
 import EasterEggs from '../components/EasterEggs.astro';
@@ -64,90 +69,129 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 			</section>
 
 			<!-- SKILLS -->
-			<section class="card" id="skills">
-				<h2 class="card-title">
-					<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
-						<rect x="4" y="4" width="16" height="16" rx="2"/>
-						<rect x="9" y="9" width="6" height="6"/>
-						<line x1="9" y1="1" x2="9" y2="4"/>
-						<line x1="15" y1="1" x2="15" y2="4"/>
-						<line x1="9" y1="20" x2="9" y2="23"/>
-						<line x1="15" y1="20" x2="15" y2="23"/>
-						<line x1="20" y1="9" x2="23" y2="9"/>
-						<line x1="20" y1="14" x2="23" y2="14"/>
-						<line x1="1" y1="9" x2="4" y2="9"/>
-						<line x1="1" y1="14" x2="4" y2="14"/>
-					</svg>
-					Skills
-				</h2>
-				<div class="skills-grid">
-					<div class="skill-category">
-						<span class="skill-label">Silicon &amp; Hardware Validation</span>
-						<p class="skill-items">Automated Test Equipment (ATE), Die Sort &amp; Yield Optimization, Power &amp; Electrical Debug</p>
+			<details class="card section-accordion" id="skills" open>
+				<summary class="card-header-summary">
+					<div class="card-summary-left">
+						<h2 class="card-title">
+							<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+								<rect x="4" y="4" width="16" height="16" rx="2"/>
+								<rect x="9" y="9" width="6" height="6"/>
+								<line x1="9" y1="1" x2="9" y2="4"/>
+								<line x1="15" y1="1" x2="15" y2="4"/>
+								<line x1="9" y1="20" x2="9" y2="23"/>
+								<line x1="15" y1="20" x2="15" y2="23"/>
+								<line x1="20" y1="9" x2="23" y2="9"/>
+								<line x1="20" y1="14" x2="23" y2="14"/>
+								<line x1="1" y1="9" x2="4" y2="9"/>
+								<line x1="1" y1="14" x2="4" y2="14"/>
+							</svg>
+							Skills
+						</h2>
+						<span class="section-summary-badge">ATE · Embedded Linux · 3D CAD</span>
 					</div>
-					<div class="skill-category">
-						<span class="skill-label">Embedded &amp; Platforms</span>
-						<p class="skill-items">Embedded Linux (Yocto, Debian, RHEL), RISC Architectures, High-Speed I/O (PCIe, Ethernet)</p>
+					<div class="card-summary-right">
+						<span class="card-chevron-btn" title="Toggle Skills section">
+							<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+						</span>
 					</div>
-					<div class="skill-category">
-						<span class="skill-label">CAD &amp; Prototyping</span>
-						<p class="skill-items">3D Parametric Modeling, 3D Printing</p>
+				</summary>
+				<div class="section-content">
+					<div class="skills-grid">
+						<div class="skill-category">
+							<span class="skill-label">Silicon &amp; Hardware Validation</span>
+							<p class="skill-items">Automated Test Equipment (ATE), Die Sort &amp; Yield Optimization, Power &amp; Electrical Debug</p>
+						</div>
+						<div class="skill-category">
+							<span class="skill-label">Embedded &amp; Platforms</span>
+							<p class="skill-items">Embedded Linux (Yocto, Debian, RHEL), RISC Architectures, High-Speed I/O (PCIe, Ethernet)</p>
+						</div>
+						<div class="skill-category">
+							<span class="skill-label">CAD &amp; Prototyping</span>
+							<p class="skill-items">3D Parametric Modeling, 3D Printing</p>
+						</div>
 					</div>
 				</div>
-			</section>
+			</details>
 
 			<!-- PROJECTS -->
-			<section class="card" id="projects">
-				<h2 class="card-title">
-					<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
-						<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-					</svg>
-					Projects
-				</h2>
-				<div class="projects-list">
-					<!-- PROJECT 1: 3D CAD VIEWER -->
-					<div class="project-box">
-						<div class="project-head">
-							<div class="project-title-group">
-								<h3 class="project-name">3D Models</h3>
-							</div>
-							<a href="https://makerworld.com/en/@brob" target="_blank" rel="noopener" class="sub-link">MakerWorld @brob &rarr;</a>
-						</div>
-
-						<!-- INTERACTIVE 3D CAD VIEWER EMBED -->
-						<CadModelViewer />
+			<details class="card section-accordion" id="projects" open>
+				<summary class="card-header-summary">
+					<div class="card-summary-left">
+						<h2 class="card-title">
+							<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+								<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+							</svg>
+							Projects
+						</h2>
+						<span class="section-summary-badge">3D CAD Models · Playkeys</span>
 					</div>
-
-					<!-- PROJECT 2: PLAYKEYS FOR PLEX WEB -->
-					<div class="project-box">
-						<div class="project-head">
-							<div class="project-title-group">
-								<h3 class="project-name">Playkeys for Plex Web</h3>
-								<span class="proj-badge">Chrome Extension</span>
+					<div class="card-summary-right">
+						<span class="card-chevron-btn" title="Toggle Projects section">
+							<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+						</span>
+					</div>
+				</summary>
+				<div class="section-content">
+					<div class="projects-list">
+						<!-- PROJECT 1: 3D CAD VIEWER -->
+						<div class="project-box">
+							<div class="project-head">
+								<div class="project-title-group">
+									<h3 class="project-name">3D Models</h3>
+								</div>
+								<a href="https://makerworld.com/en/@brob" target="_blank" rel="noopener" class="sub-link">MakerWorld @brob &rarr;</a>
 							</div>
-							<a href="https://github.com/bowuu/playkeys" target="_blank" rel="noopener" class="sub-link">GitHub Repository &rarr;</a>
+
+							<!-- INTERACTIVE 3D CAD VIEWER EMBED -->
+							<CadModelViewer />
 						</div>
-						<p class="project-text">
-							A Chrome extension that adds global media keys, playback status badges, and a popup controller for Plex Web (<code>app.plex.tv</code>) and self-hosted Plex servers. Built with Manifest V3, zero external dependencies or build steps, and zero telemetry.
-						</p>
-						<div class="project-meta-strip">
-							<span class="meta-label">Key Features:</span>
-							<span>Global OS media shortcuts (Play/Pause, Next, Previous, Stop), dynamic toolbar playback badge, popup player with track artwork and volume slider, on-demand local/self-hosted server support, and 100% local execution.</span>
-						</div>
-						<div class="project-tags">
-							<span class="tag">Manifest V3</span>
-							<span class="tag">Vanilla JavaScript</span>
-							<span class="tag">Zero Dependencies</span>
-							<span class="tag">Zero Telemetry</span>
-							<span class="tag">Self-Hosted Servers</span>
-							<span class="tag">MediaSession API</span>
+
+						<!-- PROJECT 2: PLAYKEYS FOR PLEX WEB -->
+						<div class="project-box">
+							<div class="project-head">
+								<div class="project-title-group">
+									<h3 class="project-name">Playkeys for Plex Web</h3>
+									<span class="proj-badge">Chrome Extension</span>
+								</div>
+								<a href="https://github.com/bowuu/playkeys" target="_blank" rel="noopener" class="sub-link">GitHub Repository &rarr;</a>
+							</div>
+							<p class="project-text">
+								A Chrome extension that adds global media keys, playback status badges, and a popup controller for Plex Web (<code>app.plex.tv</code>) and self-hosted Plex servers. Built with Manifest V3, zero external dependencies or build steps, and zero telemetry.
+							</p>
+							<div class="project-meta-strip">
+								<span class="meta-label">Key Features:</span>
+								<span>Global OS media shortcuts (Play/Pause, Next, Previous, Stop), dynamic toolbar playback badge, popup player with track artwork and volume slider, on-demand local/self-hosted server support, and 100% local execution.</span>
+							</div>
+							<div class="project-tags">
+								<span class="tag">Manifest V3</span>
+								<span class="tag">Vanilla JavaScript</span>
+								<span class="tag">Zero Dependencies</span>
+								<span class="tag">Zero Telemetry</span>
+								<span class="tag">Self-Hosted Servers</span>
+								<span class="tag">MediaSession API</span>
+							</div>
 						</div>
 					</div>
 				</div>
-			</section>
+			</details>
 
-			<!-- HARDWARE & NETWORK TESTS INSTRUMENT RACK -->
-			<TestsRack />
+			<!-- NETWORK TEST -->
+			<NetworkTest />
+
+			<!-- DISPLAY TEST -->
+			<DisplayTest />
+
+			<!-- AUDIO TEST -->
+			<AudioTest />
+
+			<!-- GPU VIDEO CODEC SPOTLIGHT BANNER -->
+			<CodecSpotlight />
+
+			<!-- MOUSE TEST -->
+			<MouseTest />
+
+			<!-- KEYBOARD TEST -->
+			<KeyboardTest />
 
 			<!-- DEBUG -->
 			<Debug />
@@ -158,6 +202,19 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		<EasterEggs />
 		<script>
 			import '../lib/modalHistory';
+
+			function setupCardAccordions() {
+				document.querySelectorAll('.card-header-summary button, .card-header-summary a, .card-header-summary input, .card-header-summary select, .card-header-summary .segmented-control').forEach((el) => {
+					el.addEventListener('click', (e) => {
+						if (!el.classList.contains('card-chevron-btn')) {
+							e.stopPropagation();
+						}
+					});
+				});
+			}
+
+			setupCardAccordions();
+			document.addEventListener('astro:page-load', setupCardAccordions);
 		</script>
 	</body>
 </html>

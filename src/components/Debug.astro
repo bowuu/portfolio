@@ -2,17 +2,28 @@
 // Debug.astro - Real-time client-side hardware, runtime & edge telemetry inspector
 ---
 
-<section class="card telemetry-card" id="debug">
-	<div class="telemetry-header">
-		<h2 class="card-title">
-			<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
-				<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-				<line x1="8" y1="21" x2="16" y2="21"/>
-				<line x1="12" y1="17" x2="12" y2="21"/>
-			</svg>
-			Debug
-		</h2>
-	</div>
+<details class="card section-accordion telemetry-card" id="debug" open>
+	<summary class="card-header-summary">
+		<div class="card-summary-left">
+			<h2 class="card-title">
+				<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+					<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+					<line x1="8" y1="21" x2="16" y2="21"/>
+					<line x1="12" y1="17" x2="12" y2="21"/>
+				</svg>
+				Debug
+			</h2>
+			<span class="section-summary-badge">Hardware &amp; Network Telemetry</span>
+		</div>
+
+		<div class="card-summary-right">
+			<span class="card-chevron-btn" title="Toggle Debug section">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+			</span>
+		</div>
+	</summary>
+
+	<div class="section-content">
 
 	<!-- EXPANDABLE PRIVACY & TELEMETRY NOTICE -->
 	<details class="privacy-details">
@@ -46,21 +57,15 @@
 	</details>
 
 	<!-- SUBSECTION 1: NETWORK -->
-	<details class="telemetry-group telemetry-details" id="debug-group-network" open>
-		<summary class="telemetry-group-header">
-			<div class="telemetry-group-header-left">
-				<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
-					<circle cx="12" cy="12" r="10"/>
-					<line x1="2" y1="12" x2="22" y2="12"/>
-					<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-				</svg>
-				<span>Network</span>
-				<span class="telemetry-summary-pill mono" id="debug-summary-network">IPv4 · IPv6 · Edge</span>
-			</div>
-			<span class="telemetry-chevron-wrap">
-				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="telemetry-chevron"><polyline points="6 9 12 15 18 9"/></svg>
-			</span>
-		</summary>
+	<div class="telemetry-group">
+		<div class="telemetry-group-header">
+			<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+				<circle cx="12" cy="12" r="10"/>
+				<line x1="2" y1="12" x2="22" y2="12"/>
+				<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+			</svg>
+			<span>Network</span>
+		</div>
 		<div class="telemetry-grid">
 			<div class="telemetry-item telemetry-ip-item">
 				<span class="t-label">Public IP</span>
@@ -94,31 +99,25 @@
 				<span id="t-isp" class="t-val">Detecting...</span>
 			</div>
 		</div>
-	</details>
+	</div>
 
 	<!-- SUBSECTION 2: HARDWARE -->
-	<details class="telemetry-group telemetry-details" id="debug-group-hardware" open>
-		<summary class="telemetry-group-header">
-			<div class="telemetry-group-header-left">
-				<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
-					<rect x="4" y="4" width="16" height="16" rx="2"/>
-					<rect x="9" y="9" width="6" height="6"/>
-					<line x1="9" y1="1" x2="9" y2="4"/>
-					<line x1="15" y1="1" x2="15" y2="4"/>
-					<line x1="9" y1="20" x2="9" y2="23"/>
-					<line x1="15" y1="20" x2="15" y2="23"/>
-					<line x1="20" y1="9" x2="23" y2="9"/>
-					<line x1="20" y1="14" x2="23" y2="14"/>
-					<line x1="1" y1="9" x2="4" y2="9"/>
-					<line x1="1" y1="14" x2="4" y2="14"/>
-				</svg>
-				<span>Hardware</span>
-				<span class="telemetry-summary-pill mono" id="debug-summary-hardware">OS · CPU · RAM · GPU</span>
-			</div>
-			<span class="telemetry-chevron-wrap">
-				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="telemetry-chevron"><polyline points="6 9 12 15 18 9"/></svg>
-			</span>
-		</summary>
+	<div class="telemetry-group">
+		<div class="telemetry-group-header">
+			<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+				<rect x="4" y="4" width="16" height="16" rx="2"/>
+				<rect x="9" y="9" width="6" height="6"/>
+				<line x1="9" y1="1" x2="9" y2="4"/>
+				<line x1="15" y1="1" x2="15" y2="4"/>
+				<line x1="9" y1="20" x2="9" y2="23"/>
+				<line x1="15" y1="20" x2="15" y2="23"/>
+				<line x1="20" y1="9" x2="23" y2="9"/>
+				<line x1="20" y1="14" x2="23" y2="14"/>
+				<line x1="1" y1="9" x2="4" y2="9"/>
+				<line x1="1" y1="14" x2="4" y2="14"/>
+			</svg>
+			<span>Hardware</span>
+		</div>
 		<div class="telemetry-grid">
 			<div class="telemetry-item">
 				<span class="t-label">Operating System</span>
@@ -142,24 +141,18 @@
 				<span id="t-gpu" class="t-val">Detecting WebGL...</span>
 			</div>
 		</div>
-	</details>
+	</div>
 
 	<!-- SUBSECTION 3: DISPLAY -->
-	<details class="telemetry-group telemetry-details" id="debug-group-display" open>
-		<summary class="telemetry-group-header">
-			<div class="telemetry-group-header-left">
-				<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
-					<rect x="2" y="3" width="20" height="14" rx="2"/>
-					<line x1="8" y1="21" x2="16" y2="21"/>
-					<line x1="12" y1="17" x2="12" y2="21"/>
-				</svg>
-				<span>Display</span>
-				<span class="telemetry-summary-pill mono" id="debug-summary-display">Resolution · Hz · Gamut</span>
-			</div>
-			<span class="telemetry-chevron-wrap">
-				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="telemetry-chevron"><polyline points="6 9 12 15 18 9"/></svg>
-			</span>
-		</summary>
+	<div class="telemetry-group">
+		<div class="telemetry-group-header">
+			<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+				<rect x="2" y="3" width="20" height="14" rx="2"/>
+				<line x1="8" y1="21" x2="16" y2="21"/>
+				<line x1="12" y1="17" x2="12" y2="21"/>
+			</svg>
+			<span>Display</span>
+		</div>
 		<div class="telemetry-grid">
 			<div class="telemetry-item">
 				<span class="t-label">Display &amp; Scaling</span>
@@ -178,23 +171,17 @@
 				<span id="t-touch" class="t-val">Probing digitizer...</span>
 			</div>
 		</div>
-	</details>
+	</div>
 
 	<!-- SUBSECTION 4: MEDIA -->
-	<details class="telemetry-group telemetry-details" id="debug-group-media" open>
-		<summary class="telemetry-group-header">
-			<div class="telemetry-group-header-left">
-				<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
-					<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-					<path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
-				</svg>
-				<span>Media</span>
-				<span class="telemetry-summary-pill mono" id="debug-summary-media">Audio · Codecs · DRM</span>
-			</div>
-			<span class="telemetry-chevron-wrap">
-				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="telemetry-chevron"><polyline points="6 9 12 15 18 9"/></svg>
-			</span>
-		</summary>
+	<div class="telemetry-group">
+		<div class="telemetry-group-header">
+			<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+				<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+				<path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+			</svg>
+			<span>Media</span>
+		</div>
 		<div class="telemetry-grid">
 			<div class="telemetry-item">
 				<span class="t-label">DAC Pipeline</span>
@@ -223,7 +210,7 @@
 				<span id="t-drm" class="t-val loc-clickable">Probing CDM modules...</span>
 			</div>
 		</div>
-	</details>
+	</div>
 
 	<!-- INTERACTIVE MAP APPLET (OpenStreetMap) -->
 	<div id="map-applet-modal" class="map-applet-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="map-applet-title">
@@ -591,7 +578,8 @@
 			</div>
 		</div>
 	</div>
-</section>
+	</div>
+</details>
 
 <script>
 	function detectGPU(): string {
@@ -772,13 +760,6 @@
 	};
 
 	async function initTelemetry() {
-		// Collapse debug accordions on mobile devices (< 768px) to reduce clutter
-		if (typeof window !== 'undefined' && window.innerWidth < 768) {
-			document.querySelectorAll<HTMLDetailsElement>('.telemetry-details').forEach((el) => {
-				el.open = false;
-			});
-		}
-
 		// Network & Edge elements
 		const ipv4El = document.getElementById('t-ipv4');
 		const ipv6El = document.getElementById('t-ipv6');
@@ -5094,65 +5075,6 @@
 		flex-shrink: 0;
 		color: var(--accent);
 		opacity: 0.9;
-	}
-
-	/* ACCORDION GROUP DETAILS */
-	details.telemetry-details {
-		cursor: pointer;
-	}
-
-	details.telemetry-details > summary.telemetry-group-header {
-		list-style: none;
-		user-select: none;
-		cursor: pointer;
-		margin-bottom: 0;
-		padding: 0.1em 0.2em;
-	}
-
-	details.telemetry-details > summary::-webkit-details-marker {
-		display: none;
-	}
-
-	details.telemetry-details[open] > summary.telemetry-group-header {
-		margin-bottom: 0.65em;
-	}
-
-	.telemetry-group-header-left {
-		display: flex;
-		align-items: center;
-		gap: 0.55em;
-		flex-wrap: wrap;
-	}
-
-	.telemetry-summary-pill {
-		font-size: 0.88em;
-		font-weight: 500;
-		text-transform: none;
-		letter-spacing: 0;
-		color: rgb(var(--gray));
-		background: rgba(0, 0, 0, 0.04);
-		border: 1px solid var(--border-color);
-		padding: 0.15em 0.5em;
-		border-radius: 4px;
-	}
-
-	:global(html[data-theme="dark"]) .telemetry-summary-pill {
-		background: rgba(255, 255, 255, 0.04);
-	}
-
-	.telemetry-chevron-wrap {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: rgb(var(--gray));
-	}
-
-	.telemetry-chevron {
-		transition: transform 0.2s ease;
-	}
-
-	details.telemetry-details[open] .telemetry-chevron {
-		transform: rotate(180deg);
 	}
 
 	.telemetry-grid {

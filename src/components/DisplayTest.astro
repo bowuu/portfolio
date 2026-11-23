@@ -2,18 +2,21 @@
 // DisplayTest.astro - Display Motion Blur, Pixel Response & Ghosting Benchmark
 ---
 
-<section class="card display-test-card" id="display-lab">
-	<div class="card-header-wrap">
-		<h2 class="card-title">
-			<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
-				<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-				<line x1="8" y1="21" x2="16" y2="21"/>
-				<line x1="12" y1="17" x2="12" y2="21"/>
-			</svg>
-			Display Test
-		</h2>
+<details class="card section-accordion display-test-card" id="display-lab" open>
+	<summary class="card-header-summary">
+		<div class="card-summary-left">
+			<h2 class="card-title">
+				<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+					<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+					<line x1="8" y1="21" x2="16" y2="21"/>
+					<line x1="12" y1="17" x2="12" y2="21"/>
+				</svg>
+				Display Test
+			</h2>
+			<span class="section-summary-badge">Motion Blur · Ghosting · VSYNC</span>
+		</div>
 
-		<div class="header-actions">
+		<div class="card-summary-right">
 			<button id="open-pixel-checker-btn" class="telemetry-btn" type="button" title="Open Fullscreen Dead / Stuck Pixel Checker">
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
 					<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
@@ -30,8 +33,14 @@
 				</svg>
 				<span id="toggle-display-text">Start</span>
 			</button>
+
+			<span class="card-chevron-btn" title="Toggle Display Test section">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+			</span>
 		</div>
-	</div>
+	</summary>
+
+	<div class="section-content">
 
 	<p class="benchmark-desc">
 		Inspect monitor pixel response times, sample-and-hold motion blur, overdrive coronas, and test for dead or stuck subpixels.
@@ -121,7 +130,8 @@
 			</button>
 		</div>
 	</div>
-</section>
+	</div>
+</details>
 
 <script>
 	function setupDisplayTest() {

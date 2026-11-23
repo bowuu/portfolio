@@ -258,6 +258,120 @@ html {
 }
 
 /* ==========================================================================
+   GLOBAL CARD ACCORDION SYSTEM (All Major Sections)
+   ========================================================================== */
+details.card.section-accordion {
+  transition: all 0.2s ease;
+}
+
+details.card.section-accordion > summary.card-header-summary {
+  list-style: none;
+  user-select: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75em;
+  padding-bottom: 0.75em;
+  margin-bottom: 1.2em;
+  border-bottom: 1.5px solid var(--border-color);
+  flex-wrap: wrap;
+}
+
+details.card.section-accordion > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.card.section-accordion:not([open]) > summary.card-header-summary {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+details.card.section-accordion:not([open]) {
+  padding-top: clamp(0.9em, 2vw, 1.2em);
+  padding-bottom: clamp(0.9em, 2vw, 1.2em);
+}
+
+.card-summary-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65em;
+  flex-wrap: wrap;
+}
+
+.card-summary-left .card-title {
+  margin: 0 !important;
+  padding: 0 !important;
+  border-bottom: none !important;
+}
+
+.card-summary-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+  flex-wrap: wrap;
+}
+
+.section-summary-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75em;
+  font-weight: 500;
+  color: rgb(var(--gray));
+  background: rgba(0, 0, 0, 0.04);
+  padding: 0.15em 0.6em;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  letter-spacing: -0.01em;
+}
+
+html[data-theme="dark"] .section-summary-badge {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.card-chevron-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-color);
+  color: rgb(var(--gray));
+  transition: transform 0.2s ease, background 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+html[data-theme="dark"] .card-chevron-btn {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.card-chevron-btn:hover {
+  color: var(--accent);
+  border-color: rgba(var(--accent-rgb), 0.35);
+  background: rgba(var(--accent-rgb), 0.08);
+}
+
+details.card.section-accordion[open] .card-chevron-btn svg {
+  transform: rotate(180deg);
+}
+
+.card-chevron-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.section-content {
+  animation: sectionExpand 0.2s ease-out;
+}
+
+@keyframes sectionExpand {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
    PRINT STYLES (@media print)
    Optimized for recruiter printouts & Save as PDF (Ctrl + P)
    ========================================================================== */

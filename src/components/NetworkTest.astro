@@ -2,81 +2,91 @@
 // NetworkTest.astro - Real-time zero-host-bandwidth Cloudflare edge network benchmark
 ---
 
-<section class="card benchmark-card" id="network-lab">
+<details class="card section-accordion benchmark-card" id="lab" open>
 	<a id="benchmark" style="display:none;" aria-hidden="true"></a>
-	<div class="benchmark-header">
-		<h2 class="card-title">
-			<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
-				<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-			</svg>
-			Network Test
-		</h2>
-		<button id="run-speedtest-btn" class="benchmark-btn" type="button" aria-label="Run Test (Network Benchmark)">
-			<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon" id="btn-icon-play">
-				<polygon points="5 3 19 12 5 21 5 3"/>
-			</svg>
-			<span id="speedtest-btn-text">Run Test</span>
-		</button>
-	</div>
-
-	<p class="benchmark-desc">
-		Measure real-time latency, jitter, packet loss, and sustained edge throughput directly against Cloudflare's Anycast network.
-	</p>
-
-	<!-- BENCHMARK TILES -->
-	<div class="benchmark-tiles">
-		<div class="b-tile">
-			<span class="b-tile-label">Ping / Packet Loss</span>
-			<div class="b-tile-value-wrap">
-				<span id="speed-ping" class="b-tile-num mono">--</span>
-				<span class="b-tile-unit">ms</span>
-				<span class="loss-badge mono" id="speed-loss-badge" title="Drop rate across 16 sequential HTTP 204 Anycast edge ping requests.">
-					<span id="speed-loss">0</span>% loss
-				</span>
-			</div>
-			<span class="b-tile-sub">
-				<span id="speed-jitter">Jitter: -- ms</span> ▪ <span id="speed-loss-sub">0/16 lost</span>
+	<summary class="card-header-summary">
+		<div class="card-summary-left">
+			<h2 class="card-title">
+				<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+					<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+				</svg>
+				Network Test
+			</h2>
+			<span class="section-summary-badge">Anycast Ping · Jitter · Throughput</span>
+		</div>
+		<div class="card-summary-right">
+			<button id="run-speedtest-btn" class="benchmark-btn" type="button" aria-label="Run Test (Network Benchmark)">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon" id="btn-icon-play">
+					<polygon points="5 3 19 12 5 21 5 3"/>
+				</svg>
+				<span id="speedtest-btn-text">Run Test</span>
+			</button>
+			<span class="card-chevron-btn" title="Toggle Network Test section">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
 			</span>
 		</div>
+	</summary>
 
-		<div class="b-tile">
-			<span class="b-tile-label">Download Speed</span>
-			<div class="b-tile-value-wrap">
-				<span id="speed-down" class="b-tile-num mono">--</span>
-				<span id="speed-down-unit" class="b-tile-unit">Mbps</span>
+	<div class="section-content">
+		<p class="benchmark-desc">
+			Measure real-time latency, jitter, packet loss, and sustained edge throughput directly against Cloudflare's Anycast network.
+		</p>
+
+		<!-- BENCHMARK TILES -->
+		<div class="benchmark-tiles">
+			<div class="b-tile">
+				<span class="b-tile-label">Ping / Packet Loss</span>
+				<div class="b-tile-value-wrap">
+					<span id="speed-ping" class="b-tile-num mono">--</span>
+					<span class="b-tile-unit">ms</span>
+					<span class="loss-badge mono" id="speed-loss-badge" title="Drop rate across 16 sequential HTTP 204 Anycast edge ping requests.">
+						<span id="speed-loss">0</span>% loss
+					</span>
+				</div>
+				<span class="b-tile-sub">
+					<span id="speed-jitter">Jitter: -- ms</span> ▪ <span id="speed-loss-sub">0/16 lost</span>
+				</span>
 			</div>
-			<span id="speed-down-sub" class="b-tile-sub">Edge Throughput</span>
+
+			<div class="b-tile">
+				<span class="b-tile-label">Download Speed</span>
+				<div class="b-tile-value-wrap">
+					<span id="speed-down" class="b-tile-num mono">--</span>
+					<span id="speed-down-unit" class="b-tile-unit">Mbps</span>
+				</div>
+				<span id="speed-down-sub" class="b-tile-sub">Edge Throughput</span>
+			</div>
+
+			<div class="b-tile">
+				<span class="b-tile-label">Upload Speed</span>
+				<div class="b-tile-value-wrap">
+					<span id="speed-up" class="b-tile-num mono">--</span>
+					<span id="speed-up-unit" class="b-tile-unit">Mbps</span>
+				</div>
+				<span id="speed-up-sub" class="b-tile-sub">Return Pipeline</span>
+			</div>
+
+			<div class="b-tile">
+				<span class="b-tile-label">Bufferbloat</span>
+				<div class="b-tile-value-wrap">
+					<span id="speed-bloat" class="b-tile-num mono">--</span>
+					<span id="speed-bloat-unit" class="b-tile-unit">Grade</span>
+				</div>
+				<span id="speed-bloat-sub" class="b-tile-sub">Loaded Ping &Delta;</span>
+			</div>
 		</div>
 
-		<div class="b-tile">
-			<span class="b-tile-label">Upload Speed</span>
-			<div class="b-tile-value-wrap">
-				<span id="speed-up" class="b-tile-num mono">--</span>
-				<span id="speed-up-unit" class="b-tile-unit">Mbps</span>
+		<!-- PROGRESS TRACK & LIVE STATUS -->
+		<div class="benchmark-footer">
+			<div class="progress-track" id="benchmark-progress-track">
+				<div class="progress-bar" id="benchmark-progress-bar"></div>
 			</div>
-			<span id="speed-up-sub" class="b-tile-sub">Return Pipeline</span>
-		</div>
-
-		<div class="b-tile">
-			<span class="b-tile-label">Bufferbloat</span>
-			<div class="b-tile-value-wrap">
-				<span id="speed-bloat" class="b-tile-num mono">--</span>
-				<span id="speed-bloat-unit" class="b-tile-unit">Grade</span>
+			<div class="status-wrap">
+				<span id="speedtest-status" class="status-text">Click "Run Test" to measure real-time latency, jitter, packet loss, and sustained throughput.</span>
 			</div>
-			<span id="speed-bloat-sub" class="b-tile-sub">Loaded Ping &Delta;</span>
 		</div>
 	</div>
-
-	<!-- PROGRESS TRACK & LIVE STATUS -->
-	<div class="benchmark-footer">
-		<div class="progress-track" id="benchmark-progress-track">
-			<div class="progress-bar" id="benchmark-progress-bar"></div>
-		</div>
-		<div class="status-wrap">
-			<span id="speedtest-status" class="status-text">Click "Run Test" to measure real-time latency, jitter, packet loss, and sustained throughput.</span>
-		</div>
-	</div>
-</section>
+</details>
 
 <script>
 	let isBenchmarking = false;

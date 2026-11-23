@@ -145,6 +145,10 @@ import ThemeToggle from './ThemeToggle.astro';
 				const match = href.match(/#([\w-]+)$/);
 				if (match && match[1]) {
 					setActive(match[1]);
+					const targetEl = document.getElementById(match[1]);
+					if (targetEl instanceof HTMLDetailsElement && !targetEl.open) {
+						targetEl.open = true;
+					}
 				} else {
 					setActive('about');
 				}

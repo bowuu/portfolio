@@ -2884,61 +2884,90 @@
 			}
 		}
 
+		function formatQualityTooltip(psnr: number, ssim: number, frameLabel?: string): string {
+			const rmse = (255 * 10 ** (-psnr / 20)).toFixed(2);
+			let grade = 'Visually Lossless';
+			if (psnr < 30) grade = 'Heavy Compression Artifacts';
+			else if (psnr < 38) grade = 'Standard Web Streaming';
+			else if (psnr < 45) grade = 'High-Fidelity Broadcast';
+
+			const prefix = frameLabel ? `${frameLabel}: ` : 'Average Quality: ';
+			return `${prefix}${psnr.toFixed(1)} dB PSNR · ${ssim.toFixed(3)} SSIM (${grade})\n• Avg Pixel Deviation (RMSE): ±${rmse} / 255 levels\n• Decibel Scale: +3 dB cuts noise energy by 50% (2× cleaner); +6 dB cuts linear pixel error in half\n• Industry Standards: >45 dB Archive/Lossless | 38–45 dB High Fidelity | 30–37 dB Standard | <30 dB Artifacts`;
+		}
+
 		function computePsnrAndSsim(srcImgData: ImageData, decImgData: ImageData): FrameQuality {
 			const sData = srcImgData.data;
 			const dData = decImgData.data;
-			const len = sData.length;
+			const w = srcImgData.width;
+			const h = srcImgData.height;
+
 			let sumSqDiff = 0;
+			let totalPixels = 0;
 
-			let sumSrcY = 0;
-			let sumDecY = 0;
-			let sumSqSrcY = 0;
-			let sumSqDecY = 0;
-			let sumSrcDecY = 0;
+			// 8x8 block-based MSSIM (Wang et al.)
+			const blockSize = 8;
+			const c1 = (0.01 * 255) ** 2; // (2.55)^2 = 6.5025
+			const c2 = (0.03 * 255) ** 2; // (7.65)^2 = 58.5225
+			let sumSsim = 0;
+			let numBlocks = 0;
 
-			const stride = len > 4_000_000 ? 4 : 2;
-			let samples = 0;
+			for (let by = 0; by < h; by += blockSize) {
+				const blockH = Math.min(blockSize, h - by);
+				for (let bx = 0; bx < w; bx += blockSize) {
+					const blockW = Math.min(blockSize, w - bx);
+					const blockCount = blockW * blockH;
 
-			for (let i = 0; i < len; i += 4 * stride) {
-				const sr = sData[i];
-				const sg = sData[i + 1];
-				const sb = sData[i + 2];
+					let sumX = 0;
+					let sumY = 0;
+					let sumSqX = 0;
+					let sumSqY = 0;
+					let sumXY = 0;
 
-				const dr = dData[i];
-				const dg = dData[i + 1];
-				const db = dData[i + 2];
+					for (let dy = 0; dy < blockH; dy++) {
+						const rowOffset = ((by + dy) * w + bx) * 4;
+						for (let dx = 0; dx < blockW; dx++) {
+							const p = rowOffset + (dx * 4);
+							const sr = sData[p];
+							const sg = sData[p + 1];
+							const sb = sData[p + 2];
+							const dr = dData[p];
+							const dg = dData[p + 1];
+							const db = dData[p + 2];
 
-				const diffR = sr - dr;
-				const diffG = sg - dg;
-				const diffB = sb - db;
-				sumSqDiff += (diffR * diffR + diffG * diffG + diffB * diffB);
+							const diffR = sr - dr;
+							const diffG = sg - dg;
+							const diffB = sb - db;
+							sumSqDiff += (diffR * diffR + diffG * diffG + diffB * diffB);
+							totalPixels++;
 
-				const sy = 0.2126 * sr + 0.7152 * sg + 0.0722 * sb;
-				const dy = 0.2126 * dr + 0.7152 * dg + 0.0722 * db;
+							// ITU-R BT.709 Luminance
+							const xLum = 0.2126 * sr + 0.7152 * sg + 0.0722 * sb;
+							const yLum = 0.2126 * dr + 0.7152 * dg + 0.0722 * db;
 
-				sumSrcY += sy;
-				sumDecY += dy;
-				sumSqSrcY += sy * sy;
-				sumSqDecY += dy * dy;
-				sumSrcDecY += sy * dy;
-				samples++;
+							sumX += xLum;
+							sumY += yLum;
+							sumSqX += xLum * xLum;
+							sumSqY += yLum * yLum;
+							sumXY += xLum * yLum;
+						}
+					}
+
+					const muX = sumX / blockCount;
+					const muY = sumY / blockCount;
+					const varX = (sumSqX / blockCount) - (muX * muX);
+					const varY = (sumSqY / blockCount) - (muY * muY);
+					const covXY = (sumXY / blockCount) - (muX * muY);
+
+					const num = (2 * muX * muY + c1) * (2 * covXY + c2);
+					const den = (muX * muX + muY * muY + c1) * (varX + varY + c2);
+					sumSsim += (den === 0 ? 1.0 : num / den);
+					numBlocks++;
+				}
 			}
 
-			const mse = sumSqDiff / (samples * 3);
+			const mse = totalPixels > 0 ? sumSqDiff / (totalPixels * 3) : 0;
 			const psnr = mse === 0 ? 99.9 : Math.min(99.9, Math.round((10 * Math.log10((255 * 255) / mse)) * 10) / 10);
-
-			const muX = sumSrcY / samples;
-			const muY = sumDecY / samples;
-			const varX = (sumSqSrcY / samples) - (muX * muX);
-			const varY = (sumSqDecY / samples) - (muY * muY);
-			const covXY = (sumSrcDecY / samples) - (muX * muY);
-
-			const c1 = (0.01 * 255) ** 2;
-			const c2 = (0.03 * 255) ** 2;
-
-			const ssimNum = (2 * muX * muY + c1) * (2 * covXY + c2);
-			const ssimDen = (muX * muX + muY * muY + c1) * (varX + varY + c2);
-			let ssim = ssimDen === 0 ? 1.0 : ssimNum / ssimDen;
+			let ssim = numBlocks > 0 ? sumSsim / numBlocks : 1.0;
 			ssim = Math.max(0, Math.min(1.0, Math.round(ssim * 1000) / 1000));
 
 			return { psnr, ssim };
@@ -3130,7 +3159,7 @@
 				avgSsim = Math.round((sumSsim / validFrames) * 1000) / 1000;
 				if (metricQuality) {
 					metricQuality.innerHTML = `${avgPsnr.toFixed(1)} <span class="webgpu-tile-sub">dB (${avgSsim.toFixed(3)} SSIM)</span>`;
-					metricQuality.title = `Average quality across ${validFrames} frames: ${avgPsnr.toFixed(1)} dB PSNR, ${avgSsim.toFixed(3)} SSIM.`;
+					metricQuality.title = formatQualityTooltip(avgPsnr, avgSsim, `Average across ${validFrames} frames`);
 				}
 			}
 		}
@@ -3430,8 +3459,10 @@
 			if (metricQuality) {
 				if (curQ && avgPsnr > 0) {
 					metricQuality.innerHTML = `${avgPsnr.toFixed(1)} <span class="webgpu-tile-sub">dB (F${currentFrameIdx + 1}: ${curQ.psnr.toFixed(1)} dB)</span>`;
+					metricQuality.title = formatQualityTooltip(curQ.psnr, curQ.ssim, `Frame ${currentFrameIdx + 1} (${globalFrame + 1})`);
 				} else if (decodedStartFrameLoaded >= 0 && !hasCachedDecoded) {
 					metricQuality.innerHTML = `-- <span class="webgpu-tile-sub">(Pending transcode)</span>`;
+					metricQuality.title = 'Selected range has not been transcoded yet. Click "Start" to test.';
 				}
 			}
 
@@ -4085,16 +4116,16 @@
 						: ['hvc1.1.6.L120.B0', 'hev1.1.6.L120.B0', 'hvc1.1.6.L93.B0', 'hev1.1.6.L93.B0'];
 				}
 
-				let bitrate = is4k ? 25_000_000 : 6_000_000;
+				let bitrate = is4k ? 20_000_000 : 5_000_000;
 				let latencyMode: 'quality' | 'realtime' = 'quality';
 				let bitrateMode: 'variable' | 'constant' = 'variable';
 
 				if (selectedQuality === 'low') {
-					bitrate = is4k ? 10_000_000 : 2_000_000;
+					bitrate = is4k ? 3_500_000 : 750_000;
 					latencyMode = 'realtime';
 					bitrateMode = 'constant';
 				} else if (selectedQuality === 'high') {
-					bitrate = is4k ? 45_000_000 : 16_000_000;
+					bitrate = is4k ? 50_000_000 : 18_000_000;
 					latencyMode = 'quality';
 					bitrateMode = 'variable';
 				}

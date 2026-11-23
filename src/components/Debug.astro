@@ -3040,7 +3040,8 @@
 			const spanWidth = (TEST_WINDOW_FRAMES / TOTAL_CLIP_FRAMES) * w;
 
 			// Underline for processed active transcode span
-			ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+			const isWindowAligned = rangeStartFrame === processedStartFrameLoaded;
+			ctx.fillStyle = isWindowAligned ? 'rgba(56, 189, 248, 0.45)' : 'rgba(56, 189, 248, 0.2)';
 			ctx.fillRect(startX, h - 1, spanWidth, 1);
 
 			const n = sparklineChunks.length;
@@ -3054,13 +3055,13 @@
 				const bx = startX + i * (barW + gap);
 				const by = h - barH - 1;
 
-				const isCurrent = i === currentFrameIdx;
+				const isCurrent = isWindowAligned && i === currentFrameIdx;
 				const isKey = chunk.type === 'key';
 
 				if (isKey) {
-					ctx.fillStyle = isCurrent ? '#ea580c' : '#f97316';
+					ctx.fillStyle = isCurrent ? '#ea580c' : (isWindowAligned ? '#f97316' : 'rgba(249, 115, 22, 0.45)');
 				} else {
-					ctx.fillStyle = isCurrent ? '#94a3b8' : 'rgba(148, 163, 184, 0.55)';
+					ctx.fillStyle = isCurrent ? '#ffffff' : (isWindowAligned ? 'rgba(148, 163, 184, 0.65)' : 'rgba(148, 163, 184, 0.35)');
 				}
 
 				ctx.fillRect(bx, by, barW, barH);
@@ -3072,7 +3073,7 @@
 				}
 
 				if (isKey) {
-					ctx.fillStyle = '#38bdf8';
+					ctx.fillStyle = isWindowAligned ? '#38bdf8' : 'rgba(56, 189, 248, 0.45)';
 					ctx.fillRect(bx, by - 1.5, barW, 1.5);
 				}
 			}
@@ -3280,6 +3281,9 @@
 					const barW = Math.max(2, (spanWidth - (n - 1) * gap) / n);
 					const relX = mx - startX;
 					const idx = Math.max(0, Math.min(n - 1, Math.floor(relX / (barW + gap))));
+					if (rangeStartFrame !== processedStartFrameLoaded) {
+						setRangeStartFrame(processedStartFrameLoaded);
+					}
 					seekToFrame(idx);
 				}
 			});
@@ -3403,9 +3407,9 @@
 
 		function syncTimelineUI(relFrameIdx: number) {
 			currentFrameIdx = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, relFrameIdx));
-			const activeBase = processedStartFrameLoaded >= 0 ? processedStartFrameLoaded : rangeStartFrame;
-			const globalFrame = activeBase + currentFrameIdx;
-			const curQ = frameQualityMetrics[currentFrameIdx];
+			const globalFrame = rangeStartFrame + currentFrameIdx;
+			const isTranscodeCurrent = (selectedScene === decodedSceneLoaded && decodedStartFrameLoaded === rangeStartFrame && decodedStartFrameLoaded >= 0);
+			const curQ = isTranscodeCurrent ? frameQualityMetrics[currentFrameIdx] : null;
 
 			if (frameReadout) {
 				frameReadout.textContent = `Frame ${currentFrameIdx + 1} / ${TEST_WINDOW_FRAMES}`;
@@ -3416,8 +3420,12 @@
 				}
 			}
 
-			if (metricQuality && curQ && avgPsnr > 0) {
-				metricQuality.innerHTML = `${avgPsnr.toFixed(1)} <span class="webgpu-tile-sub">dB (F${currentFrameIdx + 1}: ${curQ.psnr.toFixed(1)} dB)</span>`;
+			if (metricQuality) {
+				if (curQ && avgPsnr > 0) {
+					metricQuality.innerHTML = `${avgPsnr.toFixed(1)} <span class="webgpu-tile-sub">dB (F${currentFrameIdx + 1}: ${curQ.psnr.toFixed(1)} dB)</span>`;
+				} else if (decodedStartFrameLoaded >= 0 && !isTranscodeCurrent) {
+					metricQuality.innerHTML = `-- <span class="webgpu-tile-sub">(Pending transcode)</span>`;
+				}
 			}
 
 			if (playhead) {
@@ -3540,9 +3548,8 @@
 				}
 				playbackRaf = requestAnimationFrame(loop);
 			} else if (srcVideo) {
-				const activeBase = processedStartFrameLoaded >= 0 ? processedStartFrameLoaded : rangeStartFrame;
-				const startTime = activeBase / 24;
-				const endTime = (activeBase + TEST_WINDOW_FRAMES) / 24;
+				const startTime = rangeStartFrame / 24;
+				const endTime = (rangeStartFrame + TEST_WINDOW_FRAMES) / 24;
 				if (srcVideo.currentTime >= endTime - 0.05 || srcVideo.currentTime < startTime - 0.05) {
 					srcVideo.currentTime = startTime;
 				}
@@ -3618,8 +3625,7 @@
 			if (!rect.width) return { relFrame: 0, frameInMaster: 0 };
 			const norm = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
 			const frameInMaster = norm * TOTAL_CLIP_FRAMES;
-			const baseFrame = processedStartFrameLoaded >= 0 ? processedStartFrameLoaded : rangeStartFrame;
-			const relFrame = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round(frameInMaster - baseFrame)));
+			const relFrame = Math.max(0, Math.min(TEST_WINDOW_FRAMES - 1, Math.round(frameInMaster - rangeStartFrame)));
 			return { relFrame, frameInMaster };
 		}
 

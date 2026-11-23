@@ -20,9 +20,6 @@
 
 		<div class="card-summary-right">
 			<button type="button" id="launch-codec-spotlight-btn" class="codec-spotlight-launch-btn" title="Open Video Codec Studio">
-				<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-					<polygon points="5 3 19 12 5 21 5 3"></polygon>
-				</svg>
 				<span>Launch Studio</span>
 				<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" class="spotlight-arrow">
 					<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
@@ -91,67 +88,6 @@
 </details>
 
 <style>
-	/* CODEC SPOTLIGHT BANNER */
-	.codec-spotlight-card {
-		background: var(--bg-card);
-		border: 1px solid var(--border-color);
-		border-radius: 12px;
-		padding: 1.15em clamp(1.2em, 2.5vw, 1.8em);
-		margin-top: 1.8em;
-		width: 100%;
-		box-shadow: var(--box-shadow);
-		position: relative;
-		overflow: hidden;
-		transition: border-color 0.2s ease, box-shadow 0.2s ease;
-	}
-	.codec-spotlight-inner {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1.5em;
-		flex-wrap: wrap;
-	}
-	.codec-spotlight-info {
-		flex: 1 1 500px;
-		min-width: 0;
-	}
-	.codec-spotlight-badge-row {
-		display: flex;
-		align-items: center;
-		gap: 0.6em;
-		margin-bottom: 0.4em;
-		flex-wrap: wrap;
-	}
-	.codec-tag-pill {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4em;
-		font-size: 0.72em;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--accent);
-		background: rgba(var(--accent-rgb), 0.1);
-		border: 1px solid rgba(var(--accent-rgb), 0.25);
-		padding: 0.2em 0.6em;
-		border-radius: 6px;
-	}
-	.codec-tag-sub {
-		font-size: 0.72em;
-		color: rgb(var(--gray));
-		font-weight: 500;
-		font-family: ui-monospace, monospace;
-	}
-	.codec-spotlight-heading {
-		margin: 0 0 0.3em 0;
-		font-size: clamp(1.1em, 2vw, 1.25em);
-		font-weight: 700;
-		color: rgb(var(--black));
-		line-height: 1.3;
-	}
-	:global(html[data-theme="dark"]) .codec-spotlight-heading {
-		color: #ffffff;
-	}
 	.codec-spotlight-desc {
 		margin: 0;
 		font-size: 0.88em;
@@ -310,63 +246,47 @@
 			gap: 0.35em;
 		}
 	}
-	.codec-spotlight-action-wrap {
-		flex-shrink: 0;
-	}
 	.codec-spotlight-launch-btn {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.55em;
+		justify-content: center;
+		gap: 0.5em;
 		background: var(--accent);
 		color: #ffffff;
-		border: 1px solid var(--accent);
+		border: 1px solid transparent;
+		padding: 0 1.1em;
+		height: 31px;
 		border-radius: 8px;
-		padding: 0.55em 1.2em;
-		font-size: 0.86em;
-		font-weight: 700;
-		cursor: pointer;
-		transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-		box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.32);
 		font-family: inherit;
-		text-decoration: none;
+		font-size: 0.82em;
+		font-weight: 600;
+		line-height: 1;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+		box-sizing: border-box;
 		white-space: nowrap;
+		text-decoration: none;
 	}
 	.codec-spotlight-launch-btn:hover {
-		background: var(--accent-dark);
-		transform: translateY(-2px);
-		box-shadow: 0 6px 18px rgba(var(--accent-rgb), 0.45);
+		background: #c2410c;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 	}
 	.codec-spotlight-launch-btn:active {
 		transform: translateY(0);
 	}
 	.spotlight-arrow {
-		transition: transform 0.2s ease;
+		transition: transform 0.15s ease;
+		flex-shrink: 0;
 	}
 	.codec-spotlight-launch-btn:hover .spotlight-arrow {
 		transform: translate(2px, -2px);
 	}
 	@media (max-width: 640px) {
-		.codec-spotlight-card {
-			padding: 1.1em 1.1em;
-			margin-top: 1.2em;
-		}
-		.codec-spotlight-inner {
-			flex-direction: column;
-			align-items: stretch;
-			gap: 1.1em;
-		}
-		.codec-spotlight-info {
-			flex: none;
-			width: 100%;
-		}
-		.codec-spotlight-action-wrap {
-			width: 100%;
-		}
 		.codec-spotlight-launch-btn {
 			width: 100%;
 			justify-content: center;
-			padding: 0.65em 1.2em;
-			font-size: 0.9em;
 		}
 	}
 </style>

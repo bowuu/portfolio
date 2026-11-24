@@ -18,11 +18,11 @@
 			<span class="section-summary-badge">Anycast Ping · Jitter · Throughput</span>
 		</div>
 		<div class="card-summary-right">
-			<button id="run-speedtest-btn" class="benchmark-btn" type="button" aria-label="Run Test (Network Benchmark)">
+			<button id="run-speedtest-btn" class="benchmark-btn" type="button" title="Start network benchmark" aria-label="Start network benchmark">
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon" id="btn-icon-play">
 					<polygon points="5 3 19 12 5 21 5 3"/>
 				</svg>
-				<span id="speedtest-btn-text">Run Test</span>
+				<span id="speedtest-btn-text">Start</span>
 			</button>
 		</div>
 	</summary>
@@ -82,7 +82,7 @@
 				<div class="progress-bar" id="benchmark-progress-bar"></div>
 			</div>
 			<div class="status-wrap">
-				<span id="speedtest-status" class="status-text">Click "Run Test" to measure real-time latency, jitter, packet loss, and sustained throughput.</span>
+				<span id="speedtest-status" class="status-text">Click "Start" to measure real-time latency, jitter, packet loss, and sustained throughput.</span>
 			</div>
 		</div>
 	</div>
@@ -224,7 +224,7 @@
 		const bloatSubEl = document.getElementById('speed-bloat-sub');
 
 		if (btn) btn.disabled = true;
-		if (btnText) btnText.textContent = 'Testing...';
+		if (btnText) btnText.textContent = 'Testing';
 		if (progressBar) progressBar.style.width = '5%';
 
 		// Reset values
@@ -571,7 +571,7 @@
 		} finally {
 			isBenchmarking = false;
 			if (btn) btn.disabled = false;
-			if (btnText) btnText.textContent = 'Run Again';
+			if (btnText) btnText.textContent = 'Start';
 		}
 	}
 
@@ -655,15 +655,15 @@
 		white-space: nowrap;
 	}
 	#run-speedtest-btn {
-		width: 110px;
-		min-width: 110px;
+		width: 86px;
+		min-width: 86px;
 		justify-content: center;
 		padding: 0 0.75em;
 	}
 	#speedtest-btn-text {
 		display: inline-block;
 		text-align: center;
-		min-width: 68px;
+		min-width: 34px;
 	}
 	.benchmark-btn:hover:not(:disabled) {
 		background: #ff6b18;

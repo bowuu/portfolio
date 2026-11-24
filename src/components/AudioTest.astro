@@ -44,10 +44,17 @@
 			</div>
 
 			<div class="volume-control-wrap" title="Output Volume (Safe Ceiling -18 dBFS)">
-				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="vol-icon">
-					<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-					<path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-				</svg>
+				<button type="button" id="audio-mute-btn" class="vol-btn" title="Mute audio" aria-label="Toggle Mute">
+					<svg id="vol-icon-unmuted" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="vol-icon">
+						<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+						<path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+					</svg>
+					<svg id="vol-icon-muted" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="vol-icon hidden">
+						<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+						<line x1="23" y1="9" x2="17" y2="15"/>
+						<line x1="17" y1="9" x2="23" y2="15"/>
+					</svg>
+				</button>
 				<input type="range" id="audio-volume-slider" min="0" max="1" step="0.05" value="0.5" class="vol-slider" aria-label="Output Volume" />
 				<span id="audio-vol-text" class="vol-text mono">50%</span>
 			</div>
@@ -422,6 +429,23 @@
 
 		const volSlider = document.getElementById('audio-volume-slider') as HTMLInputElement;
 		const volText = document.getElementById('audio-vol-text');
+		const muteBtn = document.getElementById('audio-mute-btn');
+		const volIconUnmuted = document.getElementById('vol-icon-unmuted');
+		const volIconMuted = document.getElementById('vol-icon-muted');
+		let lastNonZeroVol = 0.5;
+
+		function updateVolumeUI(val: number) {
+			if (volText) volText.textContent = `${Math.round(val * 100)}%`;
+			if (val === 0) {
+				volIconUnmuted?.classList.add('hidden');
+				volIconMuted?.classList.remove('hidden');
+				if (muteBtn) muteBtn.title = 'Unmute (restore volume)';
+			} else {
+				volIconUnmuted?.classList.remove('hidden');
+				volIconMuted?.classList.add('hidden');
+				if (muteBtn) muteBtn.title = 'Mute audio';
+			}
+		}
 
 		const heroHudMain = document.getElementById('hero-hud-main');
 		const heroHudSub = document.getElementById('hero-hud-sub');
@@ -575,11 +599,35 @@
 		if (volSlider) {
 			volSlider.addEventListener('input', () => {
 				const val = parseFloat(volSlider.value);
-				if (volText) volText.textContent = `${Math.round(val * 100)}%`;
+				if (val > 0) {
+					lastNonZeroVol = val;
+				}
+				updateVolumeUI(val);
 				if (masterGain && audioCtx) {
 					masterGain.gain.setTargetAtTime(val * 0.45, audioCtx.currentTime, 0.03);
 				}
 			});
+		}
+
+		if (muteBtn) {
+			muteBtn.addEventListener('click', (e) => {
+				e.stopPropagation();
+				if (!volSlider) return;
+				const currentVal = parseFloat(volSlider.value);
+				let targetVal = 0;
+				if (currentVal > 0) {
+					lastNonZeroVol = currentVal;
+					targetVal = 0;
+				} else {
+					targetVal = lastNonZeroVol > 0 ? lastNonZeroVol : 0.5;
+				}
+				volSlider.value = String(targetVal);
+				updateVolumeUI(targetVal);
+				if (masterGain && audioCtx) {
+					masterGain.gain.setTargetAtTime(targetVal * 0.45, audioCtx.currentTime, 0.03);
+				}
+			});
+			muteBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
 		}
 
 		// Voice Audio Buffers for Spoken Tests
@@ -2084,8 +2132,32 @@
 		background: rgba(255, 255, 255, 0.05);
 	}
 
-	.vol-icon {
+	.vol-btn {
+		background: none;
+		border: none;
+		padding: 0;
+		margin: 0;
+		cursor: pointer;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 		color: rgb(var(--gray));
+		transition: color 0.15s ease, transform 0.15s ease;
+		line-height: 1;
+		flex-shrink: 0;
+	}
+
+	.vol-btn:hover {
+		color: var(--accent);
+		transform: scale(1.1);
+	}
+
+	.vol-btn:active {
+		transform: scale(0.95);
+	}
+
+	.vol-icon {
+		color: inherit;
 		flex-shrink: 0;
 	}
 

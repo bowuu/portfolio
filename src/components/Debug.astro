@@ -130,7 +130,7 @@
 			</div>
 			<div class="telemetry-item" id="item-gpu">
 				<div class="t-subhead-pill-wrap">
-					<button id="open-webgpu-btn" class="t-subhead-pill-btn" type="button" disabled title="View WebGPU compute limits & hardware architecture">
+					<button id="open-webgpu-btn" class="t-subhead-pill-btn interactive" type="button" title="View WebGPU compute limits & hardware architecture">
 						<span>Graphics (GPU)</span>
 						<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>
 					</button>
@@ -210,7 +210,7 @@
 	</div>
 
 	<!-- INTERACTIVE MAP APPLET (OpenStreetMap) -->
-	<div id="map-applet-modal" class="map-applet-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="map-applet-title">
+	<div id="map-applet-modal" class="map-applet-modal hidden" aria-hidden="true" inert role="dialog" aria-modal="true" aria-labelledby="map-applet-title">
 		<div class="map-applet-backdrop" id="map-applet-backdrop"></div>
 		<div class="map-applet-dialog" id="map-applet-dialog" data-map-theme="dark">
 			<div class="map-applet-header">
@@ -289,7 +289,7 @@
 	</div>
 
 	<!-- WEBGPU SILICON ARCHITECTURE & COMPUTE LIMITS MODAL -->
-	<div id="webgpu-applet-modal" class="map-applet-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="webgpu-applet-title">
+	<div id="webgpu-applet-modal" class="map-applet-modal hidden" aria-hidden="true" inert role="dialog" aria-modal="true" aria-labelledby="webgpu-applet-title">
 		<div class="map-applet-backdrop" id="webgpu-applet-backdrop"></div>
 		<div class="map-applet-dialog webgpu-dialog" id="webgpu-applet-dialog" data-map-theme="dark">
 			<div class="map-applet-header">
@@ -327,7 +327,7 @@
 	</div>
 
 	<!-- VIDEO CODEC STUDIO & HARDWARE BENCHMARK MODAL -->
-	<div id="codec-applet-modal" class="map-applet-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="codec-applet-title">
+	<div id="codec-applet-modal" class="map-applet-modal hidden" aria-hidden="true" inert role="dialog" aria-modal="true" aria-labelledby="codec-applet-title">
 		<div class="map-applet-backdrop" id="codec-applet-backdrop"></div>
 		<div class="map-applet-dialog codec-dialog" id="codec-applet-dialog" data-map-theme="dark">
 			<div class="map-applet-header">
@@ -923,6 +923,7 @@
 
 			modal.classList.remove('hidden');
 			modal.setAttribute('aria-hidden', 'false');
+			modal.removeAttribute('inert');
 			document.body.style.overflow = 'hidden';
 			(window as any).__pushModalHistory?.('map-modal', closeMapApplet);
 		}
@@ -932,6 +933,7 @@
 			if (!modal || modal.classList.contains('hidden')) return;
 			modal.classList.add('hidden');
 			modal.setAttribute('aria-hidden', 'true');
+			modal.setAttribute('inert', '');
 			document.body.style.overflow = '';
 			(window as any).__popModalHistory?.('map-modal');
 		}
@@ -984,6 +986,7 @@
 			if (webgpuModal) {
 				webgpuModal.classList.add('hidden');
 				webgpuModal.setAttribute('aria-hidden', 'true');
+				webgpuModal.setAttribute('inert', '');
 			}
 			document.body.style.overflow = '';
 			(window as any).__popModalHistory?.('webgpu-modal');
@@ -994,8 +997,120 @@
 
 		let webgpuInfoCache: any = null;
 
-		if (navigator.gpu) {
-			navigator.gpu.requestAdapter().then(async (adapter) => {
+		function openWebgpuInspector() {
+			if (webgpuInfoCache) {
+				if (webgpuBadge) webgpuBadge.textContent = `${webgpuInfoCache.backend} ▪ WebGPU`;
+				if (webgpuFooterVendor) {
+					webgpuFooterVendor.textContent = isFirefoxSpoofed
+						? `${webgpuInfoCache.description} (Firefox Anti-Fingerprint Profile)`
+						: webgpuInfoCache.description;
+				}
+
+				if (webgpuSpecsGrid) {
+					webgpuSpecsGrid.innerHTML = `
+						<div class="webgpu-tile">
+							<div class="webgpu-tile-label">Backend Pipeline</div>
+							<div class="webgpu-tile-val">${webgpuInfoCache.backend} <span class="webgpu-tile-sub">(Native WebGPU)</span></div>
+						</div>
+						<div class="webgpu-tile">
+							<div class="webgpu-tile-label">Compute Architecture</div>
+							<div class="webgpu-tile-val">${webgpuInfoCache.arch}</div>
+						</div>
+						<div class="webgpu-tile">
+							<div class="webgpu-tile-label">Max Workgroup Invocations</div>
+							<div class="webgpu-tile-val mono">${webgpuInfoCache.maxWorkgroupInvocations} <span class="webgpu-tile-sub">threads</span></div>
+						</div>
+						<div class="webgpu-tile">
+							<div class="webgpu-tile-label">Max Workgroup Size</div>
+							<div class="webgpu-tile-val mono">${webgpuInfoCache.maxWorkgroupX} &times; ${webgpuInfoCache.maxWorkgroupY} &times; ${webgpuInfoCache.maxWorkgroupZ}</div>
+						</div>
+						<div class="webgpu-tile">
+							<div class="webgpu-tile-label">Max Storage Buffer</div>
+							<div class="webgpu-tile-val mono">${webgpuInfoCache.maxStorageBuffer}</div>
+						</div>
+						<div class="webgpu-tile">
+							<div class="webgpu-tile-label">Max 2D Texture Dimension</div>
+							<div class="webgpu-tile-val mono">${webgpuInfoCache.maxTexture2D}</div>
+						</div>
+						<div class="webgpu-tile">
+							<div class="webgpu-tile-label">FP16 Math (shader-f16)</div>
+							<div class="webgpu-tile-val">${webgpuInfoCache.features.hasF16 ? 'Supported <span class="webgpu-tile-sub">(Half-Float)</span>' : '<span class="webgpu-tile-sub">Not Supported</span>'}</div>
+						</div>
+						<div class="webgpu-tile">
+							<div class="webgpu-tile-label">Texture Compression</div>
+							<div class="webgpu-tile-val">${webgpuInfoCache.features.hasBC ? 'BC <span class="webgpu-tile-sub">(DirectX)</span>' : (webgpuInfoCache.features.hasASTC ? 'ASTC' : 'Standard')}</div>
+						</div>
+					`;
+				}
+			} else {
+				if (webgpuBadge) webgpuBadge.textContent = 'WebGPU ▪ Fallback Status';
+				if (webgpuFooterVendor) {
+					webgpuFooterVendor.textContent = `${gpuString} (WebGPU Disabled / Unsupported)`;
+				}
+				if (webgpuSpecsGrid) {
+					webgpuSpecsGrid.innerHTML = `
+						<div class="webgpu-tile" style="grid-column: 1 / -1; padding: 1.25rem;">
+							<div class="webgpu-tile-label" style="color: #f97316; font-size: 0.9em; display: flex; align-items: center; gap: 0.5rem;">
+								<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+								Native WebGPU API Unavailable
+							</div>
+							<div style="font-size: 0.88em; line-height: 1.6; color: rgb(var(--gray-dark)); margin-top: 0.5rem;">
+								The modern <code>navigator.gpu</code> interface is unavailable or returned no compatible hardware adapter in this browser.
+							</div>
+							<div style="margin-top: 0.75rem; font-size: 0.84em; line-height: 1.55; color: rgb(var(--gray-dark));">
+								<div>▪ <strong>Supported Browsers:</strong> Google Chrome 113+, Microsoft Edge 113+, Safari 18+ (macOS/iOS), and Firefox Nightly (via <code>dom.webgpu.enabled</code>).</div>
+								<div>▪ <strong>Active Renderer:</strong> ${gpuString}</div>
+								<div>▪ <strong>Site Architecture:</strong> Gracefully falling back to 2D Canvas and WebGL pipelines with zero disruption.</div>
+							</div>
+						</div>
+					`;
+				}
+			}
+
+			if (webgpuModal) {
+				webgpuModal.classList.remove('hidden');
+				webgpuModal.setAttribute('aria-hidden', 'false');
+				webgpuModal.removeAttribute('inert');
+			}
+			document.body.style.overflow = 'hidden';
+			(window as any).__pushModalHistory?.('webgpu-modal', closeWebgpuModal);
+		}
+
+		if (openWebgpuBtn) {
+			openWebgpuBtn.classList.remove('hidden');
+			(openWebgpuBtn as HTMLButtonElement).disabled = false;
+			openWebgpuBtn.classList.add('interactive');
+			openWebgpuBtn.title = 'Click to inspect WebGPU compute limits & hardware architecture';
+			openWebgpuBtn.onclick = (e) => {
+				e.stopPropagation();
+				runHeavyTelemetryProbes();
+				openWebgpuInspector();
+			};
+		}
+
+		const itemGpu = document.getElementById('item-gpu');
+		if (itemGpu) {
+			itemGpu.classList.add('telemetry-item-clickable');
+			itemGpu.setAttribute('role', 'button');
+			itemGpu.setAttribute('tabindex', '0');
+			itemGpu.title = 'Click to inspect WebGPU compute limits & hardware architecture';
+			itemGpu.onclick = () => {
+				runHeavyTelemetryProbes();
+				openWebgpuInspector();
+			};
+			itemGpu.onkeydown = (e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					runHeavyTelemetryProbes();
+					openWebgpuInspector();
+				}
+			};
+		}
+
+		async function probeWebGPU() {
+			if (!navigator.gpu) return;
+			try {
+				const adapter = await navigator.gpu.requestAdapter();
 				if (!adapter) return;
 
 				let info: any = (adapter as any).info || {};
@@ -1042,95 +1157,13 @@
 					}
 				};
 
-				function openWebgpuInspector() {
-					if (!webgpuInfoCache) return;
-					if (webgpuBadge) webgpuBadge.textContent = `${webgpuInfoCache.backend} ▪ WebGPU`;
-					if (webgpuFooterVendor) {
-						webgpuFooterVendor.textContent = isFirefoxSpoofed
-							? `${webgpuInfoCache.description} (Firefox Anti-Fingerprint Profile)`
-							: webgpuInfoCache.description;
-					}
-
-					if (webgpuSpecsGrid) {
-						webgpuSpecsGrid.innerHTML = `
-							<div class="webgpu-tile">
-								<div class="webgpu-tile-label">Backend Pipeline</div>
-								<div class="webgpu-tile-val">${webgpuInfoCache.backend} <span class="webgpu-tile-sub">(Native WebGPU)</span></div>
-							</div>
-							<div class="webgpu-tile">
-								<div class="webgpu-tile-label">Compute Architecture</div>
-								<div class="webgpu-tile-val">${webgpuInfoCache.arch}</div>
-							</div>
-							<div class="webgpu-tile">
-								<div class="webgpu-tile-label">Max Workgroup Invocations</div>
-								<div class="webgpu-tile-val mono">${webgpuInfoCache.maxWorkgroupInvocations} <span class="webgpu-tile-sub">threads</span></div>
-							</div>
-							<div class="webgpu-tile">
-								<div class="webgpu-tile-label">Max Workgroup Size</div>
-								<div class="webgpu-tile-val mono">${webgpuInfoCache.maxWorkgroupX} &times; ${webgpuInfoCache.maxWorkgroupY} &times; ${webgpuInfoCache.maxWorkgroupZ}</div>
-							</div>
-							<div class="webgpu-tile">
-								<div class="webgpu-tile-label">Max Storage Buffer</div>
-								<div class="webgpu-tile-val mono">${webgpuInfoCache.maxStorageBuffer}</div>
-							</div>
-							<div class="webgpu-tile">
-								<div class="webgpu-tile-label">Max 2D Texture Dimension</div>
-								<div class="webgpu-tile-val mono">${webgpuInfoCache.maxTexture2D}</div>
-							</div>
-							<div class="webgpu-tile">
-								<div class="webgpu-tile-label">FP16 Math (shader-f16)</div>
-								<div class="webgpu-tile-val">${webgpuInfoCache.features.hasF16 ? 'Supported <span class="webgpu-tile-sub">(Half-Float)</span>' : '<span class="webgpu-tile-sub">Not Supported</span>'}</div>
-							</div>
-							<div class="webgpu-tile">
-								<div class="webgpu-tile-label">Texture Compression</div>
-								<div class="webgpu-tile-val">${webgpuInfoCache.features.hasBC ? 'BC <span class="webgpu-tile-sub">(DirectX)</span>' : (webgpuInfoCache.features.hasASTC ? 'ASTC' : 'Standard')}</div>
-							</div>
-						`;
-					}
-
-					if (webgpuModal) {
-						webgpuModal.classList.remove('hidden');
-						webgpuModal.setAttribute('aria-hidden', 'false');
-					}
-					document.body.style.overflow = 'hidden';
-					(window as any).__pushModalHistory?.('webgpu-modal', closeWebgpuModal);
-				}
-
-				if (openWebgpuBtn) {
-					openWebgpuBtn.classList.remove('hidden');
-					(openWebgpuBtn as HTMLButtonElement).disabled = false;
-					openWebgpuBtn.classList.add('interactive');
-					openWebgpuBtn.title = 'Click to inspect WebGPU compute limits & hardware architecture';
-					openWebgpuBtn.onclick = (e) => {
-						e.stopPropagation();
-						openWebgpuInspector();
-					};
-				}
-
-				const itemGpu = document.getElementById('item-gpu');
-				if (itemGpu) {
-					itemGpu.classList.add('telemetry-item-clickable');
-					itemGpu.setAttribute('role', 'button');
-					itemGpu.setAttribute('tabindex', '0');
-					itemGpu.title = 'Click to inspect WebGPU compute limits & hardware architecture';
-					itemGpu.onclick = openWebgpuInspector;
-					itemGpu.onkeydown = (e) => {
-						if (e.key === 'Enter' || e.key === ' ') {
-							e.preventDefault();
-							openWebgpuInspector();
-						}
-					};
-				}
-
 				if (gpuEl) {
 					gpuEl.textContent = gpuString;
 					gpuEl.title = isFirefoxSpoofed
 						? `Hardware GPU: ${gpuString} (Firefox Fingerprint Protection: modern GPUs are spoofed as a GTX 980). WebGPU backend: ${backendName}. Click box to inspect compute limits.`
 						: `Hardware GPU: ${gpuString}. WebGPU backend: ${backendName}. Click box to inspect compute limits.`;
 				}
-			}).catch(() => {});
-		} else if (openWebgpuBtn) {
-			openWebgpuBtn.title = 'WebGPU is unavailable or disabled in this browser (supported in Chrome, Edge, Safari 18+)';
+			} catch (_) {}
 		}
 
 		// 2. Instant Client Detection: OS
@@ -1619,8 +1652,9 @@
 			}
 		}
 
-		// 11. DAC Pipeline
-		if (audioEl) {
+		// 11. DAC Pipeline (Deferred)
+		function probeDAC() {
+			if (!audioEl) return;
 			try {
 				const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
 				if (AudioCtx) {
@@ -1643,8 +1677,9 @@
 		}
 
 		// 10. Hardware Video Decoder (MediaCapabilities powerEfficient & WebCodecs prefer-hardware)
+		let probeCodecs: (() => Promise<void>) | null = null;
 		if (codecsEl) {
-			const probeCodecs = async () => {
+			probeCodecs = async () => {
 				const candidates = [
 					{
 						name: 'AV1',
@@ -1771,12 +1806,12 @@
 					codecsEl.title = 'No hardware ASIC decoders detected; media decoded via software/CPU.';
 				}
 			};
-			probeCodecs();
 		}
 
 		// 11. Hardware Video Encoder (MediaCapabilities powerEfficient & WebCodecs prefer-hardware)
+		let probeEncoder: (() => Promise<void>) | null = null;
 		if (encoderEl) {
-			const probeEncoder = async () => {
+			probeEncoder = async () => {
 				const encCandidates = [
 					{
 						name: 'AV1',
@@ -1862,12 +1897,12 @@
 					encoderEl.title = 'No hardware ASIC encoders detected; media encoded via software/CPU.';
 				}
 			};
-			probeEncoder();
 		}
 
 		// 12. Hardware DRM Key System (EME)
+		let probeDRM: (() => Promise<void>) | null = null;
 		if (drmEl) {
-			const probeDRM = async () => {
+			probeDRM = async () => {
 				if (navigator.requestMediaKeySystemAccess) {
 					const drmCandidates = [
 						{
@@ -1981,158 +2016,180 @@
 				};
 			}
 
-			// Firefox prompts with an EME infobar if DRM is disabled;
-			// defer the DRM probe until the Media section scrolls into view via IntersectionObserver
-			// to avoid intrusive initial page-load prompts while still auto-loading when viewed.
-			const isFirefox = /Firefox/i.test(navigator.userAgent);
-			if (isFirefox) {
-				if ('IntersectionObserver' in window) {
-					const drmObserver = new IntersectionObserver((entries) => {
-						for (const entry of entries) {
-							if (entry.isIntersecting) {
-								drmObserver.disconnect();
-								runDrmProbe();
-								break;
-							}
+		}
+
+		// 15. Cloudflare Edge Ephemeral Detection & Dual-Stack IP (Deferred)
+		async function probeVisitorInfo() {
+			try {
+				const res = await fetch('/api/visitor-info', { cache: 'no-store' });
+				if (res.ok) {
+					const data = await res.json();
+					const edgeIp = (data.ip || '').trim();
+					if (edgeIp.includes(':')) {
+						currentIpv6 = edgeIp;
+					} else if (edgeIp) {
+						currentIpv4 = edgeIp;
+					}
+					renderIpDisplay();
+
+					// Probe dual-stack complement via Cloudflare icanhazip (CORS enabled)
+					if (!currentIpv4 || currentIpv4.includes('Localhost')) {
+						fetch('https://ipv4.icanhazip.com', { signal: AbortSignal.timeout(3000) })
+							.then((r) => r.text())
+							.then((t) => {
+								const ip = t.trim();
+								if (ip && !ip.includes(':')) {
+									currentIpv4 = ip;
+									renderIpDisplay();
+								}
+							})
+							.catch(() => {
+								if (!currentIpv4) {
+									currentIpv4 = 'Unavailable';
+									renderIpDisplay();
+								}
+							});
+					}
+
+					if (!currentIpv6) {
+						fetch('https://ipv6.icanhazip.com', { signal: AbortSignal.timeout(3000) })
+							.then((r) => r.text())
+							.then((t) => {
+								const ip = t.trim();
+								if (ip && ip.includes(':')) {
+									currentIpv6 = ip;
+								} else {
+									currentIpv6 = 'none';
+								}
+								renderIpDisplay();
+							})
+							.catch(() => {
+								currentIpv6 = 'none';
+								renderIpDisplay();
+							});
+					}
+
+					const locParts = [data.city, data.region, data.country].filter(Boolean);
+					const locString = locParts.length > 0 ? locParts.join(', ') : 'Location unavailable';
+					if (locEl) {
+						locEl.textContent = locString;
+						locEl.title = 'Approximate geolocation resolved from Cloudflare edge IP headers (no device GPS accessed).';
+					}
+
+					const lat = parseFloat(data.latitude);
+					const lon = parseFloat(data.longitude);
+					if (!isNaN(lat) && !isNaN(lon) && (lat !== 0 || lon !== 0)) {
+						prewarmMapDns();
+						if (openMapBtn) {
+							(openMapBtn as HTMLButtonElement).disabled = false;
+							openMapBtn.classList.add('interactive');
+							openMapBtn.title = `View ${locString} on interactive OpenStreetMap`;
+							openMapBtn.onclick = (e) => {
+								e.stopPropagation();
+								openMapApplet(lat, lon, locString);
+							};
 						}
-					}, { rootMargin: '200px' });
-					drmObserver.observe(drmEl);
+						const itemLocation = document.getElementById('item-location');
+						if (itemLocation) {
+							itemLocation.classList.add('telemetry-item-clickable');
+							itemLocation.setAttribute('role', 'button');
+							itemLocation.setAttribute('tabindex', '0');
+							itemLocation.title = `View ${locString} on interactive OpenStreetMap`;
+							itemLocation.onclick = () => openMapApplet(lat, lon, locString);
+							itemLocation.onkeydown = (e) => {
+								if (e.key === 'Enter' || e.key === ' ') {
+									e.preventDefault();
+									openMapApplet(lat, lon, locString);
+								}
+							};
+						}
+					} else {
+						if (openMapBtn) {
+							(openMapBtn as HTMLButtonElement).disabled = true;
+							openMapBtn.classList.remove('interactive');
+							openMapBtn.title = 'Location detected via edge headers';
+						}
+						const itemLocation = document.getElementById('item-location');
+						if (itemLocation) {
+							itemLocation.classList.remove('telemetry-item-clickable');
+							itemLocation.removeAttribute('role');
+							itemLocation.removeAttribute('tabindex');
+							itemLocation.onclick = null;
+						}
+					}
+
+					if (edgeEl) {
+						const coloCode = (data.coloCode || (data.colo ? data.colo.split(' ')[0] : '')).toUpperCase();
+						const coloCity = coloCode && COLO_NAMES[coloCode];
+						if (coloCity) {
+							edgeEl.textContent = `${coloCode} (${coloCity})`;
+						} else if (data.colo) {
+							edgeEl.textContent = data.colo;
+						} else {
+							edgeEl.textContent = 'Cloudflare Anycast Edge';
+						}
+						edgeEl.title = 'Nearest Cloudflare Anycast point of presence (PoP) terminating the TLS connection (IATA airport code).';
+					}
+
+					if (ispEl) {
+						const asn = data.asn ? `AS${data.asn}` : '';
+						const isp = data.isp ? `${data.isp}` : 'Broadband Provider';
+						ispEl.textContent = asn ? `${isp} (${asn})` : isp;
+						ispEl.title = 'Autonomous System Number (ASN) and network operator resolved from BGP routing metadata.';
+					}
 				} else {
-					window.addEventListener('scroll', runDrmProbe, { passive: true, once: true });
+					throw new Error('Edge endpoint responded with non-200');
 				}
-			} else {
-				runDrmProbe();
+			} catch (err) {
+				currentIpv4 = '127.0.0.1 (Local Edge)';
+				currentIpv6 = 'none';
+				renderIpDisplay();
+				if (locEl) locEl.textContent = 'Direct Connection';
+				if (edgeEl) edgeEl.textContent = 'Localhost (Dev Edge)';
+				if (ispEl) ispEl.textContent = 'Cloudflare Protected';
 			}
 		}
 
-		// 15. Cloudflare Edge Ephemeral Detection & Dual-Stack IP
-		try {
-			const res = await fetch('/api/visitor-info', { cache: 'no-store' });
-			if (res.ok) {
-				const data = await res.json();
-				const edgeIp = (data.ip || '').trim();
-				if (edgeIp.includes(':')) {
-					currentIpv6 = edgeIp;
-				} else if (edgeIp) {
-					currentIpv4 = edgeIp;
-				}
-				renderIpDisplay();
+		// Heavy Hardware Telemetry Probes - Deferred until #debug scrolls near viewport
+		let heavyProbesStarted = false;
+		function runHeavyTelemetryProbes() {
+			if (heavyProbesStarted) return;
+			heavyProbesStarted = true;
+			probeWebGPU();
+			probeDAC();
+			if (typeof probeCodecs === 'function') probeCodecs();
+			if (typeof probeEncoder === 'function') probeEncoder();
+			if (typeof probeDRM === 'function') probeDRM();
+			probeVisitorInfo();
+		}
 
-				// Probe dual-stack complement via Cloudflare icanhazip (CORS enabled)
-				if (!currentIpv4 || currentIpv4.includes('Localhost')) {
-					fetch('https://ipv4.icanhazip.com', { signal: AbortSignal.timeout(3000) })
-						.then((r) => r.text())
-						.then((t) => {
-							const ip = t.trim();
-							if (ip && !ip.includes(':')) {
-								currentIpv4 = ip;
-								renderIpDisplay();
-							}
-						})
-						.catch(() => {
-							if (!currentIpv4) {
-								currentIpv4 = 'Unavailable';
-								renderIpDisplay();
-							}
-						});
-				}
-
-				if (!currentIpv6) {
-					fetch('https://ipv6.icanhazip.com', { signal: AbortSignal.timeout(3000) })
-						.then((r) => r.text())
-						.then((t) => {
-							const ip = t.trim();
-							if (ip && ip.includes(':')) {
-								currentIpv6 = ip;
-							} else {
-								currentIpv6 = 'none';
-							}
-							renderIpDisplay();
-						})
-						.catch(() => {
-							currentIpv6 = 'none';
-							renderIpDisplay();
-						});
-				}
-
-				const locParts = [data.city, data.region, data.country].filter(Boolean);
-				const locString = locParts.length > 0 ? locParts.join(', ') : 'Location unavailable';
-				if (locEl) {
-					locEl.textContent = locString;
-					locEl.title = 'Approximate geolocation resolved from Cloudflare edge IP headers (no device GPS accessed).';
-				}
-
-				const lat = parseFloat(data.latitude);
-				const lon = parseFloat(data.longitude);
-				if (!isNaN(lat) && !isNaN(lon) && (lat !== 0 || lon !== 0)) {
-					prewarmMapDns();
-					if (openMapBtn) {
-						(openMapBtn as HTMLButtonElement).disabled = false;
-						openMapBtn.classList.add('interactive');
-						openMapBtn.title = `View ${locString} on interactive OpenStreetMap`;
-						openMapBtn.onclick = (e) => {
-							e.stopPropagation();
-							openMapApplet(lat, lon, locString);
-						};
+		// Deferred Trigger: Observe when the #debug section enters near viewport (400px margin)
+		const debugSection = document.getElementById('debug');
+		if (debugSection) {
+			if ('IntersectionObserver' in window) {
+				const debugObserver = new IntersectionObserver((entries) => {
+					for (const entry of entries) {
+						if (entry.isIntersecting) {
+							debugObserver.disconnect();
+							runHeavyTelemetryProbes();
+							break;
+						}
 					}
-					const itemLocation = document.getElementById('item-location');
-					if (itemLocation) {
-						itemLocation.classList.add('telemetry-item-clickable');
-						itemLocation.setAttribute('role', 'button');
-						itemLocation.setAttribute('tabindex', '0');
-						itemLocation.title = `View ${locString} on interactive OpenStreetMap`;
-						itemLocation.onclick = () => openMapApplet(lat, lon, locString);
-						itemLocation.onkeydown = (e) => {
-							if (e.key === 'Enter' || e.key === ' ') {
-								e.preventDefault();
-								openMapApplet(lat, lon, locString);
-							}
-						};
-					}
-				} else {
-					if (openMapBtn) {
-						(openMapBtn as HTMLButtonElement).disabled = true;
-						openMapBtn.classList.remove('interactive');
-						openMapBtn.title = 'Location detected via edge headers';
-					}
-					const itemLocation = document.getElementById('item-location');
-					if (itemLocation) {
-						itemLocation.classList.remove('telemetry-item-clickable');
-						itemLocation.removeAttribute('role');
-						itemLocation.removeAttribute('tabindex');
-						itemLocation.onclick = null;
-					}
-				}
-
-				if (edgeEl) {
-					const coloCode = (data.coloCode || (data.colo ? data.colo.split(' ')[0] : '')).toUpperCase();
-					const coloCity = coloCode && COLO_NAMES[coloCode];
-					if (coloCity) {
-						edgeEl.textContent = `${coloCode} (${coloCity})`;
-					} else if (data.colo) {
-						edgeEl.textContent = data.colo;
-					} else {
-						edgeEl.textContent = 'Cloudflare Anycast Edge';
-					}
-					edgeEl.title = 'Nearest Cloudflare Anycast point of presence (PoP) terminating the TLS connection (IATA airport code).';
-				}
-
-				if (ispEl) {
-					const asn = data.asn ? `AS${data.asn}` : '';
-					const isp = data.isp ? `${data.isp}` : 'Broadband Provider';
-					ispEl.textContent = asn ? `${isp} (${asn})` : isp;
-					ispEl.title = 'Autonomous System Number (ASN) and network operator resolved from BGP routing metadata.';
-				}
+				}, { rootMargin: '400px' });
+				debugObserver.observe(debugSection);
 			} else {
-				throw new Error('Edge endpoint responded with non-200');
+				runHeavyTelemetryProbes();
 			}
-		} catch (err) {
-			currentIpv4 = '127.0.0.1 (Local Edge)';
-			currentIpv6 = 'none';
-			renderIpDisplay();
-			if (locEl) locEl.textContent = 'Direct Connection';
-			if (edgeEl) edgeEl.textContent = 'Localhost (Dev Edge)';
-			if (ispEl) ispEl.textContent = 'Cloudflare Protected';
+
+			debugSection.addEventListener('toggle', () => {
+				if ((debugSection as HTMLDetailsElement).open) runHeavyTelemetryProbes();
+			});
+		} else {
+			runHeavyTelemetryProbes();
+		}
+
+		if (typeof window !== 'undefined' && window.location.hash === '#debug') {
+			runHeavyTelemetryProbes();
 		}
 
 		initCodecStudio();
@@ -2772,7 +2829,7 @@
 		}
 
 		async function probeCodecCapabilities() {
-			if (capabilityProbed || typeof VideoEncoder === 'undefined' || typeof VideoDecoder === 'undefined') return;
+			if (capabilityProbed || typeof VideoEncoder === 'undefined' || typeof VideoDecoder === 'undefined' || typeof VideoEncoder.isConfigSupported !== 'function' || typeof VideoDecoder.isConfigSupported !== 'function') return;
 			capabilityProbed = true;
 
 			const probeList: Record<string, string[]> = {
@@ -3370,6 +3427,7 @@
 				codecModal.classList.remove('is-maximized');
 				codecModal.classList.add('hidden');
 				codecModal.setAttribute('aria-hidden', 'true');
+				codecModal.setAttribute('inert', '');
 			}
 			updateMaximizeUi(false);
 			document.body.style.overflow = '';
@@ -3972,6 +4030,7 @@
 			if (codecModal) {
 				codecModal.classList.remove('hidden');
 				codecModal.setAttribute('aria-hidden', 'false');
+				codecModal.removeAttribute('inert');
 			}
 			document.body.style.overflow = 'hidden';
 			setScene(selectedScene);
@@ -3987,14 +4046,19 @@
 		if (openDecoderBtn) {
 			openDecoderBtn.onclick = (e) => {
 				e.stopPropagation();
+				runHeavyTelemetryProbes();
 				openCodecModal('decode');
 			};
 		}
 		if (itemDecoder) {
-			itemDecoder.onclick = () => openCodecModal('decode');
+			itemDecoder.onclick = () => {
+				runHeavyTelemetryProbes();
+				openCodecModal('decode');
+			};
 			itemDecoder.onkeydown = (e) => {
 				if (e.key === 'Enter' || e.key === ' ') {
 					e.preventDefault();
+					runHeavyTelemetryProbes();
 					openCodecModal('decode');
 				}
 			};
@@ -4003,14 +4067,19 @@
 		if (openEncoderBtn) {
 			openEncoderBtn.onclick = (e) => {
 				e.stopPropagation();
+				runHeavyTelemetryProbes();
 				openCodecModal('encode');
 			};
 		}
 		if (itemEncoder) {
-			itemEncoder.onclick = () => openCodecModal('encode');
+			itemEncoder.onclick = () => {
+				runHeavyTelemetryProbes();
+				openCodecModal('encode');
+			};
 			itemEncoder.onkeydown = (e) => {
 				if (e.key === 'Enter' || e.key === ' ') {
 					e.preventDefault();
+					runHeavyTelemetryProbes();
 					openCodecModal('encode');
 				}
 			};
@@ -4791,6 +4860,7 @@
 				else {
 					modal.classList.add('hidden');
 					modal.setAttribute('aria-hidden', 'true');
+					modal.setAttribute('inert', '');
 					document.body.style.overflow = '';
 					(window as any).__popModalHistory?.('map-modal');
 				}
@@ -4802,6 +4872,7 @@
 				else {
 					webgpuModal.classList.add('hidden');
 					webgpuModal.setAttribute('aria-hidden', 'true');
+					webgpuModal.setAttribute('inert', '');
 					document.body.style.overflow = '';
 					(window as any).__popModalHistory?.('webgpu-modal');
 				}
@@ -4844,6 +4915,7 @@
 				} else {
 					codecModal.classList.add('hidden');
 					codecModal.setAttribute('aria-hidden', 'true');
+					codecModal.setAttribute('inert', '');
 					document.body.style.overflow = '';
 					const loupeSrc = document.getElementById('codec-loupe-src');
 					const loupeDec = document.getElementById('codec-loupe-dec');

@@ -65,6 +65,7 @@
 
 	<p class="benchmark-desc">
 		Inspect stereo channel separation, 180&deg; wiring phase, broadband noise, and 20 Hz&ndash;20 kHz frequency response.
+		<span class="audio-ios-note">Note for iOS: ensure the physical Silent switch is OFF to hear Web Audio output.</span>
 	</p>
 
 	<!-- TWO-COLUMN WORKBENCH (HERO VISUALIZER ON LEFT, CONTROLS ON RIGHT) -->
@@ -2182,6 +2183,18 @@
 		line-height: 1.55;
 		color: rgb(var(--gray-dark));
 		margin: 0 0 1.25em 0;
+	}
+	.audio-ios-note {
+		color: rgb(var(--gray));
+		font-size: 0.9em;
+		margin-left: 0.35rem;
+	}
+	@media (max-width: 768px) {
+		.audio-ios-note {
+			display: block;
+			margin-left: 0;
+			margin-top: 0.25rem;
+		}
 	}
 
 	/* TWO-COLUMN WORKBENCH GRID */

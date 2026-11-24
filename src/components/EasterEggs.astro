@@ -97,7 +97,7 @@
 
 
 	<!-- 300MM SILICON WAFER DIE SORT MODAL (RETICLE-LIMIT ENTERPRISE DIE) -->
-	<div id="wafer-modal" class="wafer-modal hidden" role="dialog" aria-modal="true" aria-label="300mm Silicon Wafer Sort Inspector" style="display: none;">
+	<div id="wafer-modal" class="wafer-modal hidden" inert role="dialog" aria-modal="true" aria-label="300mm Silicon Wafer Sort Inspector" style="display: none;">
 		<div class="wafer-backdrop" id="wafer-backdrop"></div>
 		<div class="wafer-dialog">
 			<div class="wafer-modal-header">
@@ -168,7 +168,7 @@
 	</div>
 
 	<!-- 8x8 BIT CARRY-SAVE ARRAY MULTIPLIER MODAL (CADENCE VIRTUOSO ARCHITECTURE) -->
-	<div id="multiplier-modal" class="wafer-modal hidden" role="dialog" aria-modal="true" aria-label="8x8 Bit Carry-Save Array Multiplier" style="display: none;">
+	<div id="multiplier-modal" class="wafer-modal hidden" inert role="dialog" aria-modal="true" aria-label="8x8 Bit Carry-Save Array Multiplier" style="display: none;">
 		<div class="wafer-backdrop" id="multiplier-backdrop"></div>
 		<div class="wafer-dialog mult-dialog">
 			<div class="wafer-modal-header">
@@ -245,7 +245,7 @@
 						</svg>
 					</div>
 					<div class="mult-cell-tooltip mono" id="mult-cell-info">
-						Hover any cell F or wire to inspect Boolean logic, partial products, sum, and carry propagation.
+						Hover or tap any cell F or wire to inspect Boolean logic, partial products, sum, and carry propagation.
 					</div>
 				</div>
 
@@ -266,7 +266,7 @@
 	</div>
 
 	<!-- LAB EXTRAS DRAWER / POPOVER (SORTED ALPHABETICALLY A-Z) -->
-	<div id="lab-extras-modal" class="lab-extras-modal hidden" role="dialog" aria-modal="false" aria-label="Hardware Lab Easter Eggs" style="display: none;">
+	<div id="lab-extras-modal" class="lab-extras-modal hidden" inert role="dialog" aria-modal="false" aria-label="Hardware Lab Easter Eggs" style="display: none;">
 		<div class="extras-header">
 			<div class="extras-title">
 				<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1189,6 +1189,7 @@
 		function openWaferModal() {
 			(window as any).__closeAllEasterEggs?.();
 			modal.classList.remove('hidden');
+			modal.removeAttribute('inert');
 			modal.style.display = 'flex';
 			(window as any).__pushModalHistory?.('wafer-modal', closeWaferModal);
 			if (!activeDie && dies.length) {
@@ -1200,6 +1201,7 @@
 
 		function closeWaferModal() {
 			modal.classList.add('hidden');
+			modal.setAttribute('inert', '');
 			modal.style.display = 'none';
 			(window as any).__updateDrawerActiveUI?.();
 			(window as any).__popModalHistory?.('wafer-modal');
@@ -3299,13 +3301,13 @@
 			if (playSound) audioEngine.playMultiplierChime();
 		}
 
-		// Tooltip inspector for cells & wires
-		multSvg?.addEventListener('mouseover', (e) => {
-			const target = e.target as SVGElement;
+		// Tooltip inspector for cells & wires (Hover & Touch Tap-to-Inspect)
+		function inspectMultiplierTarget(target: SVGElement | null): boolean {
+			if (!target || !multCellInfo) return false;
 			const cellEl = target.closest('.mult-cell') as SVGElement | null;
 			const wireEl = target.closest('.mult-wire') as SVGElement | null;
 
-			if (cellEl && multCellInfo) {
+			if (cellEl) {
 				const r = parseInt(cellEl.getAttribute('data-r') || '0', 10);
 				const c = parseInt(cellEl.getAttribute('data-c') || '0', 10);
 				const st = computeMultiplierState(multX, multY);
@@ -3327,7 +3329,8 @@
 					const cout = st.C[8][k];
 					multCellInfo.innerHTML = `<strong>Cell F[8,${k}] (Vector-Merge Ripple Adder):</strong> Sin(R7)=<strong>${sin}</strong> ▪ Ctop(R7)=<strong>${cin_top}</strong> ▪ Cright=<strong>${c_in_right}</strong> &rarr; <strong>P${8+k}=${sout}</strong>, Cout=<strong>${cout}</strong>`;
 				}
-			} else if (wireEl && multCellInfo) {
+				return true;
+			} else if (wireEl) {
 				const type = wireEl.getAttribute('data-type');
 				const st = computeMultiplierState(multX, multY);
 				if (type === 'pp') {
@@ -3350,12 +3353,28 @@
 					const val = st.P[bit];
 					multCellInfo.innerHTML = `<strong>Product Drop Line:</strong> Output Bit <strong>P[${bit}] = ${val}</strong> (Weight 2<sup>${bit}</sup> = ${1 << bit})`;
 				}
+				return true;
+			}
+			return false;
+		}
+
+		let isMultiplierPinned = false;
+
+		multSvg?.addEventListener('mouseover', (e) => {
+			if (isMultiplierPinned) return;
+			inspectMultiplierTarget(e.target as SVGElement);
+		});
+
+		multSvg?.addEventListener('pointerdown', (e) => {
+			const didInspect = inspectMultiplierTarget(e.target as SVGElement);
+			if (didInspect) {
+				isMultiplierPinned = true;
 			}
 		});
 
 		multSvg?.addEventListener('mouseleave', () => {
-			if (multCellInfo) {
-				multCellInfo.textContent = 'Hover any cell F or wire to inspect Boolean logic, partial products, sum, and carry propagation.';
+			if (!isMultiplierPinned && multCellInfo) {
+				multCellInfo.textContent = 'Hover or tap any cell F or wire to inspect Boolean logic, partial products, sum, and carry propagation.';
 			}
 		});
 
@@ -3407,6 +3426,7 @@
 			isMultiplier = true;
 			if (multiplierModal) {
 				multiplierModal.classList.remove('hidden');
+				multiplierModal.removeAttribute('inert');
 				multiplierModal.style.display = 'flex';
 			}
 			(window as any).__pushModalHistory?.('multiplier-modal', closeMultiplier);
@@ -3417,8 +3437,10 @@
 		function closeMultiplier() {
 			clearCascadeTimeouts();
 			isMultiplier = false;
+			isMultiplierPinned = false;
 			if (multiplierModal) {
 				multiplierModal.classList.add('hidden');
+				multiplierModal.setAttribute('inert', '');
 				multiplierModal.style.display = 'none';
 			}
 			updateDrawerActiveUI();
@@ -3460,6 +3482,7 @@
 			if (isHidden) {
 				updateDrawerActiveUI();
 				extrasModal.classList.remove('hidden');
+				extrasModal.removeAttribute('inert');
 				extrasModal.style.display = 'block';
 				(window as any).__pushModalHistory?.('lab-extras-modal', closeLabExtras);
 			} else {
@@ -3636,6 +3659,7 @@
 
 		function closeLabExtras() {
 			extrasModal?.classList.add('hidden');
+			extrasModal?.setAttribute('inert', '');
 			if (extrasModal) extrasModal.style.display = 'none';
 			(window as any).__popModalHistory?.('lab-extras-modal');
 		}

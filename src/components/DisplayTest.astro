@@ -440,7 +440,16 @@
 
 				if (fpsEl) fpsEl.textContent = String(currentFps);
 				if (fpsUnitEl) fpsUnitEl.classList.remove('hidden');
-				if (frameTimeEl) frameTimeEl.textContent = `${avgDelta.toFixed(2)} ms / frame`;
+				if (frameTimeEl) {
+					const isMobileTouch = typeof navigator !== 'undefined' && (navigator.maxTouchPoints > 1 || /Android|iPhone|iPad/i.test(navigator.userAgent));
+					if (isMobileTouch && currentFps >= 58 && currentFps <= 62) {
+						frameTimeEl.textContent = `${avgDelta.toFixed(2)} ms / frame (Mobile 60Hz rAF)`;
+						frameTimeEl.title = '60 Hz measured. Mobile browsers and Low Power Mode frequently cap requestAnimationFrame to 60 Hz regardless of physical screen refresh rate.';
+					} else {
+						frameTimeEl.textContent = `${avgDelta.toFixed(2)} ms / frame`;
+						frameTimeEl.title = '';
+					}
+				}
 				if (jitterEl) jitterEl.textContent = `±${variance.toFixed(2)}`;
 				if (droppedEl) droppedEl.textContent = `${droppedFrames} dropped`;
 			}

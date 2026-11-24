@@ -425,7 +425,6 @@ export function initTelemetry(): void {
 		maxWorkgroupX: number;
 		maxWorkgroupY: number;
 		maxWorkgroupZ: number;
-		maxBufferSize: string;
 		maxStorageBuffer: string;
 		maxTexture2D: string;
 		features: {
@@ -466,10 +465,6 @@ export function initTelemetry(): void {
 						<div class="webgpu-tile-val mono">${webgpuInfoCache.maxWorkgroupX} &times; ${webgpuInfoCache.maxWorkgroupY} &times; ${webgpuInfoCache.maxWorkgroupZ}</div>
 					</div>
 					<div class="webgpu-tile">
-						<div class="webgpu-tile-label">Max Buffer Size</div>
-						<div class="webgpu-tile-val mono">${escapeHtml(webgpuInfoCache.maxBufferSize)}</div>
-					</div>
-					<div class="webgpu-tile">
 						<div class="webgpu-tile-label">Max Storage Buffer</div>
 						<div class="webgpu-tile-val mono">${escapeHtml(webgpuInfoCache.maxStorageBuffer)}</div>
 					</div>
@@ -481,7 +476,7 @@ export function initTelemetry(): void {
 						<div class="webgpu-tile-label">FP16 Math &amp; Timestamps</div>
 						<div class="webgpu-tile-val">${webgpuInfoCache.features.hasF16 ? 'FP16' : 'FP32'} <span class="webgpu-tile-sub">▪ Timestamp: ${webgpuInfoCache.features.hasTimestamp ? 'Yes' : 'No'}</span></div>
 					</div>
-					<div class="webgpu-tile" style="grid-column: 1 / -1;">
+					<div class="webgpu-tile">
 						<div class="webgpu-tile-label">Texture Compression</div>
 						<div class="webgpu-tile-val">${webgpuInfoCache.features.hasBC ? 'BC <span class="webgpu-tile-sub">(DirectX)</span>' : webgpuInfoCache.features.hasASTC ? 'ASTC' : webgpuInfoCache.features.hasETC2 ? 'ETC2' : 'Standard'}</div>
 					</div>
@@ -586,7 +581,6 @@ export function initTelemetry(): void {
 				maxWorkgroupX: limits.maxComputeWorkgroupSizeX || 1024,
 				maxWorkgroupY: limits.maxComputeWorkgroupSizeY || 1024,
 				maxWorkgroupZ: limits.maxComputeWorkgroupSizeZ || 64,
-				maxBufferSize: limits.maxBufferSize ? formatByteSize(limits.maxBufferSize) : '2.0 GB',
 				maxStorageBuffer: limits.maxStorageBufferBindingSize
 					? formatByteSize(limits.maxStorageBufferBindingSize)
 					: '128 MB',

@@ -32,7 +32,7 @@
 
 	<div class="section-content">
 		<p class="codec-spotlight-desc">
-			Interactive WebCodecs benchmarking workbench for evaluating real-time hardware ASIC transcoders against multi-threaded software pipelines. Profile compression efficiency, frame-by-frame encoding and decoding latencies, and reconstruction fidelity across modern video compression standards (AVC / H.264, VP9, HEVC / H.265, and AV1). Features synchronized dual-stream playback, split-view slider inspection, 4× loupe magnification, and frame-accurate timing telemetry across 1080p, 4K UHD, SMPTE color calibration targets, or custom local video files with 100% zero network egress.
+			Benchmark hardware ASIC and software WebCodecs pipelines across H.264, VP9, HEVC, and AV1. Features dual-stream playback, split-view with 4&times; loupe, and frame timing telemetry on 1080p/4K targets or local files&mdash;100% client-side.
 		</p>
 
 		<!-- SYSTEM RESOURCE WARNING & FULLSCREEN RECOMMENDATION BANNER -->
@@ -43,7 +43,7 @@
 					<line x1="12" y1="9" x2="12" y2="13"/>
 					<line x1="12" y1="17" x2="12.01" y2="17"/>
 				</svg>
-				<span class="codec-warning-title">Important System Resource Notice &amp; Recommended Setup</span>
+				<span class="codec-warning-title">Resource &amp; Display Notice</span>
 			</div>
 
 			<div class="codec-warning-body">
@@ -53,11 +53,11 @@
 							<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2">
 								<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
 							</svg>
-							High Resource Usage
+							High Load
 						</span>
 					</div>
 					<div class="codec-warning-desc">
-						Real-time video encoding and decoding—particularly at <strong>1080p or 4K UHD</strong> resolutions or in <strong>Software (CPU) fallback mode</strong>—utilizes considerable system resources across the GPU, CPU, and memory. <strong>On mobile devices, laptops on battery, or low-power hardware</strong>, running active sessions can cause heavy battery drain and thermal throttling.
+						<strong>1080p/4K</strong> and <strong>Software (CPU)</strong> transcoding heavily stress GPU, CPU, and memory&mdash;expect battery drain and heat on mobile or unplugged laptops.
 					</div>
 				</div>
 
@@ -67,11 +67,11 @@
 							<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2">
 								<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
 							</svg>
-							Recommended View
+							Best View
 						</span>
 					</div>
 					<div class="codec-warning-desc">
-						For optimal workspace visibility, side-by-side comparison displays, and live telemetry racks, the studio applet is <strong>best used in maximized / fullscreen mode</strong>. Click the distinct middle button
+						Recommended in <strong>maximized / fullscreen mode</strong> for side-by-side comparison and telemetry. Click the middle
 						<span class="wm-preview-group" title="Middle window button (Maximize / Fullscreen)">
 							<span class="wm-preview-btn">—</span>
 							<span class="wm-preview-btn wm-preview-max" title="Maximize button">
@@ -79,7 +79,7 @@
 							</span>
 							<span class="wm-preview-btn">✕</span>
 						</span>
-						in the top-right window controls when the applet is opened.
+						titlebar button after launch.
 					</div>
 				</div>
 			</div>

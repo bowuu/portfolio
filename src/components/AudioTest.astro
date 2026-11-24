@@ -45,18 +45,18 @@
 
 			<div class="volume-control-wrap" title="Output Volume (Safe Ceiling -18 dBFS)">
 				<button type="button" id="audio-mute-btn" class="vol-btn" title="Mute audio" aria-label="Toggle Mute">
-					<svg id="vol-icon-unmuted" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="vol-icon">
+					<svg id="vol-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="vol-icon">
 						<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-						<path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-					</svg>
-					<svg id="vol-icon-muted" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="vol-icon hidden">
-						<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-						<line x1="23" y1="9" x2="17" y2="15"/>
-						<line x1="17" y1="9" x2="23" y2="15"/>
+						<path id="vol-wave-1" d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+						<path id="vol-wave-2" class="hidden" d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+						<g id="vol-mute-x" class="hidden">
+							<line x1="23" y1="9" x2="17" y2="15"/>
+							<line x1="17" y1="9" x2="23" y2="15"/>
+						</g>
 					</svg>
 				</button>
 				<input type="range" id="audio-volume-slider" min="0" max="1" step="0.05" value="0.5" class="vol-slider" aria-label="Output Volume" />
-				<span id="audio-vol-text" class="vol-text mono">50%</span>
+				<button type="button" id="audio-vol-text" class="vol-text mono" title="Set volume to 100%" aria-label="Toggle 100% Volume">50%</button>
 			</div>
 		</div>
 	</summary>
@@ -429,22 +429,41 @@
 		const srcBtns = [btnSrcMic, btnSrcSim, btnSrcBoth];
 
 		const volSlider = document.getElementById('audio-volume-slider') as HTMLInputElement;
-		const volText = document.getElementById('audio-vol-text');
+		const volText = document.getElementById('audio-vol-text') as HTMLButtonElement | null;
 		const muteBtn = document.getElementById('audio-mute-btn');
-		const volIconUnmuted = document.getElementById('vol-icon-unmuted');
-		const volIconMuted = document.getElementById('vol-icon-muted');
+		const volWave1 = document.getElementById('vol-wave-1');
+		const volWave2 = document.getElementById('vol-wave-2');
+		const volMuteX = document.getElementById('vol-mute-x');
 		let lastNonZeroVol = 0.5;
+		let lastPreMaxVol = 0.5;
 
 		function updateVolumeUI(val: number) {
-			if (volText) volText.textContent = `${Math.round(val * 100)}%`;
-			if (val === 0) {
-				volIconUnmuted?.classList.add('hidden');
-				volIconMuted?.classList.remove('hidden');
-				if (muteBtn) muteBtn.title = 'Unmute (restore volume)';
-			} else {
-				volIconUnmuted?.classList.remove('hidden');
-				volIconMuted?.classList.add('hidden');
-				if (muteBtn) muteBtn.title = 'Mute audio';
+			const pct = Math.round(val * 100);
+			if (volText) {
+				volText.textContent = `${pct}%`;
+				volText.title = pct >= 100
+					? `Restore ${Math.round(lastPreMaxVol * 100)}% volume`
+					: 'Set volume to 100%';
+			}
+
+			const isMuted = pct === 0;
+			const isMid = pct > 33 && pct <= 67;
+			const isHigh = pct > 67;
+
+			volMuteX?.classList.toggle('hidden', !isMuted);
+			volWave1?.classList.toggle('hidden', !isMid && !isHigh);
+			volWave2?.classList.toggle('hidden', !isHigh);
+
+			if (muteBtn) {
+				muteBtn.title = isMuted ? 'Unmute (restore volume)' : 'Mute audio';
+			}
+		}
+
+		function applyVolume(targetVal: number) {
+			if (volSlider) volSlider.value = String(targetVal);
+			updateVolumeUI(targetVal);
+			if (masterGain && audioCtx) {
+				masterGain.gain.setTargetAtTime(targetVal * 0.45, audioCtx.currentTime, 0.03);
 			}
 		}
 
@@ -602,11 +621,11 @@
 				const val = parseFloat(volSlider.value);
 				if (val > 0) {
 					lastNonZeroVol = val;
+					if (val < 1) {
+						lastPreMaxVol = val;
+					}
 				}
-				updateVolumeUI(val);
-				if (masterGain && audioCtx) {
-					masterGain.gain.setTargetAtTime(val * 0.45, audioCtx.currentTime, 0.03);
-				}
+				applyVolume(val);
 			});
 		}
 
@@ -622,13 +641,30 @@
 				} else {
 					targetVal = lastNonZeroVol > 0 ? lastNonZeroVol : 0.5;
 				}
-				volSlider.value = String(targetVal);
-				updateVolumeUI(targetVal);
-				if (masterGain && audioCtx) {
-					masterGain.gain.setTargetAtTime(targetVal * 0.45, audioCtx.currentTime, 0.03);
-				}
+				applyVolume(targetVal);
 			});
 			muteBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
+		}
+
+		if (volText) {
+			volText.addEventListener('click', (e) => {
+				e.stopPropagation();
+				if (!volSlider) return;
+				const currentVal = parseFloat(volSlider.value);
+				let targetVal: number;
+				if (currentVal < 1) {
+					if (currentVal > 0) {
+						lastPreMaxVol = currentVal;
+					}
+					lastNonZeroVol = 1;
+					targetVal = 1;
+				} else {
+					targetVal = lastPreMaxVol > 0 && lastPreMaxVol < 1 ? lastPreMaxVol : 0.5;
+					lastNonZeroVol = targetVal;
+				}
+				applyVolume(targetVal);
+			});
+			volText.addEventListener('pointerdown', (e) => e.stopPropagation());
 		}
 
 		// Voice Audio Buffers for Spoken Tests
@@ -2170,12 +2206,29 @@
 	}
 
 	.vol-text {
+		background: none;
+		border: none;
+		padding: 0;
+		margin: 0;
+		font-family: inherit;
 		font-size: 0.75em;
 		font-weight: 700;
 		color: rgb(var(--gray-dark));
-		min-width: 32px;
+		min-width: 36px;
 		flex-shrink: 0;
 		text-align: right;
+		font-variant-numeric: tabular-nums;
+		line-height: 1;
+		cursor: pointer;
+		transition: color 0.15s ease, transform 0.15s ease;
+	}
+
+	.vol-text:hover {
+		color: var(--accent);
+	}
+
+	.vol-text:active {
+		transform: scale(0.95);
 	}
 
 	.benchmark-desc {

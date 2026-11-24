@@ -271,7 +271,7 @@ const defaultModel = manifest[0];
 			controls.maxPolarAngle = Math.PI - 0.02;
 
 			controls.addEventListener('change', () => {
-				renderer.render(scene, camera);
+				startAnimationLoop?.();
 			});
 			controls.addEventListener('start', () => {
 				startAnimationLoop?.();

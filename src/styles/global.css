@@ -56,6 +56,21 @@ html[data-theme="dark"] {
   display: none !important;
 }
 
+/* Universal scrollbar concealment for interactive benches & tables */
+.no-scrollbar,
+.keyboard-board,
+.event-inspector {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+.no-scrollbar::-webkit-scrollbar,
+.keyboard-board::-webkit-scrollbar,
+.event-inspector::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 html {
   overflow-x: hidden;
   overflow-x: clip;

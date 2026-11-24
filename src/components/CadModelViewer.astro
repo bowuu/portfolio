@@ -271,9 +271,6 @@ const defaultModel = manifest[0];
 			controls.maxPolarAngle = Math.PI - 0.02;
 
 			let isUserInteracting = false;
-			controls.addEventListener('change', () => {
-				startAnimationLoop?.();
-			});
 			controls.addEventListener('start', () => {
 				isUserInteracting = true;
 				startAnimationLoop?.();

@@ -5,6 +5,7 @@
 :root {
   --accent: #ea580c;
   --accent-dark: #c2410c;
+  --accent-text: #c2410c;
   --accent-rgb: 234, 88, 12;
   --black: 15, 23, 42;
   --gray: 100, 116, 139;
@@ -20,6 +21,7 @@
 html[data-theme="dark"] {
   --accent: #ea580c;
   --accent-dark: #c2410c;
+  --accent-text: #fb923c;
   --accent-rgb: 234, 88, 12;
   --black: 250, 250, 250;
   --gray: 161, 161, 170;
@@ -192,6 +194,24 @@ hr {
   }
 }
 
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 20000;
+  padding: 0.65em 1.1em;
+  background: var(--accent-dark);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9em;
+  border-radius: 0 0 8px 0;
+  text-decoration: none;
+}
+.skip-link:focus {
+  left: 0.75rem;
+  top: 0.75rem;
+}
+
 .sr-only {
   border: 0;
   padding: 0;
@@ -214,7 +234,6 @@ html {
 #skills,
 #projects,
 #lab,
-#benchmark,
 #display-lab,
 #audio-lab,
 #video-codec-spotlight,
@@ -238,7 +257,6 @@ html {
   transition: background-color 0.2s ease, border-color 0.15s ease, box-shadow 0.15s ease;
   width: 100%;
   position: relative;
-  overflow: hidden;
 }
 
 .card-title {
@@ -262,15 +280,14 @@ html {
 /* ==========================================================================
    GLOBAL CARD ACCORDION SYSTEM (All Major Sections)
    ========================================================================== */
-details.card.section-accordion {
+.card.section-accordion {
   padding: 0;
   transition: all 0.2s ease;
 }
 
-details.card.section-accordion > summary.card-header-summary {
+.card.section-accordion > .card-header-summary {
   list-style: none;
   user-select: none;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -283,42 +300,40 @@ details.card.section-accordion > summary.card-header-summary {
   width: 100%;
 }
 
-details.card.section-accordion > summary::-webkit-details-marker {
-  display: none;
-}
-
+.card.section-accordion[data-open="false"] > .card-header-summary,
 details.card.section-accordion:not([open]) > summary.card-header-summary {
   padding: clamp(0.9em, 2vw, 1.2em) clamp(1.2em, 3vw, 2em);
   border-bottom: none;
 }
 
+.card.section-accordion[data-open="false"],
 details.card.section-accordion:not([open]) {
   cursor: pointer;
 }
 
 /* Section Card Hover Lighting Effect (matches Debug telemetry box glow across collapsed & uncollapsed states) */
-details.card.section-accordion:hover,
+.card.section-accordion:hover,
 .card:hover {
   border-color: rgba(var(--accent-rgb), 0.38);
   box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.08), var(--box-shadow);
 }
 
-details.card.section-accordion > summary.card-header-summary:hover .card-chevron-btn,
-details.card.section-accordion:not([open]):hover .card-chevron-btn,
+.card.section-accordion > .card-header-summary:hover .card-chevron-btn,
+.card.section-accordion[data-open="false"]:hover .card-chevron-btn,
 .card-summary-left:hover .card-chevron-btn {
   color: var(--accent);
   border-color: rgba(var(--accent-rgb), 0.35);
   background: rgba(var(--accent-rgb), 0.08);
 }
 
-html[data-theme="dark"] details.card.section-accordion:hover,
+html[data-theme="dark"] .card.section-accordion:hover,
 html[data-theme="dark"] .card:hover {
   border-color: rgba(var(--accent-rgb), 0.45);
   box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.12), var(--box-shadow);
 }
 
-html[data-theme="dark"] details.card.section-accordion > summary.card-header-summary:hover .card-chevron-btn,
-html[data-theme="dark"] details.card.section-accordion:not([open]):hover .card-chevron-btn,
+html[data-theme="dark"] .card.section-accordion > .card-header-summary:hover .card-chevron-btn,
+html[data-theme="dark"] .card.section-accordion[data-open="false"]:hover .card-chevron-btn,
 html[data-theme="dark"] .card-summary-left:hover .card-chevron-btn {
   color: var(--accent);
   border-color: rgba(var(--accent-rgb), 0.42);
@@ -331,18 +346,21 @@ html[data-theme="dark"] .card-summary-left:hover .card-chevron-btn {
   gap: 0.65em;
   flex-wrap: wrap;
   cursor: pointer;
-}
-
-.card-summary-left:hover .card-chevron-btn {
-  color: var(--accent);
-  border-color: rgba(var(--accent-rgb), 0.35);
-  background: rgba(var(--accent-rgb), 0.08);
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .card-summary-left .card-title {
-  margin: 0 !important;
-  padding: 0 !important;
-  border-bottom: none !important;
+  margin: 0;
+  padding: 0;
+  border-bottom: none;
 }
 
 .card-summary-right {
@@ -446,10 +464,12 @@ html[data-theme="dark"] .card-chevron-btn {
 }
 
 /* Leading chevron: points down (0deg) when open, points right (-90deg) when collapsed */
+.card.section-accordion[data-open="true"] .card-chevron-btn svg,
 details.card.section-accordion[open] .card-chevron-btn svg {
   transform: rotate(0deg);
 }
 
+.card.section-accordion[data-open="false"] .card-chevron-btn svg,
 details.card.section-accordion:not([open]) .card-chevron-btn svg {
   transform: rotate(-90deg);
 }
@@ -500,15 +520,18 @@ details.card.section-accordion:not([open]) .card-chevron-btn svg {
   header,
   #debug,
   #lab,
-  #benchmark,
   #display-lab,
   #audio-lab,
   #video-codec-spotlight,
   #input-lab,
   #keyboard-lab,
   .canvas-wrapper,
+  .cad-viewer-header,
+  .cad-model-meta-strip,
   .cad-controls-top,
   .cad-viewer-footer,
+  .card-chevron-btn,
+  .section-summary-badge,
   .theme-wrapper,
   .theme-toggle,
   .model-select-wrapper,
@@ -516,6 +539,18 @@ details.card.section-accordion:not([open]) .card-chevron-btn svg {
   .cad-drag-hint,
   .no-print {
     display: none !important;
+  }
+
+  /* Always expand Skills and Projects when printing even if collapsed on screen */
+  #skills > .section-content,
+  #projects > .section-content {
+    display: block !important;
+  }
+  #skills .card-header-summary,
+  #projects .card-header-summary {
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 0 0 0.5rem 0 !important;
+    margin-bottom: 0.75rem !important;
   }
 
   main {
@@ -575,9 +610,11 @@ details.card.section-accordion:not([open]) .card-chevron-btn svg {
     background: #ffffff !important;
     padding: 1.25rem !important;
     margin-bottom: 1.25rem !important;
+    border-radius: 6px !important;
+  }
+  #skills.card {
     break-inside: avoid;
     page-break-inside: avoid;
-    border-radius: 6px !important;
   }
 
   .card-title {

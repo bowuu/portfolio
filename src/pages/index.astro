@@ -21,8 +21,9 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
 	</head>
 	<body>
+		<a href="#main-content" class="skip-link">Skip to main content</a>
 		<Header />
-		<main>
+		<main id="main-content" tabindex="-1">
 			<!-- HERO / ABOUT -->
 			<section class="hero" id="about">
 				<div class="avatar-wrap" id="hero-avatar-wrap">
@@ -69,14 +70,14 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 			</section>
 
 			<!-- SKILLS -->
-			<details class="card section-accordion" id="skills" open>
-				<summary class="card-header-summary">
-					<div class="card-summary-left">
-						<span class="card-chevron-btn" title="Toggle Skills section">
+			<section class="card section-accordion" id="skills" data-open="true">
+				<div class="card-header-summary">
+					<button type="button" class="card-summary-left card-summary-toggle" aria-expanded="true" aria-controls="skills-content">
+						<span class="card-chevron-btn" aria-hidden="true">
 							<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
 						</span>
 						<h2 class="card-title">
-							<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+							<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon" aria-hidden="true">
 								<rect x="4" y="4" width="16" height="16" rx="2"/>
 								<rect x="9" y="9" width="6" height="6"/>
 								<line x1="9" y1="1" x2="9" y2="4"/>
@@ -91,9 +92,9 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 							Skills
 						</h2>
 						<span class="section-summary-badge">ATE · Embedded Linux · 3D CAD</span>
-					</div>
-				</summary>
-				<div class="section-content">
+					</button>
+				</div>
+				<div class="section-content" id="skills-content">
 					<div class="skills-grid">
 						<div class="skill-category">
 							<span class="skill-label">Silicon &amp; Hardware Validation</span>
@@ -109,25 +110,25 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 						</div>
 					</div>
 				</div>
-			</details>
+			</section>
 
 			<!-- PROJECTS -->
-			<details class="card section-accordion" id="projects" open>
-				<summary class="card-header-summary">
-					<div class="card-summary-left">
-						<span class="card-chevron-btn" title="Toggle Projects section">
+			<section class="card section-accordion" id="projects" data-open="true">
+				<div class="card-header-summary">
+					<button type="button" class="card-summary-left card-summary-toggle" aria-expanded="true" aria-controls="projects-content">
+						<span class="card-chevron-btn" aria-hidden="true">
 							<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
 						</span>
 						<h2 class="card-title">
-							<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+							<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon" aria-hidden="true">
 								<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
 							</svg>
 							Projects
 						</h2>
 						<span class="section-summary-badge">3D CAD Models · Playkeys</span>
-					</div>
-				</summary>
-				<div class="section-content">
+					</button>
+				</div>
+				<div class="section-content" id="projects-content">
 					<div class="projects-list">
 						<!-- PROJECT 1: 3D CAD VIEWER -->
 						<div class="project-box">
@@ -169,7 +170,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 						</div>
 					</div>
 				</div>
-			</details>
+			</section>
 
 			<!-- NETWORK TEST -->
 			<NetworkTest />
@@ -198,22 +199,10 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		<EasterEggs />
 		<script>
 			import '../lib/modalHistory';
+			import { initSectionAccordions } from '../lib/ui';
 
-			function setupCardAccordions() {
-				document.querySelectorAll('.card-header-summary button, .card-header-summary a, .card-header-summary input, .card-header-summary select, .card-header-summary .segmented-control, .card-header-summary .header-volume-wrapper, .card-header-summary .volume-control-wrap').forEach((el) => {
-					el.addEventListener('click', (e) => {
-						if (!el.classList.contains('card-chevron-btn')) {
-							if (el.id === 'launch-codec-spotlight-btn' || el.closest('#launch-codec-spotlight-btn')) {
-								window.dispatchEvent(new CustomEvent('open-codec-studio', { detail: { pipeline: 'loopback' } }));
-							}
-							e.stopPropagation();
-						}
-					});
-				});
-			}
-
-			setupCardAccordions();
-			document.addEventListener('astro:page-load', setupCardAccordions);
+			initSectionAccordions();
+			document.addEventListener('astro:page-load', initSectionAccordions);
 		</script>
 	</body>
 </html>
@@ -260,7 +249,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		font-size: clamp(1.15em, 2.8vw, 1.38em);
 		font-weight: 700;
 		letter-spacing: -0.01em;
-		color: var(--accent);
+		color: var(--accent-text);
 		margin: 0 0 0.35em 0;
 	}
 	.tagline {
@@ -378,35 +367,6 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		border-color: rgba(251, 191, 36, 0.65);
 		box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
 	}
-	/* CARDS */
-	.card, :global(.card) {
-		background: var(--bg-card);
-		border: 1px solid var(--border-color);
-		border-radius: 12px;
-		padding: clamp(1.2em, 3vw, 2em);
-		margin-top: 1.8em;
-		box-shadow: var(--box-shadow);
-		transition: background-color 0.2s ease, border-color 0.2s ease;
-		width: 100%;
-	}
-	.card-title {
-		display: flex;
-		align-items: center;
-		gap: 0.5em;
-		font-size: clamp(1.2em, 2.5vw, 1.35em);
-		font-weight: 700;
-		letter-spacing: -0.01em;
-		margin: 0 0 1.2em 0;
-		padding-bottom: 0.5em;
-		border-bottom: 1.5px solid var(--border-color);
-		color: rgb(var(--black));
-	}
-
-	.card-icon {
-		color: var(--accent);
-		flex-shrink: 0;
-	}
-
 	/* SKILLS GRID */
 	.skills-grid {
 		display: grid;
@@ -428,7 +388,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--accent);
+		color: var(--accent-text);
 	}
 	.skill-items {
 		font-size: 0.9em;
@@ -512,14 +472,14 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		padding: 0.2em 0.55em;
 		border-radius: 4px;
 		background: rgba(var(--accent-rgb), 0.08);
-		color: var(--accent);
+		color: var(--accent-text);
 		border: 1px solid rgba(var(--accent-rgb), 0.18);
 	}
 
 	.sub-link {
 		font-size: 0.88em;
 		font-weight: 700;
-		color: var(--accent);
+		color: var(--accent-text);
 		text-decoration: none;
 	}
 	.sub-link:hover {

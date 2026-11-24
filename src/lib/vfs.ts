@@ -435,7 +435,7 @@ export function autocompletePath(partial: string, baseCwd: string = currentWorki
 	let prefix = partial;
 
 	if (lastSlash !== -1) {
-		searchDirStr = partial.slice(0, lastSlash);
+		searchDirStr = lastSlash === 0 ? '/' : partial.slice(0, lastSlash);
 		prefix = partial.slice(lastSlash + 1);
 	}
 
@@ -447,7 +447,12 @@ export function autocompletePath(partial: string, baseCwd: string = currentWorki
 	for (const [name, child] of dirNode.children.entries()) {
 		if (name.toLowerCase().startsWith(prefix.toLowerCase())) {
 			const suffix = child.type === 'dir' ? '/' : '';
-			const completed = searchDirStr ? `${searchDirStr}/${name}${suffix}` : `${name}${suffix}`;
+			const completed =
+				searchDirStr === '/'
+					? `/${name}${suffix}`
+					: searchDirStr
+						? `${searchDirStr}/${name}${suffix}`
+						: `${name}${suffix}`;
 			matches.push(completed);
 		}
 	}

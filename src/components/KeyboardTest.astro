@@ -2,14 +2,14 @@
 // KeyboardTest.astro - Full 104-Key Switch Matrix, N-Key Rollover (NKRO), Input Latency & Switch Chatter Lab
 ---
 
-<details class="card section-accordion keyboard-card" id="keyboard-lab">
-	<summary class="card-header-summary">
-		<div class="card-summary-left">
-			<span class="card-chevron-btn" title="Toggle Keyboard Test section">
+<section class="card section-accordion keyboard-card" id="keyboard-lab" data-open="false">
+	<div class="card-header-summary">
+		<button type="button" class="card-summary-left card-summary-toggle" aria-expanded="false" aria-controls="keyboard-lab-content">
+			<span class="card-chevron-btn" aria-hidden="true">
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
 			</span>
 			<h2 class="card-title">
-				<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+				<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon" aria-hidden="true">
 					<rect x="2" y="4" width="20" height="16" rx="2.5"/>
 					<path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01"/>
 					<path d="M6 12h.01M10 12h.01M14 12h.01M18 12h.01"/>
@@ -18,20 +18,20 @@
 				Keyboard Test
 			</h2>
 			<span class="section-summary-badge">104-Key ANSI Matrix · NKRO · Latency</span>
-		</div>
+		</button>
 
 		<div class="card-summary-right">
 			<button id="reset-keyboard-btn" class="telemetry-btn" type="button" title="Reset tested keys and rollover statistics">
-				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
 					<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
 					<path d="M3 3v5h5"/>
 				</svg>
 				<span>Reset</span>
 			</button>
 		</div>
-	</summary>
+	</div>
 
-	<div class="section-content">
+	<div class="section-content" id="keyboard-lab-content" hidden>
 
 	<p class="benchmark-desc">
 		Audit 104-key ANSI matrix, N-Key Rollover (NKRO), dispatch latency, and switch chatter.
@@ -103,12 +103,12 @@
 
 		<div class="kb-chassis" id="kb-container" tabindex="0" role="region" aria-label="Virtual Keyboard">
 			<div class="kb-focus-hint mono">
-				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
 					<circle cx="12" cy="12" r="10"/>
 					<line x1="12" y1="8" x2="12" y2="12"/>
 					<line x1="12" y1="16" x2="12.01" y2="16"/>
 				</svg>
-				<span>Click inside or press any key on your keyboard to test switches (104 ANSI layout)</span>
+				<span>Click inside or press any key to test switches (104 ANSI layout) <span class="kb-scroll-cue">&bull; Swipe horizontally for nav/numpad</span></span>
 			</div>
 
 			<div class="keyboard-board" id="kb-board">
@@ -346,9 +346,11 @@
 		</div>
 	</div>
 	</div>
-</details>
+</section>
 
 <script>
+	import { isSectionOpen } from '../lib/ui';
+
 	// -------------------------------------------------------------
 	// CHERRY MX RED LINEAR SWITCH ACOUSTIC SYNTHESIZER (MODAL SYNTHESIS)
 	// -------------------------------------------------------------
@@ -358,6 +360,8 @@
 		private masterFilter: BiquadFilterNode | null = null;
 		private masterCompressor: DynamicsCompressorNode | null = null;
 		private masterGain: GainNode | null = null;
+		private clackBuffer: AudioBuffer | null = null;
+		private thumpBuffer: AudioBuffer | null = null;
 
 		constructor() {
 			this.isEnabled = false;
@@ -369,13 +373,11 @@
 				if (AudioCtx) {
 					this.ctx = new AudioCtx();
 
-					// Acoustic chassis damping: roll off ultrasonic harshness above 8 kHz
 					this.masterFilter = this.ctx.createBiquadFilter();
 					this.masterFilter.type = 'lowpass';
 					this.masterFilter.frequency.setValueAtTime(8000, this.ctx.currentTime);
 					this.masterFilter.Q.setValueAtTime(0.7, this.ctx.currentTime);
 
-					// Dynamic compressor: prevents digital clipping & harsh distortion when typing fast / NKRO
 					this.masterCompressor = this.ctx.createDynamicsCompressor();
 					this.masterCompressor.threshold.setValueAtTime(-14, this.ctx.currentTime);
 					this.masterCompressor.knee.setValueAtTime(24, this.ctx.currentTime);
@@ -389,6 +391,22 @@
 					this.masterFilter.connect(this.masterCompressor);
 					this.masterCompressor.connect(this.masterGain);
 					this.masterGain.connect(this.ctx.destination);
+
+					// Pre-generate reusable noise buffers once (eliminates per-keystroke AudioBuffer GC)
+					const sr = this.ctx.sampleRate;
+					const clackLen = Math.max(32, Math.floor(sr * 0.04));
+					this.clackBuffer = this.ctx.createBuffer(1, clackLen, sr);
+					const clackData = this.clackBuffer.getChannelData(0);
+					for (let i = 0; i < clackLen; i++) {
+						clackData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (clackLen * 0.22));
+					}
+
+					const thumpLen = Math.max(64, Math.floor(sr * 0.055));
+					this.thumpBuffer = this.ctx.createBuffer(1, thumpLen, sr);
+					const thumpData = this.thumpBuffer.getChannelData(0);
+					for (let i = 0; i < thumpLen; i++) {
+						thumpData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (thumpLen * 0.28));
+					}
 				}
 			}
 			if (this.ctx && this.ctx.state === 'suspended') {
@@ -398,7 +416,11 @@
 
 		public setEnabled(enabled: boolean) {
 			this.isEnabled = enabled;
-			if (enabled) this.init();
+			if (enabled) {
+				this.init();
+			} else if (this.ctx && this.ctx.state === 'running') {
+				this.ctx.suspend().catch(() => {});
+			}
 		}
 
 		public play(code?: string) {
@@ -413,78 +435,42 @@
 			const isShift = code === 'ShiftLeft' || code === 'ShiftRight';
 			const isBig = isEnter || isBack || isShift;
 
-			// Per-key physical acoustic modeling & humanized micro-variance (±2.5% pitch, ±4% gain)
 			const jitter = 0.975 + Math.random() * 0.05;
 			const gainJitter = 0.96 + Math.random() * 0.08;
 			const pitchMod = (isSpace ? 0.62 : isBig ? 0.82 : 1.0) * jitter;
 
-			// LINEAR RED (Cherry MX Red / Smooth POM Stem Bottom-Out / Deep "Thock"):
-			// 1. Initial sharp plastic contact transient (< 2ms)
 			const contactFreq = (isSpace ? 1100 : isBig ? 1350 : 1650) * pitchMod;
-			this.playPlasticClack(t, contactFreq, 2.4, 0.004, 0.25 * gainJitter);
+			this.playFilteredBurst(this.clackBuffer, 'bandpass', contactFreq, 2.4, 0.004, 0.25 * gainJitter, t);
 
-			// 2. Primary keycap Helmholtz cavity resonance (solid deep "thock")
 			const cavityFreq = (isSpace ? 210 : isBig ? 340 : 440) * pitchMod;
 			const cavityDur = isSpace ? 0.040 : isBig ? 0.030 : 0.024;
-			this.playPlasticClack(t, cavityFreq, 3.0, cavityDur, 0.32 * gainJitter);
+			this.playFilteredBurst(this.clackBuffer, 'bandpass', cavityFreq, 3.0, cavityDur, 0.32 * gainJitter, t);
 
-			// 3. Low-frequency plate / housing bottom-out thud (warm acoustic body, no artificial pitch sweep)
 			const plateFreq = (isSpace ? 140 : isBig ? 180 : 230) * pitchMod;
-			this.playBodyThump(t, plateFreq, 2.0, cavityDur * 1.25, 0.36 * gainJitter);
+			this.playFilteredBurst(this.thumpBuffer, 'lowpass', Math.min(900, plateFreq), 2.0, cavityDur * 1.25, 0.36 * gainJitter, t);
 
 			if (isSpace) {
-				// Spacebar hollow air resonance & wire stabilizer tick
-				this.playBodyThump(t + 0.002, 95, 1.8, 0.048, 0.28 * gainJitter);
-				this.playPlasticClack(t + 0.001, 2400, 3.8, 0.004, 0.10 * gainJitter);
+				this.playFilteredBurst(this.thumpBuffer, 'lowpass', 95, 1.8, 0.048, 0.28 * gainJitter, t + 0.002);
+				this.playFilteredBurst(this.clackBuffer, 'bandpass', 2400, 3.8, 0.004, 0.10 * gainJitter, t + 0.001);
 			}
 		}
 
-		private playPlasticClack(time: number, freq: number, Q: number, dur: number, vol: number) {
-			if (!this.ctx) return;
-			const sampleRate = this.ctx.sampleRate;
-			const bufferSize = Math.max(32, Math.floor(sampleRate * Math.min(dur, 0.03)));
-			const buffer = this.ctx.createBuffer(1, bufferSize, sampleRate);
-			const data = buffer.getChannelData(0);
-			for (let i = 0; i < bufferSize; i++) {
-				data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.22));
-			}
-
+		private playFilteredBurst(
+			buffer: AudioBuffer | null,
+			filterType: BiquadFilterType,
+			freq: number,
+			Q: number,
+			dur: number,
+			vol: number,
+			time: number
+		) {
+			if (!this.ctx || !buffer) return;
 			const source = this.ctx.createBufferSource();
 			source.buffer = buffer;
 
 			const filter = this.ctx.createBiquadFilter();
-			filter.type = 'bandpass';
+			filter.type = filterType;
 			filter.frequency.setValueAtTime(Math.max(40, Math.min(18000, freq)), time);
-			filter.Q.setValueAtTime(Q, time);
-
-			const gain = this.ctx.createGain();
-			gain.gain.setValueAtTime(vol, time);
-			gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-
-			source.connect(filter);
-			filter.connect(gain);
-			gain.connect(this.masterFilter || this.ctx.destination);
-
-			source.start(time);
-			source.stop(time + dur);
-		}
-
-		private playBodyThump(time: number, freq: number, Q: number, dur: number, vol: number) {
-			if (!this.ctx) return;
-			const sampleRate = this.ctx.sampleRate;
-			const bufferSize = Math.max(64, Math.floor(sampleRate * Math.min(dur, 0.05)));
-			const buffer = this.ctx.createBuffer(1, bufferSize, sampleRate);
-			const data = buffer.getChannelData(0);
-			for (let i = 0; i < bufferSize; i++) {
-				data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.28));
-			}
-
-			const source = this.ctx.createBufferSource();
-			source.buffer = buffer;
-
-			const filter = this.ctx.createBiquadFilter();
-			filter.type = 'lowpass';
-			filter.frequency.setValueAtTime(Math.max(50, Math.min(900, freq)), time);
 			filter.Q.setValueAtTime(Q, time);
 
 			const gain = this.ctx.createGain();
@@ -503,8 +489,10 @@
 	const soundEngine = new KeyboardSoundEngine();
 
 	function initKeyboardLab() {
+		const kbCard = document.getElementById('keyboard-lab');
 		const container = document.getElementById('kb-container');
-		if (!container) return;
+		if (!kbCard || !container || kbCard.dataset.bound === '1') return;
+		kbCard.dataset.bound = '1';
 
 		const currentRolloverEl = document.getElementById('kb-current-rollover');
 		const peakRolloverEl = document.getElementById('kb-peak-rollover');
@@ -598,34 +586,102 @@
 			}
 		}
 
-		function handleKeyDown(e: KeyboardEvent) {
-			const now = performance.now();
-			const code = e.code || e.key;
+		const CHAR_TO_CODE: Record<string, string> = {
+			' ': 'Space', '`': 'Backquote', '~': 'Backquote',
+			'-': 'Minus', '_': 'Minus', '=': 'Equal', '+': 'Equal',
+			'[': 'BracketLeft', '{': 'BracketLeft', ']': 'BracketRight', '}': 'BracketRight',
+			'\\': 'Backslash', '|': 'Backslash', ';': 'Semicolon', ':': 'Semicolon',
+			"'": 'Quote', '"': 'Quote', ',': 'Comma', '<': 'Comma',
+			'.': 'Period', '>': 'Period', '/': 'Slash', '?': 'Slash',
+			'!': 'Digit1', '@': 'Digit2', '#': 'Digit3', '$': 'Digit4', '%': 'Digit5',
+			'^': 'Digit6', '&': 'Digit7', '*': 'Digit8', '(': 'Digit9', ')': 'Digit0',
+		};
 
-			// Procedural Cherry MX Red linear switch acoustics
+		function resolveCodeFromKey(key: string): string {
+			if (!key || key === 'Unidentified') return '';
+			if (key.length === 1) {
+				if (/^[a-z]$/i.test(key)) return `Key${key.toUpperCase()}`;
+				if (/^[0-9]$/.test(key)) return `Digit${key}`;
+				if (CHAR_TO_CODE[key]) return CHAR_TO_CODE[key];
+			}
+			return key;
+		}
+
+		function findKeyElement(code: string): HTMLElement | null {
+			if (!code) return null;
+			try {
+				return document.querySelector<HTMLElement>(`.keyboard-board [data-code="${CSS.escape(code)}"]`);
+			} catch (_) {
+				return null;
+			}
+		}
+
+		function shouldIgnoreGlobalKeys(eTarget: EventTarget | null): boolean {
+			if (!isSectionOpen(kbCard)) return true;
+			const termModal = document.getElementById('terminal-modal');
+			if (termModal?.classList.contains('open')) return true;
+			const el = eTarget as HTMLElement | null;
+			if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') && el !== mobileInput) {
+				return true;
+			}
+			return false;
+		}
+
+		function pulseVirtualCode(code: string, label: string) {
+			if (!code) return;
+			soundEngine.play(code);
+			activeKeys.add(code);
+			testedKeys.add(code);
+			const keyEl = findKeyElement(code);
+			if (keyEl) {
+				keyEl.classList.add('key-pressed', 'key-tested');
+				setTimeout(() => {
+					activeKeys.delete(code);
+					keyEl.classList.remove('key-pressed');
+					updateRolloverUI();
+				}, 130);
+			}
+			if (evCodeEl) evCodeEl.textContent = code;
+			if (evKeyEl) evKeyEl.textContent = label === ' ' ? 'Space' : label;
+			if (evWhichEl) evWhichEl.textContent = '--';
+			if (evModsEl) evModsEl.textContent = 'IME / Virtual';
+			if (evTsEl) evTsEl.textContent = `+${performance.now().toFixed(1)} ms`;
+			updateRolloverUI();
+			updateMatrixCoverageUI();
+		}
+
+		function handleKeyDown(e: KeyboardEvent) {
+			if (shouldIgnoreGlobalKeys(e.target)) return;
+			const now = performance.now();
+			const code = e.code || resolveCodeFromKey(e.key);
+			if (!code) return;
+
 			if (!e.repeat) {
 				soundEngine.play(code);
 			}
 
-			// Intercept functional keys and scrolling keys if container or any element inside it is focused
-			const isFocused = document.activeElement === container || 
-				document.activeElement === mobileInput || 
+			const inMobileInput = document.activeElement === mobileInput;
+			const isFocused = document.activeElement === container ||
+				inMobileInput ||
 				(container !== null && container.contains(document.activeElement));
-			
-			const keysToPrevent = [
-				'Space', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
-				'PageUp', 'PageDown', 'Home', 'End', 'F1', 'F3', 'F7', 'ContextMenu'
-			];
+
+			// Note: Tab is deliberately excluded so keyboard users are never trapped (WCAG 2.1.2)
+			const keysToPrevent = inMobileInput
+				? ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'F1', 'F3', 'F7', 'ContextMenu']
+				: ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End', 'F1', 'F3', 'F7', 'ContextMenu'];
 
 			if (isFocused && keysToPrevent.includes(e.code)) {
 				e.preventDefault();
 			}
 
-			// 1. Hardware Dispatch Latency (performance.now() vs event.timeStamp)
+			// 1. Hardware Dispatch Latency (authentic delta; never synthesize fake numbers)
 			if (e.timeStamp && dispatchLatEl) {
-				let lat = now - e.timeStamp;
-				if (lat < 0 || lat > 500) lat = 0.5 + Math.random() * 0.4;
-				dispatchLatEl.textContent = lat.toFixed(2);
+				const lat = now - e.timeStamp;
+				if (lat >= 0 && lat <= 500) {
+					dispatchLatEl.textContent = lat.toFixed(2);
+				} else {
+					dispatchLatEl.textContent = 'Clamped';
+				}
 			}
 
 			// 2. Switch Chatter / Rebound Bounce Monitor (<15ms repeat on same key)
@@ -649,7 +705,7 @@
 			}
 
 			// 4. Visual keycap activation
-			const keyEl = document.querySelector<HTMLElement>(`.keyboard-board [data-code="${code}"]`);
+			const keyEl = findKeyElement(code);
 			if (keyEl) {
 				keyEl.classList.add('key-pressed');
 				keyEl.classList.add('key-tested');
@@ -675,17 +731,59 @@
 		}
 
 		function handleKeyUp(e: KeyboardEvent) {
-			const code = e.code || e.key;
+			if (shouldIgnoreGlobalKeys(e.target)) return;
+			const code = e.code || resolveCodeFromKey(e.key);
+			if (!code) return;
+
+			// PrintScreen often fires keyup-only on Windows/Linux
+			if (code === 'PrintScreen' && !testedKeys.has(code)) {
+				testedKeys.add(code);
+				const prtEl = findKeyElement(code);
+				prtEl?.classList.add('key-tested');
+				updateMatrixCoverageUI();
+			}
+
 			activeKeys.delete(code);
 			keyReleaseTimes.set(code, performance.now());
 
-			const keyEl = document.querySelector<HTMLElement>(`.keyboard-board [data-code="${code}"]`);
+			const keyEl = findKeyElement(code);
 			if (keyEl) {
 				keyEl.classList.remove('key-pressed');
 			}
 
+			// On macOS, Cmd+Key suppresses the character key's keyup; release non-modifier keys when Meta lifts
+			if (code === 'MetaLeft' || code === 'MetaRight') {
+				activeKeys.forEach((k) => {
+					if (!k.startsWith('Meta') && !k.startsWith('Shift') && !k.startsWith('Control') && !k.startsWith('Alt')) {
+						activeKeys.delete(k);
+						findKeyElement(k)?.classList.remove('key-pressed');
+					}
+				});
+			}
+
 			updateLEDs(e);
 			updateRolloverUI();
+		}
+
+		// Mobile software keyboard IME input bridge (Android Chrome / iOS Safari often emit e.code === '')
+		if (mobileInput) {
+			mobileInput.addEventListener('beforeinput', (e: InputEvent) => {
+				if (e.inputType === 'deleteContentBackward') {
+					pulseVirtualCode('Backspace', 'Bksp');
+				} else if (e.inputType === 'insertLineBreak' || e.inputType === 'insertParagraph') {
+					pulseVirtualCode('Enter', 'Enter');
+				} else if (e.data && e.data.length > 0) {
+					const ch = e.data.slice(-1);
+					const code = resolveCodeFromKey(ch);
+					if (code) pulseVirtualCode(code, ch);
+				}
+			});
+			mobileInput.addEventListener('input', () => {
+				// Keep the mobile field clean without blocking IME composition
+				if (mobileInput.value.length > 16) {
+					mobileInput.value = '';
+				}
+			});
 		}
 
 		// Reset Button
@@ -737,6 +835,8 @@
 
 				if (evCodeEl) evCodeEl.textContent = code;
 				if (evKeyEl) evKeyEl.textContent = keyEl.querySelector('.k-label')?.textContent || code;
+				if (evWhichEl) evWhichEl.textContent = '--';
+				if (evModsEl) evModsEl.textContent = 'Touch / Click';
 				if (evTsEl) evTsEl.textContent = `+${performance.now().toFixed(1)} ms`;
 			});
 
@@ -827,24 +927,6 @@
 	.card-icon {
 		color: var(--accent);
 		flex-shrink: 0;
-	}
-
-	.card-header-wrap {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 0.8em;
-		padding-bottom: 0.8em;
-		margin-bottom: 0.8em;
-		border-bottom: 1.5px solid var(--border-color);
-	}
-
-	.header-actions {
-		display: flex;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 0.65em;
 	}
 
 	.telemetry-btn {
@@ -1363,6 +1445,22 @@
 	.mobile-type-field:focus {
 		border-color: var(--accent);
 		box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
+	}
+
+	.kb-scroll-cue {
+		display: none;
+		color: var(--accent-text);
+		font-weight: 600;
+	}
+	@media (max-width: 960px) {
+		.kb-scroll-cue {
+			display: inline;
+		}
+	}
+	@media (max-width: 768px) {
+		.mobile-type-field {
+			font-size: 16px;
+		}
 	}
 
 	/* EVENT INSPECTOR STRIP */

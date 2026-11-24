@@ -9,14 +9,25 @@ const BOT_UA_REGEX = /bot|spider|crawl|slurp|curl|wget|python|httpclient|postman
 // Baseline fallback count for local development when D1 is not bound
 const BASELINE_COUNT = 100;
 
-// Secret salt for one-way cryptographic hashing (rotates daily with the date)
-const SALT_SECRET = 'brob-salt-d1-850c6005';
+let tablesEnsured = false;
 
 function getDB(locals: any): D1Database | undefined {
 	try {
 		return (env as any)?.DB || (locals as any)?.cfContext?.env?.DB;
 	} catch (_) {
 		return (locals as any)?.cfContext?.env?.DB;
+	}
+}
+
+function getVisitorSalt(locals: any): string {
+	try {
+		return (
+			(env as any)?.VISITOR_SALT ||
+			(locals as any)?.cfContext?.env?.VISITOR_SALT ||
+			'brob-local-dev-salt'
+		);
+	} catch (_) {
+		return (locals as any)?.cfContext?.env?.VISITOR_SALT || 'brob-local-dev-salt';
 	}
 }
 
@@ -50,8 +61,8 @@ function isLikelyBot(request: Request, cf: any): boolean {
  * All raw connection headers are discarded immediately from volatile
  * RAM and are NEVER saved or logged to any database.
  */
-async function computeDailyHash(ip: string, ua: string, lang: string, day: string): Promise<string> {
-	const raw = `${ip}::${ua}::${lang}::${day}::${SALT_SECRET}`;
+async function computeDailyHash(ip: string, ua: string, lang: string, day: string, salt: string): Promise<string> {
+	const raw = `${ip}::${ua}::${lang}::${day}::${salt}`;
 	const msgBuffer = new TextEncoder().encode(raw);
 	const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
 	const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -59,6 +70,7 @@ async function computeDailyHash(ip: string, ua: string, lang: string, day: strin
 }
 
 async function ensureTables(db: D1Database): Promise<void> {
+	if (tablesEnsured) return;
 	await db.batch([
 		db.prepare(`
 			CREATE TABLE IF NOT EXISTS site_counter (
@@ -76,6 +88,7 @@ async function ensureTables(db: D1Database): Promise<void> {
 			CREATE INDEX IF NOT EXISTS idx_daily_visitors_day ON daily_visitors (day);
 		`),
 	]);
+	tablesEnsured = true;
 }
 
 // GET: Read current visitor count without incrementing
@@ -151,7 +164,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		const acceptLang = request.headers.get('accept-language')?.split(',')[0].trim() || '';
 
 		const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
-		const dailyHash = await computeDailyHash(clientIp, userAgent, acceptLang, today);
+		const dailyHash = await computeDailyHash(clientIp, userAgent, acceptLang, today, getVisitorSalt(locals));
 
 		// 2. Attempt to register the daily hash.
 		// If changes === 1, this visitor is brand new for today.
@@ -163,17 +176,23 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		let count: number;
 
 		if (insertResult.meta?.changes && insertResult.meta.changes > 0) {
-			// Brand new unique human visit today -> atomic counter increment
+			// Brand new unique human visit today -> atomic counter increment (seed from BASELINE_COUNT + 1 on fresh DB)
 			const result = await db.prepare(
-				`INSERT INTO site_counter (id, count) VALUES ('visitors', 1)
+				`INSERT INTO site_counter (id, count) VALUES ('visitors', ?1)
 				 ON CONFLICT(id) DO UPDATE SET count = count + 1
 				 RETURNING count;`
-			).first<{ count: number }>();
+			).bind(BASELINE_COUNT + 1).first<{ count: number }>();
 
 			count = result?.count ?? BASELINE_COUNT;
 
 			// Purge previous calendar days' deduplication hashes upon UTC midnight rollover
-			db.prepare(`DELETE FROM daily_visitors WHERE day < ?1;`).bind(today).run().catch(() => {});
+			const purgePromise = db.prepare(`DELETE FROM daily_visitors WHERE day < ?1;`).bind(today).run().catch(() => {});
+			const ctx = (locals as any)?.cfContext?.ctx;
+			if (ctx && typeof ctx.waitUntil === 'function') {
+				ctx.waitUntil(purgePromise);
+			} else {
+				await purgePromise;
+			}
 		} else {
 			// Already counted today -> read current count without incrementing
 			const row = await db.prepare(`SELECT count FROM site_counter WHERE id = 'visitors'`).first<{ count: number }>();

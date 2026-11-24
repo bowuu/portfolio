@@ -1,10 +1,6 @@
 ---
-// EasterEggs.astro - Hardware & Silicon Validation Interactive Easter Eggs
-// 1. 3D Viewport Parallax Hologram Tilt (perspective matrix tracking cursor/orientation)
-// 2. Chief Morale Officer "Boop the Dog" (+10 dBm RF Telemetry & Mascot Animation)
-// 3. Procedural Mechanical Switch Synthesizer (pure Web Audio API acoustics: Blue / Red / Model M)
-// 4. 300mm ATE Silicon Wafer Die Sort Map (Reticle-Limit Massive Enterprise Die Architecture)
-// 5. Zero-G Verlet Physics Element Collapse (pure vanilla physics, non-destructive GPU transforms)
+// EasterEggs.astro - Hardware & Silicon Validation Interactive Lab Extras
+// Logic modularized into ../lib/easterEggs.ts
 ---
 
 <div id="easter-eggs-container">
@@ -21,7 +17,6 @@
 		<button id="tilt-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
 	</div>
 
-	<!-- CRT BENCH OSCILLOSCOPE DEGAUSS HUD & CANVAS -->
 	<div id="degauss-hud" class="ee-hud degauss-hud hidden" style="display: none;">
 		<span class="hud-pulse-dot"></span>
 		<span class="hud-title">⚡ CRT BENCH DEGAUSS ▪ ELECTROMAGNETIC PULSE</span>
@@ -30,7 +25,6 @@
 	</div>
 	<canvas id="degauss-canvas" class="ee-canvas hidden" aria-hidden="true" style="display: none;"></canvas>
 
-	<!-- 3D SILICON CYCLONE SPHERE HUD & 3D CORE -->
 	<div id="sphere-hud" class="ee-hud sphere-hud hidden" style="display: none;">
 		<span class="hud-pulse-dot"></span>
 		<span class="hud-title">🪐 3D SILICON CYCLONE ▪ DRAG TO ROTATE ▪ HOVER TO INSPECT</span>
@@ -48,24 +42,26 @@
 		</div>
 	</div>
 
-	<!-- QUANTUM TUNNELING DISINTEGRATION HUD & CANVAS -->
 	<div id="quantum-hud" class="ee-hud quantum-hud hidden" style="display: none;">
 		<span class="hud-pulse-dot"></span>
-		<span class="hud-title">💨 QUANTUM TUNNELING ▪ CLICK ANY BOX TO DISSOLVE ▪ DRAG TO SWIRL DUST</span>
-		<button id="quantum-all-btn" type="button" class="ee-hud-btn">Dissolve All</button>
-		<button id="quantum-reassemble-btn" type="button" class="ee-hud-btn">Quantum Anneal (Restore All)</button>
-		<button id="quantum-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
+		<span class="hud-title">💨 QUANTUM TUNNELING ▪ TAP BOXES TO DISSOLVE ▪ DRAG TO SWIRL</span>
+		<div class="hud-actions-row">
+			<button id="quantum-all-btn" type="button" class="ee-hud-btn">Dissolve All</button>
+			<button id="quantum-reassemble-btn" type="button" class="ee-hud-btn">Quantum Anneal</button>
+			<button id="quantum-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
+		</div>
 	</div>
 	<canvas id="quantum-canvas" class="ee-canvas hidden" aria-hidden="true" style="display: none;"></canvas>
 
-	<!-- INFRARED THERMAL CAMERA HUD, CANVAS & SCALE -->
 	<div id="thermal-hud" class="ee-hud thermal-hud hidden" style="display: none;">
 		<div class="thermal-hud-inner">
 			<span class="hud-pulse-dot"></span>
 			<span class="hud-title">🌡️ THERMAL CAM ▪ <span id="thermal-tool-text">TOOL: LN2 CRYO-SPRAY (-196°C)</span></span>
-			<button id="thermal-tool-btn" type="button" class="ee-hud-btn">Switch to Heat Gun (450°C)</button>
-			<button id="thermal-reset-btn" type="button" class="ee-hud-btn">Normalize (24°C)</button>
-			<button id="thermal-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
+			<div class="hud-actions-row">
+				<button id="thermal-tool-btn" type="button" class="ee-hud-btn">Switch to Heat Gun (450°C)</button>
+				<button id="thermal-reset-btn" type="button" class="ee-hud-btn">Normalize (24°C)</button>
+				<button id="thermal-exit-btn" type="button" class="ee-hud-btn">Exit (Esc)</button>
+			</div>
 		</div>
 	</div>
 	<div id="thermal-scale-bar" class="thermal-scale-bar hidden" aria-hidden="true" style="display: none;">
@@ -94,10 +90,8 @@
 	</div>
 	<canvas id="thermal-canvas" class="ee-canvas hidden" aria-hidden="true" style="display: none;"></canvas>
 
-
-
-	<!-- 300MM SILICON WAFER DIE SORT MODAL (RETICLE-LIMIT ENTERPRISE DIE) -->
-	<div id="wafer-modal" class="wafer-modal hidden" inert role="dialog" aria-modal="true" aria-label="300mm Silicon Wafer Sort Inspector" style="display: none;">
+	<!-- 300MM SILICON WAFER DIE SORT MODAL -->
+	<div id="wafer-modal" class="wafer-modal hidden" aria-hidden="true" inert role="dialog" aria-modal="true" aria-label="300mm Silicon Wafer Sort Inspector" style="display: none;">
 		<div class="wafer-backdrop" id="wafer-backdrop"></div>
 		<div class="wafer-dialog">
 			<div class="wafer-modal-header">
@@ -118,7 +112,6 @@
 				</div>
 
 				<div class="wafer-telemetry-panel">
-					<!-- YIELD SUMMARY -->
 					<div class="wafer-telemetry-box">
 						<span class="w-box-title">Functional Die Yield</span>
 						<div class="w-yield-display">
@@ -130,7 +123,6 @@
 						</div>
 					</div>
 
-					<!-- ACTIVE DIE PROBE READOUT (CONCISE, FIXED HEIGHTS, ZERO JITTER) -->
 					<div class="wafer-telemetry-box">
 						<span class="w-box-title">Active Die Probe Telemetry</span>
 						<div class="wafer-probe-grid mono" id="wafer-probe-grid">
@@ -145,17 +137,15 @@
 						</div>
 					</div>
 
-					<!-- BIN DISTRIBUTION LEGEND -->
 					<div class="wafer-legend">
 						<div class="legend-item"><span class="leg-color bin1"></span><span id="leg-bin1-text">Perfect (Bin 1): 46 (55.4%) ▪ All Cores</span></div>
 						<div class="legend-item"><span class="leg-color bin2"></span><span id="leg-bin2-text">Defeatured (Bin 2): 27 (32.5%) ▪ Harvest</span></div>
 						<div class="legend-item"><span class="leg-color binx"></span><span id="leg-binx-text">Fallout (Reject): 10 (12.1%) ▪ Defect</span></div>
 					</div>
 
-					<!-- ACTIONS -->
 					<div class="wafer-actions">
 						<button id="wafer-scan-btn" type="button" class="wafer-btn primary" title="Randomize wafer defects & run ATE probe sweep">
-							<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+							<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
 							<span>Run ATE Pogo Probe Scan</span>
 						</button>
 						<button id="wafer-random-btn" type="button" class="wafer-btn">
@@ -167,8 +157,8 @@
 		</div>
 	</div>
 
-	<!-- 8x8 BIT CARRY-SAVE ARRAY MULTIPLIER MODAL (CADENCE VIRTUOSO ARCHITECTURE) -->
-	<div id="multiplier-modal" class="wafer-modal hidden" inert role="dialog" aria-modal="true" aria-label="8x8 Bit Carry-Save Array Multiplier" style="display: none;">
+	<!-- 8x8 BIT CARRY-SAVE ARRAY MULTIPLIER MODAL -->
+	<div id="multiplier-modal" class="wafer-modal hidden" aria-hidden="true" inert role="dialog" aria-modal="true" aria-label="8x8 Bit Carry-Save Array Multiplier" style="display: none;">
 		<div class="wafer-backdrop" id="multiplier-backdrop"></div>
 		<div class="wafer-dialog mult-dialog">
 			<div class="wafer-modal-header">
@@ -180,7 +170,7 @@
 				</div>
 				<div class="mult-header-actions">
 					<a href="https://github.com/bowuu/8x8-Multiplier" target="_blank" rel="noopener noreferrer" class="mult-gh-link mono" title="View 8x8 Multiplier on GitHub">
-						<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+						<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
 						<span>bowuu/8x8-Multiplier</span>
 					</a>
 					<button id="multiplier-close-btn" class="wafer-close-btn" type="button" aria-label="Close Multiplier">&times;</button>
@@ -188,10 +178,8 @@
 			</div>
 
 			<div class="mult-body">
-				<!-- INPUT REGISTERS & PRESETS -->
 				<div class="mult-inputs-card">
 					<div class="mult-registers-grid">
-						<!-- MULTIPLICAND X [7:0] -->
 						<div class="mult-reg-box">
 							<div class="mult-reg-header mono">
 								<span class="reg-title">MULTIPLICAND X [7:0]</span>
@@ -199,10 +187,7 @@
 							</div>
 							<div class="mult-cols-row mono" id="mult-x-bits"></div>
 						</div>
-
 						<div class="mult-op-badge mono">&times;</div>
-
-						<!-- MULTIPLIER Y [7:0] -->
 						<div class="mult-reg-box">
 							<div class="mult-reg-header mono">
 								<span class="reg-title">MULTIPLIER Y [7:0]</span>
@@ -223,7 +208,6 @@
 					</div>
 				</div>
 
-				<!-- SCHEMATIC VIEWPORT -->
 				<div class="mult-schematic-card">
 					<div class="mult-schematic-header mono">
 						<div class="mult-schematic-controls">
@@ -240,16 +224,13 @@
 						</div>
 					</div>
 					<div class="mult-svg-scroll-wrap" id="mult-svg-wrap">
-						<svg id="mult-schematic-svg" class="mult-schematic-svg" viewBox="0 0 990 510" preserveAspectRatio="xMidYMid meet">
-							<!-- Rendered dynamically via JS for 100% reactive state updates -->
-						</svg>
+						<svg id="mult-schematic-svg" class="mult-schematic-svg" viewBox="0 0 990 510" preserveAspectRatio="xMidYMid meet"></svg>
 					</div>
 					<div class="mult-cell-tooltip mono" id="mult-cell-info">
 						Hover or tap any cell F or wire to inspect Boolean logic, partial products, sum, and carry propagation.
 					</div>
 				</div>
 
-				<!-- 16-BIT PRODUCT OUTPUT REGISTER -->
 				<div class="mult-output-card">
 					<div class="mult-output-header mono">
 						<span class="mult-product-title">16-BIT PRODUCT OUTPUT REGISTER P [15:0]</span>
@@ -265,11 +246,11 @@
 		</div>
 	</div>
 
-	<!-- LAB EXTRAS DRAWER / POPOVER (SORTED ALPHABETICALLY A-Z) -->
-	<div id="lab-extras-modal" class="lab-extras-modal hidden" inert role="dialog" aria-modal="false" aria-label="Hardware Lab Easter Eggs" style="display: none;">
+	<!-- LAB EXTRAS DRAWER (SORTED ALPHABETICALLY A-Z) -->
+	<div id="lab-extras-modal" class="lab-extras-modal hidden" aria-hidden="true" inert role="dialog" aria-modal="false" aria-label="Hardware Lab Easter Eggs" style="display: none;">
 		<div class="extras-header">
 			<div class="extras-title">
-				<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 					<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
 				</svg>
 				<span>Hardware Lab Extras</span>
@@ -277,9 +258,8 @@
 			<button id="extras-close-btn" type="button" class="extras-close-btn" aria-label="Close Extras Drawer">&times;</button>
 		</div>
 		<div class="extras-grid">
-			<!-- 1. 3D Cyclone (3) -->
-			<button id="trigger-sphere-btn" class="extra-item-btn" type="button" title="3D Silicon Cyclone (Google Sphere Tribute)">
-				<span class="item-icon">🌪️</span>
+			<button id="trigger-sphere-btn" class="extra-item-btn" type="button" title="3D Silicon Cyclone">
+				<span class="item-icon" aria-hidden="true">🌪️</span>
 				<div class="item-meta">
 					<strong class="item-name">3D Cyclone</strong>
 					<span class="item-desc">Orbital 3D spherical cage around silicon die</span>
@@ -287,9 +267,8 @@
 				<kbd class="item-kbd">cyclone</kbd>
 			</button>
 
-			<!-- 2. 3D Tilt (3) -->
 			<button id="trigger-tilt-btn" class="extra-item-btn" type="button" title="3D Viewport Parallax Hologram Tilt">
-				<span class="item-icon">📐</span>
+				<span class="item-icon" aria-hidden="true">📐</span>
 				<div class="item-meta">
 					<strong class="item-name">3D Tilt</strong>
 					<span class="item-desc">Parallax hologram perspective depth</span>
@@ -297,9 +276,8 @@
 				<kbd class="item-kbd">Ctrl+Alt+H</kbd>
 			</button>
 
-			<!-- 3. 8x8 Multiplier (8) -->
-			<button id="trigger-multiplier-btn" class="extra-item-btn" type="button" title="8×8-Bit Carry-Save Array Multiplier (Cadence Virtuoso VLSI)">
-				<span class="item-icon">⚡</span>
+			<button id="trigger-multiplier-btn" class="extra-item-btn" type="button" title="8×8-Bit Carry-Save Array Multiplier">
+				<span class="item-icon" aria-hidden="true">⚡</span>
 				<div class="item-meta">
 					<strong class="item-name">8x8 Multiplier</strong>
 					<span class="item-desc">Braun carry-save array &amp; vector merge</span>
@@ -307,9 +285,8 @@
 				<kbd class="item-kbd">multiplier</kbd>
 			</button>
 
-			<!-- 4. Chief Morale Officer (C) -->
-			<button id="trigger-boop-btn" class="extra-item-btn" type="button" title="Boop Chief Morale Officer (She is a good girl!)">
-				<span class="item-icon">🐾</span>
+			<button id="trigger-boop-btn" class="extra-item-btn" type="button" title="Boop Chief Morale Officer">
+				<span class="item-icon" aria-hidden="true">🐾</span>
 				<div class="item-meta">
 					<strong class="item-name">Chief Morale Officer</strong>
 					<span class="item-desc">Bin CMO silicon from standard to golden sample</span>
@@ -317,9 +294,8 @@
 				<kbd class="item-kbd">boop</kbd>
 			</button>
 
-			<!-- 4. CRT Degauss (C) -->
 			<button id="trigger-degauss-btn" class="extra-item-btn" type="button" title="CRT Oscilloscope Electromagnetic Degauss Pulse">
-				<span class="item-icon">⚡</span>
+				<span class="item-icon" aria-hidden="true">⚡</span>
 				<div class="item-meta">
 					<strong class="item-name">CRT Degauss</strong>
 					<span class="item-desc">Electromagnetic coil warp &amp; phosphor pulse</span>
@@ -327,19 +303,17 @@
 				<kbd class="item-kbd">degauss</kbd>
 			</button>
 
-			<!-- 5. Quantum Tunneling (Q) -->
 			<button id="trigger-quantum-btn" class="extra-item-btn" type="button" title="Quantum Tunneling Particle Disintegration">
-				<span class="item-icon">💨</span>
+				<span class="item-icon" aria-hidden="true">💨</span>
 				<div class="item-meta">
 					<strong class="item-name">Quantum Tunneling</strong>
-					<span class="item-desc">Click boxes to dissolve into silicon dust</span>
+					<span class="item-desc">Tap boxes to dissolve into silicon dust</span>
 				</div>
 				<kbd class="item-kbd">dissolve</kbd>
 			</button>
 
-			<!-- 6. Thermal Cam (T) -->
-			<button id="trigger-thermal-btn" class="extra-item-btn" type="button" title="Infrared Thermal Camera &amp; LN2 Cryo-Blast">
-				<span class="item-icon">🌡️</span>
+			<button id="trigger-thermal-btn" class="extra-item-btn" type="button" title="Infrared Thermal Camera & LN2 Cryo-Blast">
+				<span class="item-icon" aria-hidden="true">🌡️</span>
 				<div class="item-meta">
 					<strong class="item-name">Thermal Cam</strong>
 					<span class="item-desc">Infrared thermography, LN2 cryo &amp; heat gun</span>
@@ -347,9 +321,8 @@
 				<kbd class="item-kbd">thermal</kbd>
 			</button>
 
-			<!-- 8. Wafer Sort Map (W) -->
-			<button id="trigger-wafer-btn" class="extra-item-btn" type="button" title="300mm Silicon Wafer Sort Map (Near Reticle Limit)">
-				<span class="item-icon">🔬</span>
+			<button id="trigger-wafer-btn" class="extra-item-btn" type="button" title="300mm Silicon Wafer Sort Map">
+				<span class="item-icon" aria-hidden="true">🔬</span>
 				<div class="item-meta">
 					<strong class="item-name">Wafer Sort Map</strong>
 					<span class="item-desc">300mm reticle-limit enterprise die sort</span>
@@ -357,9 +330,8 @@
 				<kbd class="item-kbd">wafer -g</kbd>
 			</button>
 
-			<!-- 9. Zero-G Drop (Z) -->
 			<button id="trigger-zerog-btn" class="extra-item-btn" type="button" title="Zero-G Physics Collapse">
-				<span class="item-icon">🪐</span>
+				<span class="item-icon" aria-hidden="true">🪐</span>
 				<div class="item-meta">
 					<strong class="item-name">Zero-G Drop</strong>
 					<span class="item-desc">Verlet physics element collapse &amp; fling</span>
@@ -374,3326 +346,17 @@
 </div>
 
 <script>
-	// -------------------------------------------------------------
-	// HARDWARE LAB EXTRAS AUDIO SYNTHESIZER
-	// -------------------------------------------------------------
-	class ExtrasAudioEngine {
-		private ctx: AudioContext | null = null;
-		private masterFilter: BiquadFilterNode | null = null;
-		private masterCompressor: DynamicsCompressorNode | null = null;
-		private masterGain: GainNode | null = null;
-		private thermalSpraySource: AudioBufferSourceNode | null = null;
-		private thermalSprayFilter: BiquadFilterNode | null = null;
-		private thermalSprayGain: GainNode | null = null;
-		private thermalNoiseBuffer: AudioBuffer | null = null;
+	import { initAllEasterEggs } from '../lib/easterEggs';
 
-		constructor() {}
-
-		private init() {
-			if (!this.ctx) {
-				const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-				if (AudioCtx) {
-					this.ctx = new AudioCtx();
-
-					this.masterFilter = this.ctx.createBiquadFilter();
-					this.masterFilter.type = 'lowpass';
-					this.masterFilter.frequency.setValueAtTime(8000, this.ctx.currentTime);
-					this.masterFilter.Q.setValueAtTime(0.7, this.ctx.currentTime);
-
-					this.masterCompressor = this.ctx.createDynamicsCompressor();
-					this.masterCompressor.threshold.setValueAtTime(-14, this.ctx.currentTime);
-					this.masterCompressor.knee.setValueAtTime(24, this.ctx.currentTime);
-					this.masterCompressor.ratio.setValueAtTime(5, this.ctx.currentTime);
-					this.masterCompressor.attack.setValueAtTime(0.002, this.ctx.currentTime);
-					this.masterCompressor.release.setValueAtTime(0.05, this.ctx.currentTime);
-
-					this.masterGain = this.ctx.createGain();
-					this.masterGain.gain.setValueAtTime(0.85, this.ctx.currentTime);
-
-					this.masterFilter.connect(this.masterCompressor);
-					this.masterCompressor.connect(this.masterGain);
-					this.masterGain.connect(this.ctx.destination);
-				}
-			}
-			if (this.ctx && this.ctx.state === 'suspended') {
-				this.ctx.resume().catch(() => {});
-			}
-		}
-
-		public playProbeTick() {
-			if (!this.ctx) return;
-			const t = this.ctx.currentTime;
-			this.playPlasticClack(t, 2200 + Math.random() * 300, 3.5, 0.008, 0.06);
-		}
-
-		// Modal physical acoustic synthesis: high-resolution shaped plastic/metal impact clack
-		private playPlasticClack(time: number, freq: number, Q: number, dur: number, vol: number) {
-			if (!this.ctx) return;
-			const sampleRate = this.ctx.sampleRate;
-			const bufferSize = Math.max(32, Math.floor(sampleRate * Math.min(dur, 0.03)));
-			const buffer = this.ctx.createBuffer(1, bufferSize, sampleRate);
-			const data = buffer.getChannelData(0);
-			for (let i = 0; i < bufferSize; i++) {
-				data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.22));
-			}
-
-			const source = this.ctx.createBufferSource();
-			source.buffer = buffer;
-
-			const filter = this.ctx.createBiquadFilter();
-			filter.type = 'bandpass';
-			filter.frequency.setValueAtTime(Math.max(40, Math.min(18000, freq)), time);
-			filter.Q.setValueAtTime(Q, time);
-
-			const gain = this.ctx.createGain();
-			gain.gain.setValueAtTime(vol, time);
-			gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-
-			source.connect(filter);
-			filter.connect(gain);
-			gain.connect(this.masterFilter || this.ctx.destination);
-
-			source.start(time);
-			source.stop(time + dur);
-		}
-
-		private playThump(time: number, startFreq: number, endFreq: number, dur: number, vol: number) {
-			if (!this.ctx) return;
-			const osc = this.ctx.createOscillator();
-			const gain = this.ctx.createGain();
-
-			osc.type = 'triangle';
-			osc.frequency.setValueAtTime(startFreq, time);
-			osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), time + dur);
-
-			gain.gain.setValueAtTime(vol, time);
-			gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-
-			osc.connect(gain);
-			gain.connect(this.ctx.destination);
-			osc.start(time);
-			osc.stop(time + dur);
-		}
-
-		private playTone(time: number, freq: number, type: OscillatorType, dur: number, vol: number) {
-			if (!this.ctx) return;
-			const osc = this.ctx.createOscillator();
-			const gain = this.ctx.createGain();
-			osc.type = type;
-			osc.frequency.setValueAtTime(freq, time);
-
-			gain.gain.setValueAtTime(vol, time);
-			gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-
-			osc.connect(gain);
-			gain.connect(this.ctx.destination);
-			osc.start(time);
-			osc.stop(time + dur);
-		}
-
-		private playImpulse(time: number, centerFreq: number, dur: number, vol: number) {
-			if (!this.ctx) return;
-			const bufferSize = Math.max(1, Math.floor(this.ctx.sampleRate * dur));
-			const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-			const data = buffer.getChannelData(0);
-			for (let i = 0; i < bufferSize; i++) {
-				data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.35));
-			}
-
-			const source = this.ctx.createBufferSource();
-			source.buffer = buffer;
-
-			const filter = this.ctx.createBiquadFilter();
-			filter.type = 'bandpass';
-			filter.frequency.setValueAtTime(centerFreq, time);
-			filter.Q.setValueAtTime(2.5, time);
-
-			const gain = this.ctx.createGain();
-			gain.gain.setValueAtTime(vol, time);
-			gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-
-			source.connect(filter);
-			filter.connect(gain);
-			gain.connect(this.ctx.destination);
-			source.start(time);
-			source.stop(time + dur);
-		}
-
-		// CRT Degauss electromagnetic coil sweep & relay click
-		public playDegauss() {
-			try {
-				this.init();
-				if (!this.ctx) return;
-				const t = this.ctx.currentTime;
-
-				// 1. Initial High-Energy Inductive Thump / Coil Charging Kick
-				const kickOsc = this.ctx.createOscillator();
-				const kickGain = this.ctx.createGain();
-				kickOsc.type = 'sine';
-				kickOsc.frequency.setValueAtTime(54, t);
-				kickOsc.frequency.exponentialRampToValueAtTime(28, t + 0.12);
-				kickGain.gain.setValueAtTime(0.35, t);
-				kickGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
-				kickOsc.connect(kickGain);
-				kickGain.connect(this.ctx.destination);
-				kickOsc.start(t);
-				kickOsc.stop(t + 0.15);
-
-				// 2. Heavy 60Hz Magnetic Coil Transformer Hum & Power Harmonics
-				const coilOsc1 = this.ctx.createOscillator();
-				const coilOsc2 = this.ctx.createOscillator();
-				const coilGain = this.ctx.createGain();
-				const coilFilter = this.ctx.createBiquadFilter();
-
-				// Fundamental 60Hz + slight thermal frequency sag (62Hz -> 58Hz)
-				coilOsc1.type = 'sawtooth';
-				coilOsc1.frequency.setValueAtTime(62, t);
-				coilOsc1.frequency.linearRampToValueAtTime(58, t + 1.4);
-
-				// 120Hz 2nd harmonic for rich transformer buzz
-				coilOsc2.type = 'sawtooth';
-				coilOsc2.frequency.setValueAtTime(124, t);
-				coilOsc2.frequency.linearRampToValueAtTime(116, t + 1.4);
-
-				// Resonant lowpass filter simulating chassis enclosure
-				coilFilter.type = 'lowpass';
-				coilFilter.frequency.setValueAtTime(450, t);
-				coilFilter.frequency.exponentialRampToValueAtTime(85, t + 1.4);
-				coilFilter.Q.setValueAtTime(2.2, t);
-
-				// PTC Thermistor Envelope: violent onset, short hold, exponential thermal decay
-				coilGain.gain.setValueAtTime(0.02, t);
-				coilGain.gain.linearRampToValueAtTime(0.32, t + 0.04);
-				coilGain.gain.setValueAtTime(0.30, t + 0.18);
-				coilGain.gain.exponentialRampToValueAtTime(0.0001, t + 1.42);
-
-				coilOsc1.connect(coilFilter);
-				coilOsc2.connect(coilFilter);
-				coilFilter.connect(coilGain);
-				coilGain.connect(this.ctx.destination);
-
-				coilOsc1.start(t);
-				coilOsc2.start(t);
-				coilOsc1.stop(t + 1.44);
-				coilOsc2.stop(t + 1.44);
-
-				// 3. Dual-Contact Mechanical Relay Opening Click-Clack at ~1.42s
-				setTimeout(() => {
-					if (!this.ctx) return;
-					const rt = this.ctx.currentTime;
-					// Contact 1: high-voltage spark & leaf snap
-					this.playImpulse(rt, 3200, 0.004, 0.22);
-					this.playTone(rt, 1450, 'triangle', 0.010, 0.12);
-					// Contact 2: mechanical armature bounce (14ms later)
-					setTimeout(() => {
-						if (!this.ctx) return;
-						const rt2 = this.ctx.currentTime;
-						this.playImpulse(rt2, 2100, 0.005, 0.16);
-						this.playTone(rt2, 820, 'square', 0.014, 0.10);
-					}, 14);
-				}, 1420);
-			} catch {}
-		}
-
-		// Zero-allocation continuous thermal spray audio engine (no GC thrashing)
-		private getThermalNoiseBuffer(): AudioBuffer | null {
-			if (this.thermalNoiseBuffer) return this.thermalNoiseBuffer;
-			if (!this.ctx) return null;
-			// 1.5 seconds of looping pink-weighted noise
-			const size = Math.floor(this.ctx.sampleRate * 1.5);
-			const buf = this.ctx.createBuffer(1, size, this.ctx.sampleRate);
-			const data = buf.getChannelData(0);
-			let b0 = 0, b1 = 0, b2 = 0;
-			for (let i = 0; i < size; i++) {
-				const white = Math.random() * 2 - 1;
-				b0 = 0.99886 * b0 + white * 0.0555179;
-				b1 = 0.99332 * b1 + white * 0.0750759;
-				b2 = 0.96900 * b2 + white * 0.1538520;
-				data[i] = (b0 + b1 + b2 + white * 0.5362) * 0.18;
-			}
-			this.thermalNoiseBuffer = buf;
-			return buf;
-		}
-
-		public startThermalSpray(mode: 'cryo' | 'heatgun') {
-			try {
-				this.init();
-				if (!this.ctx) return;
-				const t = this.ctx.currentTime;
-				const buf = this.getThermalNoiseBuffer();
-				if (!buf) return;
-
-				if (!this.thermalSpraySource) {
-					this.thermalSpraySource = this.ctx.createBufferSource();
-					this.thermalSpraySource.buffer = buf;
-					this.thermalSpraySource.loop = true;
-
-					this.thermalSprayFilter = this.ctx.createBiquadFilter();
-					this.thermalSprayGain = this.ctx.createGain();
-					this.thermalSprayGain.gain.setValueAtTime(0.0001, t);
-
-					this.thermalSpraySource.connect(this.thermalSprayFilter);
-					this.thermalSprayFilter.connect(this.thermalSprayGain);
-					this.thermalSprayGain.connect(this.ctx.destination);
-					this.thermalSpraySource.start(t);
-				}
-
-				if (this.thermalSprayFilter && this.thermalSprayGain) {
-					if (mode === 'cryo') {
-						this.thermalSprayFilter.type = 'bandpass';
-						this.thermalSprayFilter.frequency.setTargetAtTime(3400, t, 0.02);
-						this.thermalSprayFilter.Q.setTargetAtTime(1.6, t, 0.02);
-						this.thermalSprayGain.gain.setTargetAtTime(0.08, t, 0.03);
-					} else {
-						this.thermalSprayFilter.type = 'lowpass';
-						this.thermalSprayFilter.frequency.setTargetAtTime(320, t, 0.02);
-						this.thermalSprayFilter.Q.setTargetAtTime(2.4, t, 0.02);
-						this.thermalSprayGain.gain.setTargetAtTime(0.12, t, 0.03);
-					}
-				}
-			} catch {}
-		}
-
-		public stopThermalSpray() {
-			try {
-				if (!this.ctx || !this.thermalSprayGain) return;
-				const t = this.ctx.currentTime;
-				this.thermalSprayGain.gain.setTargetAtTime(0.0001, t, 0.04);
-			} catch {}
-		}
-
-		// Quantum Tunneling disintegrate chime sweep
-		public playQuantumDisintegrate() {
-			try {
-				this.init();
-				if (!this.ctx) return;
-				const t = this.ctx.currentTime;
-				this.playImpulse(t, 2400, 0.04, 0.18);
-				const freqs = [880, 1174, 1567, 2093, 2793];
-				freqs.forEach((f, idx) => {
-					this.playTone(t + idx * 0.06, f, 'sine', 0.25, 0.08);
-				});
-			} catch {}
-		}
-
-		// Laser Cutting Hum & Arc
-		public playLaserCut() {
-			try {
-				this.init();
-				if (!this.ctx) return;
-				const t = this.ctx.currentTime;
-				const osc = this.ctx.createOscillator();
-				const gain = this.ctx.createGain();
-				osc.type = 'sawtooth';
-				osc.frequency.setValueAtTime(2800, t);
-				osc.frequency.exponentialRampToValueAtTime(800, t + 0.35);
-				gain.gain.setValueAtTime(0.12, t);
-				gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
-				osc.connect(gain);
-				gain.connect(this.ctx.destination);
-				osc.start(t);
-				osc.stop(t + 0.35);
-				this.playImpulse(t + 0.05, 3400, 0.03, 0.15);
-			} catch {}
-		}
-
-		// Laser Plasma Sinter Weld
-		public playLaserWeld() {
-			try {
-				this.init();
-				if (!this.ctx) return;
-				const t = this.ctx.currentTime;
-				this.playImpulse(t, 1400, 0.08, 0.25);
-				this.playTone(t + 0.02, 440, 'triangle', 0.18, 0.15);
-			} catch {}
-		}
-
-		// Cryo spray hiss burst
-		public playCryoHiss() {
-			try {
-				this.init();
-				if (!this.ctx) return;
-				this.playImpulse(this.ctx.currentTime, 3200, 0.06, 0.08);
-			} catch {}
-		}
-
-		// Heat gun roar burst
-		public playHeatRoar() {
-			try {
-				this.init();
-				if (!this.ctx) return;
-				this.playThump(this.ctx.currentTime, 160, 110, 0.08, 0.10);
-			} catch {}
-		}
-
-		// 8x8 Multiplier bit toggle click
-		public playBitClick(isHigh: boolean) {
-			try {
-				this.init();
-				if (!this.ctx) return;
-				const t = this.ctx.currentTime;
-				const freq = isHigh ? 2200 : 1400;
-				this.playTone(t, freq, 'sine', 0.022, 0.07);
-				this.playImpulse(t, 2800, 0.004, 0.05);
-			} catch {}
-		}
-
-		// 8x8 Multiplier vector compute chime (ascending arpeggio)
-		public playMultiplierChime() {
-			try {
-				this.init();
-				if (!this.ctx) return;
-				const t = this.ctx.currentTime;
-				const notes = [523.25, 659.25, 783.99, 1046.5];
-				notes.forEach((f, i) => {
-					this.playTone(t + i * 0.035, f, 'sine', 0.11, 0.06);
-				});
-			} catch {}
-		}
-
-		// 8x8 Multiplier combinational stage cascade step
-		public playCascadeStep(step: number, total: number = 9) {
-			try {
-				this.init();
-				if (!this.ctx) return;
-				const t = this.ctx.currentTime;
-				const freq = 340 + (step / total) * 440;
-				this.playTone(t, freq, 'sine', 0.035, 0.045);
-				this.playImpulse(t, freq * 2, 0.003, 0.03);
-			} catch {}
-		}
-	}
-
-	const audioEngine = new ExtrasAudioEngine();
-
-	// -------------------------------------------------------------
-	// CHIEF MORALE OFFICER: SILICON LOTTERY BINNING LADDER (6.0 GHz)
-	// -------------------------------------------------------------
-	function initDogBoop() {
-		const avatarImg = document.getElementById('hero-avatar-img') || document.querySelector('.hero .avatar-img');
-		const avatarWrap = document.getElementById('hero-avatar-wrap') || document.querySelector('.hero .avatar-wrap');
-		if (!avatarImg || !avatarWrap) return;
-
-		let streak = 0;
-		let streakTimer = 0;
-
-		const binReadouts = [
-			'🐾 Standard Bin 3: 1.80 GHz @ 0.75V',
-			'🐾 Mainstream Bin 2: 3.20 GHz @ 0.90V',
-			'🐾 Premium Bin 1: 4.40 GHz @ 1.10V',
-			'🐾 Golden Die: 5.20 GHz @ 1.25V (Top 1%)',
-			'🐾 Golden Sample: 6.00 GHz (Good Girl! 🐾)'
-		];
-
-		let dogAudioCtx: AudioContext | null = null;
-		function playDogChime(step: number) {
-			try {
-				const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-				if (!AudioCtx) return;
-				if (!dogAudioCtx) {
-					dogAudioCtx = new AudioCtx();
-				}
-				if (dogAudioCtx.state === 'suspended') {
-					dogAudioCtx.resume().catch(() => {});
-				}
-				const ctx = dogAudioCtx;
-				const t = ctx.currentTime;
-				const notes = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
-				const baseFreq = notes[Math.min(step, notes.length - 1)];
-
-				const osc = ctx.createOscillator();
-				const gain = ctx.createGain();
-				osc.type = 'sine';
-				osc.frequency.setValueAtTime(baseFreq, t);
-				osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.35, t + 0.12);
-
-				gain.gain.setValueAtTime(0.18, t);
-				gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-
-				osc.connect(gain);
-				gain.connect(ctx.destination);
-				osc.start(t);
-				osc.stop(t + 0.22);
-			} catch {}
-		}
-
-		function triggerBoop() {
-			streak++;
-			window.clearTimeout(streakTimer);
-			streakTimer = window.setTimeout(() => { streak = 0; }, 3500);
-
-			playDogChime(streak);
-
-			avatarImg.classList.remove('booped');
-			void (avatarImg as HTMLElement).offsetWidth;
-			avatarImg.classList.add('booped');
-
-			const pill = document.createElement('div');
-			const tier = Math.min(streak, 5);
-			pill.className = `morale-boost-pill mono bin-tier-${tier}`;
-			const text = binReadouts[Math.min(streak - 1, binReadouts.length - 1)];
-			pill.textContent = text;
-			avatarWrap.appendChild(pill);
-
-			if (streak >= 5) {
-				const glyphs = ['🐾', '🦴', '⚡', '🔥', '✨', '🐾'];
-				glyphs.forEach((g, i) => {
-					const conf = document.createElement('span');
-					conf.className = 'boop-particle';
-					conf.textContent = g;
-					const angle = (i / glyphs.length) * Math.PI * 2;
-					const dist = 55 + Math.random() * 35;
-					const dx = Math.cos(angle) * dist;
-					const dy = Math.sin(angle) * dist - 25;
-					conf.style.setProperty('--dx', `${dx.toFixed(1)}px`);
-					conf.style.setProperty('--dy', `${dy.toFixed(1)}px`);
-					avatarWrap.appendChild(conf);
-					setTimeout(() => conf.remove(), 950);
-				});
-			}
-
-			setTimeout(() => {
-				pill.remove();
-			}, 1300);
-		}
-
-		avatarImg.addEventListener('click', triggerBoop);
-		(window as any).__boopDog = () => {
-			avatarImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-			setTimeout(triggerBoop, 300);
-		};
-	}
-
-	// -------------------------------------------------------------
-	// 300MM SILICON WAFER DIE SORT INSPECTOR (MASSIVE RETICLE-LIMIT DIE)
-	// -------------------------------------------------------------
-	function initWaferInspector() {
-		const modal = document.getElementById('wafer-modal');
-		const backdrop = document.getElementById('wafer-backdrop');
-		const closeBtn = document.getElementById('wafer-close-btn');
-		const scanBtn = document.getElementById('wafer-scan-btn');
-		const randomBtn = document.getElementById('wafer-random-btn');
-		const canvas = document.getElementById('wafer-canvas') as HTMLCanvasElement | null;
-		if (!modal || !canvas) return;
-
-		const ctx = canvas.getContext('2d');
-		if (!ctx) return;
-
-		const waferRadius = 175;
-		const cx = 200;
-		const cy = 200;
-
-		// Near-reticle-limit massive die footprint (~740 mm², ~83 gross dies on 300mm substrate)
-		const dieW = 30;
-		const dieH = 24;
-		const stepX = 32.5;
-		const stepY = 26.5;
-		const cols = 12;
-		const rows = 14;
-
-		interface WaferDie {
-			col: number;
-			row: number;
-			x: number;
-			y: number;
-			bin: 1 | 2 | 'x';
-			id: string;
-			fmax: number;
-			vmin: number;
-			leakage: number;
-			disabledCores: number[];
-			tested: boolean;
-		}
-
-		const dies: WaferDie[] = [];
-		let activeDie: WaferDie | null = null;
-		let isScanning = false;
-
-		function generateWaferDies(randomize: boolean = false) {
-			dies.length = 0;
-			const halfW = (cols * stepX) / 2;
-			const halfH = (rows * stepY) / 2;
-
-			// Random defect cluster centers & parameters
-			const clusterX = randomize ? Math.floor(Math.random() * 8 + 2) : 4;
-			const clusterY = randomize ? Math.floor(Math.random() * 8 + 3) : 8;
-			const edgeDefectThreshold = randomize ? (0.83 + Math.random() * 0.08) : 0.86;
-			const lotNum = randomize ? Math.floor(Math.random() * 800 + 100) : 740;
-			const waferNum = randomize ? Math.floor(Math.random() * 24 + 1) : 14;
-
-			for (let r = 0; r < rows; r++) {
-				for (let c = 0; c < cols; c++) {
-					const x = cx - halfW + c * stepX;
-					const y = cy - halfH + r * stepY;
-
-					const corners = [
-						[x, y],
-						[x + dieW, y],
-						[x, y + dieH],
-						[x + dieW, y + dieH]
-					];
-
-					// Check if all 4 corners are inside wafer exclusion boundary
-					const fits = corners.every(([px, py]) => {
-						const dx = px - cx;
-						const dy = py - cy;
-						const dist = Math.sqrt(dx * dx + dy * dy);
-						if (dist > waferRadius - 8) return false;
-						// Notch exclusion at 6 o'clock bottom center
-						if (Math.abs(dx) < 14 && py > cy + waferRadius - 16) return false;
-						return true;
-					});
-
-					if (!fits) continue;
-
-					const dist = Math.sqrt((x + dieW / 2 - cx) ** 2 + (y + dieH / 2 - cy) ** 2);
-					const normR = dist / (waferRadius - 8);
-					const rnd = Math.random();
-
-					// Binning for massive reticle-limit die:
-					// - Bin 1: Perfect (All cores enabled, zero defect) ~55%
-					// - Bin 2: Defeatured (Defects in redundant cores, cores disabled) ~33%
-					// - Bin X: Parametric fallout (Critical path / scribe / dielectric breakdown) ~12%
-					let bin: 1 | 2 | 'x' = 1;
-					const disabledCores: number[] = [];
-
-					if (normR > edgeDefectThreshold && rnd < 0.45) {
-						bin = 'x'; // Edge lithography breakdown
-					} else if (Math.abs(c - clusterX) <= 1 && Math.abs(r - clusterY) <= 1 && rnd < 0.65) {
-						bin = 'x'; // Particle defect cluster
-					} else if (rnd < 0.35) {
-						bin = 2; // Defeatured SKU (cores disabled)
-						const numDisabled = 2 + Math.floor(Math.random() * 3);
-						while (disabledCores.length < numDisabled) {
-							const coreIdx = Math.floor(Math.random() * 12);
-							if (!disabledCores.includes(coreIdx)) disabledCores.push(coreIdx);
-						}
-					} else {
-						bin = 1; // Perfect SKU
-					}
-
-					const hexId = `0x7E${lotNum.toString(16).toUpperCase()}` + ((r * cols + c) * 137).toString(16).toUpperCase().padStart(4, '0');
-					const fmax = bin === 1 ? +(3.70 + Math.random() * 0.22).toFixed(2) : bin === 2 ? +(3.10 + Math.random() * 0.18).toFixed(2) : +(1.60 + Math.random() * 0.4).toFixed(2);
-					const vmin = bin === 1 ? +(0.760 + Math.random() * 0.035).toFixed(3) : bin === 2 ? +(0.830 + Math.random() * 0.035).toFixed(3) : +(1.180 + Math.random() * 0.2).toFixed(3);
-					const leakage = bin === 1 ? +(22.5 + Math.random() * 4.5).toFixed(1) : bin === 2 ? +(29.5 + Math.random() * 5.0).toFixed(1) : +(85.0 + Math.random() * 30.0).toFixed(1);
-
-					dies.push({
-						col: c,
-						row: r,
-						x,
-						y,
-						bin,
-						id: hexId,
-						fmax,
-						vmin,
-						leakage,
-						disabledCores,
-						tested: true
-					});
-				}
-			}
-
-			const subEl = document.getElementById('wafer-sub-meta');
-			if (subEl) {
-				subEl.textContent = `LOT #${lotNum}C-W${waferNum < 10 ? '0' + waferNum : waferNum} ▪ 3nm HPC Node ▪ Reticle Limit (740 mm²) ▪ ${dies.length} Dies`;
-			}
-
-			// Update legend tallies (Concise strings, zero wrapping)
-			const b1Count = dies.filter(d => d.bin === 1).length;
-			const b2Count = dies.filter(d => d.bin === 2).length;
-			const bxCount = dies.filter(d => d.bin === 'x').length;
-			const total = dies.length;
-
-			const legB1 = document.getElementById('leg-bin1-text');
-			const legB2 = document.getElementById('leg-bin2-text');
-			const legBx = document.getElementById('leg-binx-text');
-
-			if (legB1) legB1.textContent = `Perfect (Bin 1): ${b1Count} (${((b1Count / total) * 100).toFixed(1)}%) ▪ All Cores`;
-			if (legB2) legB2.textContent = `Defeatured (Bin 2): ${b2Count} (${((b2Count / total) * 100).toFixed(1)}%) ▪ Harvest`;
-			if (legBx) legBx.textContent = `Fallout (Reject): ${bxCount} (${((bxCount / total) * 100).toFixed(1)}%) ▪ Defect`;
-		}
-
-		generateWaferDies(false);
-
-		function drawWafer() {
-			if (!ctx || !canvas) return;
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-			// 1. Outer Wafer Substrate Circle
-			ctx.save();
-			ctx.beginPath();
-			ctx.arc(cx, cy, waferRadius, 0, Math.PI * 2);
-			const grad = ctx.createRadialGradient(cx - 30, cy - 30, 20, cx, cy, waferRadius);
-			grad.addColorStop(0, '#1a2233');
-			grad.addColorStop(0.7, '#111622');
-			grad.addColorStop(1, '#0b0f17');
-			ctx.fillStyle = grad;
-			ctx.fill();
-
-			ctx.lineWidth = 3;
-			ctx.strokeStyle = '#38bdf8';
-			ctx.stroke();
-
-			// Wafer Notch at 6 o'clock (0° / bottom)
-			ctx.beginPath();
-			ctx.arc(cx, cy + waferRadius, 9, Math.PI, 0, true);
-			ctx.fillStyle = '#0f172a';
-			ctx.fill();
-			ctx.stroke();
-			ctx.restore();
-
-			// 2. Render Massive Near-Reticle-Limit Silicon Dies
-			for (const die of dies) {
-				ctx.save();
-				if (!die.tested) {
-					ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-					ctx.fillRect(die.x, die.y, dieW, dieH);
-				} else if (die.bin === 1) {
-					ctx.fillStyle = '#10b981';
-					ctx.fillRect(die.x, die.y, dieW, dieH);
-
-					ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
-					ctx.lineWidth = 0.5;
-					const tileW = (dieW - 2) / 4;
-					const tileH = (dieH - 2) / 3;
-					for (let tr = 0; tr < 3; tr++) {
-						for (let tc = 0; tc < 4; tc++) {
-							ctx.strokeRect(die.x + 1 + tc * tileW, die.y + 1 + tr * tileH, tileW, tileH);
-						}
-					}
-				} else if (die.bin === 2) {
-					ctx.fillStyle = '#f59e0b';
-					ctx.fillRect(die.x, die.y, dieW, dieH);
-
-					const tileW = (dieW - 2) / 4;
-					const tileH = (dieH - 2) / 3;
-					ctx.lineWidth = 0.5;
-
-					for (let tr = 0; tr < 3; tr++) {
-						for (let tc = 0; tc < 4; tc++) {
-							const cIdx = tr * 4 + tc;
-							const tx = die.x + 1 + tc * tileW;
-							const ty = die.y + 1 + tr * tileH;
-							if (die.disabledCores.includes(cIdx)) {
-								ctx.fillStyle = 'rgba(30, 10, 10, 0.85)';
-								ctx.fillRect(tx, ty, tileW, tileH);
-								ctx.strokeStyle = '#ef4444';
-								ctx.strokeRect(tx, ty, tileW, tileH);
-							} else {
-								ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
-								ctx.strokeRect(tx, ty, tileW, tileH);
-							}
-						}
-					}
-				} else {
-					ctx.fillStyle = '#ef4444';
-					ctx.fillRect(die.x, die.y, dieW, dieH);
-
-					ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
-					ctx.lineWidth = 1;
-					ctx.beginPath();
-					ctx.moveTo(die.x + 2, die.y + 2);
-					ctx.lineTo(die.x + dieW - 2, die.y + dieH - 2);
-					ctx.moveTo(die.x + dieW - 2, die.y + 2);
-					ctx.lineTo(die.x + 2, die.y + dieH - 2);
-					ctx.stroke();
-				}
-
-				ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
-				ctx.lineWidth = 1;
-				ctx.strokeRect(die.x, die.y, dieW, dieH);
-				ctx.restore();
-			}
-
-			// 3. Highlight Active / Inspected Die
-			if (activeDie) {
-				ctx.save();
-				ctx.strokeStyle = '#00f0ff';
-				ctx.lineWidth = 2.5;
-				ctx.shadowColor = '#00f0ff';
-				ctx.shadowBlur = 10;
-				ctx.strokeRect(activeDie.x - 1, activeDie.y - 1, dieW + 2, dieH + 2);
-
-				ctx.strokeStyle = 'rgba(0, 240, 255, 0.5)';
-				ctx.lineWidth = 1;
-				ctx.setLineDash([3, 3]);
-				ctx.beginPath();
-				ctx.moveTo(activeDie.x + dieW / 2, 16);
-				ctx.lineTo(activeDie.x + dieW / 2, 384);
-				ctx.moveTo(16, activeDie.y + dieH / 2);
-				ctx.lineTo(384, activeDie.y + dieH / 2);
-				ctx.stroke();
-				ctx.restore();
-			}
-		}
-
-		function updateTelemetry(die: WaferDie) {
-			const idEl = document.getElementById('wp-id');
-			const posEl = document.getElementById('wp-pos');
-			const binEl = document.getElementById('wp-bin');
-			const configEl = document.getElementById('wp-config');
-			const areaEl = document.getElementById('wp-area');
-			const fmaxEl = document.getElementById('wp-fmax');
-			const vminEl = document.getElementById('wp-vmin');
-			const leakEl = document.getElementById('wp-leak');
-
-			if (idEl) idEl.textContent = die.id;
-			if (posEl) posEl.textContent = `(${die.col}, ${die.row})`;
-			if (binEl) {
-				if (die.bin === 1) {
-					binEl.textContent = 'Perfect (Bin 1)';
-					binEl.style.color = '#10b981';
-				} else if (die.bin === 2) {
-					binEl.textContent = 'Defeatured (Bin 2)';
-					binEl.style.color = '#f59e0b';
-				} else {
-					binEl.textContent = 'Fallout (Reject)';
-					binEl.style.color = '#ef4444';
-				}
-			}
-			if (configEl) {
-				if (die.bin === 1) {
-					configEl.textContent = 'All Active';
-					configEl.style.color = '#10b981';
-				} else if (die.bin === 2) {
-					configEl.textContent = `-${die.disabledCores.length} Cores`;
-					configEl.style.color = '#f59e0b';
-				} else {
-					configEl.textContent = 'Defect Fail';
-					configEl.style.color = '#ef4444';
-				}
-			}
-			if (areaEl) areaEl.textContent = '740 mm²';
-			if (fmaxEl) fmaxEl.textContent = `${die.fmax} GHz`;
-			if (vminEl) vminEl.textContent = `${die.vmin} V`;
-			if (leakEl) leakEl.textContent = `${die.leakage} mA`;
-		}
-
-		function handleCanvasPointer(e: MouseEvent) {
-			if (!canvas) return;
-			const rect = canvas.getBoundingClientRect();
-			const px = (e.clientX - rect.left) * (canvas.width / rect.width);
-			const py = (e.clientY - rect.top) * (canvas.height / rect.height);
-
-			const found = dies.find(d => px >= d.x && px <= d.x + dieW && py >= d.y && py <= d.y + dieH);
-			if (found) {
-				activeDie = found;
-				updateTelemetry(found);
-				drawWafer();
-			}
-		}
-
-		canvas.addEventListener('mousemove', handleCanvasPointer);
-		canvas.addEventListener('click', handleCanvasPointer);
-
-		function openWaferModal() {
-			(window as any).__closeAllEasterEggs?.();
-			modal.classList.remove('hidden');
-			modal.removeAttribute('inert');
-			modal.style.display = 'flex';
-			(window as any).__pushModalHistory?.('wafer-modal', closeWaferModal);
-			if (!activeDie && dies.length) {
-				activeDie = dies[Math.floor(dies.length / 2)];
-				updateTelemetry(activeDie);
-			}
-			drawWafer();
-		}
-
-		function closeWaferModal() {
-			modal.classList.add('hidden');
-			modal.setAttribute('inert', '');
-			modal.style.display = 'none';
-			(window as any).__updateDrawerActiveUI?.();
-			(window as any).__popModalHistory?.('wafer-modal');
-		}
-
-		closeBtn?.addEventListener('click', closeWaferModal);
-		backdrop?.addEventListener('click', closeWaferModal);
-
-		window.addEventListener('keydown', (e) => {
-			if ((e.key === 'Escape' || e.key === 'Esc') && !modal.classList.contains('hidden') && modal.style.display !== 'none') {
-				closeWaferModal();
-			}
-		});
-
-		// DYNAMIC RANDOMIZATION & ATE POGO SCAN
-		scanBtn?.addEventListener('click', () => {
-			if (isScanning) return;
-			isScanning = true;
-
-			generateWaferDies(true);
-			dies.forEach(d => { d.tested = false; });
-			activeDie = null;
-			drawWafer();
-
-			const yieldValEl = document.getElementById('wafer-yield-val');
-			const yieldBarEl = document.getElementById('wafer-yield-bar');
-			const d0El = document.getElementById('wafer-d0-val');
-
-			let idx = 0;
-			const batchSize = 4;
-			const total = dies.length;
-
-			function stepScan() {
-				const end = Math.min(idx + batchSize, total);
-				for (let i = idx; i < end; i++) {
-					dies[i].tested = true;
-				}
-				idx = end;
-				activeDie = dies[idx - 1] || null;
-				if (activeDie) updateTelemetry(activeDie);
-
-				const testedCount = dies.filter(d => d.tested).length;
-				const goodCount = dies.filter(d => d.tested && d.bin !== 'x').length;
-				const curYield = testedCount ? ((goodCount / testedCount) * 100).toFixed(1) : '0.0';
-
-				if (yieldValEl) yieldValEl.textContent = `${curYield}%`;
-				if (yieldBarEl) yieldBarEl.style.width = `${curYield}%`;
-
-				audioEngine.playProbeTick();
-				drawWafer();
-
-				if (idx < total) {
-					requestAnimationFrame(stepScan);
-				} else {
-					isScanning = false;
-					const finalYield = ((goodCount / total) * 100).toFixed(1);
-					if (yieldValEl) yieldValEl.textContent = `${finalYield}%`;
-					if (yieldBarEl) yieldBarEl.style.width = `${finalYield}%`;
-					if (d0El) {
-						const d0 = (0.075 + Math.random() * 0.015).toFixed(3);
-						d0El.textContent = `D₀: ${d0}/cm²`;
-					}
-				}
-			}
-
-			requestAnimationFrame(stepScan);
-		});
-
-		randomBtn?.addEventListener('click', () => {
-			if (!dies.length) return;
-			const r = dies[Math.floor(Math.random() * dies.length)];
-			activeDie = r;
-			updateTelemetry(r);
-			drawWafer();
-		});
-
-		(window as any).__openWaferMap = openWaferModal;
-		(window as any).__closeWaferMap = closeWaferModal;
-		(window as any).__toggleWaferMap = () => (modal.classList.contains('hidden') ? openWaferModal() : closeWaferModal());
-	}
-
-	// -------------------------------------------------------------
-	// INTERACTIVE HARDWARE EASTER EGGS CORE
-	// -------------------------------------------------------------
-	function initEasterEggs() {
-		let isZeroG = false;
-		let isTilt = false;
-		let isDegauss = false;
-		let isSphere = false;
-		let isQuantum = false;
-		let isThermal = false;
-		let isMultiplier = false;
-
-		let multX = 170; // 0xAA (1010 1010)
-		let multY = 85;  // 0x55 (0101 0101)
-		let multSlowMode = false;
-		let multCascadeTimeouts: number[] = [];
-
-		const multiplierModal = document.getElementById('multiplier-modal');
-		const multBackdrop = document.getElementById('multiplier-backdrop');
-		const multCloseBtn = document.getElementById('multiplier-close-btn');
-		const multSvg = document.getElementById('mult-schematic-svg') as SVGSVGElement | null;
-		const multCellInfo = document.getElementById('mult-cell-info');
-		const multXBits = document.getElementById('mult-x-bits');
-		const multYBits = document.getElementById('mult-y-bits');
-		const multXMeta = document.getElementById('mult-x-meta');
-		const multYMeta = document.getElementById('mult-y-meta');
-		const multPDec = document.getElementById('mult-p-dec');
-		const multPHex = document.getElementById('mult-p-hex');
-		const multPBin = document.getElementById('mult-p-bin');
-		const multPBits = document.getElementById('mult-product-bits');
-		const multRandBtn = document.getElementById('mult-rand-btn');
-		const multSpeedBtn = document.getElementById('mult-speed-btn');
-		const multReplayBtn = document.getElementById('mult-replay-btn');
-		const multSpeedIcon = document.getElementById('mult-speed-icon');
-		const multSpeedText = document.getElementById('mult-speed-text');
-		const triggerMultiplierBtn = document.getElementById('trigger-multiplier-btn');
-
-		const zerogHud = document.getElementById('zerog-hud');
-		const zerogResetBtn = document.getElementById('zerog-reset-btn');
-		const tiltHud = document.getElementById('tilt-hud');
-		const tiltExitBtn = document.getElementById('tilt-exit-btn');
-
-		const degaussHud = document.getElementById('degauss-hud');
-		const degaussReBtn = document.getElementById('degauss-re-btn');
-		const degaussExitBtn = document.getElementById('degauss-exit-btn');
-		const degaussCanvas = document.getElementById('degauss-canvas') as HTMLCanvasElement | null;
-
-		const sphereHud = document.getElementById('sphere-hud');
-		const sphereExitBtn = document.getElementById('sphere-exit-btn');
-		const sphereCore = document.getElementById('sphere-core');
-
-		const quantumHud = document.getElementById('quantum-hud');
-		const quantumAllBtn = document.getElementById('quantum-all-btn');
-		const quantumReBtn = document.getElementById('quantum-reassemble-btn');
-		const quantumExitBtn = document.getElementById('quantum-exit-btn');
-		const quantumCanvas = document.getElementById('quantum-canvas') as HTMLCanvasElement | null;
-
-		const thermalHud = document.getElementById('thermal-hud');
-		const thermalToolBtn = document.getElementById('thermal-tool-btn');
-		const thermalResetBtn = document.getElementById('thermal-reset-btn');
-		const thermalExitBtn = document.getElementById('thermal-exit-btn');
-		const thermalScaleBar = document.getElementById('thermal-scale-bar');
-		const thermalSpots = document.getElementById('thermal-spots');
-		const thermalCanvas = document.getElementById('thermal-canvas') as HTMLCanvasElement | null;
-
-		const extrasModal = document.getElementById('lab-extras-modal');
-		const extrasCloseBtn = document.getElementById('extras-close-btn');
-
-		function closeAllActiveModes() {
-			if (isZeroG) resetZeroG();
-			if (isTilt) toggleTilt(false);
-			if (isDegauss) resetDegauss();
-			if (isSphere) resetSphere();
-			if (isQuantum) resetQuantum();
-			if (isThermal) resetThermal();
-			if (isMultiplier) closeMultiplier();
-			(window as any).__closeWaferMap?.();
-		}
-		(window as any).__closeAllEasterEggs = closeAllActiveModes;
-
-		// Force initial hidden state on all easter egg elements
-		if (zerogHud) { zerogHud.style.display = 'none'; zerogHud.classList.add('hidden'); }
-		if (tiltHud) { tiltHud.style.display = 'none'; tiltHud.classList.add('hidden'); }
-		if (degaussHud) { degaussHud.style.display = 'none'; degaussHud.classList.add('hidden'); }
-		if (degaussCanvas) { degaussCanvas.style.display = 'none'; degaussCanvas.classList.add('hidden'); }
-		if (sphereHud) { sphereHud.style.display = 'none'; sphereHud.classList.add('hidden'); }
-		if (sphereCore) { sphereCore.style.display = 'none'; sphereCore.classList.add('hidden'); }
-		if (quantumHud) { quantumHud.style.display = 'none'; quantumHud.classList.add('hidden'); }
-		if (quantumCanvas) { quantumCanvas.style.display = 'none'; quantumCanvas.classList.add('hidden'); }
-		if (thermalHud) { thermalHud.style.display = 'none'; thermalHud.classList.add('hidden'); }
-		if (thermalScaleBar) { thermalScaleBar.style.display = 'none'; thermalScaleBar.classList.add('hidden'); }
-		if (thermalSpots) { thermalSpots.style.display = 'none'; thermalSpots.classList.add('hidden'); }
-		if (thermalCanvas) { thermalCanvas.style.display = 'none'; thermalCanvas.classList.add('hidden'); }
-		if (multiplierModal) { multiplierModal.style.display = 'none'; multiplierModal.classList.add('hidden'); }
-		if (extrasModal) { extrasModal.style.display = 'none'; extrasModal.classList.add('hidden'); }
-
-		// 1. REFINED ZERO-G DROP (OVERFLOW LOCK & SLEEP)
-		interface PhysicsBody {
-			el: HTMLElement;
-			x: number;
-			y: number;
-			prevX: number;
-			prevY: number;
-			angle: number;
-			prevAngle: number;
-			width: number;
-			height: number;
-			initialLeft: number;
-			initialTop: number;
-		}
-
-		let bodies: PhysicsBody[] = [];
-		let animId = 0;
-		let draggedBody: PhysicsBody | null = null;
-		let dragOffsetX = 0;
-		let dragOffsetY = 0;
-		let lastPointerX = 0;
-		let lastPointerY = 0;
-
-		function startZeroG() {
-			if (isZeroG) return;
-			closeAllActiveModes();
-
-			isZeroG = true;
-			if (zerogHud) {
-				zerogHud.style.display = 'flex';
-				zerogHud.classList.remove('hidden');
-			}
-
-			// Prevent document scroll bounds from expanding below footer
-			document.documentElement.style.overflow = 'hidden';
-			document.body.style.overflow = 'hidden';
-
-			// Sleep active Three.js CAD viewer loop to save GPU/CPU
-			window.dispatchEvent(new CustomEvent('pause-cad-render'));
-
-			const selector = '.card, .benchmark-card, .debug-card, .cad-model-card, .hero .avatar-wrap';
-			const rawElements = Array.from(document.querySelectorAll<HTMLElement>(selector));
-			const winH = window.innerHeight;
-			const winW = window.innerWidth;
-
-			// Target visible cards to eliminate off-screen physics thrashing
-			const elements = rawElements.filter((el) => {
-				const rect = el.getBoundingClientRect();
-				return rect.bottom > -150 && rect.top < winH + 350;
-			});
-
-			bodies = elements.map((el) => {
-				const rect = el.getBoundingClientRect();
-				el.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
-				el.style.transition = 'none';
-				el.style.willChange = 'transform';
-				el.style.cursor = 'grab';
-
-				return {
-					el,
-					x: rect.left,
-					y: rect.top,
-					prevX: rect.left + (Math.random() - 0.5) * 4,
-					prevY: rect.top - Math.random() * 3,
-					angle: 0,
-					prevAngle: (Math.random() - 0.5) * 0.03,
-					width: rect.width,
-					height: rect.height,
-					initialLeft: rect.left,
-					initialTop: rect.top
-				};
-			});
-
-			runPhysicsLoop();
-		}
-
-		function resetZeroG() {
-			if (!isZeroG) return;
-			isZeroG = false;
-			cancelAnimationFrame(animId);
-			animId = 0;
-			if (zerogHud) {
-				zerogHud.classList.add('hidden');
-				zerogHud.style.display = 'none';
-			}
-
-			document.documentElement.style.overflow = '';
-			document.body.style.overflow = '';
-			window.dispatchEvent(new CustomEvent('resume-cad-render'));
-
-			bodies.forEach((b) => {
-				b.el.style.transition = 'transform 0.55s cubic-bezier(0.25, 1, 0.5, 1)';
-				b.el.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
-				b.el.style.cursor = '';
-			});
-
-			setTimeout(() => {
-				bodies.forEach((b) => {
-					b.el.style.transition = '';
-					b.el.style.willChange = '';
-					b.el.style.transform = '';
-				});
-				bodies = [];
-			}, 600);
-		}
-
-		function runPhysicsLoop() {
-			const gravity = 0.45;
-			const friction = 0.985;
-			const restitution = 0.48;
-			let settledFrames = 0;
-
-			function step() {
-				if (!isZeroG) return;
-				const winW = window.innerWidth;
-				const winH = window.innerHeight;
-				let totalKinetic = 0;
-
-				for (const b of bodies) {
-					if (b === draggedBody) {
-						b.prevX = b.x;
-						b.prevY = b.y;
-						b.x = lastPointerX - dragOffsetX;
-						b.y = lastPointerY - dragOffsetY;
-					} else {
-						const vx = (b.x - b.prevX) * friction;
-						const vy = (b.y - b.prevY) * friction + gravity;
-						const vAngle = (b.angle - b.prevAngle) * friction;
-
-						b.prevX = b.x;
-						b.prevY = b.y;
-						b.x += vx;
-						b.y += vy;
-						b.prevAngle = b.angle;
-						b.angle += vAngle;
-
-						totalKinetic += Math.abs(vx) + Math.abs(vy);
-
-						// Strict viewport bottom floor clamp
-						if (b.y + b.height > winH - 12) {
-							b.y = winH - 12 - b.height;
-							b.prevY = b.y + vy * restitution;
-							b.prevAngle += vx * 0.002;
-						}
-						// Left/right bounds
-						if (b.x < 8) {
-							b.x = 8;
-							b.prevX = b.x + vx * restitution;
-						}
-						if (b.x + b.width > winW - 8) {
-							b.x = winW - 8 - b.width;
-							b.prevX = b.x + vx * restitution;
-						}
-					}
-
-					const dx = b.x - b.initialLeft;
-					const dy = b.y - b.initialTop;
-					const deg = (b.angle * 180) / Math.PI;
-					b.el.style.transform = `translate3d(${dx.toFixed(2)}px, ${dy.toFixed(2)}px, 0) rotate(${deg.toFixed(2)}deg)`;
-				}
-
-				// Sleep physics loop when rested to achieve 0% idle CPU
-				if (!draggedBody && totalKinetic < 0.08) {
-					settledFrames++;
-					if (settledFrames > 25) {
-						animId = 0;
-						return;
-					}
-				} else {
-					settledFrames = 0;
-				}
-
-				animId = requestAnimationFrame(step);
-			}
-
-			animId = requestAnimationFrame(step);
-		}
-
-		window.addEventListener('pointerdown', (e) => {
-			if (!isZeroG) return;
-			const target = (e.target as HTMLElement).closest('.card, .benchmark-card, .debug-card, .cad-model-card, .hero .avatar-wrap') as HTMLElement | null;
-			if (!target) return;
-			const body = bodies.find((b) => b.el === target);
-			if (body) {
-				draggedBody = body;
-				dragOffsetX = e.clientX - body.x;
-				dragOffsetY = e.clientY - body.y;
-				lastPointerX = e.clientX;
-				lastPointerY = e.clientY;
-				body.el.style.cursor = 'grabbing';
-				if (!animId) runPhysicsLoop();
-			}
-		});
-
-		window.addEventListener('pointermove', (e) => {
-			if (draggedBody) {
-				lastPointerX = e.clientX;
-				lastPointerY = e.clientY;
-			}
-		});
-
-		window.addEventListener('pointerup', () => {
-			if (draggedBody) {
-				draggedBody.el.style.cursor = 'grab';
-				draggedBody = null;
-			}
-		});
-
-		if (zerogResetBtn) zerogResetBtn.addEventListener('click', resetZeroG);
-
-		// 2. 3D TILT VIEWPORT
-		const mainEl = document.querySelector('main') as HTMLElement | null;
-		function handleTiltMove(e: MouseEvent) {
-			if (!isTilt || !mainEl) return;
-			const nx = (e.clientX / window.innerWidth - 0.5) * 16;
-			const ny = (e.clientY / window.innerHeight - 0.5) * -16;
-			mainEl.style.transform = `perspective(1200px) rotateY(${nx.toFixed(2)}deg) rotateX(${ny.toFixed(2)}deg) scale(0.985)`;
-		}
-
-		function handleOrientation(e: DeviceOrientationEvent) {
-			if (!isTilt || !mainEl || !e.gamma || !e.beta) return;
-			const nx = Math.max(-15, Math.min(15, e.gamma));
-			const ny = Math.max(-15, Math.min(15, (e.beta - 45) * 0.7));
-			mainEl.style.transform = `perspective(1200px) rotateY(${nx.toFixed(2)}deg) rotateX(${-ny.toFixed(2)}deg) scale(0.985)`;
-		}
-
-		function toggleTilt(force?: boolean) {
-			const next = typeof force === 'boolean' ? force : !isTilt;
-			if (next === isTilt) return;
-			if (next) {
-				closeAllActiveModes();
-			}
-			isTilt = next;
-
-			if (isTilt) {
-				if (tiltHud) {
-					tiltHud.style.display = 'flex';
-					tiltHud.classList.remove('hidden');
-				}
-				window.addEventListener('mousemove', handleTiltMove);
-				if (typeof (DeviceOrientationEvent as any)?.requestPermission === 'function') {
-					(DeviceOrientationEvent as any).requestPermission().then((state: string) => {
-						if (state === 'granted') {
-							window.addEventListener('deviceorientation', handleOrientation);
-						}
-					}).catch(() => {});
-				} else {
-					window.addEventListener('deviceorientation', handleOrientation);
-				}
-				if (mainEl) mainEl.style.transition = 'transform 0.12s ease-out';
-			} else {
-				if (tiltHud) {
-					tiltHud.classList.add('hidden');
-					tiltHud.style.display = 'none';
-				}
-				window.removeEventListener('mousemove', handleTiltMove);
-				window.removeEventListener('deviceorientation', handleOrientation);
-				if (mainEl) {
-					mainEl.style.transition = 'transform 0.4s ease';
-					mainEl.style.transform = '';
-					setTimeout(() => { if (mainEl) mainEl.style.transition = ''; }, 400);
-				}
-			}
-		}
-
-		if (tiltExitBtn) tiltExitBtn.addEventListener('click', () => toggleTilt(false));
-
-		// 3. CRT BENCH OSCILLOSCOPE DEGAUSS
-		let degaussAnimId = 0;
-		let degaussStartTime = 0;
-
-		function pulseDegauss() {
-			audioEngine.playDegauss();
-			if (!degaussCanvas || !mainEl) return;
-
-			cancelAnimationFrame(degaussAnimId);
-			degaussCanvas.style.display = 'block';
-			degaussCanvas.classList.remove('hidden');
-
-			const dpr = Math.min(window.devicePixelRatio || 1, 2);
-			degaussCanvas.width = window.innerWidth * dpr;
-			degaussCanvas.height = window.innerHeight * dpr;
-			const ctx = degaussCanvas.getContext('2d');
-			if (!ctx) return;
-			ctx.scale(dpr, dpr);
-
-			document.body.classList.add('crt-active', 'crt-degaussing');
-			degaussStartTime = performance.now();
-			const duration = 1600; // 1.6s authentic thermistor cooling cycle
-
-			function loopDegauss(now: number) {
-				const elapsed = now - degaussStartTime;
-				const t = elapsed / 1000; // elapsed time in seconds
-
-				if (elapsed >= duration || !isDegauss) {
-					// Degauss complete: restore razor-sharp screen convergence
-					ctx?.clearRect(0, 0, window.innerWidth, window.innerHeight);
-					if (mainEl) {
-						mainEl.style.transform = '';
-						mainEl.style.filter = '';
-					}
-					document.body.classList.remove('crt-degaussing');
-					if (degaussCanvas) {
-						degaussCanvas.classList.add('hidden');
-						degaussCanvas.style.display = 'none';
-					}
-					return;
-				}
-
-				// 1. Exponential magnetic decay curve: e^(-3.2 * t)
-				const decay = Math.exp(-3.2 * t);
-
-				// 2. Multi-frequency electromagnetic coil oscillations
-				const omega60 = 2 * Math.PI * 60 * t; // 60 Hz AC coil fundamental
-				const omega30 = 2 * Math.PI * 30 * t; // 30 Hz subharmonic barrel oscillation
-				const omega15 = 2 * Math.PI * 15 * t; // 15 Hz low-frequency wobble
-
-				const sin60 = Math.sin(omega60);
-				const cos60 = Math.cos(omega60);
-				const sin30 = Math.sin(omega30);
-				const cos30 = Math.cos(omega30 + 0.4);
-				const sin15 = Math.sin(omega15);
-
-				// Physical raster geometry deflection on <main>
-				const tx = sin60 * 16 * decay;
-				const ty = cos60 * 10 * decay;
-				const sx = 1.0 + sin60 * 0.055 * decay;
-				const sy = 1.0 - sin60 * 0.055 * decay;
-				const skewX = sin30 * 4.8 * decay;
-				const skewY = cos30 * 2.8 * decay;
-				const rot = sin15 * 1.6 * decay;
-
-				if (mainEl) {
-					mainEl.style.transform = `translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0) scale(${sx.toFixed(3)}, ${sy.toFixed(3)}) skew(${skewX.toFixed(2)}deg, ${skewY.toFixed(2)}deg) rotate(${rot.toFixed(2)}deg)`;
-
-					// Dynamic magnetic phosphor filter:
-					// Intense flash during first 160ms, followed by contrast & chromatic shift
-					const flash = t < 0.16 ? (1 - t / 0.16) * 0.85 : 0;
-					const bright = 1.0 + flash + 0.15 * decay;
-					const contrast = 1.0 + 0.75 * decay;
-					const sat = 1.0 + 1.2 * decay;
-					const redShift = (-15 * sin60 * decay).toFixed(1);
-					const cyanShift = (15 * sin60 * decay).toFixed(1);
-
-					mainEl.style.filter = `brightness(${bright.toFixed(2)}) contrast(${contrast.toFixed(2)}) saturate(${sat.toFixed(2)}) drop-shadow(${redShift}px 0 0 rgba(255, 0, 85, ${(0.8 * decay).toFixed(2)})) drop-shadow(${cyanShift}px 0 0 rgba(0, 245, 255, ${(0.8 * decay).toFixed(2)}))`;
-				}
-
-				// 3. Canvas Chromatic Purity Distortion & Magnetic Flux Rings
-				if (ctx) {
-					ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-
-					const w = window.innerWidth;
-					const h = window.innerHeight;
-					const cx = w / 2;
-					const cy = h / 2;
-
-					// A. Initial Phosphor Induction Flash Bloom (t < 0.22s)
-					if (t < 0.22) {
-						const bloomProgress = t / 0.22;
-						const bloomAlpha = (1 - bloomProgress) * 0.45;
-						const bGrad = ctx.createRadialGradient(cx, cy, 20, cx, cy, Math.max(w, h) * 0.7);
-						bGrad.addColorStop(0, `rgba(230, 255, 245, ${bloomAlpha.toFixed(2)})`);
-						bGrad.addColorStop(0.5, `rgba(160, 255, 220, ${(bloomAlpha * 0.6).toFixed(2)})`);
-						bGrad.addColorStop(1, 'rgba(160, 255, 220, 0)');
-						ctx.fillStyle = bGrad;
-						ctx.fillRect(0, 0, w, h);
-					}
-
-					// B. Swirling Electromagnetic Rainbow Purity Aberration
-					// Simulates electron beam deflection away from phosphor triads
-					const ringCount = 3;
-					for (let r = 0; r < ringCount; r++) {
-						const ringRadius = (Math.max(w, h) * (0.35 + r * 0.25)) * (1 + sin60 * 0.08 * decay);
-						const ringAlpha = (0.28 - r * 0.06) * decay;
-
-						// Top-Left / Bottom-Right: Emerald Green & Cyan Flux
-						const gGrad = ctx.createRadialGradient(0, 0, 50, 0, 0, ringRadius);
-						gGrad.addColorStop(0, `rgba(16, 185, 129, ${(ringAlpha * 0.9).toFixed(2)})`);
-						gGrad.addColorStop(0.4, `rgba(6, 182, 212, ${(ringAlpha * 0.6).toFixed(2)})`);
-						gGrad.addColorStop(0.8, `rgba(14, 165, 233, ${(ringAlpha * 0.2).toFixed(2)})`);
-						gGrad.addColorStop(1, 'rgba(14, 165, 233, 0)');
-						ctx.fillStyle = gGrad;
-						ctx.fillRect(0, 0, w, h);
-
-						// Top-Right / Bottom-Left: Hot Magenta & Vivid Violet Flux
-						const mGrad = ctx.createRadialGradient(w, 0, 50, w, 0, ringRadius * 1.1);
-						mGrad.addColorStop(0, `rgba(236, 72, 153, ${(ringAlpha * 0.95).toFixed(2)})`);
-						mGrad.addColorStop(0.4, `rgba(168, 85, 247, ${(ringAlpha * 0.65).toFixed(2)})`);
-						mGrad.addColorStop(0.8, `rgba(139, 92, 246, ${(ringAlpha * 0.2).toFixed(2)})`);
-						mGrad.addColorStop(1, 'rgba(139, 92, 246, 0)');
-						ctx.fillStyle = mGrad;
-						ctx.fillRect(0, 0, w, h);
-
-						// Bottom-Right Corner Amber Flux
-						const aGrad = ctx.createRadialGradient(w, h, 60, w, h, ringRadius * 0.95);
-						aGrad.addColorStop(0, `rgba(245, 158, 11, ${(ringAlpha * 0.85).toFixed(2)})`);
-						aGrad.addColorStop(0.5, `rgba(239, 68, 68, ${(ringAlpha * 0.45).toFixed(2)})`);
-						aGrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
-						ctx.fillStyle = aGrad;
-						ctx.fillRect(0, 0, w, h);
-					}
-
-					// C. Cathode Ray Scanline Ripple
-					if (t < 0.65) {
-						const rippleAlpha = (1 - t / 0.65) * 0.12 * decay;
-						ctx.strokeStyle = `rgba(255, 255, 255, ${rippleAlpha.toFixed(2)})`;
-						ctx.lineWidth = 1;
-						const step = 8;
-						const phase = t * 120;
-						ctx.beginPath();
-						for (let y = (phase % step); y < h; y += step * 3) {
-							const waveOffset = Math.sin(y * 0.05 + omega60) * 12 * decay;
-							ctx.moveTo(0, y + waveOffset);
-							ctx.lineTo(w, y + waveOffset);
-						}
-						ctx.stroke();
-					}
-
-					// D. CRT Curved Screen Perimeter Bezel Shadow
-					const bezelGrad = ctx.createRadialGradient(cx, cy, Math.min(w, h) * 0.45, cx, cy, Math.max(w, h) * 0.72);
-					bezelGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-					bezelGrad.addColorStop(0.7, `rgba(0, 0, 0, ${(0.45 * decay).toFixed(2)})`);
-					bezelGrad.addColorStop(1, `rgba(0, 0, 0, ${(0.85 * decay).toFixed(2)})`);
-					ctx.fillStyle = bezelGrad;
-					ctx.fillRect(0, 0, w, h);
-				}
-
-				degaussAnimId = requestAnimationFrame(loopDegauss);
-			}
-
-			degaussAnimId = requestAnimationFrame(loopDegauss);
-		}
-
-		function startDegauss() {
-			if (isDegauss) return;
-			closeAllActiveModes();
-			isDegauss = true;
-			if (degaussHud) {
-				degaussHud.style.display = 'flex';
-				degaussHud.classList.remove('hidden');
-			}
-			document.body.classList.add('crt-active');
-			pulseDegauss();
-		}
-
-		function resetDegauss() {
-			if (!isDegauss) return;
-			isDegauss = false;
-			cancelAnimationFrame(degaussAnimId);
-			if (degaussHud) {
-				degaussHud.classList.add('hidden');
-				degaussHud.style.display = 'none';
-			}
-			if (degaussCanvas) {
-				degaussCanvas.classList.add('hidden');
-				degaussCanvas.style.display = 'none';
-				const ctx = degaussCanvas.getContext('2d');
-				if (ctx) ctx.clearRect(0, 0, degaussCanvas.width, degaussCanvas.height);
-			}
-			if (mainEl) {
-				mainEl.style.transform = '';
-				mainEl.style.filter = '';
-			}
-			document.body.classList.remove('crt-active', 'crt-degaussing');
-		}
-
-		degaussReBtn?.addEventListener('click', pulseDegauss);
-		degaussExitBtn?.addEventListener('click', resetDegauss);
-
-		// 4. 3D SILICON CYCLONE / ORBITAL SPHERE (GOOGLE SPHERE TRIBUTE)
-		let sphereAnimId = 0;
-		let sphereRotX = 0;
-		let sphereRotY = 0;
-		let sphereVelX = 0;
-		let sphereVelY = 0.005;
-		let isSphereDragging = false;
-		let lastSphereX = 0;
-		let lastSphereY = 0;
-		let hoveredSphereEl: HTMLElement | null = null;
-		interface SpherePoint {
-			el: HTMLElement;
-			origLeft: number;
-			origTop: number;
-			origW: number;
-			origH: number;
-			px: number;
-			py: number;
-			pz: number;
-		}
-		let spherePoints: SpherePoint[] = [];
-
-		function handleSpherePointerDown(e: PointerEvent) {
-			if (e.target && (e.target as HTMLElement).closest('.ee-hud, .wafer-modal, .lab-extras-modal')) return;
-			isSphereDragging = true;
-			lastSphereX = e.clientX;
-			lastSphereY = e.clientY;
-		}
-
-		function handleSpherePointerMove(e: PointerEvent) {
-			if (isSphereDragging) {
-				const dx = e.clientX - lastSphereX;
-				const dy = e.clientY - lastSphereY;
-				sphereVelY = dx * 0.0035;
-				sphereVelX = -dy * 0.0035;
-				lastSphereX = e.clientX;
-				lastSphereY = e.clientY;
-			}
-		}
-
-		function handleSpherePointerUp() {
-			isSphereDragging = false;
-		}
-
-		function startSphere() {
-			if (isSphere) return;
-			closeAllActiveModes();
-			isSphere = true;
-			if (sphereHud) {
-				sphereHud.style.display = 'flex';
-				sphereHud.classList.remove('hidden');
-			}
-			if (sphereCore) {
-				sphereCore.style.display = 'flex';
-				sphereCore.classList.remove('hidden');
-			}
-
-			document.documentElement.style.overflow = 'hidden';
-			document.body.style.overflow = 'hidden';
-			window.dispatchEvent(new CustomEvent('pause-cad-render'));
-
-			const cards = Array.from(document.querySelectorAll<HTMLElement>('.card, .benchmark-card, .debug-card, .cad-model-card, .hero .avatar-wrap'));
-			const R = Math.min(window.innerWidth, window.innerHeight) * 0.38;
-			const phi = Math.PI * (3 - Math.sqrt(5));
-
-			spherePoints = cards.map((el, i) => {
-				const rect = el.getBoundingClientRect();
-				const y = 1 - (i / Math.max(1, cards.length - 1)) * 2;
-				const rAtY = Math.sqrt(Math.max(0, 1 - y * y));
-				const theta = phi * i;
-				const x = Math.cos(theta) * rAtY;
-				const z = Math.sin(theta) * rAtY;
-
-				el.style.transition = 'none';
-				el.style.willChange = 'transform, opacity';
-
-				return {
-					el,
-					origLeft: rect.left,
-					origTop: rect.top,
-					origW: rect.width,
-					origH: rect.height,
-					px: x * R,
-					py: y * R,
-					pz: z * R
-				};
-			});
-
-			window.addEventListener('pointerdown', handleSpherePointerDown);
-			window.addEventListener('pointermove', handleSpherePointerMove);
-			window.addEventListener('pointerup', handleSpherePointerUp);
-
-			spherePoints.forEach((p) => {
-				p.el.addEventListener('pointerenter', () => { hoveredSphereEl = p.el; });
-				p.el.addEventListener('pointerleave', () => { if (hoveredSphereEl === p.el) hoveredSphereEl = null; });
-			});
-
-			function loopSphere() {
-				if (!isSphere) return;
-				if (!isSphereDragging) {
-					sphereVelX *= 0.95;
-					sphereVelY = sphereVelY * 0.95 + 0.003 * 0.05;
-				}
-				sphereRotX += sphereVelX;
-				sphereRotY += sphereVelY;
-
-				const cosY = Math.cos(sphereRotY), sinY = Math.sin(sphereRotY);
-				const cosX = Math.cos(sphereRotX), sinX = Math.sin(sphereRotX);
-				const cx = window.innerWidth / 2;
-				const cy = window.innerHeight / 2;
-
-				spherePoints.forEach((p) => {
-					const x1 = p.px * cosY - p.pz * sinY;
-					const z1 = p.px * sinY + p.pz * cosY;
-					const y1 = p.py * cosX - z1 * sinX;
-					const z2 = p.py * sinX + z1 * cosX;
-
-					const targetX = cx + x1 - p.origLeft - p.origW / 2;
-					const targetY = cy + y1 - p.origTop - p.origH / 2;
-
-					const depthNorm = Math.max(0, Math.min(1, (z2 + R) / (2 * R)));
-					const isHovered = hoveredSphereEl === p.el;
-					const scale = isHovered ? 1.15 : (0.55 + depthNorm * 0.50);
-					const opacity = isHovered ? 1 : (0.35 + depthNorm * 0.65);
-					const zIndex = isHovered ? 9999 : Math.round(depthNorm * 1000);
-
-					p.el.style.transform = `translate3d(${targetX.toFixed(1)}px, ${targetY.toFixed(1)}px, ${z2.toFixed(1)}px) scale(${scale.toFixed(2)})`;
-					p.el.style.opacity = opacity.toFixed(2);
-					p.el.style.zIndex = zIndex.toString();
-				});
-
-				const dieCube = sphereCore?.querySelector('.die-cube') as HTMLElement | null;
-				if (dieCube) {
-					dieCube.style.transform = `rotateX(${-sphereRotX * 57.3}deg) rotateY(${sphereRotY * 57.3}deg)`;
-				}
-
-				sphereAnimId = requestAnimationFrame(loopSphere);
-			}
-
-			sphereAnimId = requestAnimationFrame(loopSphere);
-		}
-
-		function resetSphere() {
-			if (!isSphere) return;
-			isSphere = false;
-			cancelAnimationFrame(sphereAnimId);
-			if (sphereHud) {
-				sphereHud.classList.add('hidden');
-				sphereHud.style.display = 'none';
-			}
-			if (sphereCore) {
-				sphereCore.classList.add('hidden');
-				sphereCore.style.display = 'none';
-			}
-
-			window.removeEventListener('pointerdown', handleSpherePointerDown);
-			window.removeEventListener('pointermove', handleSpherePointerMove);
-			window.removeEventListener('pointerup', handleSpherePointerUp);
-
-			document.documentElement.style.overflow = '';
-			document.body.style.overflow = '';
-			window.dispatchEvent(new CustomEvent('resume-cad-render'));
-
-			spherePoints.forEach((p) => {
-				p.el.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease';
-				p.el.style.transform = '';
-				p.el.style.opacity = '';
-				p.el.style.zIndex = '';
-			});
-
-			setTimeout(() => {
-				spherePoints.forEach((p) => {
-					p.el.style.transition = '';
-					p.el.style.willChange = '';
-					p.el.style.transform = '';
-					p.el.style.opacity = '';
-					p.el.style.zIndex = '';
-				});
-				spherePoints = [];
-			}, 500);
-		}
-
-		sphereExitBtn?.addEventListener('click', resetSphere);
-
-		// 5. QUANTUM TUNNELING DISINTEGRATION & ANNEAL
-		let quantumAnimId = 0;
-		let quantumPointerX = -999;
-		let quantumPointerY = -999;
-		let quantumState: 'swirling' | 'reassembling' = 'swirling';
-		interface QParticle {
-			x: number;
-			y: number;
-			origX: number;
-			origY: number;
-			vx: number;
-			vy: number;
-			color: string;
-			size: number;
-			rot: number;
-			vRot: number;
-			card: HTMLElement;
-		}
-		let qParticles: QParticle[] = [];
-		const dissolvedCards = new Set<HTMLElement>();
-
-		function isDogElement(el: HTMLElement): boolean {
-			return !!el.closest('.hero .avatar-wrap, #hero-avatar-wrap, #hero-avatar-img, .avatar-img');
-		}
-
-		function handleQuantumPointer(e: MouseEvent) {
-			quantumPointerX = e.clientX;
-			quantumPointerY = e.clientY;
-		}
-
-		function handleQuantumClick(e: MouseEvent) {
-			if (!isQuantum) return;
-			const target = e.target as HTMLElement;
-			if (target.closest('.ee-hud, .wafer-modal, .lab-extras-modal, #footer-extras-btn')) return;
-
-			// Don't touch my dog!
-			if (isDogElement(target)) {
-				e.preventDefault();
-				e.stopPropagation();
-				const avatarWrap = document.getElementById('hero-avatar-wrap') || document.querySelector('.hero .avatar-wrap');
-				if (avatarWrap) {
-					const shieldPill = document.createElement('div');
-					shieldPill.className = 'morale-boost-pill mono';
-					shieldPill.style.borderColor = '#38bdf8';
-					shieldPill.style.color = '#38bdf8';
-					shieldPill.textContent = '🐾 Protected by CMO! (Quantum-Stabilized 🛡️)';
-					avatarWrap.appendChild(shieldPill);
-					setTimeout(() => shieldPill.remove(), 1600);
-				}
-				(window as any).__boopDog?.();
-				return;
-			}
-
-			const card = target.closest('.card, .benchmark-card, .debug-card, .cad-model-card') as HTMLElement | null;
-			if (card && !dissolvedCards.has(card)) {
-				e.preventDefault();
-				e.stopPropagation();
-				dissolveCard(card);
-			}
-		}
-
-		function dissolveCard(card: HTMLElement) {
-			if (dissolvedCards.has(card) || isDogElement(card)) return;
-			dissolvedCards.add(card);
-
-			const rect = card.getBoundingClientRect();
-			card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-			card.style.opacity = '0';
-			card.style.transform = 'scale(0.96)';
-			card.style.pointerEvents = 'none';
-
-			// Spawn bold, high-visibility rotating silicon micro-chips
-			const count = Math.min(450, Math.max(140, Math.floor((rect.width * rect.height) / 350)));
-			const colors = ['#f97316', '#38bdf8', '#0ea5e9', '#fbbf24', '#ffffff', '#34d399', '#c084fc'];
-
-			for (let i = 0; i < count; i++) {
-				const px = rect.left + Math.random() * rect.width;
-				const py = rect.top + Math.random() * rect.height;
-				const col = colors[Math.floor(Math.random() * colors.length)];
-				const angle = Math.random() * Math.PI * 2;
-				const speed = 2 + Math.random() * 5.5;
-
-				qParticles.push({
-					x: px,
-					y: py,
-					origX: px,
-					origY: py,
-					vx: Math.cos(angle) * speed,
-					vy: Math.sin(angle) * speed - 1.5,
-					color: col,
-					size: Math.random() * 4.5 + 4.5, // 4.5px - 9.0px bold silicon micro-dies
-					rot: Math.random() * Math.PI * 2,
-					vRot: (Math.random() - 0.5) * 0.16,
-					card: card
-				});
-			}
-
-			audioEngine.playQuantumDisintegrate();
-		}
-
-		function dissolveAllVisible() {
-			if (!isQuantum) return;
-			const winH = window.innerHeight;
-			const cards = Array.from(document.querySelectorAll<HTMLElement>('.card, .benchmark-card, .debug-card, .cad-model-card')).filter(c => {
-				if (isDogElement(c)) return false;
-				const r = c.getBoundingClientRect();
-				return r.bottom > 0 && r.top < winH && !dissolvedCards.has(c);
-			});
-			cards.forEach((c, idx) => {
-				setTimeout(() => dissolveCard(c), idx * 55);
-			});
-		}
-
-		function startQuantum() {
-			if (isQuantum || !quantumCanvas) return;
-			closeAllActiveModes();
-			isQuantum = true;
-			if (quantumHud) {
-				quantumHud.style.display = 'flex';
-				quantumHud.classList.remove('hidden');
-			}
-			quantumCanvas.style.display = 'block';
-			quantumCanvas.classList.remove('hidden');
-			document.body.classList.add('quantum-active');
-
-			const dpr = Math.min(window.devicePixelRatio || 1, 2);
-			quantumCanvas.width = window.innerWidth * dpr;
-			quantumCanvas.height = window.innerHeight * dpr;
-			const ctx = quantumCanvas.getContext('2d');
-			if (!ctx) return;
-			ctx.scale(dpr, dpr);
-
-			document.querySelectorAll<HTMLElement>('.card, .benchmark-card, .debug-card, .cad-model-card').forEach((c) => {
-				if (!isDogElement(c)) {
-					c.classList.add('quantum-targetable');
-				}
-			});
-
-			quantumState = 'swirling';
-			window.addEventListener('mousemove', handleQuantumPointer, { passive: true });
-			window.addEventListener('click', handleQuantumClick, true);
-
-			function loopQuantum() {
-				if (!isQuantum || !ctx || !quantumCanvas) return;
-				ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-
-				for (let i = 0; i < qParticles.length; i++) {
-					const p = qParticles[i];
-
-					if (quantumState === 'reassembling') {
-						const dx = p.origX - p.x;
-						const dy = p.origY - p.y;
-						p.vx = p.vx * 0.82 + dx * 0.18;
-						p.vy = p.vy * 0.82 + dy * 0.18;
-						p.x += p.vx;
-						p.y += p.vy;
-					} else {
-						p.vx *= 0.985;
-						p.vy *= 0.985;
-						p.vy -= 0.035; // gentle thermal lift
-						p.x += p.vx;
-						p.y += p.vy;
-						p.rot += p.vRot;
-
-						const dist = Math.hypot(p.x - quantumPointerX, p.y - quantumPointerY);
-						if (dist < 180 && dist > 2) {
-							const force = (1 - dist / 180) * 4.5;
-							p.vx += (-(p.y - quantumPointerY) / dist) * force;
-							p.vy += ((p.x - quantumPointerX) / dist) * force;
-						}
-					}
-
-					// High-visibility glowing silicon micro-chips
-					ctx.save();
-					ctx.translate(p.x, p.y);
-					ctx.rotate(p.rot);
-					ctx.shadowBlur = 6;
-					ctx.shadowColor = p.color;
-					ctx.fillStyle = p.color;
-					const s = p.size;
-					ctx.fillRect(-s / 2, -s / 2, s, s);
-					// Gleaming inner metallic die core
-					ctx.fillStyle = '#ffffff';
-					ctx.fillRect(-s / 4, -s / 4, s / 2, s / 2);
-					ctx.restore();
-				}
-
-				if (quantumState === 'reassembling') {
-					let allSnapped = true;
-					for (let i = 0; i < qParticles.length; i += 6) {
-						const p = qParticles[i];
-						if (Math.hypot(p.x - p.origX, p.y - p.origY) > 8) {
-							allSnapped = false;
-							break;
-						}
-					}
-					if (allSnapped) {
-						dissolvedCards.forEach(c => {
-							c.style.opacity = '';
-							c.style.transform = '';
-							c.style.pointerEvents = '';
-						});
-						dissolvedCards.clear();
-						qParticles = [];
-						quantumState = 'swirling';
-					}
-				}
-
-				quantumAnimId = requestAnimationFrame(loopQuantum);
-			}
-
-			quantumAnimId = requestAnimationFrame(loopQuantum);
-		}
-
-		function triggerQuantumReassemble() {
-			if (!isQuantum || quantumState === 'reassembling') return;
-			quantumState = 'reassembling';
-		}
-
-		function resetQuantum() {
-			if (!isQuantum) return;
-			isQuantum = false;
-			cancelAnimationFrame(quantumAnimId);
-			if (quantumHud) {
-				quantumHud.classList.add('hidden');
-				quantumHud.style.display = 'none';
-			}
-			if (quantumCanvas) {
-				quantumCanvas.classList.add('hidden');
-				quantumCanvas.style.display = 'none';
-			}
-			document.body.classList.remove('quantum-active');
-			window.removeEventListener('mousemove', handleQuantumPointer);
-			window.removeEventListener('click', handleQuantumClick, true);
-
-			document.querySelectorAll<HTMLElement>('.card, .benchmark-card, .debug-card, .cad-model-card').forEach((c) => {
-				c.style.opacity = '';
-				c.style.transform = '';
-				c.style.pointerEvents = '';
-				c.classList.remove('quantum-targetable');
-			});
-			dissolvedCards.clear();
-			qParticles = [];
-			const ctx = quantumCanvas?.getContext('2d');
-			if (ctx && quantumCanvas) ctx.clearRect(0, 0, quantumCanvas.width, quantumCanvas.height);
-		}
-
-		quantumAllBtn?.addEventListener('click', dissolveAllVisible);
-		quantumReBtn?.addEventListener('click', triggerQuantumReassemble);
-		quantumExitBtn?.addEventListener('click', resetQuantum);
-
-		// 6. INFRARED THERMAL CAMERA & LN2 CRYO-SPRAY
-		let thermalAnimId = 0;
-		let thermalToolMode: 'cryo' | 'heatgun' = 'cryo';
-		let isThermalSpraying = false;
-		let thermalPointerX = 0;
-		let thermalPointerY = 0;
-		let probeTemp = 24.5;
-		let cpuTemp = 98.4;
-		let vrmTemp = 104.2;
-		let memTemp = 71.5;
-
-		interface ThermalVapor {
-			x: number;
-			y: number;
-			vx: number;
-			vy: number;
-			radius: number;
-			life: number;
-			maxLife: number;
-			isCryo: boolean;
-		}
-		let thermalVapors: ThermalVapor[] = [];
-
-		interface FrostCrystal {
-			x: number;
-			y: number;
-			angle: number;
-			length: number;
-			branches: { offset: number; angle: number; length: number }[];
-			life: number;
-			maxLife: number;
-		}
-		let frostCrystals: FrostCrystal[] = [];
-
-		interface ThermalHeatSpot {
-			x: number;
-			y: number;
-			radius: number;
-			life: number;
-			maxLife: number;
-		}
-		let heatSpots: ThermalHeatSpot[] = [];
-
-		const tToolText = document.getElementById('thermal-tool-text');
-		const tToolBtn = document.getElementById('thermal-tool-btn');
-		const tProbeVal = document.getElementById('t-cursor-val');
-		const tCpuVal = document.getElementById('t-cpu-val');
-		const tVrmVal = document.getElementById('t-vrm-val');
-		const tMemVal = document.getElementById('t-mem-val');
-		const tSpotCursor = document.getElementById('t-spot-cursor');
-
-		// Cached offscreen sprites for 60/120/144 FPS zero-lag hardware-accelerated particle blitting
-		let cachedCryoSprite: HTMLCanvasElement | null = null;
-		let cachedHeatSprite: HTMLCanvasElement | null = null;
-		let cachedHeatSpotSprite: HTMLCanvasElement | null = null;
-
-		function initThermalSprites() {
-			if (cachedCryoSprite) return;
-
-			// 1. Cryo LN2 vapor sprite (128x128)
-			cachedCryoSprite = document.createElement('canvas');
-			cachedCryoSprite.width = 128;
-			cachedCryoSprite.height = 128;
-			const cCtx = cachedCryoSprite.getContext('2d');
-			if (cCtx) {
-				const grad = cCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
-				grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-				grad.addColorStop(0.25, 'rgba(224, 242, 254, 0.75)');
-				grad.addColorStop(0.55, 'rgba(56, 189, 248, 0.40)');
-				grad.addColorStop(0.85, 'rgba(14, 165, 233, 0.15)');
-				grad.addColorStop(1, 'rgba(14, 165, 233, 0)');
-				cCtx.fillStyle = grad;
-				cCtx.fillRect(0, 0, 128, 128);
-			}
-
-			// 2. Heat Gun incandescent vapor sprite (128x128)
-			cachedHeatSprite = document.createElement('canvas');
-			cachedHeatSprite.width = 128;
-			cachedHeatSprite.height = 128;
-			const hCtx = cachedHeatSprite.getContext('2d');
-			if (hCtx) {
-				const grad = hCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
-				grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-				grad.addColorStop(0.28, 'rgba(254, 240, 138, 0.80)');
-				grad.addColorStop(0.58, 'rgba(249, 115, 22, 0.45)');
-				grad.addColorStop(0.85, 'rgba(225, 29, 72, 0.18)');
-				grad.addColorStop(1, 'rgba(147, 51, 234, 0)');
-				hCtx.fillStyle = grad;
-				hCtx.fillRect(0, 0, 128, 128);
-			}
-
-			// 3. Surface heat glow spot (96x96)
-			cachedHeatSpotSprite = document.createElement('canvas');
-			cachedHeatSpotSprite.width = 96;
-			cachedHeatSpotSprite.height = 96;
-			const sCtx = cachedHeatSpotSprite.getContext('2d');
-			if (sCtx) {
-				const grad = sCtx.createRadialGradient(48, 48, 0, 48, 48, 48);
-				grad.addColorStop(0, 'rgba(255, 255, 255, 0.80)');
-				grad.addColorStop(0.3, 'rgba(249, 115, 22, 0.60)');
-				grad.addColorStop(0.7, 'rgba(225, 29, 72, 0.30)');
-				grad.addColorStop(1, 'rgba(225, 29, 72, 0)');
-				sCtx.fillStyle = grad;
-				sCtx.fillRect(0, 0, 96, 96);
-			}
-		}
-
-		function handleThermalPointerMove(e: MouseEvent) {
-			thermalPointerX = e.clientX;
-			thermalPointerY = e.clientY;
-			if (tSpotCursor) {
-				tSpotCursor.style.transform = `translate3d(${e.clientX + 14}px, ${e.clientY + 14}px, 0)`;
-			}
-		}
-
-		function handleThermalPointerDown(e: MouseEvent) {
-			if (e.target && (e.target as HTMLElement).closest('.ee-hud, .wafer-modal, .lab-extras-modal')) return;
-			isThermalSpraying = true;
-			thermalPointerX = e.clientX;
-			thermalPointerY = e.clientY;
-			audioEngine.startThermalSpray(thermalToolMode);
-		}
-
-		function handleThermalPointerUp() {
-			isThermalSpraying = false;
-			audioEngine.stopThermalSpray();
-		}
-
-		function startThermal() {
-			if (isThermal || !thermalCanvas) return;
-			closeAllActiveModes();
-			isThermal = true;
-			initThermalSprites();
-
-			if (thermalHud) {
-				thermalHud.style.display = 'flex';
-				thermalHud.classList.remove('hidden');
-			}
-			if (thermalScaleBar) {
-				thermalScaleBar.style.display = 'flex';
-				thermalScaleBar.classList.remove('hidden');
-			}
-			if (thermalSpots) {
-				thermalSpots.style.display = 'block';
-				thermalSpots.classList.remove('hidden');
-			}
-			thermalCanvas.style.display = 'block';
-			thermalCanvas.classList.remove('hidden');
-			document.body.classList.add('thermal-active');
-
-			const dpr = Math.min(window.devicePixelRatio || 1, 2);
-			thermalCanvas.width = window.innerWidth * dpr;
-			thermalCanvas.height = window.innerHeight * dpr;
-			const ctx = thermalCanvas.getContext('2d');
-			if (!ctx) return;
-			ctx.scale(dpr, dpr);
-
-			window.addEventListener('mousemove', handleThermalPointerMove, { passive: true });
-			window.addEventListener('mousedown', handleThermalPointerDown);
-			window.addEventListener('mouseup', handleThermalPointerUp);
-
-			let lastDomUpdate = 0;
-
-			function loopThermal() {
-				if (!isThermal || !ctx || !thermalCanvas) return;
-				ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-
-				if (isThermalSpraying) {
-					if (thermalToolMode === 'cryo') {
-						probeTemp = Math.max(-196, probeTemp - 8.5);
-
-						// Spawn cryogenic billowing vapor plumes (capped pool for zero lag)
-						if (thermalVapors.length < 45) {
-							for (let i = 0; i < 2; i++) {
-								const ang = Math.random() * Math.PI * 2;
-								const spd = 1.5 + Math.random() * 4.0;
-								thermalVapors.push({
-									x: thermalPointerX + (Math.random() - 0.5) * 16,
-									y: thermalPointerY + (Math.random() - 0.5) * 16,
-									vx: Math.cos(ang) * spd,
-									vy: Math.sin(ang) * spd + 1.2, // Cold gas drifts down
-									radius: 18 + Math.random() * 22,
-									life: 0,
-									maxLife: 26 + Math.random() * 16,
-									isCryo: true
-								});
-							}
-						}
-
-						// Spawn dendritic frost crystals blooming on contact surface
-						if (Math.random() > 0.65 && frostCrystals.length < 25) {
-							const branches = [];
-							const branchCount = 3 + Math.floor(Math.random() * 2);
-							for (let b = 0; b < branchCount; b++) {
-								branches.push({
-									offset: 0.3 + Math.random() * 0.5,
-									angle: (Math.random() > 0.5 ? 1 : -1) * (0.55 + Math.random() * 0.3),
-									length: 6 + Math.random() * 8
-								});
-							}
-							frostCrystals.push({
-								x: thermalPointerX + (Math.random() - 0.5) * 36,
-								y: thermalPointerY + (Math.random() - 0.5) * 36,
-								angle: Math.random() * Math.PI * 2,
-								length: 15 + Math.random() * 18,
-								branches,
-								life: 0,
-								maxLife: 80 + Math.random() * 40
-							});
-						}
-					} else {
-						probeTemp = Math.min(450, probeTemp + 12.0);
-
-						// Heat gun buoyant rising thermal plumes
-						if (thermalVapors.length < 45) {
-							for (let i = 0; i < 2; i++) {
-								const ang = Math.random() * Math.PI * 2;
-								const spd = 1.8 + Math.random() * 4.0;
-								thermalVapors.push({
-									x: thermalPointerX + (Math.random() - 0.5) * 16,
-									y: thermalPointerY + (Math.random() - 0.5) * 16,
-									vx: Math.cos(ang) * spd,
-									vy: Math.sin(ang) * spd - 2.5, // Hot gas rises
-									radius: 16 + Math.random() * 22,
-									life: 0,
-									maxLife: 24 + Math.random() * 14,
-									isCryo: false
-								});
-							}
-						}
-
-						if (Math.random() > 0.65 && heatSpots.length < 20) {
-							heatSpots.push({
-								x: thermalPointerX + (Math.random() - 0.5) * 20,
-								y: thermalPointerY + (Math.random() - 0.5) * 20,
-								radius: 16 + Math.random() * 22,
-								life: 0,
-								maxLife: 55 + Math.random() * 25
-							});
-						}
-					}
-				} else {
-					probeTemp += (24.5 - probeTemp) * 0.05;
-				}
-
-				// Throttled DOM telemetry updates (~16 updates/sec) to eliminate forced layout thrashing
-				const now = performance.now();
-				if (now - lastDomUpdate > 60) {
-					lastDomUpdate = now;
-					cpuTemp += (Math.random() - 0.49) * 0.3;
-					vrmTemp += (Math.random() - 0.49) * 0.4;
-					memTemp += (Math.random() - 0.49) * 0.2;
-					if (tCpuVal) tCpuVal.textContent = `${cpuTemp.toFixed(1)}°C`;
-					if (tVrmVal) tVrmVal.textContent = `${vrmTemp.toFixed(1)}°C`;
-					if (tMemVal) tMemVal.textContent = `${memTemp.toFixed(1)}°C`;
-
-					if (tProbeVal) {
-						if (probeTemp <= -100) {
-							tProbeVal.textContent = `${probeTemp.toFixed(1)}°C [SUPERCOOLED 77K]`;
-							tProbeVal.style.color = '#38bdf8';
-						} else if (probeTemp >= 120) {
-							tProbeVal.textContent = `${probeTemp.toFixed(1)}°C [RUNAWAY SATURATION]`;
-							tProbeVal.style.color = '#ef4444';
-						} else {
-							tProbeVal.textContent = `${probeTemp.toFixed(1)}°C`;
-							tProbeVal.style.color = '#10b981';
-						}
-					}
-				}
-
-				// 1. Draw glowing surface heat spots via pre-rendered hardware sprite
-				if (cachedHeatSpotSprite) {
-					for (let i = heatSpots.length - 1; i >= 0; i--) {
-						const hs = heatSpots[i];
-						hs.life++;
-						const progress = hs.life / hs.maxLife;
-						const alpha = (1 - progress) * 0.45;
-						ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-						const d = hs.radius * 2;
-						ctx.drawImage(cachedHeatSpotSprite, hs.x - hs.radius, hs.y - hs.radius, d, d);
-						if (hs.life >= hs.maxLife) heatSpots.splice(i, 1);
-					}
-				}
-
-				// 2. Draw dendritic frost crystals (batched single path, zero shadowBlur for 60fps)
-				for (let i = frostCrystals.length - 1; i >= 0; i--) {
-					const fc = frostCrystals[i];
-					fc.life++;
-					const progress = fc.life / fc.maxLife;
-					const alpha = (1 - progress) * 0.85;
-
-					ctx.strokeStyle = `rgba(224, 242, 254, ${alpha.toFixed(2)})`;
-					ctx.lineWidth = 1.4;
-					ctx.beginPath();
-
-					for (let sym = 0; sym < 6; sym++) {
-						const rootAngle = fc.angle + (sym * Math.PI) / 3;
-						const cosR = Math.cos(rootAngle);
-						const sinR = Math.sin(rootAngle);
-						const endX = fc.x + cosR * fc.length;
-						const endY = fc.y + sinR * fc.length;
-
-						ctx.moveTo(fc.x, fc.y);
-						ctx.lineTo(endX, endY);
-
-						for (const br of fc.branches) {
-							const bx = fc.x + cosR * (fc.length * br.offset);
-							const by = fc.y + sinR * (fc.length * br.offset);
-							const bAngle1 = rootAngle + br.angle;
-							const bAngle2 = rootAngle - br.angle;
-							ctx.moveTo(bx, by);
-							ctx.lineTo(bx + Math.cos(bAngle1) * br.length, by + Math.sin(bAngle1) * br.length);
-							ctx.moveTo(bx, by);
-							ctx.lineTo(bx + Math.cos(bAngle2) * br.length, by + Math.sin(bAngle2) * br.length);
-						}
-					}
-					ctx.stroke();
-
-					if (fc.life >= fc.maxLife) frostCrystals.splice(i, 1);
-				}
-
-				// 3. Draw billowing soft-edge thermal vapor clouds via pre-rendered hardware sprites
-				for (let i = thermalVapors.length - 1; i >= 0; i--) {
-					const v = thermalVapors[i];
-					v.x += v.vx;
-					v.y += v.vy;
-					v.vx *= 0.96;
-					v.vy *= 0.96;
-					v.life++;
-
-					const progress = v.life / v.maxLife;
-					const currentRadius = v.radius * (1 + progress * 1.5);
-					const alpha = (1 - progress) * 0.40;
-
-					const sprite = v.isCryo ? cachedCryoSprite : cachedHeatSprite;
-					if (sprite) {
-						ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-						const d = currentRadius * 2;
-						ctx.drawImage(sprite, v.x - currentRadius, v.y - currentRadius, d, d);
-					}
-
-					if (v.life >= v.maxLife) {
-						thermalVapors.splice(i, 1);
-					}
-				}
-				ctx.globalAlpha = 1.0;
-
-				thermalAnimId = requestAnimationFrame(loopThermal);
-			}
-
-			thermalAnimId = requestAnimationFrame(loopThermal);
-		}
-
-		function toggleThermalTool() {
-			if (thermalToolMode === 'cryo') {
-				thermalToolMode = 'heatgun';
-				if (tToolText) tToolText.textContent = 'TOOL: HEAT GUN (450°C)';
-				if (tToolBtn) tToolBtn.textContent = 'Switch to LN2 Cryo (-196°C)';
-			} else {
-				thermalToolMode = 'cryo';
-				if (tToolText) tToolText.textContent = 'TOOL: LN2 CRYO-SPRAY (-196°C)';
-				if (tToolBtn) tToolBtn.textContent = 'Switch to Heat Gun (450°C)';
-			}
-			if (isThermalSpraying) {
-				audioEngine.startThermalSpray(thermalToolMode);
-			}
-		}
-
-		function normalizeThermal() {
-			probeTemp = 24.5;
-			cpuTemp = 98.4;
-			vrmTemp = 104.2;
-			memTemp = 71.5;
-			thermalVapors = [];
-			frostCrystals = [];
-			heatSpots = [];
-		}
-
-		function resetThermal() {
-			if (!isThermal) return;
-			isThermal = false;
-			isThermalSpraying = false;
-			audioEngine.stopThermalSpray();
-			cancelAnimationFrame(thermalAnimId);
-			if (thermalHud) {
-				thermalHud.classList.add('hidden');
-				thermalHud.style.display = 'none';
-			}
-			if (thermalScaleBar) {
-				thermalScaleBar.classList.add('hidden');
-				thermalScaleBar.style.display = 'none';
-			}
-			if (thermalSpots) {
-				thermalSpots.classList.add('hidden');
-				thermalSpots.style.display = 'none';
-			}
-			if (thermalCanvas) {
-				thermalCanvas.classList.add('hidden');
-				thermalCanvas.style.display = 'none';
-			}
-			document.body.classList.remove('thermal-active');
-			window.removeEventListener('mousemove', handleThermalPointerMove);
-			window.removeEventListener('mousedown', handleThermalPointerDown);
-			window.removeEventListener('mouseup', handleThermalPointerUp);
-			thermalVapors = [];
-			frostCrystals = [];
-			heatSpots = [];
-			const ctx = thermalCanvas?.getContext('2d');
-			if (ctx && thermalCanvas) ctx.clearRect(0, 0, thermalCanvas.width, thermalCanvas.height);
-		}
-
-		tToolBtn?.addEventListener('click', toggleThermalTool);
-		thermalResetBtn?.addEventListener('click', normalizeThermal);
-		thermalExitBtn?.addEventListener('click', resetThermal);
-
-		// -------------------------------------------------------------
-		// 8. 8x8-BIT CARRY-SAVE ARRAY MULTIPLIER (CADENCE VIRTUOSO VLSI)
-		// -------------------------------------------------------------
-		const multDx = 56;
-		const multDy = 46;
-		const multCellW = 28;
-		const multCellH = 28;
-		const multXBase = 500;
-		const multYBase = 46;
-		const multPBusY = 470;
-
-		function getCellPos(r: number, c: number) {
-			if (r < 8) {
-				const x = multXBase + (7 - r) * multDx - c * multDx;
-				const y = multYBase + r * multDy;
-				return { x, y, cx: x + multCellW / 2, cy: y + multCellH / 2 };
-			} else {
-				// r === 8: Vector merge ripple-carry adder row
-				const x = (c < 7) ? (multXBase - (c + 1) * multDx) : (multXBase - 8 * multDx);
-				const y = multYBase + 8 * multDy;
-				return { x, y, cx: x + multCellW / 2, cy: y + multCellH / 2 };
-			}
-		}
-
-		interface MultiplierState {
-			S: number[][];
-			C: number[][];
-			PP: number[][];
-			P: number[];
-			pVal: number;
-		}
-
-		function computeMultiplierState(X: number, Y: number): MultiplierState {
-			const S = Array(9).fill(0).map(() => Array(8).fill(0));
-			const C = Array(9).fill(0).map(() => Array(8).fill(0));
-			const PP = Array(8).fill(0).map(() => Array(8).fill(0));
-			const P = Array(16).fill(0);
-
-			for (let r = 0; r < 8; r++) {
-				const xr = (X >> r) & 1;
-				for (let c = 0; c < 8; c++) {
-					PP[r][c] = xr & ((Y >> c) & 1);
-				}
-			}
-
-			// Row 0: Full Adders with PP as input, top and carry-in tied to 0
-			for (let c = 0; c < 8; c++) {
-				S[0][c] = PP[0][c];
-				C[0][c] = 0;
-			}
-			P[0] = S[0][0];
-
-			// Rows 1 to 7 (CSA Stages)
-			for (let r = 1; r < 8; r++) {
-				for (let c = 0; c < 8; c++) {
-					const pp = PP[r][c];
-					const sin = (c < 7) ? S[r - 1][c + 1] : 0;
-					const cin = C[r - 1][c];
-					S[r][c] = sin ^ cin ^ pp;
-					C[r][c] = (sin & cin) | (sin & pp) | (cin & pp);
-				}
-				P[r] = S[r][0];
-			}
-
-			// Row 8 (Vector merge ripple carry stage)
-			let c_in_right = 0;
-			for (let k = 0; k < 8; k++) {
-				const sin = (k < 7) ? S[7][k + 1] : 0;
-				const cin_top = C[7][k];
-				S[8][k] = sin ^ cin_top ^ c_in_right;
-				C[8][k] = (sin & cin_top) | (sin & c_in_right) | (cin_top & c_in_right);
-				c_in_right = C[8][k];
-				P[8 + k] = S[8][k];
-			}
-
-			let pVal = 0;
-			for (let i = 0; i < 16; i++) pVal |= (P[i] << i);
-			return { S, C, PP, P, pVal };
-		}
-
-		function buildMultiplierSvg() {
-			if (!multSvg) return;
-
-			let svgHtml = `
-				<defs>
-					<marker id="arr-dim" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
-						<polygon points="0 0, 5 2.5, 0 5" fill="rgba(148, 163, 184, 0.45)" />
-					</marker>
-					<marker id="arr-act" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
-						<polygon points="0 0, 5 2.5, 0 5" fill="#22c55e" />
-					</marker>
-					<filter id="mult-glow" x="-20%" y="-20%" width="140%" height="140%">
-						<feGaussianBlur stdDeviation="2.0" result="blur" />
-						<feMerge>
-							<feMergeNode in="blur" />
-							<feMergeNode in="SourceGraphic" />
-						</feMerge>
-					</filter>
-				</defs>
-			`;
-
-			// 1. Top Zero Inputs
-			// Row 0 Top Inputs (into each cell)
-			for (let c = 0; c < 8; c++) {
-				const pos = getCellPos(0, c);
-				svgHtml += `
-					<line class="mult-wire wire-dim" x1="${pos.cx}" y1="${pos.y - 18}" x2="${pos.cx}" y2="${pos.y}" marker-end="url(#arr-dim)" />
-					<text class="wire-label" x="${pos.cx}" y="${pos.y - 21}" text-anchor="middle">0</text>
-				`;
-			}
-			// Rows 1-7 Leftmost Cell (c = 7) Top Zero Inputs
-			for (let r = 1; r < 8; r++) {
-				const pos = getCellPos(r, 7);
-				svgHtml += `
-					<line class="mult-wire wire-dim" x1="${pos.cx}" y1="${pos.y - 16}" x2="${pos.cx}" y2="${pos.y}" marker-end="url(#arr-dim)" />
-					<text class="wire-label" x="${pos.cx}" y="${pos.y - 19}" text-anchor="middle">0</text>
-				`;
-			}
-			// Row 8 Leftmost Cell (k = 7) Top Zero Input
-			const r8TopPos = getCellPos(8, 7);
-			svgHtml += `
-				<line class="mult-wire wire-dim" x1="${r8TopPos.cx}" y1="${r8TopPos.y - 16}" x2="${r8TopPos.cx}" y2="${r8TopPos.y}" marker-end="url(#arr-dim)" />
-				<text class="wire-label" x="${r8TopPos.cx}" y="${r8TopPos.y - 19}" text-anchor="middle">0</text>
-			`;
-
-			// Row 8 Right Zero Carry Input
-			const r8Cell0 = getCellPos(8, 0);
-			svgHtml += `
-				<line class="mult-wire wire-dim" x1="${r8Cell0.x + multCellW + 16}" y1="${r8Cell0.cy}" x2="${r8Cell0.x + multCellW}" y2="${r8Cell0.cy}" marker-end="url(#arr-dim)" />
-				<text class="wire-label" x="${r8Cell0.x + multCellW + 21}" y="${r8Cell0.cy + 3}">0</text>
-			`;
-
-			// Row 8 Left Carry Out Arrow (C16 = 0)
-			const r8Cell7 = getCellPos(8, 7);
-			svgHtml += `
-				<line class="mult-wire wire-dim" x1="${r8Cell7.x}" y1="${r8Cell7.cy}" x2="${r8Cell7.x - 18}" y2="${r8Cell7.cy}" marker-end="url(#arr-dim)" />
-				<text class="wire-label" x="${r8Cell7.x - 23}" y="${r8Cell7.cy + 3}" text-anchor="end">0</text>
-			`;
-
-			// 2. Sum Wires between rows
-			// Rows 0 to 6 -> Rows 1 to 7
-			for (let r = 0; r < 7; r++) {
-				for (let c = 0; c < 7; c++) {
-					const top = getCellPos(r, c + 1);
-					const bot = getCellPos(r + 1, c);
-					svgHtml += `
-						<line id="wire-sum-${r}-${c + 1}" class="mult-wire wire-dim" x1="${top.cx}" y1="${top.y + multCellH}" x2="${bot.cx}" y2="${bot.y}" marker-end="url(#arr-dim)" data-type="sum" data-r="${r}" data-c="${c + 1}" />
-					`;
-				}
-			}
-			// Row 7 -> Row 8 (Vector merge stage)
-			for (let k = 0; k < 7; k++) {
-				const top = getCellPos(7, k + 1);
-				const bot = getCellPos(8, k);
-				svgHtml += `
-					<line id="wire-sum-7-${k + 1}" class="mult-wire wire-dim" x1="${top.cx}" y1="${top.y + multCellH}" x2="${bot.cx}" y2="${bot.y}" marker-end="url(#arr-dim)" data-type="sum" data-r="7" data-c="${k + 1}" />
-				`;
-			}
-
-			// 3. Carry Wires (Diagonal down-left)
-			// Rows 0 to 6 -> Rows 1 to 7
-			for (let r = 0; r < 7; r++) {
-				for (let c = 0; c < 8; c++) {
-					const top = getCellPos(r, c);
-					const bot = getCellPos(r + 1, c);
-					svgHtml += `
-						<line id="wire-carry-${r}-${c}" class="mult-wire wire-dim" x1="${top.x + 6}" y1="${top.y + multCellH}" x2="${bot.x + multCellW - 6}" y2="${bot.y}" marker-end="url(#arr-dim)" data-type="carry" data-r="${r}" data-c="${c}" />
-					`;
-				}
-			}
-			// Row 7 -> Row 8
-			for (let k = 0; k < 8; k++) {
-				const top = getCellPos(7, k);
-				const bot = getCellPos(8, k);
-				svgHtml += `
-					<line id="wire-carry-7-${k}" class="mult-wire wire-dim" x1="${top.x + 6}" y1="${top.y + multCellH}" x2="${bot.x + multCellW - 6}" y2="${bot.y}" marker-end="url(#arr-dim)" data-type="carry" data-r="7" data-c="${k}" />
-				`;
-			}
-			// Row 8 Ripple-Carry (Horizontal Left)
-			for (let k = 0; k < 7; k++) {
-				const left = getCellPos(8, k);
-				const right = getCellPos(8, k + 1);
-				svgHtml += `
-					<line id="wire-carry-8-${k}" class="mult-wire wire-dim" x1="${left.x}" y1="${left.cy}" x2="${right.x + multCellW}" y2="${right.cy}" marker-end="url(#arr-dim)" data-type="carry" data-r="8" data-c="${k}" />
-				`;
-			}
-
-			// 4. Partial Product Input Arrows (from right into each cell)
-			for (let r = 0; r < 8; r++) {
-				for (let c = 0; c < 8; c++) {
-					const pos = getCellPos(r, c);
-					svgHtml += `
-						<line id="wire-pp-${r}-${c}" class="mult-wire wire-dim" x1="${pos.x + multCellW + 14}" y1="${pos.cy}" x2="${pos.x + multCellW}" y2="${pos.cy}" marker-end="url(#arr-dim)" data-type="pp" data-r="${r}" data-c="${c}" />
-						<text id="lbl-pp-${r}-${c}" class="wire-label" x="${pos.x + multCellW + 7}" y="${pos.cy - 3}" text-anchor="middle">X${r}Y${c}</text>
-					`;
-				}
-			}
-
-			// 5. Product Drop Lines (P0 to P15)
-			// P0 to P7: from cell (r, 0) bottom center straight down
-			for (let r = 0; r < 8; r++) {
-				const pos = getCellPos(r, 0);
-				svgHtml += `
-					<line id="wire-prod-${r}" class="mult-wire wire-dim" x1="${pos.cx}" y1="${pos.y + multCellH}" x2="${pos.cx}" y2="${multPBusY}" marker-end="url(#arr-dim)" data-type="prod" data-bit="${r}" />
-					<text id="lbl-prod-${r}" class="prod-label" x="${pos.cx}" y="${multPBusY + 18}">P${r}</text>
-				`;
-			}
-			// P8 to P15: from cell (8, k) bottom center straight down
-			for (let k = 0; k < 8; k++) {
-				const pos = getCellPos(8, k);
-				svgHtml += `
-					<line id="wire-prod-${8 + k}" class="mult-wire wire-dim" x1="${pos.cx}" y1="${pos.y + multCellH}" x2="${pos.cx}" y2="${multPBusY}" marker-end="url(#arr-dim)" data-type="prod" data-bit="${8 + k}" />
-					<text id="lbl-prod-${8 + k}" class="prod-label" x="${pos.cx}" y="${multPBusY + 18}">P${8 + k}</text>
-				`;
-			}
-
-			// 6. Full Adder Cells (F)
-			// Rows 0 to 7
-			for (let r = 0; r < 8; r++) {
-				for (let c = 0; c < 8; c++) {
-					const pos = getCellPos(r, c);
-					svgHtml += `
-						<g class="mult-cell" id="cell-f-${r}-${c}" data-r="${r}" data-c="${c}">
-							<rect class="cell-box" x="${pos.x}" y="${pos.y}" width="${multCellW}" height="${multCellH}" rx="3" />
-							<text class="cell-label" x="${pos.cx}" y="${pos.cy + 3.5}">F</text>
-						</g>
-					`;
-				}
-			}
-			// Row 8
-			for (let k = 0; k < 8; k++) {
-				const pos = getCellPos(8, k);
-				svgHtml += `
-					<g class="mult-cell" id="cell-f-8-${k}" data-r="8" data-c="${k}">
-						<rect class="cell-box" x="${pos.x}" y="${pos.y}" width="${multCellW}" height="${multCellH}" rx="3" />
-						<text class="cell-label" x="${pos.cx}" y="${pos.cy + 3.5}">F</text>
-					</g>
-				`;
-			}
-
-			multSvg.innerHTML = svgHtml;
-		}
-
-		function clearCascadeTimeouts() {
-			multCascadeTimeouts.forEach(id => clearTimeout(id));
-			multCascadeTimeouts = [];
-			document.querySelectorAll('.mult-cell.cell-evaluating').forEach(el => el.classList.remove('cell-evaluating'));
-		}
-
-		function renderMultiplierInputs() {
-			if (multXBits) {
-				multXBits.innerHTML = '';
-				for (let i = 7; i >= 0; i--) {
-					if (i === 3) {
-						const gap = document.createElement('div');
-						gap.className = 'mult-nibble-gap';
-						multXBits.appendChild(gap);
-					}
-					const val = (multX >> i) & 1;
-					const col = document.createElement('div');
-					col.className = 'mult-bit-col';
-
-					const nameSpan = document.createElement('span');
-					nameSpan.className = 'bit-col-name mono';
-					nameSpan.textContent = `X${i}`;
-
-					const btn = document.createElement('button');
-					btn.type = 'button';
-					btn.className = `bit-val-btn mono ${val ? 'active' : ''}`;
-					btn.title = `Toggle Multiplicand Bit X[${i}] (Weight 2^${i} = ${1 << i})`;
-					btn.textContent = String(val);
-					btn.addEventListener('click', () => {
-						multX ^= (1 << i);
-						audioEngine.playBitClick(((multX >> i) & 1) === 1);
-						updateMultiplier(true);
-					});
-
-					col.appendChild(nameSpan);
-					col.appendChild(btn);
-					multXBits.appendChild(col);
-				}
-			}
-			if (multXMeta) {
-				const bin = multX.toString(2).padStart(8, '0');
-				multXMeta.textContent = `0x${multX.toString(16).toUpperCase().padStart(2, '0')} ▪ ${multX} ▪ ${bin.slice(0, 4)} ${bin.slice(4)}₂`;
-			}
-
-			if (multYBits) {
-				multYBits.innerHTML = '';
-				for (let i = 7; i >= 0; i--) {
-					if (i === 3) {
-						const gap = document.createElement('div');
-						gap.className = 'mult-nibble-gap';
-						multYBits.appendChild(gap);
-					}
-					const val = (multY >> i) & 1;
-					const col = document.createElement('div');
-					col.className = 'mult-bit-col';
-
-					const nameSpan = document.createElement('span');
-					nameSpan.className = 'bit-col-name mono';
-					nameSpan.textContent = `Y${i}`;
-
-					const btn = document.createElement('button');
-					btn.type = 'button';
-					btn.className = `bit-val-btn mono ${val ? 'active' : ''}`;
-					btn.title = `Toggle Multiplier Bit Y[${i}] (Weight 2^${i} = ${1 << i})`;
-					btn.textContent = String(val);
-					btn.addEventListener('click', () => {
-						multY ^= (1 << i);
-						audioEngine.playBitClick(((multY >> i) & 1) === 1);
-						updateMultiplier(true);
-					});
-
-					col.appendChild(nameSpan);
-					col.appendChild(btn);
-					multYBits.appendChild(col);
-				}
-			}
-			if (multYMeta) {
-				const bin = multY.toString(2).padStart(8, '0');
-				multYMeta.textContent = `0x${multY.toString(16).toUpperCase().padStart(2, '0')} ▪ ${multY} ▪ ${bin.slice(0, 4)} ${bin.slice(4)}₂`;
-			}
-		}
-
-		function setWireState(wireId: string, val: number, lblId?: string) {
-			const wire = document.getElementById(wireId);
-			if (wire) {
-				wire.setAttribute('class', `mult-wire ${val ? 'wire-active' : 'wire-dim'}`);
-				wire.setAttribute('marker-end', val ? 'url(#arr-act)' : 'url(#arr-dim)');
-			}
-			if (lblId) {
-				const lbl = document.getElementById(lblId);
-				if (lbl) lbl.classList.toggle('active', !!val);
-			}
-		}
-
-		function setProductBitUI(bit: number, val: number) {
-			setWireState(`wire-prod-${bit}`, val, `lbl-prod-${bit}`);
-			const led = document.getElementById(`mult-p-led-${bit}`);
-			if (led) {
-				led.textContent = String(val);
-				led.className = `p-val-led mono ${val ? 'active' : ''}`;
-			}
-		}
-
-		function renderProductBitsSkeleton(st?: MultiplierState) {
-			if (!multPBits) return;
-			multPBits.innerHTML = '';
-			for (let i = 15; i >= 0; i--) {
-				if (i === 11 || i === 7 || i === 3) {
-					const gap = document.createElement('div');
-					gap.className = 'mult-nibble-gap';
-					multPBits.appendChild(gap);
-				}
-				const val = st ? st.P[i] : 0;
-				const col = document.createElement('div');
-				col.className = 'mult-bit-col';
-
-				const nameSpan = document.createElement('span');
-				nameSpan.className = 'bit-col-name mono';
-				nameSpan.textContent = `P${i}`;
-
-				const span = document.createElement('span');
-				span.id = `mult-p-led-${i}`;
-				span.className = `p-val-led mono ${val && st ? 'active' : ''}`;
-				span.title = `Product Bit P[${i}] (Weight 2^${i} = ${1 << i})`;
-				span.textContent = st ? String(val) : '0';
-
-				col.appendChild(nameSpan);
-				col.appendChild(span);
-				multPBits.appendChild(col);
-			}
-		}
-
-		function runMultiplierCascade(playSound: boolean) {
-			clearCascadeTimeouts();
-			const st = computeMultiplierState(multX, multY);
-
-			// Render inputs immediately
-			renderMultiplierInputs();
-
-			// Prepare Product register in calculating state
-			if (multPDec) multPDec.textContent = 'Calculating...';
-			if (multPHex) multPHex.textContent = '0x----';
-			if (multPBin) multPBin.textContent = '---- ---- ---- ----₂';
-			renderProductBitsSkeleton();
-
-			// Reset all internal wires & cells
-			for (let r = 0; r < 8; r++) {
-				for (let c = 0; c < 8; c++) {
-					const cell = document.getElementById(`cell-f-${r}-${c}`);
-					if (cell) cell.classList.remove('cell-active', 'cell-evaluating');
-					setWireState(`wire-pp-${r}-${c}`, 0, `lbl-pp-${r}-${c}`);
-					if (r < 7 && c < 7) setWireState(`wire-sum-${r}-${c+1}`, 0);
-					if (r < 7) setWireState(`wire-carry-${r}-${c}`, 0);
-				}
-			}
-			for (let k = 0; k < 8; k++) {
-				const cell = document.getElementById(`cell-f-8-${k}`);
-				if (cell) cell.classList.remove('cell-active', 'cell-evaluating');
-				if (k < 7) setWireState(`wire-sum-7-${k+1}`, 0);
-				setWireState(`wire-carry-7-${k}`, 0);
-				if (k < 7) setWireState(`wire-carry-8-${k}`, 0);
-				setWireState(`wire-prod-${8+k}`, 0, `lbl-prod-${8+k}`);
-			}
-			for (let i = 0; i < 8; i++) {
-				setWireState(`wire-prod-${i}`, 0, `lbl-prod-${i}`);
-			}
-
-			// Stage 0: t = 20ms - Partial Products (64 parallel AND gates)
-			multCascadeTimeouts.push(window.setTimeout(() => {
-				for (let r = 0; r < 8; r++) {
-					for (let c = 0; c < 8; c++) {
-						setWireState(`wire-pp-${r}-${c}`, st.PP[r][c], `lbl-pp-${r}-${c}`);
-					}
-				}
-				if (multCellInfo) {
-					multCellInfo.innerHTML = '<strong>Stage 1/9: Partial Product Generation (t = 0)</strong> ▪ 64 parallel AND gates computing X[r]&middot;Y[c]';
-				}
-				audioEngine.playCascadeStep(0, 9);
-			}, 20));
-
-			const rowDelay = 140; // ms per CSA stage
-
-			// Stages 1 to 7: CSA Rows 0 to 6
-			for (let r = 0; r < 7; r++) {
-				const stepTime = 160 + r * rowDelay;
-				multCascadeTimeouts.push(window.setTimeout(() => {
-					for (let c = 0; c < 8; c++) {
-						const cell = document.getElementById(`cell-f-${r}-${c}`);
-						if (cell) cell.classList.add('cell-evaluating');
-					}
-				}, stepTime - 40));
-
-				multCascadeTimeouts.push(window.setTimeout(() => {
-					for (let c = 0; c < 8; c++) {
-						const cell = document.getElementById(`cell-f-${r}-${c}`);
-						if (cell) {
-							cell.classList.remove('cell-evaluating');
-							const hasActivity = st.S[r][c] || st.C[r][c] || st.PP[r][c];
-							cell.classList.toggle('cell-active', !!hasActivity);
-						}
-						setWireState(`wire-carry-${r}-${c}`, st.C[r][c]);
-						if (c < 7) {
-							setWireState(`wire-sum-${r}-${c+1}`, st.S[r][c+1]);
-						}
-					}
-					setProductBitUI(r, st.P[r]);
-					if (multCellInfo) {
-						multCellInfo.innerHTML = `<strong>Stage ${r + 2}/9: CSA Row ${r} Evaluated</strong> ▪ Product Bit <strong>P[${r}] = ${st.P[r]}</strong> settled`;
-					}
-					audioEngine.playCascadeStep(r + 1, 9);
-				}, stepTime));
-			}
-
-			// Stage 8: CSA Row 7
-			const r7Time = 160 + 7 * rowDelay;
-			multCascadeTimeouts.push(window.setTimeout(() => {
-				for (let c = 0; c < 8; c++) {
-					const cell = document.getElementById(`cell-f-7-${c}`);
-					if (cell) cell.classList.add('cell-evaluating');
-				}
-			}, r7Time - 40));
-
-			multCascadeTimeouts.push(window.setTimeout(() => {
-				for (let c = 0; c < 8; c++) {
-					const cell = document.getElementById(`cell-f-7-${c}`);
-					if (cell) {
-						cell.classList.remove('cell-evaluating');
-						const hasActivity = st.S[7][c] || st.C[7][c] || st.PP[7][c];
-						cell.classList.toggle('cell-active', !!hasActivity);
-					}
-					setWireState(`wire-carry-7-${c}`, st.C[7][c]);
-					if (c < 7) {
-						setWireState(`wire-sum-7-${c+1}`, st.S[7][c+1]);
-					}
-				}
-				setProductBitUI(7, st.P[7]);
-				if (multCellInfo) {
-					multCellInfo.innerHTML = `<strong>Stage 9/9: CSA Row 7 Evaluated</strong> ▪ Product Bit <strong>P[7] = ${st.P[7]}</strong> settled ▪ Entering Vector Merge stage`;
-				}
-				audioEngine.playCascadeStep(8, 9);
-			}, r7Time));
-
-			// Stage 9: Row 8 Vector Merge Ripple Adder (k = 0 to 7)
-			const r8StartTime = r7Time + 150;
-			const r8BitDelay = 60; // ms per ripple carry bit
-
-			for (let k = 0; k < 8; k++) {
-				const bitTime = r8StartTime + k * r8BitDelay;
-				multCascadeTimeouts.push(window.setTimeout(() => {
-					const cell = document.getElementById(`cell-f-8-${k}`);
-					if (cell) cell.classList.add('cell-evaluating');
-				}, bitTime - 25));
-
-				multCascadeTimeouts.push(window.setTimeout(() => {
-					const cell = document.getElementById(`cell-f-8-${k}`);
-					if (cell) {
-						cell.classList.remove('cell-evaluating');
-						const hasActivity = st.S[8][k] || st.C[8][k];
-						cell.classList.toggle('cell-active', !!hasActivity);
-					}
-					if (k < 7) {
-						setWireState(`wire-carry-8-${k}`, st.C[8][k]);
-					}
-					setProductBitUI(8 + k, st.P[8 + k]);
-					if (multCellInfo) {
-						multCellInfo.innerHTML = `<strong>Vector Merge Ripple Adder:</strong> Cell [8,${k}] ▪ Carry propagating left ▪ Bit <strong>P[${8 + k}] = ${st.P[8 + k]}</strong> settled`;
-					}
-					audioEngine.playCascadeStep(8 + (k + 1) / 8, 9);
-				}, bitTime));
-			}
-
-			// Final Completion
-			const finishTime = r8StartTime + 8 * r8BitDelay + 70;
-			multCascadeTimeouts.push(window.setTimeout(() => {
-				if (multPDec) multPDec.textContent = `P = ${st.pVal.toLocaleString()}`;
-				if (multPHex) multPHex.textContent = `0x${st.pVal.toString(16).toUpperCase().padStart(4, '0')}`;
-				if (multPBin) {
-					const b = st.pVal.toString(2).padStart(16, '0');
-					multPBin.textContent = `${b.slice(0, 4)} ${b.slice(4, 8)} ${b.slice(8, 12)} ${b.slice(12)}₂`;
-				}
-				if (multCellInfo) {
-					multCellInfo.innerHTML = `<strong>✓ Wavefront Settled:</strong> All 9 combinational stages evaluated ▪ <strong>P = ${st.pVal.toLocaleString()}</strong> (0x${st.pVal.toString(16).toUpperCase().padStart(4, '0')})`;
-				}
-				if (playSound) audioEngine.playMultiplierChime();
-			}, finishTime));
-		}
-
-		function updateMultiplier(playSound: boolean = false, forceSlow: boolean = false) {
-			if (multSlowMode || forceSlow) {
-				runMultiplierCascade(playSound);
-				return;
-			}
-
-			clearCascadeTimeouts();
-			const st = computeMultiplierState(multX, multY);
-
-			renderMultiplierInputs();
-
-			// Render Product output
-			if (multPDec) multPDec.textContent = `P = ${st.pVal.toLocaleString()}`;
-			if (multPHex) multPHex.textContent = `0x${st.pVal.toString(16).toUpperCase().padStart(4, '0')}`;
-			if (multPBin) {
-				const b = st.pVal.toString(2).padStart(16, '0');
-				multPBin.textContent = `${b.slice(0, 4)} ${b.slice(4, 8)} ${b.slice(8, 12)} ${b.slice(12)}₂`;
-			}
-			renderProductBitsSkeleton(st);
-
-			// Update SVG Wires & Cells
-			// Partial Products
-			for (let r = 0; r < 8; r++) {
-				for (let c = 0; c < 8; c++) {
-					setWireState(`wire-pp-${r}-${c}`, st.PP[r][c], `lbl-pp-${r}-${c}`);
-				}
-			}
-
-			// Sum Wires
-			for (let r = 0; r < 7; r++) {
-				for (let c = 0; c < 7; c++) {
-					setWireState(`wire-sum-${r}-${c+1}`, st.S[r][c+1]);
-				}
-			}
-			for (let k = 0; k < 7; k++) {
-				setWireState(`wire-sum-7-${k+1}`, st.S[7][k+1]);
-			}
-
-			// Carry Wires
-			for (let r = 0; r < 7; r++) {
-				for (let c = 0; c < 8; c++) {
-					setWireState(`wire-carry-${r}-${c}`, st.C[r][c]);
-				}
-			}
-			for (let k = 0; k < 8; k++) {
-				setWireState(`wire-carry-7-${k}`, st.C[7][k]);
-			}
-			for (let k = 0; k < 7; k++) {
-				setWireState(`wire-carry-8-${k}`, st.C[8][k]);
-			}
-
-			// Product Output Drop Lines
-			for (let i = 0; i < 16; i++) {
-				setWireState(`wire-prod-${i}`, st.P[i], `lbl-prod-${i}`);
-			}
-
-			// Cell Active Highlights
-			for (let r = 0; r < 8; r++) {
-				for (let c = 0; c < 8; c++) {
-					const cell = document.getElementById(`cell-f-${r}-${c}`);
-					const hasActivity = st.S[r][c] || st.C[r][c] || st.PP[r][c];
-					if (cell) cell.classList.toggle('cell-active', !!hasActivity);
-				}
-			}
-			for (let k = 0; k < 8; k++) {
-				const cell = document.getElementById(`cell-f-8-${k}`);
-				const hasActivity = st.S[8][k] || st.C[8][k];
-				if (cell) cell.classList.toggle('cell-active', !!hasActivity);
-			}
-
-			if (playSound) audioEngine.playMultiplierChime();
-		}
-
-		// Tooltip inspector for cells & wires (Hover & Touch Tap-to-Inspect)
-		function inspectMultiplierTarget(target: SVGElement | null): boolean {
-			if (!target || !multCellInfo) return false;
-			const cellEl = target.closest('.mult-cell') as SVGElement | null;
-			const wireEl = target.closest('.mult-wire') as SVGElement | null;
-
-			if (cellEl) {
-				const r = parseInt(cellEl.getAttribute('data-r') || '0', 10);
-				const c = parseInt(cellEl.getAttribute('data-c') || '0', 10);
-				const st = computeMultiplierState(multX, multY);
-
-				if (r < 8) {
-					const pp = st.PP[r][c];
-					const sin = (c < 7 && r > 0) ? st.S[r - 1][c + 1] : 0;
-					const cin = (r > 0) ? st.C[r - 1][c] : 0;
-					const sout = st.S[r][c];
-					const cout = st.C[r][c];
-					const weight = 1 << (r + c);
-					multCellInfo.innerHTML = `<strong>Cell F[${r},${c}] (CSA Row ${r}):</strong> PP=X${r}&middot;Y${c}=<strong>${pp}</strong> ▪ Sin=<strong>${sin}</strong> ▪ Cin=<strong>${cin}</strong> &rarr; <strong>Sum=${sout}</strong>, <strong>Cout=${cout}</strong> ▪ Bit Weight: 2<sup>${r+c}</sup> (${weight})`;
-				} else {
-					const k = c;
-					const sin = (k < 7) ? st.S[7][k + 1] : 0;
-					const cin_top = st.C[7][k];
-					const c_in_right = (k > 0) ? st.C[8][k - 1] : 0;
-					const sout = st.S[8][k];
-					const cout = st.C[8][k];
-					multCellInfo.innerHTML = `<strong>Cell F[8,${k}] (Vector-Merge Ripple Adder):</strong> Sin(R7)=<strong>${sin}</strong> ▪ Ctop(R7)=<strong>${cin_top}</strong> ▪ Cright=<strong>${c_in_right}</strong> &rarr; <strong>P${8+k}=${sout}</strong>, Cout=<strong>${cout}</strong>`;
-				}
-				return true;
-			} else if (wireEl) {
-				const type = wireEl.getAttribute('data-type');
-				const st = computeMultiplierState(multX, multY);
-				if (type === 'pp') {
-					const r = parseInt(wireEl.getAttribute('data-r') || '0', 10);
-					const c = parseInt(wireEl.getAttribute('data-c') || '0', 10);
-					const val = st.PP[r][c];
-					multCellInfo.innerHTML = `<strong>Partial Product Wire:</strong> X[${r}] &times; Y[${c}] = ${((multX >> r) & 1)} &times; ${((multY >> c) & 1)} = <strong>${val}</strong> (Weight 2<sup>${r+c}</sup> = ${1 << (r+c)})`;
-				} else if (type === 'sum') {
-					const r = parseInt(wireEl.getAttribute('data-r') || '0', 10);
-					const c = parseInt(wireEl.getAttribute('data-c') || '0', 10);
-					const val = st.S[r][c];
-					multCellInfo.innerHTML = `<strong>Sum Propagation Wire:</strong> S[${r}][${c}] = <strong>${val}</strong> (Feeding cell below)`;
-				} else if (type === 'carry') {
-					const r = parseInt(wireEl.getAttribute('data-r') || '0', 10);
-					const c = parseInt(wireEl.getAttribute('data-c') || '0', 10);
-					const val = st.C[r][c];
-					multCellInfo.innerHTML = `<strong>Carry Propagation Wire:</strong> C[${r}][${c}] = <strong>${val}</strong> (Feeding diagonally down-left)`;
-				} else if (type === 'prod') {
-					const bit = parseInt(wireEl.getAttribute('data-bit') || '0', 10);
-					const val = st.P[bit];
-					multCellInfo.innerHTML = `<strong>Product Drop Line:</strong> Output Bit <strong>P[${bit}] = ${val}</strong> (Weight 2<sup>${bit}</sup> = ${1 << bit})`;
-				}
-				return true;
-			}
-			return false;
-		}
-
-		let isMultiplierPinned = false;
-
-		multSvg?.addEventListener('mouseover', (e) => {
-			if (isMultiplierPinned) return;
-			inspectMultiplierTarget(e.target as SVGElement);
-		});
-
-		multSvg?.addEventListener('pointerdown', (e) => {
-			const didInspect = inspectMultiplierTarget(e.target as SVGElement);
-			if (didInspect) {
-				isMultiplierPinned = true;
-			}
-		});
-
-		multSvg?.addEventListener('mouseleave', () => {
-			if (!isMultiplierPinned && multCellInfo) {
-				multCellInfo.textContent = 'Hover or tap any cell F or wire to inspect Boolean logic, partial products, sum, and carry propagation.';
-			}
-		});
-
-		// Presets
-		document.querySelectorAll('.mult-pre-btn[data-x]').forEach((btn) => {
-			btn.addEventListener('click', () => {
-				const x = parseInt(btn.getAttribute('data-x') || '0', 10);
-				const y = parseInt(btn.getAttribute('data-y') || '0', 10);
-				multX = x;
-				multY = y;
-				updateMultiplier(true);
-			});
-		});
-
-		multRandBtn?.addEventListener('click', () => {
-			multX = Math.floor(Math.random() * 256);
-			multY = Math.floor(Math.random() * 256);
-			updateMultiplier(true);
-		});
-
-		multSpeedBtn?.addEventListener('click', () => {
-			multSlowMode = !multSlowMode;
-			if (multSpeedBtn) multSpeedBtn.classList.toggle('active', multSlowMode);
-			if (multSpeedIcon) multSpeedIcon.textContent = multSlowMode ? '🐢' : '⚡';
-			if (multSpeedText) multSpeedText.textContent = multSlowMode ? 'Cascade' : 'Instant';
-			updateMultiplier(true);
-		});
-
-		function runInstantReplay() {
-			clearCascadeTimeouts();
-			const svg = document.getElementById('mult-schematic-svg');
-			if (svg) {
-				svg.classList.add('instant-reflash');
-				setTimeout(() => svg.classList.remove('instant-reflash'), 120);
-			}
-			updateMultiplier(true, false);
-		}
-
-		multReplayBtn?.addEventListener('click', () => {
-			if (multSlowMode) {
-				runMultiplierCascade(true);
-			} else {
-				runInstantReplay();
-			}
-		});
-
-		function openMultiplier() {
-			closeAllActiveModes();
-			isMultiplier = true;
-			if (multiplierModal) {
-				multiplierModal.classList.remove('hidden');
-				multiplierModal.removeAttribute('inert');
-				multiplierModal.style.display = 'flex';
-			}
-			(window as any).__pushModalHistory?.('multiplier-modal', closeMultiplier);
-			updateDrawerActiveUI();
-			updateMultiplier(false);
-		}
-
-		function closeMultiplier() {
-			clearCascadeTimeouts();
-			isMultiplier = false;
-			isMultiplierPinned = false;
-			if (multiplierModal) {
-				multiplierModal.classList.add('hidden');
-				multiplierModal.setAttribute('inert', '');
-				multiplierModal.style.display = 'none';
-			}
-			updateDrawerActiveUI();
-			(window as any).__popModalHistory?.('multiplier-modal');
-		}
-
-		function toggleMultiplier() {
-			if (isMultiplier) {
-				closeMultiplier();
-			} else {
-				openMultiplier();
-			}
-		}
-
-		multCloseBtn?.addEventListener('click', closeMultiplier);
-		multBackdrop?.addEventListener('click', closeMultiplier);
-		triggerMultiplierBtn?.addEventListener('click', () => {
-			extrasModal?.classList.add('hidden');
-			if (extrasModal) extrasModal.style.display = 'none';
-			toggleMultiplier();
-		});
-
-		// Initial SVG structure build
-		buildMultiplierSvg();
-
-		// Global API Exports
-		(window as any).__toggleZeroG = () => (isZeroG ? resetZeroG() : startZeroG());
-		(window as any).__toggleTilt = (force?: boolean) => toggleTilt(force);
-		(window as any).__toggleDegauss = () => (isDegauss ? resetDegauss() : startDegauss());
-		(window as any).__toggleSphere = () => (isSphere ? resetSphere() : startSphere());
-		(window as any).__toggleQuantum = () => (isQuantum ? resetQuantum() : startQuantum());
-		(window as any).__toggleThermal = () => (isThermal ? resetThermal() : startThermal());
-		(window as any).__toggleMultiplier = () => toggleMultiplier();
-		(window as any).__openMultiplier = () => openMultiplier();
-		(window as any).__closeMultiplier = () => closeMultiplier();
-		(window as any).__toggleLabExtras = () => {
-			if (!extrasModal) return;
-			const isHidden = extrasModal.classList.contains('hidden');
-			if (isHidden) {
-				updateDrawerActiveUI();
-				extrasModal.classList.remove('hidden');
-				extrasModal.removeAttribute('inert');
-				extrasModal.style.display = 'block';
-				(window as any).__pushModalHistory?.('lab-extras-modal', closeLabExtras);
-			} else {
-				closeLabExtras();
-			}
-		};
-
-		function updateDrawerActiveUI() {
-			const sphereBtn = document.getElementById('trigger-sphere-btn');
-			const tiltBtn = document.getElementById('trigger-tilt-btn');
-			const multBtn = document.getElementById('trigger-multiplier-btn');
-			const degaussBtn = document.getElementById('trigger-degauss-btn');
-			const thermalBtn = document.getElementById('trigger-thermal-btn');
-			const quantumBtn = document.getElementById('trigger-quantum-btn');
-			const zerogBtn = document.getElementById('trigger-zerog-btn');
-			const waferBtn = document.getElementById('trigger-wafer-btn');
-			const waferModal = document.getElementById('wafer-modal');
-
-			sphereBtn?.classList.toggle('active', isSphere);
-			tiltBtn?.classList.toggle('active', isTilt);
-			multBtn?.classList.toggle('active', isMultiplier);
-			degaussBtn?.classList.toggle('active', isDegauss);
-			thermalBtn?.classList.toggle('active', isThermal);
-			quantumBtn?.classList.toggle('active', isQuantum);
-			zerogBtn?.classList.toggle('active', isZeroG);
-			waferBtn?.classList.toggle('active', !!(waferModal && !waferModal.classList.contains('hidden')));
-		}
-
-		(window as any).__updateDrawerActiveUI = updateDrawerActiveUI;
-
-		const kbLabEl = document.getElementById('keyboard-lab');
-		function isNearKeyboardLab(): boolean {
-			if (!kbLabEl) return false;
-			const rect = kbLabEl.getBoundingClientRect();
-			return rect.bottom > -80 && rect.top < window.innerHeight + 80;
-		}
-
-		window.addEventListener('keydown', (e) => {
-			if (e.key === 'Escape' || e.key === 'Esc') {
-				let handled = false;
-				const waferModal = document.getElementById('wafer-modal');
-				if (waferModal && (!waferModal.classList.contains('hidden') || waferModal.style.display !== 'none')) {
-					(window as any).__closeWaferMap?.();
-					handled = true;
-				}
-				if (isMultiplier) {
-					closeMultiplier();
-					handled = true;
-				}
-				if (isZeroG || isTilt || isDegauss || isSphere || isQuantum || isThermal) {
-					closeAllActiveModes();
-					handled = true;
-				}
-				if (extrasModal && (!extrasModal.classList.contains('hidden') || extrasModal.style.display !== 'none')) {
-					extrasModal.classList.add('hidden');
-					extrasModal.style.display = 'none';
-					handled = true;
-				}
-				if (handled) {
-					e.preventDefault();
-					updateDrawerActiveUI();
-				}
-				return;
-			}
-
-			const hasModifiers = (e.ctrlKey || e.metaKey) && e.altKey;
-			if (!hasModifiers) return;
-
-			const activeTag = document.activeElement?.tagName;
-			if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return;
-
-			const termModal = document.getElementById('terminal-modal');
-			if (termModal && termModal.classList.contains('open')) return;
-
-			if (isNearKeyboardLab()) return;
-			if (document.activeElement?.closest('#keyboard-lab')) return;
-
-			if (e.code === 'KeyG') {
-				e.preventDefault();
-				(window as any).__toggleZeroG();
-				updateDrawerActiveUI();
-			} else if (e.code === 'KeyH') {
-				e.preventDefault();
-				(window as any).__toggleTilt();
-				updateDrawerActiveUI();
-			}
-		});
-
-		// Lab Extras Drawer Wire-up (Alphabetical Order 9 items)
-		document.getElementById('trigger-sphere-btn')?.addEventListener('click', () => {
-			extrasModal?.classList.add('hidden');
-			if (extrasModal) extrasModal.style.display = 'none';
-			if (isSphere) {
-				resetSphere();
-			} else {
-				startSphere();
-			}
-			updateDrawerActiveUI();
-		});
-
-		document.getElementById('trigger-tilt-btn')?.addEventListener('click', () => {
-			extrasModal?.classList.add('hidden');
-			if (extrasModal) extrasModal.style.display = 'none';
-			if (isTilt) {
-				toggleTilt(false);
-			} else {
-				toggleTilt(true);
-			}
-			updateDrawerActiveUI();
-		});
-
-		document.getElementById('trigger-boop-btn')?.addEventListener('click', () => {
-			extrasModal?.classList.add('hidden');
-			if (extrasModal) extrasModal.style.display = 'none';
-			(window as any).__boopDog?.();
-		});
-
-		document.getElementById('trigger-degauss-btn')?.addEventListener('click', () => {
-			extrasModal?.classList.add('hidden');
-			if (extrasModal) extrasModal.style.display = 'none';
-			if (isDegauss) {
-				resetDegauss();
-			} else {
-				startDegauss();
-			}
-			updateDrawerActiveUI();
-		});
-
-		document.getElementById('trigger-thermal-btn')?.addEventListener('click', () => {
-			extrasModal?.classList.add('hidden');
-			if (extrasModal) extrasModal.style.display = 'none';
-			if (isThermal) {
-				resetThermal();
-			} else {
-				startThermal();
-			}
-			updateDrawerActiveUI();
-		});
-
-		document.getElementById('trigger-quantum-btn')?.addEventListener('click', () => {
-			extrasModal?.classList.add('hidden');
-			if (extrasModal) extrasModal.style.display = 'none';
-			if (isQuantum) {
-				resetQuantum();
-			} else {
-				startQuantum();
-			}
-			updateDrawerActiveUI();
-		});
-
-		document.getElementById('trigger-wafer-btn')?.addEventListener('click', () => {
-			extrasModal?.classList.add('hidden');
-			if (extrasModal) extrasModal.style.display = 'none';
-			const waferModal = document.getElementById('wafer-modal');
-			if (waferModal && !waferModal.classList.contains('hidden')) {
-				(window as any).__closeWaferMap?.();
-			} else {
-				(window as any).__openWaferMap?.();
-			}
-			updateDrawerActiveUI();
-		});
-
-		document.getElementById('trigger-zerog-btn')?.addEventListener('click', () => {
-			extrasModal?.classList.add('hidden');
-			if (extrasModal) extrasModal.style.display = 'none';
-			if (isZeroG) {
-				resetZeroG();
-			} else {
-				startZeroG();
-			}
-			updateDrawerActiveUI();
-		});
-
-
-		function closeLabExtras() {
-			extrasModal?.classList.add('hidden');
-			extrasModal?.setAttribute('inert', '');
-			if (extrasModal) extrasModal.style.display = 'none';
-			(window as any).__popModalHistory?.('lab-extras-modal');
-		}
-
-		extrasCloseBtn?.addEventListener('click', closeLabExtras);
-
-		document.addEventListener('click', (e) => {
-			const target = e.target as HTMLElement;
-			if (extrasModal && !extrasModal.classList.contains('hidden')) {
-				if (!extrasModal.contains(target) && !target.closest('#footer-extras-btn')) {
-					closeLabExtras();
-				}
-			}
-		});
-	}
-
-	let isEasterEggsInitialized = false;
-	function safeInit() {
-		if (isEasterEggsInitialized) return;
-		isEasterEggsInitialized = true;
-		initEasterEggs();
-		initWaferInspector();
-		initDogBoop();
-	}
-
-	safeInit();
-	document.addEventListener('astro:page-load', safeInit);
+	initAllEasterEggs();
+	document.addEventListener('astro:page-load', initAllEasterEggs);
 </script>
 
 <style>
 	/* FLOATING HUDS */
 	.ee-hud {
 		position: fixed;
-		top: 16px;
+		top: calc(16px + env(safe-area-inset-top, 0px));
 		left: 50%;
 		transform: translateX(-50%);
 		background: rgba(15, 23, 42, 0.94);
@@ -3713,6 +376,13 @@
 		z-index: 100000;
 		transition: all 0.2s ease;
 		white-space: nowrap;
+		max-width: calc(100vw - 24px);
+	}
+	.hud-actions-row {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45em;
+		flex-wrap: wrap;
 	}
 	.hidden,
 	.ee-hud.hidden,
@@ -3738,7 +408,6 @@
 		0%, 100% { opacity: 1; transform: scale(1); }
 		50% { opacity: 0.4; transform: scale(0.85); }
 	}
-
 	.ee-hud-btn {
 		font-size: 0.9em;
 		font-weight: 700;
@@ -3756,16 +425,14 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.75em;
+		flex-wrap: wrap;
 	}
 	#thermal-tool-text {
 		display: inline-block;
-		width: 245px;
-		min-width: 245px;
+		min-width: 220px;
 		text-align: left;
 	}
 	#thermal-tool-btn {
-		width: 236px;
-		min-width: 236px;
 		text-align: center;
 	}
 	.ee-hud-btn:hover {
@@ -3777,7 +444,7 @@
 	/* LAB EXTRAS MODAL DRAWER */
 	.lab-extras-modal {
 		position: fixed;
-		bottom: 60px;
+		bottom: calc(60px + env(safe-area-inset-bottom, 0px));
 		right: 24px;
 		width: 340px;
 		background: var(--bg-card);
@@ -3810,7 +477,7 @@
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		color: var(--accent);
+		color: var(--accent-text);
 	}
 	.extras-close-btn {
 		background: transparent;
@@ -3822,9 +489,8 @@
 		line-height: 1;
 		transition: color 0.15s ease;
 	}
-	.extras-close-btn:hover {
-		color: #ffffff;
-	}
+	.extras-close-btn:hover { color: rgb(var(--black)); }
+	:global(html[data-theme="dark"]) .extras-close-btn:hover { color: #ffffff; }
 	.extras-grid {
 		display: flex;
 		flex-direction: column;
@@ -3854,27 +520,17 @@
 		box-shadow: inset 0 0 0 1px var(--accent);
 	}
 	.extra-item-btn.active .item-name {
-		color: var(--accent);
+		color: var(--accent-text);
 		font-weight: 700;
 	}
 	.extra-item-btn.active .item-desc::after {
 		content: ' ▪ Active (Click to Reset)';
-		color: var(--accent);
+		color: var(--accent-text);
 		font-weight: 600;
 	}
-	.item-icon {
-		font-size: 1.25em;
-		flex-shrink: 0;
-	}
-	.item-meta {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		min-width: 0;
-	}
-	.item-name {
-		font-size: 0.82em;
-	}
+	.item-icon { font-size: 1.25em; flex-shrink: 0; }
+	.item-meta { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+	.item-name { font-size: 0.82em; }
 	.item-desc {
 		font-size: 0.7em;
 		color: rgb(var(--gray));
@@ -3905,7 +561,7 @@
 		padding-top: 0.45em;
 	}
 
-	/* 300MM WAFER SORT MODAL (ROCK-SOLID ZERO JITTER LAYOUT) */
+	/* 300MM WAFER SORT MODAL */
 	.wafer-modal {
 		position: fixed;
 		inset: 0;
@@ -3945,28 +601,10 @@
 		background: rgba(15, 23, 42, 0.8);
 		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 	}
-	.wafer-title-wrap {
-		display: flex;
-		align-items: center;
-		gap: 0.75em;
-	}
-	.wafer-title-meta {
-		display: flex;
-		flex-direction: column;
-	}
-	.wafer-title {
-		font-size: 0.86em;
-		font-weight: 700;
-		letter-spacing: 0.06em;
-		color: #38bdf8;
-	}
-	.wafer-sub {
-		font-size: 0.72em;
-		color: #94a3b8;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
+	.wafer-title-wrap { display: flex; align-items: center; gap: 0.75em; min-width: 0; }
+	.wafer-title-meta { display: flex; flex-direction: column; min-width: 0; }
+	.wafer-title { font-size: 0.86em; font-weight: 700; letter-spacing: 0.06em; color: #38bdf8; }
+	.wafer-sub { font-size: 0.72em; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 	.wafer-close-btn {
 		background: transparent;
 		border: none;
@@ -3976,9 +614,7 @@
 		line-height: 1;
 		transition: color 0.15s ease;
 	}
-	.wafer-close-btn:hover {
-		color: #ffffff;
-	}
+	.wafer-close-btn:hover { color: #ffffff; }
 	.wafer-modal-body {
 		display: grid;
 		grid-template-columns: 400px 1fr;
@@ -4003,122 +639,26 @@
 		display: block;
 		cursor: crosshair;
 	}
-	.wafer-notch-indicator {
-		font-size: 0.68em;
-		color: #64748b;
-		margin-top: 0.4em;
-		white-space: nowrap;
-	}
-	.wafer-telemetry-panel {
-		display: flex;
-		flex-direction: column;
-		justify-content: space-between;
-		gap: 0.75em;
-		min-width: 0;
-	}
-	.wafer-telemetry-box {
-		background: rgba(255, 255, 255, 0.03);
-		border: 1px solid rgba(255, 255, 255, 0.08);
-		border-radius: 8px;
-		padding: 0.7em 0.85em;
-	}
-	.w-box-title {
-		display: block;
-		font-size: 0.7em;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: #94a3b8;
-		margin-bottom: 0.4em;
-	}
-	.w-yield-display {
-		display: flex;
-		align-items: baseline;
-		gap: 0.6em;
-		margin-bottom: 0.4em;
-	}
-	.w-yield-val {
-		font-size: 1.6em;
-		font-weight: 800;
-		color: #10b981;
-		line-height: 1;
-	}
-	.w-yield-badge {
-		font-size: 0.72em;
-		color: #94a3b8;
-	}
-	.w-yield-bar-wrap {
-		width: 100%;
-		height: 6px;
-		background: rgba(255, 255, 255, 0.1);
-		border-radius: 3px;
-		overflow: hidden;
-	}
-	.w-yield-bar {
-		height: 100%;
-		background: linear-gradient(90deg, #10b981, #f59e0b);
-		border-radius: 3px;
-		transition: width 0.3s ease;
-	}
-	.wafer-probe-grid {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.35em 0.75em;
-		font-size: 0.74em;
-	}
-	.probe-row {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		height: 20px;
-		line-height: 20px;
-		white-space: nowrap;
-		overflow: hidden;
-		gap: 0.4em;
-	}
-	.p-k {
-		color: #64748b;
-		flex-shrink: 0;
-	}
-	.p-v {
-		color: #f8fafc;
-		font-weight: 600;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		text-align: right;
-	}
-	.wafer-legend {
-		display: flex;
-		flex-direction: column;
-		gap: 0.35em;
-		font-size: 0.72em;
-		color: #94a3b8;
-		background: rgba(0, 0, 0, 0.2);
-		padding: 0.55em 0.75em;
-		border-radius: 6px;
-	}
-	.legend-item {
-		display: flex;
-		align-items: center;
-		gap: 0.5em;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-	.leg-color {
-		width: 10px;
-		height: 10px;
-		border-radius: 2px;
-		flex-shrink: 0;
-	}
+	.wafer-notch-indicator { font-size: 0.68em; color: #64748b; margin-top: 0.4em; white-space: nowrap; }
+	.wafer-telemetry-panel { display: flex; flex-direction: column; justify-content: space-between; gap: 0.75em; min-width: 0; }
+	.wafer-telemetry-box { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 0.7em 0.85em; }
+	.w-box-title { display: block; font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 0.4em; }
+	.w-yield-display { display: flex; align-items: baseline; gap: 0.6em; margin-bottom: 0.4em; }
+	.w-yield-val { font-size: 1.6em; font-weight: 800; color: #10b981; line-height: 1; }
+	.w-yield-badge { font-size: 0.72em; color: #94a3b8; }
+	.w-yield-bar-wrap { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden; }
+	.w-yield-bar { height: 100%; background: linear-gradient(90deg, #10b981, #f59e0b); border-radius: 3px; transition: width 0.3s ease; }
+	.wafer-probe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.35em 0.75em; font-size: 0.74em; }
+	.probe-row { display: flex; justify-content: space-between; align-items: center; height: 20px; line-height: 20px; white-space: nowrap; overflow: hidden; gap: 0.4em; }
+	.p-k { color: #64748b; flex-shrink: 0; }
+	.p-v { color: #f8fafc; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+	.wafer-legend { display: flex; flex-direction: column; gap: 0.35em; font-size: 0.72em; color: #94a3b8; background: rgba(0, 0, 0, 0.2); padding: 0.55em 0.75em; border-radius: 6px; }
+	.legend-item { display: flex; align-items: center; gap: 0.5em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	.leg-color { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
 	.leg-color.bin1 { background: #10b981; }
 	.leg-color.bin2 { background: #f59e0b; }
 	.leg-color.binx { background: #ef4444; }
-	.wafer-actions {
-		display: flex;
-		gap: 0.5em;
-	}
+	.wafer-actions { display: flex; gap: 0.5em; }
 	.wafer-btn {
 		flex: 1;
 		display: inline-flex;
@@ -4136,21 +676,11 @@
 		transition: all 0.15s ease;
 		white-space: nowrap;
 	}
-	.wafer-btn:hover {
-		background: rgba(255, 255, 255, 0.15);
-		border-color: #38bdf8;
-		color: #38bdf8;
-	}
-	.wafer-btn.primary {
-		background: #0284c7;
-		border-color: #38bdf8;
-		color: #ffffff;
-	}
-	.wafer-btn.primary:hover {
-		background: #0369a1;
-	}
+	.wafer-btn:hover { background: rgba(255, 255, 255, 0.15); border-color: #38bdf8; color: #38bdf8; }
+	.wafer-btn.primary { background: #0284c7; border-color: #38bdf8; color: #ffffff; }
+	.wafer-btn.primary:hover { background: #0369a1; }
 
-	/* 8x8 BIT CARRY-SAVE ARRAY MULTIPLIER MODAL & SCHEMATIC */
+	/* 8x8 BIT CARRY-SAVE ARRAY MULTIPLIER MODAL */
 	.mult-dialog {
 		max-width: 1080px;
 		width: 95vw;
@@ -4165,17 +695,9 @@
 		flex-direction: column;
 		animation: extrasPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 	}
-	.mult-dialog .wafer-modal-header {
-		padding: 0.6em 1.1em;
-	}
-	.mult-dialog .wafer-title {
-		color: #22c55e;
-	}
-	.mult-header-actions {
-		display: flex;
-		align-items: center;
-		gap: 0.75em;
-	}
+	.mult-dialog .wafer-modal-header { padding: 0.6em 1.1em; }
+	.mult-dialog .wafer-title { color: #22c55e; }
+	.mult-header-actions { display: flex; align-items: center; gap: 0.75em; }
 	.mult-gh-link {
 		display: inline-flex;
 		align-items: center;
@@ -4189,101 +711,20 @@
 		text-decoration: none;
 		transition: all 0.15s ease;
 	}
-	.mult-gh-link:hover {
-		background: rgba(34, 197, 94, 0.15);
-		border-color: #22c55e;
-		color: #22c55e;
-	}
-	.mult-body {
-		padding: 0.75em 1em;
-		display: flex;
-		flex-direction: column;
-		gap: 0.55em;
-	}
+	.mult-gh-link:hover { background: rgba(34, 197, 94, 0.15); border-color: #22c55e; color: #22c55e; }
+	.mult-body { padding: 0.75em 1em; display: flex; flex-direction: column; gap: 0.55em; }
+	.mult-inputs-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 0.55em 0.85em; display: flex; flex-direction: column; gap: 0.45em; }
+	.mult-registers-grid { display: flex; align-items: center; justify-content: space-between; gap: 0.85em; flex-wrap: wrap; }
+	.mult-reg-box { display: flex; flex-direction: column; gap: 0.25em; flex: 1; min-width: 270px; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 0.4em 0.7em; }
+	.mult-reg-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.72em; }
+	.reg-title { font-weight: 700; color: #38bdf8; letter-spacing: 0.04em; }
+	.reg-meta { color: #94a3b8; font-size: 0.9em; }
+	.mult-op-badge { font-size: 1.35em; font-weight: 800; color: #f59e0b; padding: 0 0.15em; align-self: center; line-height: 1; user-select: none; }
 
-	/* TWO-ROW REGISTER CONTROLS */
-	.mult-inputs-card {
-		background: rgba(255, 255, 255, 0.02);
-		border: 1px solid rgba(255, 255, 255, 0.08);
-		border-radius: 8px;
-		padding: 0.55em 0.85em;
-		display: flex;
-		flex-direction: column;
-		gap: 0.45em;
-	}
-	.mult-registers-grid {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.85em;
-		flex-wrap: wrap;
-	}
-	.mult-reg-box {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25em;
-		flex: 1;
-		min-width: 270px;
-		background: rgba(15, 23, 42, 0.5);
-		border: 1px solid rgba(255, 255, 255, 0.08);
-		border-radius: 6px;
-		padding: 0.4em 0.7em;
-	}
-	.mult-reg-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		font-size: 0.72em;
-	}
-	.reg-title {
-		font-weight: 700;
-		color: #38bdf8;
-		letter-spacing: 0.04em;
-	}
-	.reg-meta {
-		color: #94a3b8;
-		font-size: 0.9em;
-	}
-	.mult-op-badge {
-		font-size: 1.35em;
-		font-weight: 800;
-		color: #f59e0b;
-		padding: 0 0.15em;
-		align-self: center;
-		line-height: 1;
-		user-select: none;
-		-webkit-user-select: none;
-	}
-
-	/* UNIFIED COLUMN-BASED BIT REGISTER ARCHITECTURE */
-	:global(.mult-cols-row) {
-		display: flex;
-		align-items: center;
-		width: 100%;
-		gap: 3px;
-	}
-	:global(.mult-nibble-gap) {
-		width: 8px;
-		flex-shrink: 0;
-	}
-	:global(.mult-bit-col) {
-		flex: 1;
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 3px;
-	}
-	:global(.bit-col-name) {
-		font-size: 0.68em;
-		font-weight: 700;
-		color: #64748b;
-		text-align: center;
-		line-height: 1;
-		user-select: none;
-		-webkit-user-select: none;
-		letter-spacing: 0.02em;
-	}
+	:global(.mult-cols-row) { display: flex; align-items: center; width: 100%; gap: 3px; }
+	:global(.mult-nibble-gap) { width: 8px; flex-shrink: 0; }
+	:global(.mult-bit-col) { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+	:global(.bit-col-name) { font-size: 0.68em; font-weight: 700; color: #64748b; text-align: center; line-height: 1; user-select: none; letter-spacing: 0.02em; }
 	:global(.bit-val-btn) {
 		width: 100%;
 		height: 28px;
@@ -4299,21 +740,10 @@
 		cursor: pointer;
 		transition: all 0.1s ease;
 		user-select: none;
-		-webkit-user-select: none;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 	}
-	:global(.bit-val-btn:hover) {
-		border-color: #38bdf8;
-		color: #ffffff;
-		background: rgba(56, 189, 248, 0.12);
-	}
-	:global(.bit-val-btn.active) {
-		border-color: #22c55e;
-		background: rgba(34, 197, 94, 0.2);
-		color: #22c55e;
-		font-weight: 800;
-		box-shadow: 0 0 8px rgba(34, 197, 94, 0.25);
-	}
+	:global(.bit-val-btn:hover) { border-color: #38bdf8; color: #ffffff; background: rgba(56, 189, 248, 0.12); }
+	:global(.bit-val-btn.active) { border-color: #22c55e; background: rgba(34, 197, 94, 0.2); color: #22c55e; font-weight: 800; box-shadow: 0 0 8px rgba(34, 197, 94, 0.25); }
 	:global(.p-val-led) {
 		width: 100%;
 		height: 26px;
@@ -4327,31 +757,12 @@
 		border: 1px solid rgba(255, 255, 255, 0.08);
 		border-radius: 4px;
 		user-select: none;
-		-webkit-user-select: none;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 		transition: all 0.15s ease;
 	}
-	:global(.p-val-led.active) {
-		border-color: #22c55e;
-		background: rgba(34, 197, 94, 0.22);
-		color: #22c55e;
-		font-weight: 800;
-		box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
-	}
-	.mult-presets {
-		display: flex;
-		align-items: center;
-		gap: 0.4em;
-		flex-wrap: wrap;
-		padding-top: 0.35em;
-		border-top: 1px solid rgba(255, 255, 255, 0.06);
-		font-size: 0.72em;
-	}
-	.presets-title {
-		color: #64748b;
-		font-weight: 700;
-		margin-right: 0.2em;
-	}
+	:global(.p-val-led.active) { border-color: #22c55e; background: rgba(34, 197, 94, 0.22); color: #22c55e; font-weight: 800; box-shadow: 0 0 8px rgba(34, 197, 94, 0.3); }
+	.mult-presets { display: flex; align-items: center; gap: 0.4em; flex-wrap: wrap; padding-top: 0.35em; border-top: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.72em; }
+	.presets-title { color: #64748b; font-weight: 700; margin-right: 0.2em; }
 	.mult-pre-btn {
 		background: rgba(255, 255, 255, 0.05);
 		border: 1px solid rgba(255, 255, 255, 0.12);
@@ -4362,67 +773,17 @@
 		font-size: 0.95em;
 		transition: all 0.15s ease;
 	}
-	.mult-pre-btn:hover {
-		background: rgba(34, 197, 94, 0.15);
-		border-color: #22c55e;
-		color: #22c55e;
-	}
+	.mult-pre-btn:hover { background: rgba(34, 197, 94, 0.15); border-color: #22c55e; color: #22c55e; }
 
-	/* SCHEMATIC CARD & CLEAN SVG VIEWPORT (ZERO SCROLLBARS) */
-	.mult-schematic-card {
-		background: #06080d;
-		border: 1px solid rgba(255, 255, 255, 0.08);
-		border-radius: 8px;
-		padding: 0.55em 0.85em;
-		display: flex;
-		flex-direction: column;
-		gap: 0.4em;
-	}
-	.mult-schematic-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		font-size: 0.7em;
-		color: #94a3b8;
-		font-weight: 600;
-		letter-spacing: 0.04em;
-		flex-wrap: wrap;
-		gap: 0.5em;
-	}
-	.mult-schematic-controls {
-		display: flex;
-		align-items: center;
-		gap: 0.75em;
-		flex-wrap: wrap;
-	}
-	.mult-legend {
-		display: flex;
-		gap: 0.85em;
-		align-items: center;
-	}
-	:global(#mult-schematic-svg.instant-reflash) {
-		opacity: 0.65;
-		filter: brightness(1.25);
-		transition: opacity 60ms ease, filter 60ms ease;
-	}
-	.mult-legend .leg-item {
-		display: flex;
-		align-items: center;
-		gap: 0.35em;
-		font-size: 0.92em;
-	}
-	.mult-legend .leg-line {
-		width: 14px;
-		height: 3px;
-		border-radius: 2px;
-	}
-	.mult-legend .leg-line.active {
-		background: #22c55e;
-		box-shadow: 0 0 6px #22c55e;
-	}
-	.mult-legend .leg-line.dim {
-		background: rgba(148, 163, 184, 0.45);
-	}
+	.mult-schematic-card { background: #06080d; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 0.55em 0.85em; display: flex; flex-direction: column; gap: 0.4em; }
+	.mult-schematic-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.7em; color: #94a3b8; font-weight: 600; letter-spacing: 0.04em; flex-wrap: wrap; gap: 0.5em; }
+	.mult-schematic-controls { display: flex; align-items: center; gap: 0.75em; flex-wrap: wrap; }
+	.mult-legend { display: flex; gap: 0.85em; align-items: center; }
+	:global(#mult-schematic-svg.instant-reflash) { opacity: 0.65; filter: brightness(1.25); transition: opacity 60ms ease, filter 60ms ease; }
+	.mult-legend .leg-item { display: flex; align-items: center; gap: 0.35em; font-size: 0.92em; }
+	.mult-legend .leg-line { width: 14px; height: 3px; border-radius: 2px; }
+	.mult-legend .leg-line.active { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+	.mult-legend .leg-line.dim { background: rgba(148, 163, 184, 0.45); }
 	:global(.mult-speed-toggle) {
 		background: rgba(255, 255, 255, 0.05);
 		border: 1px solid rgba(255, 255, 255, 0.14);
@@ -4437,34 +798,19 @@
 		gap: 0.35em;
 		transition: all 0.15s ease;
 		user-select: none;
-		-webkit-user-select: none;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 		box-sizing: border-box;
 		white-space: nowrap;
 	}
-	#mult-speed-btn {
-		width: 106px;
-		min-width: 106px;
-	}
-	#mult-speed-text {
-		display: inline-block;
-		text-align: center;
-		min-width: 62px;
-	}
-	:global(.mult-speed-toggle:hover) {
-		background: rgba(34, 197, 94, 0.15);
-		border-color: #22c55e;
-		color: #22c55e;
-	}
-	:global(.mult-speed-toggle.active) {
-		background: rgba(245, 158, 11, 0.18);
-		border-color: #f59e0b;
-		color: #fbbf24;
-		box-shadow: 0 0 8px rgba(245, 158, 11, 0.25);
-	}
+	#mult-speed-btn { width: 106px; min-width: 106px; }
+	#mult-speed-text { display: inline-block; text-align: center; min-width: 62px; }
+	:global(.mult-speed-toggle:hover) { background: rgba(34, 197, 94, 0.15); border-color: #22c55e; color: #22c55e; }
+	:global(.mult-speed-toggle.active) { background: rgba(245, 158, 11, 0.18); border-color: #f59e0b; color: #fbbf24; box-shadow: 0 0 8px rgba(245, 158, 11, 0.25); }
 	.mult-svg-scroll-wrap {
 		width: 100%;
-		overflow: hidden;
+		overflow-x: auto;
+		overflow-y: hidden;
+		-webkit-overflow-scrolling: touch;
 		border-radius: 6px;
 		background: #040609;
 		border: 1px solid rgba(255, 255, 255, 0.04);
@@ -4479,7 +825,6 @@
 		display: block;
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 		user-select: none;
-		-webkit-user-select: none;
 	}
 	.mult-cell-tooltip {
 		min-height: 1.6em;
@@ -4491,171 +836,39 @@
 		padding: 0.25em 0.65em;
 		display: flex;
 		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.2em;
 		line-height: 1.35;
 	}
-	.mult-cell-tooltip strong {
-		color: #f8fafc;
-	}
+	.mult-cell-tooltip :global(strong) { color: #f8fafc; }
+	.mult-output-card { background: rgba(34, 197, 94, 0.03); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 8px; padding: 0.55em 0.85em; display: flex; flex-direction: column; gap: 0.4em; }
+	.mult-output-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.4em; }
+	.mult-product-title { font-size: 0.74em; font-weight: 700; color: #22c55e; letter-spacing: 0.06em; }
+	.mult-product-vals { display: flex; gap: 0.8em; align-items: baseline; font-size: 0.8em; }
+	.mult-product-vals .p-dec { font-size: 1.15em; font-weight: 800; color: #22c55e; }
+	.mult-product-vals .p-hex { color: #38bdf8; font-weight: 700; }
+	.mult-product-vals .p-bin { color: #94a3b8; }
 
-	/* TWO-ROW PRODUCT OUTPUT CARD */
-	.mult-output-card {
-		background: rgba(34, 197, 94, 0.03);
-		border: 1px solid rgba(34, 197, 94, 0.25);
-		border-radius: 8px;
-		padding: 0.55em 0.85em;
-		display: flex;
-		flex-direction: column;
-		gap: 0.4em;
-	}
-	.mult-output-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 0.4em;
-	}
-	.mult-product-title {
-		font-size: 0.74em;
-		font-weight: 700;
-		color: #22c55e;
-		letter-spacing: 0.06em;
-	}
-	.mult-product-vals {
-		display: flex;
-		gap: 0.8em;
-		align-items: baseline;
-		font-size: 0.8em;
-	}
-	.mult-product-vals .p-dec {
-		font-size: 1.15em;
-		font-weight: 800;
-		color: #22c55e;
-	}
-	.mult-product-vals .p-hex {
-		color: #38bdf8;
-		font-weight: 700;
-	}
-	.mult-product-vals .p-bin {
-		color: #94a3b8;
-	}
+	/* SVG CELL & WIRE STYLES (DEDUPLICATED) */
+	:global(.mult-cell) { cursor: pointer; }
+	:global(.mult-cell rect.cell-box) { fill: #0c1017; stroke: rgba(148, 163, 184, 0.35); stroke-width: 1.5; transition: all 0.15s ease; }
+	:global(.mult-cell:hover rect.cell-box) { stroke: #38bdf8; fill: #162030; }
+	:global(.mult-cell.cell-active rect.cell-box) { stroke: #22c55e; fill: rgba(34, 197, 94, 0.12); }
+	:global(.mult-cell.cell-evaluating rect.cell-box) { stroke: #fbbf24 !important; fill: rgba(245, 158, 11, 0.28) !important; filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6)); }
+	:global(.mult-cell text.cell-label) { fill: #94a3b8; font-size: 11px; font-weight: 800; text-anchor: middle; pointer-events: none; }
+	:global(.mult-cell:hover text.cell-label) { fill: #38bdf8; }
+	:global(.mult-cell.cell-active text.cell-label) { fill: #22c55e; }
+	:global(.mult-cell.cell-evaluating text.cell-label) { fill: #fbbf24 !important; font-weight: 900; }
+	:global(.mult-wire) { stroke-width: 1.5; fill: none; transition: stroke 0.15s ease, filter 0.15s ease; }
+	:global(.mult-wire.wire-dim) { stroke: rgba(148, 163, 184, 0.24); }
+	:global(.mult-wire.wire-active) { stroke: #22c55e; filter: url(#mult-glow); }
+	:global(.wire-label) { font-size: 9px; fill: #475569; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; transition: fill 0.15s; pointer-events: none; }
+	:global(.wire-label.active) { fill: #22c55e; font-weight: 700; }
+	:global(.prod-label) { font-size: 11px; fill: #64748b; font-weight: 700; text-anchor: middle; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; pointer-events: none; transition: fill 0.15s; }
+	:global(.prod-label.active) { fill: #22c55e; font-weight: 800; }
 
-	/* SVG CELL & WIRE STYLES */
-	:global(.mult-cell) {
-		cursor: pointer;
-	}
-	:global(.mult-cell rect.cell-box) {
-		fill: #0c1017;
-		stroke: rgba(148, 163, 184, 0.35);
-		stroke-width: 1.5;
-		transition: all 0.15s ease;
-	}
-	:global(.mult-cell:hover rect.cell-box) {
-		stroke: #38bdf8;
-		fill: #162030;
-	}
-	:global(.mult-cell.cell-active rect.cell-box) {
-		stroke: #22c55e;
-		fill: rgba(34, 197, 94, 0.12);
-	}
-	:global(.mult-cell.cell-evaluating rect.cell-box) {
-		stroke: #fbbf24 !important;
-		fill: rgba(245, 158, 11, 0.28) !important;
-		filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6));
-	}
-	:global(.mult-cell text.cell-label) {
-		fill: #94a3b8;
-		font-size: 11px;
-		font-weight: 800;
-		text-anchor: middle;
-		pointer-events: none;
-	}
-	:global(.mult-cell:hover text.cell-label) {
-		fill: #38bdf8;
-	}
-	:global(.mult-cell.cell-active text.cell-label) {
-		fill: #22c55e;
-	}
-	:global(.mult-cell.cell-evaluating text.cell-label) {
-		fill: #fbbf24 !important;
-		font-weight: 900;
-	}
-	:global(.mult-wire) {
-		stroke-width: 1.5;
-		fill: none;
-		transition: stroke 0.15s ease, filter 0.15s ease;
-	}
-	:global(.mult-wire.wire-dim) {
-		stroke: rgba(148, 163, 184, 0.24);
-	}
-	:global(.mult-wire.wire-active) {
-		stroke: #22c55e;
-		filter: url(#mult-glow);
-	}
-	:global(.wire-label) {
-		font-size: 8px;
-		fill: #475569;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-		transition: fill 0.15s;
-		pointer-events: none;
-	}
-	:global(.wire-label.active) {
-		fill: #22c55e;
-		font-weight: 700;
-	}
-	:global(.prod-label) {
-		font-size: 10px;
-		fill: #64748b;
-		font-weight: 700;
-		text-anchor: middle;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-		pointer-events: none;
-		transition: fill 0.15s;
-	}
-	:global(.prod-label.active) {
-		fill: #22c55e;
-		font-weight: 800;
-	}
-	:global(.mult-wire) {
-		stroke-width: 1.5;
-		fill: none;
-		transition: stroke 0.15s ease, filter 0.15s ease;
-	}
-	:global(.mult-wire.wire-dim) {
-		stroke: rgba(148, 163, 184, 0.24);
-	}
-	:global(.mult-wire.wire-active) {
-		stroke: #22c55e;
-		filter: url(#mult-glow);
-	}
-	:global(.wire-label) {
-		font-size: 9px;
-		fill: #475569;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-		transition: fill 0.15s;
-		pointer-events: none;
-	}
-	:global(.wire-label.active) {
-		fill: #22c55e;
-		font-weight: 700;
-	}
-	:global(.prod-label) {
-		font-size: 11px;
-		fill: #64748b;
-		font-weight: 700;
-		text-anchor: middle;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-		pointer-events: none;
-		transition: fill 0.15s;
-	}
-	:global(.prod-label.active) {
-		fill: #22c55e;
-		font-weight: 800;
-	}
-
-	/* CHIEF MORALE OFFICER: AVATAR BOOP & PARTICLES */
-	:global(.avatar-img.booped) {
-		animation: avatarBoop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-	}
+	/* CHIEF MORALE OFFICER */
+	:global(.avatar-img.booped) { animation: avatarBoop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) !important; }
 	@keyframes avatarBoop {
 		0% { transform: scale(1); }
 		28% { transform: scale(1.18, 0.84) rotate(-3deg); }
@@ -4663,7 +876,6 @@
 		78% { transform: scale(1.04, 0.98); }
 		100% { transform: scale(1); }
 	}
-
 	:global(.morale-rf-pill),
 	:global(.morale-boost-pill) {
 		position: absolute;
@@ -4683,25 +895,15 @@
 		z-index: 1000;
 		animation: floatPill 1.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 	}
-	:global(.morale-boost-pill.bin-tier-3) {
-		border-color: #f97316;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 14px rgba(249, 115, 22, 0.5);
-	}
+	:global(.morale-boost-pill.bin-tier-3) { border-color: #f97316; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 14px rgba(249, 115, 22, 0.5); }
 	:global(.morale-boost-pill.bin-tier-4),
-	:global(.morale-boost-pill.bin-tier-5) {
-		border-color: #fbbf24;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 18px rgba(251, 191, 36, 0.7);
-		color: #fef08a;
-	}
+	:global(.morale-boost-pill.bin-tier-5) { border-color: #fbbf24; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 18px rgba(251, 191, 36, 0.7); color: #fef08a; }
 	@keyframes floatPill {
 		0% { opacity: 0; transform: translate(-50%, 8px) scale(0.85); }
 		15% { opacity: 1; transform: translate(-50%, -10px) scale(1.05); }
 		70% { opacity: 1; transform: translate(-50%, -36px) scale(1); }
 		100% { opacity: 0; transform: translate(-50%, -52px) scale(0.95); }
 	}
-
-
-
 	:global(.boop-particle) {
 		position: absolute;
 		top: 50%;
@@ -4717,54 +919,27 @@
 		100% { opacity: 0; transform: translate(calc(-50% + var(--dx) * 1.3), calc(-50% + var(--dy) * 1.3)) scale(0.6); }
 	}
 
-	/* HARDWARE LAB EASTER EGG FULL-VIEWPORT CANVASES */
-	.ee-canvas {
-		position: fixed;
-		inset: 0;
-		width: 100vw;
-		height: 100vh;
-		pointer-events: none;
-		z-index: 999990;
-	}
-
-	/* 1. CRT BENCH OSCILLOSCOPE DEGAUSS & SCANLINES */
-	#degauss-canvas {
-		mix-blend-mode: screen;
-		pointer-events: none;
-	}
+	/* OVERLAY CANVASES & THERMAL CAM */
+	.ee-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 999990; }
+	#degauss-canvas { mix-blend-mode: screen; pointer-events: none; }
 	:global(body.crt-active)::after {
 		content: '';
 		position: fixed;
 		inset: 0;
 		pointer-events: none;
 		z-index: 999980;
-		background: 
+		background:
 			linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.28) 50%),
 			linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
 		background-size: 100% 3px, 4px 100%;
 		box-shadow: inset 0 0 140px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(0, 0, 0, 0.9);
 	}
-	:global(body.crt-degaussing main) {
-		will-change: transform, filter;
-	}
+	:global(body.crt-degaussing main) { will-change: transform, filter; }
+	:global(body.thermal-active) { touch-action: none; user-select: none; -webkit-user-select: none; }
+	:global(body.thermal-active main) { filter: invert(0.85) hue-rotate(185deg) saturate(3.2) contrast(1.35) !important; transition: filter 0.35s ease; }
 
-	/* 2. 3D SILICON CYCLONE SPHERE CORE & CUBE */
-	.sphere-core {
-		position: fixed;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		perspective: 1000px;
-		pointer-events: none;
-		z-index: 500;
-	}
-	.die-cube {
-		width: 110px;
-		height: 110px;
-		position: relative;
-		transform-style: preserve-3d;
-		transition: transform 0.05s linear;
-	}
+	.sphere-core { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); perspective: 1000px; pointer-events: none; z-index: 500; }
+	.die-cube { width: 110px; height: 110px; position: relative; transform-style: preserve-3d; transition: transform 0.05s linear; }
 	.die-face {
 		position: absolute;
 		width: 110px;
@@ -4780,29 +955,15 @@
 		color: #fbbf24;
 		letter-spacing: 0.06em;
 	}
-	.die-front  { transform: rotateY(0deg) translateZ(55px); }
-	.die-back   { transform: rotateY(180deg) translateZ(55px); }
-	.die-left   { transform: rotateY(-90deg) translateZ(55px); }
-	.die-right  { transform: rotateY(90deg) translateZ(55px); }
-	.die-top    { transform: rotateX(90deg) translateZ(55px); }
+	.die-front { transform: rotateY(0deg) translateZ(55px); }
+	.die-back { transform: rotateY(180deg) translateZ(55px); }
+	.die-left { transform: rotateY(-90deg) translateZ(55px); }
+	.die-right { transform: rotateY(90deg) translateZ(55px); }
+	.die-top { transform: rotateX(90deg) translateZ(55px); }
 	.die-face.die-bottom { transform: rotateX(-90deg) translateZ(55px); }
-	.die-aura {
-		position: absolute;
-		inset: -35px;
-		border-radius: 50%;
-		background: radial-gradient(circle, rgba(249, 115, 22, 0.3) 0%, transparent 70%);
-		animation: auraPulse 2s ease-in-out infinite alternate;
-	}
-	@keyframes auraPulse {
-		from { transform: scale(0.9); opacity: 0.6; }
-		to { transform: scale(1.15); opacity: 1; }
-	}
+	.die-aura { position: absolute; inset: -35px; border-radius: 50%; background: radial-gradient(circle, rgba(249, 115, 22, 0.3) 0%, transparent 70%); animation: auraPulse 2s ease-in-out infinite alternate; }
+	@keyframes auraPulse { from { transform: scale(0.9); opacity: 0.6; } to { transform: scale(1.15); opacity: 1; } }
 
-	/* 3. INFRARED THERMAL CAMERA VIEWPORT */
-	:global(body.thermal-active main) {
-		filter: invert(0.85) hue-rotate(185deg) saturate(3.2) contrast(1.35) !important;
-		transition: filter 0.35s ease;
-	}
 	.thermal-scale-bar {
 		position: fixed;
 		right: 18px;
@@ -4822,145 +983,65 @@
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 		pointer-events: none;
 	}
-	.ts-gradient {
-		width: 10px;
-		flex: 1;
-		margin: 6px 0;
-		border-radius: 3px;
-		background: linear-gradient(to bottom, #ffffff 0%, #fde047 18%, #f97316 40%, #dc2626 62%, #7c3aed 82%, #0284c7 92%, #38bdf8 100%);
-	}
-	.ts-val {
-		font-size: 0.58em;
-		font-weight: 700;
-		color: #f8fafc;
-	}
-	.ts-emissivity {
-		font-size: 0.55em;
-		color: rgb(var(--gray));
-	}
-	.thermal-spots {
-		position: fixed;
-		inset: 0;
-		pointer-events: none;
-		z-index: 999994;
-	}
-	.thermal-spot {
-		position: absolute;
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		pointer-events: none;
-	}
-	.spot-crosshair {
-		width: 14px;
-		height: 14px;
-		border: 1px solid #ef4444;
-		border-radius: 50%;
-		position: relative;
-	}
-	.spot-crosshair::before, .spot-crosshair::after {
-		content: '';
-		position: absolute;
-		background: #ef4444;
-	}
+	.ts-gradient { width: 10px; flex: 1; margin: 6px 0; border-radius: 3px; background: linear-gradient(to bottom, #ffffff 0%, #fde047 18%, #f97316 40%, #dc2626 62%, #7c3aed 82%, #0284c7 92%, #38bdf8 100%); }
+	.ts-val { font-size: 0.58em; font-weight: 700; color: #f8fafc; }
+	.ts-emissivity { font-size: 0.55em; color: rgb(var(--gray)); }
+	.thermal-spots { position: fixed; inset: 0; pointer-events: none; z-index: 999994; }
+	.thermal-spot { position: absolute; display: flex; align-items: center; gap: 6px; pointer-events: none; }
+	.spot-crosshair { width: 14px; height: 14px; border: 1px solid #ef4444; border-radius: 50%; position: relative; }
+	.spot-crosshair::before, .spot-crosshair::after { content: ''; position: absolute; background: #ef4444; }
 	.spot-crosshair::before { top: 50%; left: -3px; right: -3px; height: 1px; transform: translateY(-50%); }
 	.spot-crosshair::after { left: 50%; top: -3px; bottom: -3px; width: 1px; transform: translateX(-50%); }
-	.spot-crosshair.active {
-		border-color: #38bdf8;
-	}
-	.spot-crosshair.active::before, .spot-crosshair.active::after {
-		background: #38bdf8;
-	}
-	.spot-label {
-		font-size: 0.65em;
-		font-weight: 700;
-		background: rgba(15, 23, 42, 0.88);
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		padding: 2px 6px;
-		border-radius: 4px;
-		color: #f8fafc;
-		white-space: nowrap;
-	}
-	#t-spot-cursor {
-		top: 0;
-		left: 0;
-		transition: transform 0.04s linear;
-	}
+	.spot-crosshair.active { border-color: #38bdf8; }
+	.spot-crosshair.active::before, .spot-crosshair.active::after { background: #38bdf8; }
+	.spot-label { font-size: 0.65em; font-weight: 700; background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(255, 255, 255, 0.2); padding: 2px 6px; border-radius: 4px; color: #f8fafc; white-space: nowrap; }
+	#t-spot-cursor { top: 0; left: 0; transition: transform 0.04s linear; }
 
-	/* 4. QUANTUM TUNNELING CARD TARGETING */
-	:global(body.quantum-active) .quantum-targetable {
-		cursor: crosshair !important;
-		transition: outline 0.15s ease, box-shadow 0.15s ease;
-	}
-	:global(body.quantum-active) .quantum-targetable:hover {
-		outline: 2px dashed #38bdf8 !important;
-		outline-offset: 4px !important;
-		box-shadow: 0 0 20px rgba(56, 189, 248, 0.45) !important;
-	}
+	:global(body.quantum-active) .quantum-targetable { cursor: crosshair !important; transition: outline 0.15s ease, box-shadow 0.15s ease; }
+	:global(body.quantum-active) .quantum-targetable:hover { outline: 2px dashed #38bdf8 !important; outline-offset: 4px !important; box-shadow: 0 0 20px rgba(56, 189, 248, 0.45) !important; }
 
 	@media (max-width: 820px) {
-		.wafer-modal-body {
-			grid-template-columns: 1fr;
-			justify-items: center;
-		}
-		.wafer-canvas-wrap {
-			max-width: 320px;
-		}
-		.wafer-modal {
-			padding: 0.75rem;
-		}
+		.wafer-modal-body { grid-template-columns: 1fr; justify-items: center; }
+		.wafer-canvas-wrap { max-width: 320px; }
+		.wafer-modal { padding: 0.75rem; }
 	}
 
 	@media (max-width: 600px) {
 		.ee-hud {
 			font-size: 0.7em;
-			padding: 0.35em 0.85em;
-			width: 92%;
-			justify-content: space-between;
+			padding: 0.4em 0.75em;
+			width: 94%;
+			flex-wrap: wrap;
+			white-space: normal;
+			justify-content: center;
+			border-radius: 14px;
+			gap: 0.4em;
 		}
-		.hud-title {
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
+		.thermal-hud-inner {
+			justify-content: center;
+			gap: 0.4em;
 		}
+		#thermal-tool-text {
+			min-width: 0;
+			width: auto;
+		}
+		.hud-title { text-align: center; }
 		.lab-extras-modal {
 			right: 12px;
 			left: 12px;
 			width: auto;
-			bottom: 50px;
+			bottom: calc(50px + env(safe-area-inset-bottom, 0px));
 		}
-		.wafer-probe-grid {
-			grid-template-columns: 1fr;
-		}
-		.mult-dialog {
-			width: 98vw;
-		}
-		.mult-body {
-			padding: 0.5em 0.6em;
-			gap: 0.4em;
-		}
-		:global(.bit-col-name) {
-			font-size: 0.58em;
-		}
-		:global(.p-val-led) {
-			font-size: 0.78em;
-			height: 22px;
-		}
-		:global(.bit-val-btn) {
-			height: 24px;
-			font-size: 0.85em;
-		}
-		:global(.mult-nibble-gap) {
-			width: 5px;
-		}
-		:global(.mult-cols-row) {
-			gap: 2px;
-		}
-		.wafer-modal {
-			padding: 0 !important;
-			align-items: stretch !important;
-			justify-content: flex-start !important;
-		}
+		.wafer-probe-grid { grid-template-columns: 1fr; }
+		.mult-body { padding: 0.5em 0.6em; gap: 0.4em; }
+		.mult-svg-scroll-wrap { justify-content: flex-start; }
+		.mult-schematic-svg { min-width: 620px; max-height: 55vh; }
+		:global(.bit-col-name) { font-size: 0.58em; }
+		:global(.p-val-led) { font-size: 0.78em; height: 22px; }
+		:global(.bit-val-btn) { height: 24px; font-size: 0.85em; }
+		:global(.mult-nibble-gap) { width: 5px; }
+		:global(.mult-cols-row) { gap: 2px; }
+		.wafer-modal { padding: 0 !important; align-items: stretch !important; justify-content: flex-start !important; }
 		.wafer-dialog,
 		.mult-dialog {
 			width: 100vw !important;
@@ -4978,6 +1059,7 @@
 			top: 0 !important;
 			z-index: 100 !important;
 			flex-shrink: 0 !important;
+			padding-top: calc(0.7em + env(safe-area-inset-top, 0px)) !important;
 			background: #0f131a !important;
 		}
 		.wafer-modal-body,
@@ -4985,6 +1067,7 @@
 			flex: 1 1 auto !important;
 			overflow-y: auto !important;
 			-webkit-overflow-scrolling: touch !important;
+			padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)) !important;
 		}
 	}
 </style>

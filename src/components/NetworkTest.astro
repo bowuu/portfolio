@@ -2,32 +2,31 @@
 // NetworkTest.astro - Real-time zero-host-bandwidth Cloudflare edge network benchmark
 ---
 
-<details class="card section-accordion benchmark-card" id="lab" open>
-	<a id="benchmark" style="display:none;" aria-hidden="true"></a>
-	<summary class="card-header-summary">
-		<div class="card-summary-left">
-			<span class="card-chevron-btn" title="Toggle Network Test section">
+<section class="card section-accordion benchmark-card" id="lab" data-open="true">
+	<div class="card-header-summary">
+		<button type="button" class="card-summary-left card-summary-toggle" aria-expanded="true" aria-controls="network-lab-content">
+			<span class="card-chevron-btn" aria-hidden="true">
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
 			</span>
 			<h2 class="card-title">
-				<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+				<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon" aria-hidden="true">
 					<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
 				</svg>
 				Network Test
 			</h2>
 			<span class="section-summary-badge">Anycast Ping · Jitter · Throughput</span>
-		</div>
+		</button>
 		<div class="card-summary-right">
 			<button id="run-speedtest-btn" class="benchmark-btn" type="button" title="Start network benchmark" aria-label="Start network benchmark">
-				<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon" id="btn-icon-play">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon" id="btn-icon-play" aria-hidden="true">
 					<polygon points="5 3 19 12 5 21 5 3"/>
 				</svg>
 				<span id="speedtest-btn-text">Start</span>
 			</button>
 		</div>
-	</summary>
+	</div>
 
-	<div class="section-content">
+	<div class="section-content" id="network-lab-content">
 		<p class="benchmark-desc">
 			Measure real-time latency, jitter, packet loss, and sustained edge throughput directly against Cloudflare's Anycast network.
 		</p>
@@ -86,7 +85,7 @@
 			</div>
 		</div>
 	</div>
-</details>
+</section>
 
 <script>
 	let isBenchmarking = false;
@@ -155,8 +154,8 @@
 
 	let clientLat = 0;
 	let clientLon = 0;
-	let detectedColo = 'MIA';
-	let detectedCity = 'Miami, FL';
+	let detectedColo = '';
+	let detectedCity = '';
 
 	function getGreatCircleDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
 		const R = 6371; // Earth radius in km
@@ -255,9 +254,7 @@
 			if (statusText) statusText.textContent = 'Transmitting 16 probes to analyze latency, jitter, and packet loss...';
 
 			const totalProbes = 16;
-			let successful = 0;
 			let failed = 0;
-			let tcpLostTotal = 0;
 			const pings: number[] = [];
 
 			for (let i = 0; i < totalProbes; i++) {
@@ -271,16 +268,9 @@
 					});
 					clearTimeout(timeout);
 					if (res.ok) {
-						successful++;
 						const rtt = performance.now() - t0;
 						pings.push(rtt);
 						if (pingEl) pingEl.textContent = Math.round(rtt).toString();
-
-						const timing = res.headers.get('server-timing') || '';
-						const lostMatch = timing.match(/lost=(\d+)/);
-						if (lostMatch) {
-							tcpLostTotal += parseInt(lostMatch[1], 10);
-						}
 					} else {
 						failed++;
 					}
@@ -288,13 +278,12 @@
 					failed++;
 				}
 
-				const currentLost = failed + tcpLostTotal;
-				const currentLossRate = ((currentLost / (i + 1)) * 100).toFixed(0);
+				const currentLossRate = ((failed / (i + 1)) * 100).toFixed(0);
 				if (lossEl) lossEl.textContent = currentLossRate;
-				if (lossSubEl) lossSubEl.textContent = `${currentLost}/${i + 1} lost`;
+				if (lossSubEl) lossSubEl.textContent = `${failed}/${i + 1} lost`;
 				if (lossBadge) {
 					lossBadge.title = `Drop rate across ${i + 1} sequential HTTP 204 Anycast edge ping requests.`;
-					if (currentLost > 0) {
+					if (failed > 0) {
 						lossBadge.classList.add('loss-warn');
 						lossBadge.classList.remove('loss-optimal');
 					}
@@ -304,22 +293,22 @@
 
 			// Finalize latency, jitter, loss
 			pings.sort((a, b) => a - b);
-			const medianPing = pings.length ? Math.round(pings[Math.floor(pings.length / 2)]) : 0;
+			const hasPingBaseline = pings.length > 0;
+			const medianPing = hasPingBaseline ? Math.round(pings[Math.floor(pings.length / 2)]) : 0;
 			let diffSum = 0;
 			for (let i = 1; i < pings.length; i++) {
 				diffSum += Math.abs(pings[i] - pings[i - 1]);
 			}
-			const jitter = pings.length > 1 ? (diffSum / (pings.length - 1)).toFixed(1) : '0.0';
-			const finalLost = failed + tcpLostTotal;
-			const finalLossRate = ((finalLost / totalProbes) * 100).toFixed(0);
+			const jitter = pings.length > 1 ? (diffSum / (pings.length - 1)).toFixed(1) : (hasPingBaseline ? '0.0' : '--');
+			const finalLossRate = ((failed / totalProbes) * 100).toFixed(0);
 
-			if (pingEl) pingEl.textContent = medianPing.toString();
+			if (pingEl) pingEl.textContent = hasPingBaseline ? medianPing.toString() : '--';
 			updateColoTargetUI(jitter);
 			if (lossEl) lossEl.textContent = finalLossRate;
-			if (lossSubEl) lossSubEl.textContent = `${finalLost}/${totalProbes} lost`;
+			if (lossSubEl) lossSubEl.textContent = `${failed}/${totalProbes} lost`;
 			if (lossBadge) {
 				lossBadge.title = `Drop rate across ${totalProbes} sequential HTTP 204 Anycast edge ping requests.`;
-				if (finalLost === 0) {
+				if (failed === 0) {
 					lossBadge.classList.add('loss-optimal');
 					lossBadge.classList.remove('loss-warn');
 				} else {
@@ -332,23 +321,24 @@
 			// STAGE 2: MULTI-STREAM SUSTAINED DOWNLOAD (3s)
 			// ==========================================
 			if (statusText) statusText.textContent = 'Streaming multi-connection download to measure sustained wire speed...';
-			if (progressBar) progressBar.style.width = '25%';
+			if (progressBar) progressBar.style.width = '30%';
 
 			const downDurationSec = 3.0;
 			const downStreams = 4;
 			const chunkSize = 25000000; // 25MB per request
 			const downControllers: AbortController[] = [];
-			const loadedPings: number[] = [];
+			const downBloatControllers: AbortController[] = [];
+			const downLoadedPings: number[] = [];
+			const upLoadedPings: number[] = [];
 			if (bloatSubEl) bloatSubEl.textContent = 'Probing queue...';
 
 			let downTotalBytes = 0;
 			let downSteadyBytes = 0;
 			let downSteadyStartTime = 0;
 			const d0 = performance.now();
-			const downWarmupMs = 500; // Discard initial 500ms TCP slow start ramp
+			const downWarmupMs = 500;
 			let isDownDone = false;
 
-			// Live ticker to update speed every 80ms
 			const downTicker = setInterval(() => {
 				const now = performance.now();
 				const elapsedTotal = (now - d0) / 1000;
@@ -357,18 +347,24 @@
 					const curMbps = (downSteadyBytes * 8) / (steadyElapsed * 1_000_000);
 					if (downEl) downEl.textContent = curMbps.toFixed(1);
 				}
-				const progressPct = 25 + Math.min(38, (elapsedTotal / downDurationSec) * 38);
+				const progressPct = 30 + Math.min(35, (elapsedTotal / downDurationSec) * 35);
 				if (progressBar) progressBar.style.width = `${progressPct.toFixed(0)}%`;
 			}, 80);
 
 			// Background loaded ping probe loop during download
 			const downBloatInterval = setInterval(async () => {
 				if (isDownDone) return;
+				const ctrl = new AbortController();
+				downBloatControllers.push(ctrl);
+				const timer = setTimeout(() => ctrl.abort(), 1200);
 				const t0 = performance.now();
 				try {
-					const res = await fetch(`/api/ping?_bld=${Date.now()}`, { cache: 'no-store' });
-					if (res.ok) loadedPings.push(performance.now() - t0);
-				} catch (_) {}
+					const res = await fetch(`/api/ping?_bld=${Date.now()}`, { signal: ctrl.signal, cache: 'no-store' });
+					if (res.ok && !isDownDone) downLoadedPings.push(performance.now() - t0);
+				} catch (_) {
+				} finally {
+					clearTimeout(timer);
+				}
 			}, 350);
 
 			const runDownWorker = async (streamId: number) => {
@@ -416,12 +412,18 @@
 			}, (downDurationSec + 0.15) * 1000);
 
 			await Promise.allSettled(Array.from({ length: downStreams }, (_, i) => runDownWorker(i)));
+			isDownDone = true;
 			clearTimeout(downTimeout);
 			clearInterval(downTicker);
 			clearInterval(downBloatInterval);
+			downBloatControllers.forEach(c => { try { c.abort(); } catch (_) {} });
 
-			const finalDownElapsed = downSteadyStartTime > 0 ? (performance.now() - downSteadyStartTime) / 1000 : (performance.now() - d0) / 1000;
-			const finalDownMbps = (downSteadyBytes * 8) / (Math.max(finalDownElapsed, 0.001) * 1_000_000);
+			const downBytesToCount = downSteadyBytes > 0 ? downSteadyBytes : downTotalBytes;
+			const finalDownElapsed =
+				downSteadyBytes > 0 && downSteadyStartTime > 0
+					? (performance.now() - downSteadyStartTime) / 1000
+					: (performance.now() - d0) / 1000;
+			const finalDownMbps = (downBytesToCount * 8) / (Math.max(finalDownElapsed, 0.001) * 1_000_000);
 			if (downTotalBytes === 0) {
 				if (downEl) downEl.textContent = 'Blocked';
 				if (downUnitEl) downUnitEl.style.display = 'none';
@@ -432,66 +434,91 @@
 				const downSecDisplay = Math.max(1, Math.round((performance.now() - d0) / 1000));
 				if (downSubEl) downSubEl.textContent = `Sustained (${(downTotalBytes / (1024 * 1024)).toFixed(1)} MB / ${downSecDisplay}s)`;
 			}
-			if (progressBar) progressBar.style.width = '63%';
+			if (progressBar) progressBar.style.width = '65%';
 
 			// ==========================================
-			// STAGE 3: MULTI-STREAM SUSTAINED UPLOAD (3s)
+			// STAGE 3: MULTI-STREAM SUSTAINED UPLOAD (3s, adaptive chunks)
 			// ==========================================
 			if (statusText) statusText.textContent = 'Saturating return pipeline with multi-stream upstream channels...';
 			if (upSubEl) upSubEl.textContent = 'Measuring...';
 
 			const upDurationSec = 3.0;
 			const upStreams = 4;
-			const upChunkSize = 3 * 1024 * 1024; // 3MB chunk per request
-			const upBuf = new Uint8Array(upChunkSize);
+			const maxUpChunkSize = 2 * 1024 * 1024; // 2MB max chunk
+			const upMaxBuf = new Uint8Array(maxUpChunkSize);
+			// Populate with non-zero pseudo-random pattern once to avoid proxy/tunnel zero-compression skew
+			for (let i = 0; i < upMaxBuf.length; i += 64) {
+				upMaxBuf[i] = (i * 131 + 17) & 0xff;
+			}
 			const upControllers: AbortController[] = [];
+			const upBloatControllers: AbortController[] = [];
 
 			let upTotalBytes = 0;
 			let upSteadyBytes = 0;
 			let upSteadyStartTime = 0;
 			const u0 = performance.now();
-			const upWarmupMs = 500; // Discard initial 500ms TCP slow start ramp
+			const upWarmupMs = 500;
 			let isUpDone = false;
 
 			const upTicker = setInterval(() => {
 				const now = performance.now();
 				const elapsedTotal = (now - u0) / 1000;
-				if (upSteadyStartTime > 0 && now - upSteadyStartTime > 150) {
-					const steadyElapsed = (now - upSteadyStartTime) / 1000;
-					const curMbps = (upSteadyBytes * 8) / (steadyElapsed * 1_000_000);
-					if (upEl && curMbps > 0) upEl.textContent = curMbps.toFixed(1);
+				const activeBytes = upSteadyBytes > 0 ? upSteadyBytes : upTotalBytes;
+				const activeElapsed =
+					upSteadyBytes > 0 && upSteadyStartTime > 0
+						? (now - upSteadyStartTime) / 1000
+						: elapsedTotal;
+				if (activeElapsed > 0.15 && activeBytes > 0) {
+					const curMbps = (activeBytes * 8) / (activeElapsed * 1_000_000);
+					if (upEl) upEl.textContent = curMbps.toFixed(1);
 				}
-				const progressPct = 63 + Math.min(37, (elapsedTotal / upDurationSec) * 37);
+				const progressPct = 65 + Math.min(35, (elapsedTotal / upDurationSec) * 35);
 				if (progressBar) progressBar.style.width = `${progressPct.toFixed(0)}%`;
 			}, 80);
 
 			// Background loaded ping probe loop during upload
 			const upBloatInterval = setInterval(async () => {
 				if (isUpDone) return;
+				const ctrl = new AbortController();
+				upBloatControllers.push(ctrl);
+				const timer = setTimeout(() => ctrl.abort(), 1200);
 				const t0 = performance.now();
 				try {
-					const res = await fetch(`/api/ping?_blu=${Date.now()}`, { cache: 'no-store' });
-					if (res.ok) loadedPings.push(performance.now() - t0);
-				} catch (_) {}
+					const res = await fetch(`/api/ping?_blu=${Date.now()}`, { signal: ctrl.signal, cache: 'no-store' });
+					if (res.ok && !isUpDone) upLoadedPings.push(performance.now() - t0);
+				} catch (_) {
+				} finally {
+					clearTimeout(timer);
+				}
 			}, 350);
 
 			const runUpWorker = async (workerId: number) => {
+				// Start with 256 KB so slow links (<8 Mbps) complete quickly, then ramp up to 2 MB
+				let chunkSize = 256 * 1024;
 				while (!isUpDone && (performance.now() - u0) / 1000 < upDurationSec) {
 					const ctrl = new AbortController();
 					upControllers.push(ctrl);
 					const reqStart = performance.now();
+					const payload = upMaxBuf.subarray(0, chunkSize);
 					try {
 						const res = await fetch(`https://speed.cloudflare.com/__up?_u=${workerId}_${Date.now()}`, {
 							method: 'POST',
-							body: upBuf,
+							body: payload,
 							headers: { 'Content-Type': 'application/octet-stream' },
 							signal: ctrl.signal,
 						});
 						if (res.ok) {
-							upTotalBytes += upChunkSize;
-							if (reqStart - u0 > upWarmupMs) {
-								if (upSteadyStartTime === 0) upSteadyStartTime = reqStart;
-								upSteadyBytes += upChunkSize;
+							const doneNow = performance.now();
+							upTotalBytes += chunkSize;
+							if (doneNow - u0 > upWarmupMs) {
+								if (upSteadyStartTime === 0) {
+									upSteadyStartTime = Math.max(reqStart, u0 + upWarmupMs);
+								}
+								upSteadyBytes += chunkSize;
+							}
+							const reqMs = doneNow - reqStart;
+							if (reqMs < 250 && chunkSize < maxUpChunkSize) {
+								chunkSize = Math.min(maxUpChunkSize, chunkSize * 2);
 							}
 						}
 					} catch (_) {
@@ -508,12 +535,17 @@
 			}, (upDurationSec + 0.15) * 1000);
 
 			await Promise.allSettled(Array.from({ length: upStreams }, (_, i) => runUpWorker(i)));
+			isUpDone = true;
 			clearTimeout(upTimeout);
 			clearInterval(upTicker);
 			clearInterval(upBloatInterval);
+			upBloatControllers.forEach(c => { try { c.abort(); } catch (_) {} });
 
-			const finalUpElapsed = upSteadyStartTime > 0 ? (performance.now() - upSteadyStartTime) / 1000 : (performance.now() - u0) / 1000;
 			const upBytesToCount = upSteadyBytes > 0 ? upSteadyBytes : upTotalBytes;
+			const finalUpElapsed =
+				upSteadyBytes > 0 && upSteadyStartTime > 0
+					? (performance.now() - upSteadyStartTime) / 1000
+					: (performance.now() - u0) / 1000;
 			const finalUpMbps = (upBytesToCount * 8) / (Math.max(finalUpElapsed, 0.001) * 1_000_000);
 			if (upTotalBytes === 0) {
 				if (upEl) upEl.textContent = 'Blocked';
@@ -529,36 +561,56 @@
 			// ==========================================
 			// STAGE 4: BUFFERBLOAT & FIBER OPTIC METRICS
 			// ==========================================
-			loadedPings.sort((a, b) => a - b);
-			const medianLoaded = loadedPings.length ? Math.round(loadedPings[Math.floor(loadedPings.length / 2)]) : medianPing;
-			const bloatDelta = Math.max(0, medianLoaded - medianPing);
-			let grade = 'A+';
-			let gradeColor = 'rgb(34, 197, 94)'; // green
-			if (bloatDelta > 75) { grade = 'D'; gradeColor = 'rgb(239, 68, 68)'; }
-			else if (bloatDelta > 40) { grade = 'C'; gradeColor = 'rgb(245, 158, 11)'; }
-			else if (bloatDelta > 20) { grade = 'B'; gradeColor = 'rgb(56, 189, 248)'; }
-			else if (bloatDelta > 6) { grade = 'A'; gradeColor = 'rgb(34, 197, 94)'; }
+			const calcMedian = (arr: number[], fallback: number) => {
+				if (!arr.length) return fallback;
+				const sorted = [...arr].sort((a, b) => a - b);
+				return Math.round(sorted[Math.floor(sorted.length / 2)]);
+			};
 
-			if (bloatEl) {
-				bloatEl.textContent = grade;
-				bloatEl.style.color = gradeColor;
-			}
-			if (bloatSubEl) {
-				bloatSubEl.textContent = `+${bloatDelta} ms loaded Δ`;
+			if (!hasPingBaseline) {
+				if (bloatEl) {
+					bloatEl.textContent = '--';
+					bloatEl.style.color = '';
+				}
+				if (bloatSubEl) bloatSubEl.textContent = 'Offline / no ping baseline';
+			} else {
+				const allLoaded = [...downLoadedPings, ...upLoadedPings];
+				const medianLoaded = calcMedian(allLoaded, medianPing);
+				const downDelta = Math.max(0, calcMedian(downLoadedPings, medianPing) - medianPing);
+				const upDelta = Math.max(0, calcMedian(upLoadedPings, medianPing) - medianPing);
+				const bloatDelta = Math.max(0, medianLoaded - medianPing);
+				let grade = 'A+';
+				let gradeColor = 'rgb(34, 197, 94)';
+				if (bloatDelta > 75) { grade = 'D'; gradeColor = 'rgb(239, 68, 68)'; }
+				else if (bloatDelta > 40) { grade = 'C'; gradeColor = 'rgb(245, 158, 11)'; }
+				else if (bloatDelta > 20) { grade = 'B'; gradeColor = 'rgb(56, 189, 248)'; }
+				else if (bloatDelta > 6) { grade = 'A'; gradeColor = 'rgb(34, 197, 94)'; }
+
+				if (bloatEl) {
+					bloatEl.textContent = grade;
+					bloatEl.style.color = gradeColor;
+				}
+				if (bloatSubEl) {
+					bloatSubEl.textContent = `DL +${downDelta} ms ▪ UL +${upDelta} ms`;
+				}
 			}
 
 			// Physics: Great-circle distance & speed of light in optical glass (c_glass ~ 204 km/ms)
 			let distanceKm = 0;
 			let fiberRttMs = '0';
-			const coloCoord = COLO_COORDS[detectedColo];
+			const coloCoord = detectedColo ? COLO_COORDS[detectedColo] : undefined;
 			if (coloCoord && clientLat && clientLon) {
 				distanceKm = getGreatCircleDistance(clientLat, clientLon, coloCoord.lat, coloCoord.lon);
 				fiberRttMs = Math.max(0.1, (2 * distanceKm) / 204).toFixed(1);
 			}
 
 			if (progressBar) progressBar.style.width = '100%';
-			if (downTotalBytes === 0 && upTotalBytes === 0) {
+			if (!hasPingBaseline && downTotalBytes === 0 && upTotalBytes === 0) {
+				if (statusText) statusText.innerHTML = '<span style="color: rgb(239, 68, 68); font-weight: 600;">Offline:</span> Unable to reach Cloudflare edge endpoints.';
+			} else if (downTotalBytes === 0 && upTotalBytes === 0) {
 				if (statusText) statusText.innerHTML = '<span style="color: rgb(239, 68, 68); font-weight: 600;">Notice:</span> speed.cloudflare.com throughput test blocked by ad-blocker or firewall policy. Edge ping &amp; latency succeeded.';
+			} else if (upTotalBytes === 0) {
+				if (statusText) statusText.innerHTML = '<span style="color: rgb(245, 158, 11); font-weight: 600;">Partial:</span> Download measured, but upload endpoint timed out or was blocked.';
 			} else {
 				const targetSummary = detectedColo ? ` via Cloudflare ${detectedColo} Edge (${detectedCity})` : ' via Cloudflare Anycast';
 				const physicsSummary = distanceKm > 0 ? ` ▪ ~${distanceKm} km (fiber limit: ~${fiberRttMs} ms RTT)` : '';
@@ -576,19 +628,16 @@
 	}
 
 	function setupBenchmarkBtn() {
+		const labEl = document.getElementById('lab');
 		const btn = document.getElementById('run-speedtest-btn');
-		if (btn) {
-			btn.removeEventListener('click', runBenchmark);
-			btn.addEventListener('click', runBenchmark);
-		}
+		if (!labEl || !btn || labEl.dataset.bound === '1') return;
+		labEl.dataset.bound = '1';
+		btn.addEventListener('click', runBenchmark);
+		resolveEdgeDatacenter();
 	}
 
 	setupBenchmarkBtn();
-	resolveEdgeDatacenter();
-	document.addEventListener('astro:page-load', () => {
-		setupBenchmarkBtn();
-		resolveEdgeDatacenter();
-	});
+	document.addEventListener('astro:page-load', setupBenchmarkBtn);
 </script>
 
 <style>
@@ -612,17 +661,6 @@
 	.card-icon {
 		color: var(--accent);
 		flex-shrink: 0;
-	}
-
-	.benchmark-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 0.8em;
-		padding-bottom: 0.8em;
-		margin-bottom: 0.8em;
-		border-bottom: 1.5px solid var(--border-color);
 	}
 
 	.benchmark-desc {
@@ -815,9 +853,8 @@
 		}
 	}
 	@media (max-width: 520px) {
-		.benchmark-header {
-			flex-direction: column;
-			align-items: flex-start;
+		.benchmark-card .card-summary-right {
+			width: 100%;
 		}
 		#run-speedtest-btn,
 		.benchmark-btn {

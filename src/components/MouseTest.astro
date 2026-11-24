@@ -2,34 +2,34 @@
 // MouseTest.astro - Real-Time Mouse Polling Rate, Switch Debounce & Click Latency Inspector
 ---
 
-<details class="card section-accordion input-card" id="input-lab">
-	<summary class="card-header-summary">
-		<div class="card-summary-left">
-			<span class="card-chevron-btn" title="Toggle Mouse Test section">
+<section class="card section-accordion input-card" id="input-lab" data-open="false">
+	<div class="card-header-summary">
+		<button type="button" class="card-summary-left card-summary-toggle" aria-expanded="false" aria-controls="input-lab-content">
+			<span class="card-chevron-btn" aria-hidden="true">
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
 			</span>
 			<h2 class="card-title">
-				<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+				<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon" aria-hidden="true">
 					<rect x="5" y="2" width="14" height="20" rx="7"/>
 					<line x1="12" y1="6" x2="12" y2="10"/>
 				</svg>
 				Mouse Test
 			</h2>
 			<span class="section-summary-badge">USB Polling Oscilloscope · Chatter</span>
-		</div>
+		</button>
 
 		<div class="card-summary-right">
 			<button id="reset-input-lab-btn" class="telemetry-btn" type="button" title="Reset all polling, reflex, and mouse button measurements">
-				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
 					<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
 					<path d="M3 3v5h5"/>
 				</svg>
 				<span>Reset</span>
 			</button>
 		</div>
-	</summary>
+	</div>
 
-	<div class="section-content">
+	<div class="section-content" id="input-lab-content" hidden>
 
 	<p class="benchmark-desc">
 		Measure real-time USB mouse polling frequency, display-to-click visual reaction latency, and test mouse buttons and scroll wheel.
@@ -228,10 +228,14 @@
 		</div>
 	</div>
 	</div>
-</details>
+</section>
 
 <script>
 	function initInputLatencyLab() {
+		const inputLabSection = document.getElementById('input-lab');
+		if (!inputLabSection || inputLabSection.dataset.bound === '1') return;
+		inputLabSection.dataset.bound = '1';
+
 		// ==========================================
 		// 1. UNIFIED MOUSE POLLING & REFLEX BENCHMARK
 		// ==========================================
@@ -300,12 +304,13 @@
 			const yTop = 14;
 			const usableH = yBaseline - yTop;
 
-			// Determine dynamic scale ceiling based on observed peak
+			// Determine dynamic scale ceiling based on active sparkline window (prevents stale spikes from locking scale)
+			const windowPeakHz = Math.max(0, ...sparklineData);
 			let maxScale = 1200;
-			if (peakHz > 4500) maxScale = 9000;
-			else if (peakHz > 2200) maxScale = 4500;
-			else if (peakHz > 1100) maxScale = 2200;
-			else if (peakHz > 250) maxScale = 1200;
+			if (windowPeakHz > 4500) maxScale = 9000;
+			else if (windowPeakHz > 2200) maxScale = 4500;
+			else if (windowPeakHz > 1100) maxScale = 2200;
+			else if (windowPeakHz > 250) maxScale = 1200;
 			else maxScale = 250;
 
 			// Standard guideline tiers
@@ -407,7 +412,10 @@
 
 				if (eventTimestamps.length > 0) {
 					const dt = t - eventTimestamps[eventTimestamps.length - 1];
-					if (dt > 0.05 && dt < 80) {
+					if (dt >= 80) {
+						// Clear stale samples across movement pauses
+						intervalHistory = [];
+					} else if (dt > 0.08) {
 						intervalHistory.push(dt);
 						if (intervalHistory.length > 40) intervalHistory.shift();
 					}
@@ -418,18 +426,15 @@
 
 			if (intervalHistory.length >= 8) {
 				const sorted = [...intervalHistory].sort((a, b) => a - b);
-				// Trim fastest 20% and slowest 20% to reject OS/Bluetooth event delivery micro-bursts and pause turnarounds
 				const trim = Math.floor(sorted.length * 0.2);
 				const trimmed = sorted.slice(trim, sorted.length - trim);
 				const medianDt = trimmed.length ? trimmed[Math.floor(trimmed.length / 2)] : sorted[Math.floor(sorted.length / 2)];
 				const currentHz = Math.round(1000 / medianDt);
 
-				// 1. Throttle text/DOM updates to every ~90ms (11 updates/sec)
-				// Keeps the numeric readout stable, calm, and readable without rapid flickering
 				if (now - lastDomUpdateTime >= 90) {
 					lastDomUpdateTime = now;
 
-					if (currentHz > 40 && currentHz < 12000) {
+					if (currentHz > 40 && currentHz < 9000) {
 						if (pollCurrentHz) pollCurrentHz.textContent = `${currentHz}`;
 
 						if (currentHz > peakHz) {
@@ -463,13 +468,9 @@
 					}
 				}
 
-				// 2. Sample sparkline graph at ~45ms (~22 updates/sec)
-				// 60 points * 45ms = ~2.7s of smooth, responsive visual history without feeling sluggish
 				if (now - lastGraphSampleTime >= 45) {
 					lastGraphSampleTime = now;
-					const jitter = (Math.random() - 0.5) * Math.min(currentHz * 0.08, 12);
-					const pointRate = Math.round(Math.max(30, currentHz + jitter));
-
+					const pointRate = Math.round(Math.max(0, Math.min(9000, currentHz)));
 					sparklineData.push(pointRate);
 					if (sparklineData.length > SPARKLINE_POINTS) sparklineData.shift();
 					drawSparkline();
@@ -496,48 +497,65 @@
 			clearTimeout(stateTimer);
 			stateTimer = setTimeout(() => {
 				reactionState = 'READY';
-				greenTimestamp = performance.now();
 				if (pollReflexBox) pollReflexBox.className = 'poll-reflex-box ready';
 				if (reactionHeadline) reactionHeadline.textContent = 'CLICK NOW!';
 				if (reactionSub) reactionSub.textContent = 'Click as fast as you can';
+				// Anchor reaction timer after visual state is queued for next paint frame
+				requestAnimationFrame(() => {
+					if (reactionState === 'READY') {
+						greenTimestamp = performance.now();
+					}
+				});
 			}, randomDelay);
+		}
+
+		function handleReflexTrigger(downTime: number) {
+			if (reactionState === 'IDLE' || reactionState === 'RESULT' || reactionState === 'TOO_SOON') {
+				startReactionTest();
+			} else if (reactionState === 'WAITING') {
+				clearTimeout(stateTimer);
+				reactionState = 'TOO_SOON';
+				if (pollReflexBox) pollReflexBox.className = 'poll-reflex-box too-soon';
+				if (reactionHeadline) reactionHeadline.textContent = 'Too Soon!';
+				if (reactionSub) reactionSub.textContent = 'Clicked before green. Click to retry.';
+			} else if (reactionState === 'READY') {
+				const base = greenTimestamp > 0 ? greenTimestamp : downTime;
+				const reactionDelta = Math.max(1, Math.round(downTime - base));
+				reactionState = 'RESULT';
+				reactionScores.push(reactionDelta);
+				if (reactionDelta < bestReflex) {
+					bestReflex = reactionDelta;
+				}
+				if (reactionBestSub) {
+					reactionBestSub.textContent = `Best: ${bestReflex} ms (${reactionScores.length} test${reactionScores.length === 1 ? '' : 's'})`;
+				}
+
+				if (reactionTimeVal) reactionTimeVal.textContent = `${reactionDelta}`;
+
+				let rating = 'Average';
+				if (reactionDelta < 185) rating = 'Fast';
+				else if (reactionDelta < 225) rating = 'Good';
+				else if (reactionDelta < 275) rating = 'Average';
+				else rating = 'Slow';
+
+				if (pollReflexBox) pollReflexBox.className = 'poll-reflex-box result';
+				if (reactionHeadline) reactionHeadline.textContent = `${reactionDelta} ms (${rating})`;
+				if (reactionSub) reactionSub.textContent = 'Click to test again';
+			}
 		}
 
 		if (pollReflexBox) {
 			pollReflexBox.addEventListener('pointermove', handlePointerMove);
 			pollReflexBox.addEventListener('pointerdown', (e: PointerEvent) => {
+				if (e.pointerType === 'mouse' && e.button !== 0) return;
 				const downTime = (e.timeStamp && e.timeStamp > 0) ? e.timeStamp : performance.now();
-
-				if (reactionState === 'IDLE' || reactionState === 'RESULT' || reactionState === 'TOO_SOON') {
-					startReactionTest();
-				} else if (reactionState === 'WAITING') {
-					clearTimeout(stateTimer);
-					reactionState = 'TOO_SOON';
-					if (pollReflexBox) pollReflexBox.className = 'poll-reflex-box too-soon';
-					if (reactionHeadline) reactionHeadline.textContent = 'Too Soon!';
-					if (reactionSub) reactionSub.textContent = 'Clicked before green. Click to retry.';
-				} else if (reactionState === 'READY') {
-					const reactionDelta = Math.max(1, Math.round(downTime - greenTimestamp));
-					reactionState = 'RESULT';
-					reactionScores.push(reactionDelta);
-					if (reactionDelta < bestReflex) {
-						bestReflex = reactionDelta;
-					}
-					if (reactionBestSub) {
-						reactionBestSub.textContent = `Best: ${bestReflex} ms (${reactionScores.length} test${reactionScores.length === 1 ? '' : 's'})`;
-					}
-
-					if (reactionTimeVal) reactionTimeVal.textContent = `${reactionDelta}`;
-
-					let rating = 'Average';
-					if (reactionDelta < 185) rating = 'Fast';
-					else if (reactionDelta < 225) rating = 'Good';
-					else if (reactionDelta < 275) rating = 'Average';
-					else rating = 'Slow';
-
-					if (pollReflexBox) pollReflexBox.className = 'poll-reflex-box result';
-					if (reactionHeadline) reactionHeadline.textContent = `${reactionDelta} ms (${rating})`;
-					if (reactionSub) reactionSub.textContent = 'Click to test again';
+				handleReflexTrigger(downTime);
+			});
+			pollReflexBox.addEventListener('keydown', (e: KeyboardEvent) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					const downTime = (e.timeStamp && e.timeStamp > 0) ? e.timeStamp : performance.now();
+					handleReflexTrigger(downTime);
 				}
 			});
 
@@ -608,19 +626,20 @@
 			activeTimers.set(el, timer);
 		}
 
+		const activePointerBtns = new Map<string, { el: HTMLElement | SVGElement | null; id: number }>();
+
 		function getButtonInfo(btn: number, target?: HTMLElement | SVGElement | null): { name: string; el: HTMLElement | SVGElement | null; id: number } {
-			// Check if clicking directly on a specific visual button element
-			if (target) {
+			if (target && btn === 0) {
 				const thumb1 = target.closest('#btn-thumb1, #back-button') as HTMLElement | SVGElement | null;
 				if (thumb1) return { name: 'Back', el: thumb1El, id: 3 };
 				const thumb2 = target.closest('#btn-thumb2, #forward-button') as HTMLElement | SVGElement | null;
 				if (thumb2) return { name: 'Forward', el: thumb2El, id: 4 };
 				const wheel = target.closest('#btn-wheel, #scroll-wheel') as HTMLElement | SVGElement | null;
-				if (wheel && btn === 0) return { name: 'Wheel', el: wheelEl, id: 1 };
+				if (wheel) return { name: 'Wheel', el: wheelEl, id: 1 };
 				const rmb = target.closest('#btn-rmb, #right-button') as HTMLElement | SVGElement | null;
-				if (rmb && btn === 0) return { name: 'Right', el: rmbEl, id: 2 };
+				if (rmb) return { name: 'Right', el: rmbEl, id: 2 };
 				const lmb = target.closest('#btn-lmb, #left-button') as HTMLElement | SVGElement | null;
-				if (lmb && btn === 0) return { name: 'Left', el: lmbEl, id: 0 };
+				if (lmb) return { name: 'Left', el: lmbEl, id: 0 };
 			}
 
 			switch (btn) {
@@ -633,9 +652,10 @@
 			}
 		}
 
-		function onPointerDown(e: MouseEvent | PointerEvent) {
-			e.preventDefault();
+		function onPointerDown(e: PointerEvent) {
+			btnZone?.focus({ preventScroll: true });
 			const info = getButtonInfo(e.button, e.target as HTMLElement | SVGElement | null);
+			activePointerBtns.set(`${e.pointerId}:${e.button}`, { el: info.el, id: info.id });
 			const now = performance.now();
 
 			// Double-click chatter detection (<30ms between successive clicks of same button)
@@ -666,10 +686,16 @@
 			}
 		}
 
-		function onPointerUp(e: MouseEvent | PointerEvent) {
-			e.preventDefault();
-			const info = getButtonInfo(e.button, e.target as HTMLElement | SVGElement | null);
-			deactivateButton(info.el, info.id);
+		function onPointerUp(e: PointerEvent) {
+			const key = `${e.pointerId}:${e.button}`;
+			const tracked = activePointerBtns.get(key);
+			if (tracked) {
+				activePointerBtns.delete(key);
+				deactivateButton(tracked.el, tracked.id);
+			} else {
+				const info = getButtonInfo(e.button, e.target as HTMLElement | SVGElement | null);
+				deactivateButton(info.el, info.id);
+			}
 		}
 		function onWheel(e: WheelEvent) {
 			e.preventDefault();
@@ -700,19 +726,18 @@
 		}
 
 		if (btnZone) {
-			btnZone.addEventListener('mousedown', onPointerDown);
-			btnZone.addEventListener('mouseup', onPointerUp);
+			btnZone.addEventListener('pointerdown', onPointerDown);
+			btnZone.addEventListener('pointerup', onPointerUp);
+			btnZone.addEventListener('pointercancel', onPointerUp);
 			btnZone.addEventListener('contextmenu', (e) => e.preventDefault());
 			btnZone.addEventListener('auxclick', (e) => e.preventDefault());
 			btnZone.addEventListener('wheel', onWheel, { passive: false });
 		}
 
-		// Ensure all buttons deactivate even if mouseup occurs outside btnZone or window blurs
-		window.addEventListener('mouseup', (e: MouseEvent) => {
-			const info = getButtonInfo(e.button, e.target as HTMLElement | SVGElement | null);
-			deactivateButton(info.el, info.id);
-		});
+		// Ensure all buttons deactivate even if pointerup occurs outside btnZone or window blurs
+		window.addEventListener('pointerup', onPointerUp);
 		window.addEventListener('blur', () => {
+			activePointerBtns.clear();
 			isButtonDown.clear();
 			activeTimers.forEach(t => clearTimeout(t));
 			activeTimers.clear();
@@ -784,12 +809,13 @@
 
 		drawSparkline();
 		window.addEventListener('resize', drawSparkline);
+		if (pollReflexBox && window.ResizeObserver) {
+			const ro = new ResizeObserver(() => drawSparkline());
+			ro.observe(pollReflexBox);
+		}
 
-		const inputLabDetails = document.getElementById('input-lab');
-		inputLabDetails?.addEventListener('toggle', () => {
-			if ((inputLabDetails as HTMLDetailsElement).open) {
-				requestAnimationFrame(() => drawSparkline());
-			}
+		inputLabSection.addEventListener('section-toggle', () => {
+			requestAnimationFrame(() => drawSparkline());
 		});
 
 		// Instantly redraw canvas when theme toggles
@@ -833,17 +859,6 @@
 	.card-icon {
 		color: var(--accent);
 		flex-shrink: 0;
-	}
-
-	.card-header-wrap {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 0.8em;
-		padding-bottom: 0.8em;
-		margin-bottom: 0.8em;
-		border-bottom: 1.5px solid var(--border-color);
 	}
 
 	.telemetry-btn {
@@ -995,7 +1010,7 @@
 		overflow: hidden;
 		user-select: none;
 		-webkit-user-select: none;
-		touch-action: manipulation;
+		touch-action: none;
 		margin-bottom: 0.85em;
 		display: flex;
 		align-items: center;
@@ -1294,8 +1309,7 @@
 		font-size: 0.66em;
 		color: rgb(var(--gray));
 		opacity: 0.85;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
+		line-height: 1.25;
+		word-break: break-word;
 	}
 </style>

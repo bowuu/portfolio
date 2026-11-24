@@ -27,7 +27,9 @@ process.env.PUBLIC_GIT_COMMIT_SHORT_HASH = gitCommitShortHash;
 export default defineConfig({
   site: "https://brob.uk",
   integrations: [sitemap()],
-  adapter: cloudflare(),
+  adapter: cloudflare({
+    imageService: "passthrough",
+  }),
   vite: {
     build: {
       cssMinify: "esbuild",

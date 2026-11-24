@@ -75,6 +75,10 @@ import ThemeToggle from './ThemeToggle.astro';
 
 <script>
 	function setupHeader() {
+		const headerEl = document.getElementById('site-header');
+		if (!headerEl || headerEl.dataset.bound === '1') return;
+		headerEl.dataset.bound = '1';
+
 		const navLinks = document.querySelectorAll<HTMLAnchorElement>('.nav-link, .mobile-nav-link');
 		const menuBtn = document.getElementById('mobile-menu-btn');
 		const dropdown = document.getElementById('mobile-nav-dropdown');
@@ -82,11 +86,12 @@ import ThemeToggle from './ThemeToggle.astro';
 		// 1. Mobile Menu Toggle
 		if (menuBtn && dropdown) {
 			function closeMenu() {
-				dropdown?.classList.remove('open');
+				if (!dropdown?.classList.contains('open')) return;
+				dropdown.classList.remove('open');
 				menuBtn?.classList.remove('open');
 				menuBtn?.setAttribute('aria-expanded', 'false');
-				dropdown?.setAttribute('aria-hidden', 'true');
-				dropdown?.setAttribute('inert', '');
+				dropdown.setAttribute('aria-hidden', 'true');
+				dropdown.setAttribute('inert', '');
 				(window as any).__popModalHistory?.('mobile-menu');
 			}
 
@@ -116,22 +121,24 @@ import ThemeToggle from './ThemeToggle.astro';
 			});
 
 			document.addEventListener('click', (e) => {
+				if (!dropdown.classList.contains('open')) return;
 				if (!dropdown.contains(e.target as Node) && !menuBtn.contains(e.target as Node)) {
 					closeMenu();
 				}
 			});
 
 			document.addEventListener('keydown', (e) => {
+				if (!dropdown.classList.contains('open')) return;
 				if (e.key === 'Escape' || e.key === 'Esc') closeMenu();
 			});
 		}
 
 		// 2. Dynamic Scroll / Nav Highlight
 		if (!navLinks.length) return;
-		const sectionIds = ['about', 'skills', 'projects', 'lab', 'benchmark', 'display-lab', 'audio-lab', 'video-codec-spotlight', 'input-lab', 'keyboard-lab', 'debug'];
+		const sectionIds = ['about', 'skills', 'projects', 'lab', 'display-lab', 'audio-lab', 'video-codec-spotlight', 'input-lab', 'keyboard-lab', 'debug'];
 
 		function setActive(id: string) {
-			const targetId = (id === 'benchmark' || id === 'display-lab' || id === 'audio-lab' || id === 'video-codec-spotlight' || id === 'input-lab' || id === 'keyboard-lab') ? 'lab' : id;
+			const targetId = (id === 'display-lab' || id === 'audio-lab' || id === 'video-codec-spotlight' || id === 'input-lab' || id === 'keyboard-lab') ? 'lab' : id;
 			navLinks.forEach((link) => {
 				const href = link.getAttribute('href') || '';
 				if (href.endsWith(`#${targetId}`) || (targetId === 'about' && href === '/')) {
@@ -149,8 +156,8 @@ import ThemeToggle from './ThemeToggle.astro';
 				if (match && match[1]) {
 					setActive(match[1]);
 					const targetEl = document.getElementById(match[1]);
-					if (targetEl instanceof HTMLDetailsElement && !targetEl.open) {
-						targetEl.open = true;
+					if (targetEl) {
+						(window as any).__openSection?.(targetEl);
 					}
 				} else {
 					setActive('about');
@@ -173,6 +180,20 @@ import ThemeToggle from './ThemeToggle.astro';
 			const el = document.getElementById(id);
 			if (el) observer.observe(el);
 		});
+
+		// Ensure bottom-most #debug highlights on tall 1440p/4K monitors where rootMargin band cannot be crossed
+		let scrollRaf: number | null = null;
+		window.addEventListener('scroll', () => {
+			if (scrollRaf !== null) return;
+			scrollRaf = requestAnimationFrame(() => {
+				scrollRaf = null;
+				if (window.scrollY <= 40) {
+					setActive('about');
+				} else if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 40) {
+					setActive('debug');
+				}
+			});
+		}, { passive: true });
 
 		const currentHash = window.location.hash.replace('#', '');
 		if (currentHash && sectionIds.includes(currentHash)) {
@@ -233,11 +254,11 @@ import ThemeToggle from './ThemeToggle.astro';
 		cursor: pointer;
 	}
 	.nav-link:hover {
-		color: var(--accent);
+		color: var(--accent-text);
 	}
 	.nav-link.active {
 		border-bottom: 4px solid var(--accent);
-		color: var(--accent);
+		color: var(--accent-text);
 		font-weight: 600;
 	}
 
@@ -354,7 +375,7 @@ import ThemeToggle from './ThemeToggle.astro';
 	/* Responsive Breakpoint for Mobile & Tablets */
 	@media (max-width: 768px) {
 		header {
-			padding: 0 0.85rem;
+			padding: max(0px, env(safe-area-inset-top)) max(0.85rem, env(safe-area-inset-right)) 0 max(0.85rem, env(safe-area-inset-left));
 		}
 		nav {
 			display: flex;
@@ -442,11 +463,11 @@ import ThemeToggle from './ThemeToggle.astro';
 			display: block;
 		}
 		.mobile-nav-link:hover {
-			color: var(--accent);
+			color: var(--accent-text);
 			background: rgba(var(--gray-light), 0.5);
 		}
 		.mobile-nav-link.active {
-			color: var(--accent);
+			color: var(--accent-text);
 			border-left-color: var(--accent);
 			font-weight: 700;
 			background: rgba(var(--accent-rgb), 0.08);

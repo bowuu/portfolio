@@ -2,15 +2,15 @@
 // AudioTest.astro - DAC Latency, Stereo Isolation, 180° Polarity, Frequency Sweeper & Noise Generator
 ---
 
-<details class="card section-accordion audio-test-card" id="audio-lab" open>
-	<summary class="card-header-summary">
-		<div class="card-summary-left">
-			<span class="card-chevron-btn" title="Toggle Audio Test section">
+<section class="card section-accordion audio-test-card" id="audio-lab" data-open="true">
+	<div class="card-header-summary">
+		<button type="button" class="card-summary-left card-summary-toggle" aria-expanded="true" aria-controls="audio-lab-content">
+			<span class="card-chevron-btn" aria-hidden="true">
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
 			</span>
 
 			<h2 class="card-title">
-				<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+				<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" class="card-icon" aria-hidden="true">
 					<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
 					<path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
 				</svg>
@@ -25,13 +25,13 @@
 					<span id="hero-hud-sub" class="hud-sub-text">Select Test</span>
 				</div>
 			</div>
-		</div>
+		</button>
 
 		<div class="card-summary-right">
 			<!-- VISUALIZER INPUT SOURCE SWITCHER (Mic | Sim | Both) -->
 			<div class="segmented-control source-control" role="group" aria-label="Audio Input Source">
 				<button class="seg-btn" id="btn-src-mic" data-src-mode="mic" type="button" title="Microphone Input (Live Capture)">
-					<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" class="source-mic-icon">
+					<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" class="source-mic-icon" aria-hidden="true">
 						<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
 						<path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
 						<line x1="12" y1="19" x2="12" y2="23"/>
@@ -43,9 +43,9 @@
 				<button class="seg-btn" id="btn-src-both" data-src-mode="both" type="button" title="Combine Microphone & Simulated Audio">Both</button>
 			</div>
 
-			<div class="volume-control-wrap" title="Output Volume (Safe Ceiling -18 dBFS)">
+			<div class="volume-control-wrap" title="Output Volume (Soft-Knee Compressor Ceiling -18 dBFS)">
 				<button type="button" id="audio-mute-btn" class="vol-btn" title="Mute audio" aria-label="Toggle Mute">
-					<svg id="vol-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="vol-icon">
+					<svg id="vol-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="vol-icon" aria-hidden="true">
 						<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
 						<path id="vol-wave-1" d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
 						<path id="vol-wave-2" class="hidden" d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
@@ -59,13 +59,13 @@
 				<button type="button" id="audio-vol-text" class="vol-text mono" title="Set volume to 100%" aria-label="Toggle 100% Volume">50%</button>
 			</div>
 		</div>
-	</summary>
+	</div>
 
-	<div class="section-content">
+	<div class="section-content" id="audio-lab-content">
 
 	<p class="benchmark-desc">
 		Inspect stereo channel separation, 180&deg; wiring phase, broadband noise, and 20 Hz&ndash;20 kHz frequency response.
-		<span class="audio-ios-note">Note for iOS: ensure the physical Silent switch is OFF to hear Web Audio output.</span>
+		<span class="audio-ios-note">Note for iOS: ensure Silent Mode (Silent switch, Action Button, or Control Center) is OFF to hear Web Audio output.</span>
 	</p>
 
 	<!-- TWO-COLUMN WORKBENCH (HERO VISUALIZER ON LEFT, CONTROLS ON RIGHT) -->
@@ -240,14 +240,23 @@
 		</div>
 		</div>
 	</div>
-</details>
+</section>
 
 <script>
 	function setupAudioTest() {
+		const audioCard = document.getElementById('audio-lab');
+		if (!audioCard || audioCard.dataset.bound === '1') return;
+		audioCard.dataset.bound = '1';
+
 		let audioCtx: AudioContext | null = null;
 		let audioBus: GainNode | null = null;
 		let masterGain: GainNode | null = null;
 		let compressor: DynamicsCompressorNode | null = null;
+		let playToken = 0;
+
+		// Reusable time-domain buffers (zero per-frame GC allocation)
+		let timeBufL: Float32Array<ArrayBuffer> | null = null;
+		let timeBufR: Float32Array<ArrayBuffer> | null = null;
 
 		// Input Source & Visualizer Summing Routing (Mic / Simulated / Both)
 		let visualizerBus: GainNode | null = null;
@@ -463,7 +472,7 @@
 			if (volSlider) volSlider.value = String(targetVal);
 			updateVolumeUI(targetVal);
 			if (masterGain && audioCtx) {
-				masterGain.gain.setTargetAtTime(targetVal * 0.45, audioCtx.currentTime, 0.03);
+				masterGain.gain.setTargetAtTime(targetVal * 0.25, audioCtx.currentTime, 0.03);
 			}
 		}
 
@@ -525,10 +534,10 @@
 				const AudioConstructor = window.AudioContext || (window as any).webkitAudioContext;
 				audioCtx = new AudioConstructor();
 
-				// Master compressor to prevent clipping / distortion on speakers
+				// Master soft-knee compressor (-18 dBFS ceiling) to prevent speaker clipping
 				compressor = audioCtx.createDynamicsCompressor();
-				compressor.threshold.setValueAtTime(-12, audioCtx.currentTime);
-				compressor.knee.setValueAtTime(30, audioCtx.currentTime);
+				compressor.threshold.setValueAtTime(-18, audioCtx.currentTime);
+				compressor.knee.setValueAtTime(12, audioCtx.currentTime);
 				compressor.ratio.setValueAtTime(12, audioCtx.currentTime);
 				compressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
 				compressor.release.setValueAtTime(0.25, audioCtx.currentTime);
@@ -542,7 +551,7 @@
 				// Master volume attenuation node for simulated audio speakers / output
 				masterGain = audioCtx.createGain();
 				const initialVol = volSlider ? parseFloat(volSlider.value) : 0.5;
-				masterGain.gain.setValueAtTime(initialVol * 0.45, audioCtx.currentTime);
+				masterGain.gain.setValueAtTime(initialVol * 0.25, audioCtx.currentTime);
 
 				audioBus.connect(masterGain);
 				masterGain.connect(compressor);
@@ -844,38 +853,69 @@
 		}
 
 		// Stop All Active Audio
+		let activeEnvGain: GainNode | null = null;
 		function stopAllAudio() {
+			playToken++;
 			if (sweepRafId) {
 				cancelAnimationFrame(sweepRafId);
 				sweepRafId = null;
 			}
 			isSweeping = false;
 
-			if (currentSourceNode) {
-				try {
-					currentSourceNode.onended = null;
-					currentSourceNode.stop();
-					currentSourceNode.disconnect();
-				} catch (_) {}
+			if (activeEnvGain && audioCtx) {
+				const fadeNode = activeEnvGain;
+				const oldSource = currentSourceNode;
+				const oldOsc = currentOsc;
+				const oldNoise = noiseNode;
+				activeEnvGain = null;
 				currentSourceNode = null;
-			}
-			if (currentOsc) {
-				try {
-					currentOsc.stop();
-					currentOsc.disconnect();
-				} catch (_) {}
 				currentOsc = null;
-			}
-			if (noiseNode) {
-				try {
-					(noiseNode as any).stop?.();
-					noiseNode.disconnect();
-				} catch (_) {}
 				noiseNode = null;
+				const now = audioCtx.currentTime;
+				try {
+					fadeNode.gain.cancelScheduledValues(now);
+					fadeNode.gain.setValueAtTime(fadeNode.gain.value, now);
+					fadeNode.gain.linearRampToValueAtTime(0.0001, now + 0.012);
+				} catch (_) {}
+				setTimeout(() => {
+					if (oldSource) {
+						try { oldSource.onended = null; oldSource.stop(); oldSource.disconnect(); } catch (_) {}
+					}
+					if (oldOsc) {
+						try { oldOsc.stop(); oldOsc.disconnect(); } catch (_) {}
+					}
+					if (oldNoise) {
+						try { (oldNoise as any).stop?.(); oldNoise.disconnect(); } catch (_) {}
+					}
+					try { fadeNode.disconnect(); } catch (_) {}
+				}, 18);
+			} else {
+				if (currentSourceNode) {
+					try {
+						currentSourceNode.onended = null;
+						currentSourceNode.stop();
+						currentSourceNode.disconnect();
+					} catch (_) {}
+					currentSourceNode = null;
+				}
+				if (currentOsc) {
+					try {
+						currentOsc.stop();
+						currentOsc.disconnect();
+					} catch (_) {}
+					currentOsc = null;
+				}
+				if (noiseNode) {
+					try {
+						(noiseNode as any).stop?.();
+						noiseNode.disconnect();
+					} catch (_) {}
+					noiseNode = null;
+				}
 			}
 
 			activeMode = 'none';
-			document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
+			audioCard?.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
 			updateTonePlayButtonUI(false);
 			if (runSweepBtn) runSweepBtn.classList.remove('active');
 			if (runSweepText) runSweepText.textContent = 'Auto Frequency Sweep (10s)';
@@ -905,6 +945,9 @@
 				const sliderVal = parseFloat(freqSlider.value);
 				const hz = sliderValToHz(sliderVal);
 
+				if (activeMode !== 'none' && activeMode !== 'tone') {
+					stopAllAudio();
+				}
 				activeSignal = 'sine';
 				updateFrequencyUI(hz, false);
 				freqSlider.setAttribute('aria-valuenow', String(Math.round(hz)));
@@ -917,8 +960,6 @@
 					const pillHz = parseInt(p.getAttribute('data-hz') || '0', 10);
 					p.classList.toggle('active', pillHz === hz);
 				});
-				btnNoisePink?.classList.remove('active');
-				btnNoiseWhite?.classList.remove('active');
 			});
 		}
 
@@ -971,10 +1012,16 @@
 			spectrumDecayFactor = 1.0;
 			updateTonePlayButtonUI(true);
 
+			const env = ctx.createGain();
+			env.gain.setValueAtTime(0.0001, ctx.currentTime);
+			env.gain.linearRampToValueAtTime(1.0, ctx.currentTime + 0.01);
+			env.connect(audioBus || masterGain!);
+			activeEnvGain = env;
+
 			const osc = ctx.createOscillator();
 			osc.type = 'sine';
 			osc.frequency.setValueAtTime(currentToneHz, ctx.currentTime);
-			osc.connect(audioBus || masterGain!);
+			osc.connect(env);
 			osc.start();
 			currentOsc = osc;
 
@@ -1004,22 +1051,32 @@
 				return;
 			}
 			const ctx = getAudioContext();
+			const preSweepHz = currentToneHz;
 			stopAllAudio();
 			isSweeping = true;
 			activeMode = 'sweep';
 			activeSignal = 'sine';
 			spectrumDecayFactor = 1.0;
 
+			const maxSweepHz = Math.min(20000, Math.floor(ctx.sampleRate * 0.45));
+			const env = ctx.createGain();
+			env.gain.setValueAtTime(0.0001, ctx.currentTime);
+			env.gain.linearRampToValueAtTime(1.0, ctx.currentTime + 0.01);
+			env.connect(audioBus || masterGain!);
+			activeEnvGain = env;
+
 			const osc = ctx.createOscillator();
 			osc.type = 'sine';
 			osc.frequency.setValueAtTime(20, ctx.currentTime);
-			osc.frequency.exponentialRampToValueAtTime(20000, ctx.currentTime + 10);
-			osc.connect(audioBus || masterGain!);
+			osc.frequency.exponentialRampToValueAtTime(maxSweepHz, ctx.currentTime + 10);
+			osc.connect(env);
 			osc.start();
 			currentOsc = osc;
 
 			if (runSweepBtn) runSweepBtn.classList.add('active');
-			if (runSweepText) runSweepText.textContent = 'Stop Frequency Sweep';
+			if (runSweepText) {
+				runSweepText.textContent = maxSweepHz < 18000 ? `Stop Sweep (Nyquist ${Math.round(maxSweepHz / 1000)} kHz)` : 'Stop Frequency Sweep';
+			}
 			updateHudOverlay();
 			ensureVisualizerRunning();
 
@@ -1029,10 +1086,11 @@
 				const elapsed = (performance.now() - sweepStart) / 1000;
 				if (elapsed >= 10) {
 					stopAllAudio();
+					updateFrequencyUI(preSweepHz, true);
 					return;
 				}
 				// Exponential frequency calculation
-				const sweepHz = 20 * Math.pow(20000 / 20, elapsed / 10);
+				const sweepHz = 20 * Math.pow(maxSweepHz / 20, elapsed / 10);
 				updateFrequencyUI(sweepHz, true);
 
 				sweepRafId = requestAnimationFrame(updateSweepProgress);
@@ -1088,10 +1146,25 @@
 				}
 			}
 
+			// Crossfade loop boundary (128 samples) to prevent periodic 2s seam click
+			const fadeSamples = Math.min(128, Math.floor(bufferSize / 8));
+			for (let i = 0; i < fadeSamples; i++) {
+				const t = i / fadeSamples;
+				const endIdx = bufferSize - fadeSamples + i;
+				outL[i] = outL[i] * t + outL[endIdx] * (1 - t);
+				outR[i] = outR[i] * t + outR[endIdx] * (1 - t);
+			}
+
+			const env = ctx.createGain();
+			env.gain.setValueAtTime(0.0001, ctx.currentTime);
+			env.gain.linearRampToValueAtTime(1.0, ctx.currentTime + 0.01);
+			env.connect(audioBus || masterGain!);
+			activeEnvGain = env;
+
 			const noiseSource = ctx.createBufferSource();
 			noiseSource.buffer = noiseBuffer;
 			noiseSource.loop = true;
-			noiseSource.connect(audioBus || masterGain!);
+			noiseSource.connect(env);
 			noiseSource.start();
 			noiseNode = noiseSource;
 
@@ -1108,8 +1181,9 @@
 				return;
 			}
 
-			const ctx = getAudioContext();
+			getAudioContext();
 			stopAllAudio();
+			const myToken = ++playToken;
 			activeMode = mode;
 			spectrumDecayFactor = 1.0;
 
@@ -1123,10 +1197,10 @@
 			updateHudOverlay();
 
 			const buf = await loadVoiceBuffer(mode);
-			if (activeMode !== mode) return;
+			if (myToken !== playToken || activeMode !== mode) return;
 
 			function playVoiceClip() {
-				if (activeMode !== mode || !masterGain) return;
+				if (myToken !== playToken || activeMode !== mode || !masterGain) return;
 				const c = getAudioContext();
 				const merger = c.createChannelMerger(2);
 
@@ -1138,12 +1212,12 @@
 						const g = c.createGain();
 						g.gain.setValueAtTime(1.0, c.currentTime);
 						source.connect(g);
-						g.connect(merger, 0, 0); // left ear only
+						g.connect(merger, 0, 0);
 					} else if (mode === 'right') {
 						const g = c.createGain();
 						g.gain.setValueAtTime(1.0, c.currentTime);
 						source.connect(g);
-						g.connect(merger, 0, 1); // right ear only
+						g.connect(merger, 0, 1);
 					} else if (mode === 'inphase') {
 						const leftG = c.createGain();
 						const rightG = c.createGain();
@@ -1157,7 +1231,7 @@
 						const leftG = c.createGain();
 						const rightG = c.createGain();
 						leftG.gain.setValueAtTime(1.0, c.currentTime);
-						rightG.gain.setValueAtTime(-1.0, c.currentTime); // 180° phase inversion
+						rightG.gain.setValueAtTime(-1.0, c.currentTime);
 						source.connect(leftG);
 						source.connect(rightG);
 						leftG.connect(merger, 0, 0);
@@ -1169,12 +1243,17 @@
 					currentSourceNode = source;
 
 					source.onended = () => {
-						if (activeMode === mode) {
+						if (myToken === playToken && activeMode === mode) {
 							playVoiceClip();
 						}
 					};
 				} else {
-					// Fallback to sine wave if audio file fails to load
+					const env = c.createGain();
+					env.gain.setValueAtTime(0.0001, c.currentTime);
+					env.gain.linearRampToValueAtTime(1.0, c.currentTime + 0.01);
+					env.connect(audioBus || masterGain);
+					activeEnvGain = env;
+
 					const osc = c.createOscillator();
 					osc.type = 'sine';
 					osc.frequency.setValueAtTime(1000, c.currentTime);
@@ -1200,7 +1279,7 @@
 						leftG.connect(merger, 0, 0);
 						rightG.connect(merger, 0, 1);
 					}
-					merger.connect(audioBus || masterGain);
+					merger.connect(env);
 					osc.start();
 					currentOsc = osc;
 				}
@@ -1269,16 +1348,20 @@
 				heroCtx.lineTo(w, cy);
 				heroCtx.stroke();
 				if (phaseValText && phaseMeterFill) {
-					phaseValText.textContent = '+1.00';
-					phaseMeterFill.style.width = '100%';
-					phaseMeterFill.style.background = '#22c55e';
+					phaseValText.textContent = '0.00';
+					phaseMeterFill.style.width = '50%';
+					phaseMeterFill.style.background = 'rgba(148, 163, 184, 0.4)';
 				}
 				return;
 			}
 
 			const bufLen = analyserLeft.fftSize;
-			const timeL = new Float32Array(bufLen);
-			const timeR = new Float32Array(bufLen);
+			if (!timeBufL || timeBufL.length !== bufLen) {
+				timeBufL = new Float32Array(bufLen);
+				timeBufR = new Float32Array(bufLen);
+			}
+			const timeL = timeBufL;
+			const timeR = timeBufR!;
 			analyserLeft.getFloatTimeDomainData(timeL);
 			analyserRight.getFloatTimeDomainData(timeR);
 
@@ -1501,19 +1584,14 @@
 			fftAnalyser.getByteFrequencyData(cachedFftData);
 			const freqData = cachedFftData;
 
-			const sampleRate = audioCtx.sampleRate;
-			const binWidth = (sampleRate / 2) / binCount;
-
+			const binMap = getSpecBinMap(w, binCount, audioCtx.sampleRate);
 			const stepPx = Math.max(1, Math.round(w / 300));
 			const yPoints: number[] = [];
 
 			for (let x = 0; x <= w; x += stepPx) {
-				const normX0 = Math.max(0, (x - stepPx * 0.5) / w);
-				const normX1 = Math.min(1, (x + stepPx * 0.5) / w);
-				const hz0 = Math.pow(10, logMin + normX0 * logRange);
-				const hz1 = Math.pow(10, logMin + normX1 * logRange);
-				const binStart = Math.max(0, Math.floor(hz0 / binWidth));
-				const binEnd = Math.min(binCount - 1, Math.ceil(hz1 / binWidth));
+				const cx = Math.min(w - 1, x);
+				const binStart = binMap.binStart[cx];
+				const binEnd = binMap.binEnd[cx];
 
 				let val = 0;
 				if (binEnd > binStart) {
@@ -1521,11 +1599,9 @@
 						if (freqData[b] > val) val = freqData[b];
 					}
 				} else {
-					const hz = Math.pow(10, logMin + (x / w) * logRange);
-					const binExact = Math.min(binCount - 1, Math.max(0, hz / binWidth));
-					const b0 = Math.floor(binExact);
-					const b1 = Math.min(binCount - 1, b0 + 1);
-					const frac = binExact - b0;
+					const b0 = binMap.b0[cx];
+					const b1 = binMap.b1[cx];
+					const frac = binMap.frac[cx];
 					val = freqData[b0] * (1 - frac) + freqData[b1] * frac;
 				}
 
@@ -1611,8 +1687,8 @@
 
 			if (!specHistoryCtx || !specHistoryCanvas) return;
 
-			const isProducingSound = activeMode !== 'none' || isSweeping || !!micStream;
-			const shouldRecordWaterfall = isProducingSound || spectrumDecayFactor > 0 || activeHeroMode === 'spectrogram';
+			const isProducingSound = activeMode !== 'none' || isSweeping || (currentSourceMode !== 'sim' && !!micStream);
+			const shouldRecordWaterfall = isProducingSound || spectrumDecayFactor > 0;
 			if (!shouldRecordWaterfall) return;
 
 			const now = performance.now();
@@ -1781,10 +1857,15 @@
 			let currentPeakL = 0;
 			let currentPeakR = 0;
 
-			if (analyserLeft && analyserRight && activeMode !== 'none') {
+			const isSampling = activeMode !== 'none' || (currentSourceMode !== 'sim' && !!micStream);
+			if (analyserLeft && analyserRight && isSampling) {
 				const bufLen = analyserLeft.fftSize;
-				const timeL = new Float32Array(bufLen);
-				const timeR = new Float32Array(bufLen);
+				if (!timeBufL || timeBufL.length !== bufLen) {
+					timeBufL = new Float32Array(bufLen);
+					timeBufR = new Float32Array(bufLen);
+				}
+				const timeL = timeBufL;
+				const timeR = timeBufR!;
 				analyserLeft.getFloatTimeDomainData(timeL);
 				analyserRight.getFloatTimeDomainData(timeR);
 
@@ -1985,8 +2066,8 @@
 				}
 			}
 
-			// Keep spectrogram waterfall recording continuously in background once audio is enabled, or whenever viewing spectrogram
-			if (audioCtx || activeHeroMode === 'spectrogram') {
+			// Keep spectrogram waterfall recording continuously in background once audio is enabled
+			if (audioCtx) {
 				updateSpectrogramBuffer();
 			}
 
@@ -2001,12 +2082,11 @@
 			// Render horizontal stereo VU meter
 			renderStereoMeter();
 
-			// If audio is actively playing, VU meter / spectrum are still decaying, or spectrogram is the active mode
+			// Only loop rAF while audio is actively playing/mic active or meters are still decaying (0% idle CPU)
 			const isDecaying = smoothL > -59.5 || smoothR > -59.5 || spectrumDecayFactor > 0;
-			const isProducing = activeMode !== 'none' || isSweeping || !!micStream;
-			const isSpectrogramActive = activeHeroMode === 'spectrogram';
+			const isProducing = activeMode !== 'none' || isSweeping || (currentSourceMode !== 'sim' && !!micStream);
 
-			if ((isProducing || isDecaying || isSpectrogramActive) && isAudioVisible) {
+			if ((isProducing || isDecaying) && isAudioVisible) {
 				rafVisualizerId = requestAnimationFrame(renderActiveVisualizer);
 			} else {
 				rafVisualizerId = null;
@@ -2084,6 +2164,10 @@
 		});
 		themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
+		audioCard.addEventListener('section-toggle', () => {
+			requestAnimationFrame(resizeCanvases);
+		});
+
 		document.addEventListener('astro:before-swap', () => {
 			stopAllAudio();
 			stopMicrophone();
@@ -2105,11 +2189,11 @@
 	}
 
 	/* CARD HEADER SUMMARY */
-	.audio-test-card > summary.card-header-summary {
+	.audio-test-card > .card-header-summary {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		flex-wrap: nowrap;
+		flex-wrap: wrap;
 		gap: 0.85em;
 	}
 
@@ -2117,7 +2201,8 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.75em;
-		flex-shrink: 0;
+		flex-shrink: 1;
+		min-width: 0;
 	}
 
 	.audio-test-card .card-summary-left .card-title {
@@ -2172,8 +2257,10 @@
 	.vol-btn {
 		background: none;
 		border: none;
-		padding: 0;
-		margin: 0;
+		padding: 6px;
+		margin: 0 -4px;
+		min-width: 28px;
+		min-height: 28px;
 		cursor: pointer;
 		display: inline-flex;
 		align-items: center;
@@ -3025,7 +3112,7 @@
 	}
 
 	@media (max-width: 680px) {
-		.audio-test-card > summary.card-header-summary {
+		.audio-test-card > .card-header-summary {
 			display: flex;
 			flex-direction: column;
 			align-items: stretch;

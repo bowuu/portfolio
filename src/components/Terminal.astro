@@ -1,8 +1,11 @@
 ---
 // Terminal.astro - Interactive CLI Console & Navigation Drawer
+import manifest from '../../public/models/manifest.json';
+
+const cadCatalogList = manifest.map((m, idx) => `  ${String(idx + 1).padStart(2, '0')}. ${m.name}`).join('\n');
 ---
 
-<div id="terminal-modal" class="terminal-modal" aria-hidden="true">
+<div id="terminal-modal" class="terminal-modal" aria-hidden="true" inert data-cad-count={manifest.length} data-cad-list={cadCatalogList}>
 	<div class="terminal-backdrop" id="terminal-backdrop"></div>
 	<div class="terminal-window" id="terminal-window" role="dialog" aria-modal="true" aria-label="Terminal Console">
 		<!-- LINUX-STYLE TERMINAL TITLEBAR -->
@@ -97,7 +100,21 @@
 </div>
 
 <script>
-	import * as vfs from '../lib/vfs';
+	import { escapeHtml, openModalFocus, closeModalFocus, openSection, isSectionOpen } from '../lib/ui';
+
+	let vfsMod: typeof import('../lib/vfs') | null = null;
+	let vfsPromise: Promise<typeof import('../lib/vfs')> | null = null;
+	function ensureVfs() {
+		if (vfsMod) return Promise.resolve(vfsMod);
+		if (!vfsPromise) {
+			vfsPromise = import('../lib/vfs').then((mod) => {
+				vfsMod = mod;
+				return mod;
+			});
+		}
+		return vfsPromise;
+	}
+
 	function initTerminal() {
 		const modal = document.getElementById('terminal-modal');
 		const win = document.getElementById('terminal-window');
@@ -114,6 +131,8 @@
 		const headerToggle = document.getElementById('terminal-toggle-btn');
 
 		if (!modal || !win || !input || !screen || !historyEl) return;
+		if (modal.dataset.bound === '1') return;
+		modal.dataset.bound = '1';
 
 		let history: string[] = [];
 		let historyIndex = -1;
@@ -122,25 +141,35 @@
 			'help',
 			'about',
 			'audio',
+			'sound',
+			'dac',
 			'skills',
 			'projects',
 			'tests',
 			'network',
+			'ping',
+			'speed',
 			'mouse',
 			'keyboard',
+			'keys',
 			'display',
+			'screen',
+			'fps',
 			'codec',
 			'video',
 			'studio',
 			'cad',
 			'debug',
+			'telemetry',
 			'theme',
 			'transparency',
 			'transparent',
 			'opacity',
 			'blur',
 			'backdrop',
+			'glass',
 			'visitor',
+			'counter',
 			'whoami',
 			'man',
 			'pwd',
@@ -152,6 +181,7 @@
 			'date',
 			'clear',
 			'exit',
+			'quit',
 			'neofetch',
 			'fastfetch',
 			'dmesg',
@@ -160,7 +190,9 @@
 			'boot',
 			'gcode',
 			'slice',
+			'm104',
 			'ls',
+			'dir',
 			'cat',
 			'sudo',
 			'uname',
@@ -168,7 +200,9 @@
 			'wafer',
 			'sensors',
 			'temp',
+			'thermals',
 			'gravity',
+			'zerog',
 			'tilt',
 			'degauss',
 			'cyclone',
@@ -180,8 +214,9 @@
 		];
 
 		function openTerminal() {
+			ensureVfs(); // Preload VFS on demand when terminal opens
 			modal?.classList.add('open');
-			modal?.setAttribute('aria-hidden', 'false');
+			openModalFocus(modal, input);
 			(window as any).__pushModalHistory?.('terminal-modal', closeTerminal);
 			setTimeout(() => {
 				input?.focus();
@@ -190,8 +225,9 @@
 		}
 
 		function closeTerminal() {
-			modal?.classList.remove('open');
-			modal?.setAttribute('aria-hidden', 'true');
+			if (!modal?.classList.contains('open')) return;
+			modal.classList.remove('open');
+			closeModalFocus(modal);
 			(window as any).__popModalHistory?.('terminal-modal');
 		}
 
@@ -303,12 +339,27 @@
 		// Global keyboard toggle (`~` or `Esc`)
 		window.addEventListener('keydown', (e: KeyboardEvent) => {
 			const target = e.target as HTMLElement | null;
-			const isTyping = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') && target !== input;
+			const isTypingField = Boolean(
+				target &&
+					(target.tagName === 'INPUT' ||
+						target.tagName === 'TEXTAREA' ||
+						target.tagName === 'SELECT' ||
+						target.isContentEditable)
+			);
+			const kbEl = document.getElementById('keyboard-lab');
+			const isTestingKeyboard = Boolean(
+				kbEl &&
+					(kbEl.contains(target) ||
+						(isSectionOpen(kbEl) &&
+							kbEl.getBoundingClientRect().top < window.innerHeight &&
+							kbEl.getBoundingClientRect().bottom > 0))
+			);
 
-			if ((e.code === 'Backquote' || e.key === '`' || e.key === '~') && !isTyping) {
+			if ((e.code === 'Backquote' || e.key === '`' || e.key === '~') && !isTypingField && !isTestingKeyboard) {
 				e.preventDefault();
 				toggleTerminal();
 			} else if ((e.key === 'Escape' || e.key === 'Esc') && modal.classList.contains('open')) {
+				e.preventDefault();
 				closeTerminal();
 			}
 		});
@@ -324,7 +375,8 @@
 		function appendEchoLine(cmdText: string) {
 			const row = document.createElement('div');
 			row.className = 'term-line mono';
-			row.innerHTML = `<span class="term-prompt"><span class="p-user">guest@brob</span><span class="p-sep">:</span><span class="p-path">${escapeHtml(vfs.getDisplayPath())}</span><span class="p-char">$</span></span> <span class="term-cmd">${escapeHtml(cmdText)}</span>`;
+			const displayPath = vfsMod ? vfsMod.getDisplayPath() : '~/portfolio';
+			row.innerHTML = `<span class="term-prompt"><span class="p-user">guest@brob</span><span class="p-sep">:</span><span class="p-path">${escapeHtml(displayPath)}</span><span class="p-char">$</span></span> <span class="term-cmd">${escapeHtml(cmdText)}</span>`;
 			historyEl?.appendChild(row);
 			if (screen) screen.scrollTop = screen.scrollHeight;
 		}
@@ -835,12 +887,93 @@
     Launch the interactive 8x8-bit Braun Carry-Save Array Multiplier schematic viewer.
     Features 72 Full Adder cells, 64 Partial Product AND gates, dynamic signal flow tracing,
     toggleable 8-bit multiplicand X[7:0] and multiplier Y[7:0] registers, preset vectors,
-    and 16-bit product register P[15:0] based on Bo Wu's Cadence Virtuoso VLSI design.`
+    and 16-bit product register P[15:0] based on Bo Wu's Cadence Virtuoso VLSI design.`,
+
+			boop: `
+<span class="term-head">NAME</span>
+    boop - Chief Morale Officer silicon lottery binning overdrive
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">boop</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Trigger Chief Morale Officer silicon binning boost on the mascot avatar.`,
+
+			cyclone: `
+<span class="term-head">NAME</span>
+    cyclone - 3D silicon cyclone orbital cage
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">cyclone</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Arrange visible portfolio cards into an interactive 3D spherical cage.`,
+
+			degauss: `
+<span class="term-head">NAME</span>
+    degauss - CRT oscilloscope electromagnetic degauss pulse
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">degauss</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Fire a 60 Hz PTC-damped electromagnetic coil oscillation and purity ring sweep.`,
+
+			dissolve: `
+<span class="term-head">NAME</span>
+    dissolve - quantum tunneling particle disintegration
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">dissolve</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Dissolve clicked cards into silicon dust particles; drag to swirl and anneal to restore.`,
+
+			extras: `
+<span class="term-head">NAME</span>
+    extras - open the Hardware Lab Extras drawer
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">extras</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Toggle the Lab Extras drawer containing physics, VLSI, and wafer tools.`,
+
+			gravity: `
+<span class="term-head">NAME</span>
+    gravity - Zero-G Verlet physics element collapse (alias: zerog)
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">gravity</span> | <span class="term-hl">zerog</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Drop portfolio cards under 2D Verlet gravity with pointer drag-and-throw physics.`,
+
+			thermal: `
+<span class="term-head">NAME</span>
+    thermal - infrared thermography and LN2 cryo-spray camera
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">thermal</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Activate thermal viewport overlay with LN2 cryo-spray and heat-gun cursor probe.`,
+
+			tilt: `
+<span class="term-head">NAME</span>
+    tilt - 3D viewport parallax hologram perspective
+
+<span class="term-head">SYNOPSIS</span>
+    <span class="term-hl">tilt</span>
+
+<span class="term-head">DESCRIPTION</span>
+    Tilt the portfolio viewport in 3D tracking pointer movement or device gyroscope.`
 		};
 
 		function showManPage(page: string) {
 			const rawP = page.toLowerCase();
-			const p = rawP === 'boot' ? 'uboot' : rawP;
+			const aliasMap: Record<string, string> = { boot: 'uboot', zerog: 'gravity' };
+			const p = aliasMap[rawP] || rawP;
 			if (MAN_PAGES[p]) {
 				appendOutput(MAN_PAGES[p]);
 			} else {
@@ -848,7 +981,7 @@
 			}
 		}
 
-		function executeCommand(rawCmd: string) {
+		async function executeCommand(rawCmd: string) {
 			const trimmed = rawCmd.trim();
 
 			// Echo executed line
@@ -906,7 +1039,7 @@ These shell commands are defined internally. Type <span class="term-hl">'help'</
   <span class="term-hl">keyboard</span>                 104-key switch matrix lab (#keyboard-lab)
   <span class="term-hl">man</span> [cmd]                Reference manual page for shell commands
   <span class="term-hl">mouse</span>                    Mouse polling &amp; latency lab (#input-lab)
-  <span class="term-hl">network</span>                  Anycast edge throughput benchmark (#benchmark)
+  <span class="term-hl">network</span>                  Anycast edge throughput benchmark (#lab)
   <span class="term-hl">projects</span>                 Featured engineering projects &amp; 3D models
   <span class="term-hl">skills</span>                   Silicon validation, Linux &amp; 3D CAD platforms
   <span class="term-hl">tests</span>                    Navigate to hardware &amp; network test suites (#lab)
@@ -1001,8 +1134,8 @@ Verified Profiles:
 				case 'network':
 				case 'ping':
 				case 'speed':
-					scrollToSection('benchmark');
-					appendOutput('<span class="term-cyan">&rarr; Navigating to Network Edge Benchmark (#benchmark)...</span>');
+					scrollToSection('lab');
+					appendOutput('<span class="term-cyan">&rarr; Navigating to Network Edge Benchmark (#lab)...</span>');
 					break;
 
 				case 'mouse':
@@ -1067,19 +1200,11 @@ Verified Profiles:
 						appendOutput('<span class="term-cyan">&rarr; Centrifuge Stress Test engaged on 3D CAD viewer (#cad-viewer)! (10,000 RPM)</span>');
 						break;
 					}
+					const cadCount = modal?.getAttribute('data-cad-count') || '11';
+					const cadList = modal?.getAttribute('data-cad-list') || '';
 					appendOutput(`
-<span class="term-head">Autodesk Inventor 3D CAD Catalog (11 Models):</span>
-  01. ASUS RT-BE92U Router Mount
-  02. Network Switch Vertical Stand
-  03. Vertical Laptop Workstation Stand
-  04. Dual Keyboard Under-Desk Bracket
-  05. IKEA Tertial Desk Lamp Heavy Mount
-  06. Audio-Technica ATH-R70x Headband Joiner
-  07. Lenovo Smart Clock Essential Riser
-  08. Smart Remote Wall Mount
-  09. Subaru BRZ / GR86 Armrest Blocker
-  10. Skil 12V Battery Magnetic Holder
-  11. Gilmour Garden Nozzle Handle
+<span class="term-head">Autodesk Inventor 3D CAD Catalog (${escapeHtml(cadCount)} Models):</span>
+${escapeHtml(cadList)}
 <span class="term-dim">All models render in Three.js WebGL with authentic .stp downloads under /public/models/.</span>`);
 					break;
 
@@ -1091,19 +1216,24 @@ Verified Profiles:
 
 				case 'theme':
 					const sub = args[0]?.toLowerCase();
+					const metaTheme = document.getElementById('meta-theme-color');
 					if (sub === 'dark') {
 						document.documentElement.setAttribute('data-theme', 'dark');
+						metaTheme?.setAttribute('content', '#0c0c0e');
 						appendOutput('Theme switched to: <span class="term-hl">Obsidian Dark</span>');
 					} else if (sub === 'light') {
 						document.documentElement.removeAttribute('data-theme');
+						metaTheme?.setAttribute('content', '#fafafa');
 						appendOutput('Theme switched to: <span class="term-hl">Clean Light</span>');
 					} else {
 						const current = document.documentElement.getAttribute('data-theme');
 						if (current === 'dark') {
 							document.documentElement.removeAttribute('data-theme');
+							metaTheme?.setAttribute('content', '#fafafa');
 							appendOutput('Theme toggled to: <span class="term-hl">Clean Light</span>');
 						} else {
 							document.documentElement.setAttribute('data-theme', 'dark');
+							metaTheme?.setAttribute('content', '#0c0c0e');
 							appendOutput('Theme toggled to: <span class="term-hl">Obsidian Dark</span>');
 						}
 					}
@@ -1157,7 +1287,7 @@ Verified Profiles:
 					const currentCount = counterEl ? counterEl.textContent : 'active';
 					appendOutput(`
 <span class="term-head">Cloudflare D1 Engagement Counter:</span>
-  Total Verified Visitors: <span class="term-hl">${currentCount}</span>
+  Total Verified Visitors: <span class="term-hl">${escapeHtml(currentCount)}</span>
   Architecture: Edge-computed SHA-256 with volatile daily rotating salt
   Privacy: Zero IP persistence; hashes purged at UTC midnight rollover.`);
 					break;
@@ -1172,8 +1302,8 @@ Verified Profiles:
 					appendOutput(`
 <span class="term-head">Visitor Telemetry Identity:</span>
   USER:       guest@brob
-  EDGE POP:   <span class="term-cyan">${colo} ▪ ${loc}</span>
-  CLIENT IP:  <span class="term-dim">${ip} (ephemeral, zero persistence)</span>
+  EDGE POP:   <span class="term-cyan">${escapeHtml(colo)} ▪ ${escapeHtml(loc)}</span>
+  CLIENT IP:  <span class="term-dim">${escapeHtml(ip)} (ephemeral, zero persistence)</span>
   HOST:       brob.uk (Cloudflare Workers Anycast)
   SECURITY:   Zero-logging, volatile daily rotating salt`);
 					break;
@@ -1233,44 +1363,52 @@ Verified Profiles:
 </div>`);
 					break;
 
-				case 'bringup':
-					appendOutput(`
-<span class="term-head">=== AUTOMATED TEST EQUIPMENT (ATE) SILICON BRINGUP SEQUENCE ===</span>
+				case 'bringup': {
+					const isFast = args.some((a) => a === '-f' || a === '--fast');
+					const stages = [
+						`<span class="term-head">=== AUTOMATED TEST EQUIPMENT (ATE) SILICON BRINGUP SEQUENCE ===</span>
 <span class="term-dim">Target Die: LOT #850C-W14 (Part: BROB-VAL-SILICON, 3nm FinFET, Stepping A0)</span>
-<span class="term-dim">Probe Card: Pogo-Pin Matrix #07 | ATE Station: Teradyne UltraFLEXplus</span>
-
-[<span class="term-cyan">+0.000s</span>] <span class="term-hl">POWER_DOMAIN_INIT:</span>
+<span class="term-dim">Probe Card: Pogo-Pin Matrix #07 | ATE Station: Teradyne UltraFLEXplus</span>`,
+						`[<span class="term-cyan">+0.000s</span>] <span class="term-hl">POWER_DOMAIN_INIT:</span>
          VDD_CORE: <span class="term-cyan">0.852 V</span> (0.850V &plusmn; 2mV) ▪ Rail Inrush: 14.8A OK
          VDD_SOC:  <span class="term-cyan">1.050 V</span> ▪ VDD_DDR5: <span class="term-cyan">1.204 V</span> ▪ VCC_3V3: <span class="term-cyan">3.314 V</span>
-         <span class="term-hl">[PWRGD ASSERTED - POWER SEQUENCING NOMINAL]</span>
-
-[<span class="term-cyan">+0.045s</span>] <span class="term-hl">CLOCK_PLL_LOCK:</span>
+         <span class="term-hl">[PWRGD ASSERTED - POWER SEQUENCING NOMINAL]</span>`,
+						`[<span class="term-cyan">+0.045s</span>] <span class="term-hl">CLOCK_PLL_LOCK:</span>
          Oscillator: 100.000 MHz (TCXO Ref)
          VCO locked @ 9.600 GHz &rarr; Core PLL locked @ <span class="term-hl">4.800 GHz</span>
          Phase Jitter: <span class="term-cyan">0.118 ps RMS</span> (Budget: 0.200 ps) ▪ Lock Time: 12.4 &mu;s
-         <span class="term-hl">[PLL LOCK VERIFIED]</span>
-
-[<span class="term-cyan">+0.112s</span>] <span class="term-hl">MEMORY_PHY_TRAINING (LPDDR5-6400):</span>
+         <span class="term-hl">[PLL LOCK VERIFIED]</span>`,
+						`[<span class="term-cyan">+0.112s</span>] <span class="term-hl">MEMORY_PHY_TRAINING (LPDDR5-6400):</span>
          CA Training: Completed ▪ Read DQS Centering: +42 ps OK
          Write DQ Eye: Height: <span class="term-cyan">185 mV</span>, Width: <span class="term-cyan">88 ps</span> (BER &lt; 1e-15)
          Sideband ECC: <span class="term-cyan">64 GiB Verified (0 Parity / Bit Errors)</span>
-         <span class="term-hl">[DRAM PHY CALIBRATION PASSED]</span>
-
-[<span class="term-cyan">+0.198s</span>] <span class="term-hl">HIGH_SPEED_SERDES_TRAINING (PCIe Gen5 x16):</span>
+         <span class="term-hl">[DRAM PHY CALIBRATION PASSED]</span>`,
+						`[<span class="term-cyan">+0.198s</span>] <span class="term-hl">HIGH_SPEED_SERDES_TRAINING (PCIe Gen5 x16):</span>
          LTSSM: Detect &rarr; Polling &rarr; Config &rarr; Recovery
          Equalization Phase 0-3: CTLE Boost +6dB, DFE Tap 1: -45mV
          Link Active: <span class="term-hl">Gen5 x16 @ 32.0 GT/s</span> (128b/130b encoding, 64 GB/s)
-         <span class="term-hl">[SERDES LINK NEGOTIATION L0 ACTIVE]</span>
-
-[<span class="term-cyan">+0.264s</span>] <span class="term-hl">BIST_AND_BOUNDARY_SCAN:</span>
+         <span class="term-hl">[SERDES LINK NEGOTIATION L0 ACTIVE]</span>`,
+						`[<span class="term-cyan">+0.264s</span>] <span class="term-hl">BIST_AND_BOUNDARY_SCAN:</span>
          1,024 On-Die Scan Chains Tested ▪ Total Flops: 2,418,920
          Stuck-At Fault Coverage: <span class="term-cyan">99.84%</span> ▪ At-Speed Delay Faults: 0
          IDCODE: <span class="term-hl">0x850C6005</span> ▪ Fused Silicon MAC: e4:5f:01:8a:32:00
          <span class="term-hl">[ATE SCAN COMPLETE - ZERO SILICON DEFECTS]</span>
 
 <span class="term-head">=== BRINGUP VERDICT: PASS [BIN 1 - ULTRA HIGH PERFORMANCE 4.80 GHz] ===</span>
-Silicon die validated and ready for bootloader handoff. Type <span class="term-hl">'uboot'</span> to initialize firmware.`);
+Silicon die validated and ready for bootloader handoff. Type <span class="term-hl">'uboot'</span> to initialize firmware.`
+					];
+					if (isFast) {
+						appendOutput('\n' + stages.join('\n\n'));
+					} else {
+						for (let i = 0; i < stages.length; i++) {
+							appendOutput(stages[i]);
+							if (i < stages.length - 1) {
+								await new Promise((r) => setTimeout(r, 90));
+							}
+						}
+					}
 					break;
+				}
 
 				case 'uboot':
 				case 'boot':
@@ -1293,7 +1431,7 @@ initrd_addr=0x44100000
 ipaddr=192.168.1.100
 kernel_addr=0x40080000
 loadaddr=0x40000000
-mmcboot=echo Loading FIT image...; bootm ${loadaddr}#config-1
+mmcboot=echo Loading FIT image...; bootm \${loadaddr}#config-1
 serverip=192.168.1.1
 soc=brob-val
 stderr=serial@fe660000
@@ -1319,13 +1457,15 @@ reloc off   = <span class="term-cyan">0x000000103ff2a000</span>`);
 						break;
 					}
 					if (ubootSub === 'md') {
-						const addrHex = args[1] ? args[1].toUpperCase() : '0x40000000';
+						const parsedAddr = args[1] ? parseInt(args[1], 16) : 0x40000000;
+						const baseAddr = Number.isFinite(parsedAddr) && parsedAddr >= 0 ? parsedAddr : 0x40000000;
+						const fmtAddr = (offset: number) => '0x' + (baseAddr + offset).toString(16).padStart(8, '0');
 						appendOutput(`
-<span class="term-head">Memory Dump [FIT Image Header @ ${escapeHtml(addrHex)}]:</span>
-  ${escapeHtml(addrHex)}: 44535446 00000840 00000000 00000038  <span class="term-dim">FITD@.......8</span>
-  ${escapeHtml(addrHex.slice(0, -1))}8: 00000028 00000011 00000010 00000000  <span class="term-dim">(...........</span>
-  ${escapeHtml(addrHex.slice(0, -2))}10: 6b65726e 656c2d31 00000000 00000001  <span class="term-dim">kernel-1....</span>
-  ${escapeHtml(addrHex.slice(0, -2))}18: 7838365f 36340000 6c696e75 78000000  <span class="term-dim">x86_64..linux...</span>`);
+<span class="term-head">Memory Dump [FIT Image Header @ ${escapeHtml(fmtAddr(0))}]:</span>
+  ${fmtAddr(0x00)}: 44535446 00000840 00000000 00000038  <span class="term-dim">FITD@.......8</span>
+  ${fmtAddr(0x10)}: 00000028 00000011 00000010 00000000  <span class="term-dim">(...........</span>
+  ${fmtAddr(0x20)}: 6b65726e 656c2d31 00000000 00000001  <span class="term-dim">kernel-1....</span>
+  ${fmtAddr(0x30)}: 7838365f 36340000 6c696e75 78000000  <span class="term-dim">x86_64..linux...</span>`);
 						break;
 					}
 
@@ -1401,6 +1541,7 @@ Hit any key to stop autoboot:  0
 					const isWaferGui = args.some(a => a === '-g' || a === '--gui' || a === '--map');
 					if (isWaferGui) {
 						if (typeof (window as any).__openWaferMap === 'function') {
+							closeTerminal();
 							(window as any).__openWaferMap();
 							appendOutput(`\n<span class="term-cyan">ATE:</span> Launching 300mm silicon wafer interactive HUD inspector...`);
 						} else {
@@ -1498,7 +1639,9 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 					break;
 
 				case 'gravity':
+				case 'zerog':
 					if (typeof (window as any).__toggleZeroG === 'function') {
+						closeTerminal();
 						(window as any).__toggleZeroG();
 						appendOutput('<span class="term-hl">[Zero-G Verlet Physics]</span> Gravity simulation toggled. Drag or fling cards across the screen. Press <span class="term-cyan">Ctrl+Alt+G</span> or click <span class="term-cyan">Resolder</span> to reassemble.');
 					} else {
@@ -1508,6 +1651,7 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 
 				case 'tilt':
 					if (typeof (window as any).__toggleTilt === 'function') {
+						closeTerminal();
 						(window as any).__toggleTilt();
 						appendOutput('<span class="term-hl">[3D Parallax Hologram]</span> Viewport tilt toggled. Move your mouse or tilt your device to view perspective depth. Press <span class="term-cyan">Ctrl+Alt+H</span> or <span class="term-cyan">Esc</span> to exit.');
 					} else {
@@ -1517,6 +1661,7 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 
 				case 'degauss':
 					if (typeof (window as any).__toggleDegauss === 'function') {
+						closeTerminal();
 						(window as any).__toggleDegauss();
 						appendOutput('<span class="term-hl">[CRT Degauss]</span> Electromagnetic coil pulse fired. Color purity restored. Press <span class="term-cyan">Esc</span> to exit.');
 					} else {
@@ -1526,6 +1671,7 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 
 				case 'cyclone':
 					if (typeof (window as any).__toggleSphere === 'function') {
+						closeTerminal();
 						(window as any).__toggleSphere();
 						appendOutput('<span class="term-hl">[3D Silicon Cyclone]</span> Portfolio cards launched into 3D orbital sphere. Drag with mouse to rotate; hover to inspect; press <span class="term-cyan">Esc</span> to collapse to 2D.');
 					} else {
@@ -1535,6 +1681,7 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 
 				case 'dissolve':
 					if (typeof (window as any).__toggleQuantum === 'function') {
+						closeTerminal();
 						(window as any).__toggleQuantum();
 						appendOutput('<span class="term-hl">[Quantum Tunneling]</span> Quantum disintegration mode active. Click any box to dissolve into silicon dust (CMO protected!); drag to swirl particles. Click "Quantum Anneal" or press <span class="term-cyan">Esc</span> to reassemble.');
 					} else {
@@ -1544,6 +1691,7 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 
 				case 'thermal':
 					if (typeof (window as any).__toggleThermal === 'function') {
+						closeTerminal();
 						(window as any).__toggleThermal();
 						appendOutput('<span class="term-hl">[Thermal Camera]</span> Infrared thermal imaging mode active. Click/hold mouse to spray LN2 (-196°C) or Heat Gun (450°C). Press <span class="term-cyan">Esc</span> to exit.');
 					} else {
@@ -1562,6 +1710,7 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 
 				case 'multiplier':
 					if (typeof (window as any).__openMultiplier === 'function') {
+						closeTerminal();
 						(window as any).__openMultiplier();
 						appendOutput('<span class="term-hl">[8x8 Multiplier]</span> Launched 8×8-bit Carry-Save Array Multiplier (Cadence Virtuoso VLSI) interactive schematic inspector.');
 					} else {
@@ -1571,6 +1720,7 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 
 				case 'extras':
 					if (typeof (window as any).__toggleLabExtras === 'function') {
+						closeTerminal();
 						(window as any).__toggleLabExtras();
 						appendOutput('<span class="term-hl">[Hardware Lab Extras]</span> Drawer toggled.');
 					} else {
@@ -1598,11 +1748,14 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 					}
 					break;
 
-				case 'pwd':
+				case 'pwd': {
+					const vfs = await ensureVfs();
 					appendOutput(escapeHtml(vfs.getCwd()));
 					break;
+				}
 
-				case 'cd':
+				case 'cd': {
+					const vfs = await ensureVfs();
 					const cdTarget = args[0] || '';
 					const cdRes = vfs.changeDirectory(cdTarget);
 					if (!cdRes.success) {
@@ -1612,9 +1765,11 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 						if (activePathEl) activePathEl.textContent = vfs.getDisplayPath();
 					}
 					break;
+				}
 
 				case 'ls':
-				case 'dir':
+				case 'dir': {
+					const vfs = await ensureVfs();
 					const lsIsAll = args.some(a => a.startsWith('-') && a.includes('a'));
 					const lsIsLong = args.some(a => a.startsWith('-') && a.includes('l'));
 					const lsIsHuman = args.some(a => a.startsWith('-') && a.includes('h'));
@@ -1622,8 +1777,10 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 					const lsRes = vfs.listDirectory(lsPath, { all: lsIsAll, long: lsIsLong, human: lsIsHuman });
 					appendOutput(lsRes.output);
 					break;
+				}
 
-				case 'cat':
+				case 'cat': {
+					const vfs = await ensureVfs();
 					if (args.length === 0) {
 						appendOutput('<span class="term-err">cat: missing file operand. Try "cat README.md" or "cat package.json"</span>');
 					} else {
@@ -1633,37 +1790,46 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 						}
 					}
 					break;
+				}
 
-				case 'head':
+				case 'head': {
+					const vfs = await ensureVfs();
 					const headNIdx = args.findIndex(a => a === '-n');
 					const headLines = headNIdx !== -1 && args[headNIdx + 1] ? parseInt(args[headNIdx + 1], 10) || 10 : 10;
 					const headTarget = args.find((a, i) => !a.startsWith('-') && (headNIdx === -1 || i !== headNIdx + 1)) || '';
 					const headRes = vfs.headFile(headTarget, headLines);
 					appendOutput(headRes.output);
 					break;
+				}
 
-				case 'tail':
+				case 'tail': {
+					const vfs = await ensureVfs();
 					const tailNIdx = args.findIndex(a => a === '-n');
 					const tailLines = tailNIdx !== -1 && args[tailNIdx + 1] ? parseInt(args[tailNIdx + 1], 10) || 10 : 10;
 					const tailTarget = args.find((a, i) => !a.startsWith('-') && (tailNIdx === -1 || i !== tailNIdx + 1)) || '';
 					const tailRes = vfs.tailFile(tailTarget, tailLines);
 					appendOutput(tailRes.output);
 					break;
+				}
 
-				case 'grep':
+				case 'grep': {
+					const vfs = await ensureVfs();
 					const grepPattern = args[0] || '';
 					const grepTarget = args[1] || '';
 					const grepRes = vfs.grepFile(grepPattern, grepTarget);
 					appendOutput(grepRes.output);
 					break;
+				}
 
-				case 'tree':
+				case 'tree': {
+					const vfs = await ensureVfs();
 					const treeLIdx = args.findIndex(a => a === '-L' || a === '-d');
 					const treeDepth = treeLIdx !== -1 && args[treeLIdx + 1] ? parseInt(args[treeLIdx + 1], 10) || 3 : 3;
 					const treeTarget = args.find((a, i) => !a.startsWith('-') && (treeLIdx === -1 || i !== treeLIdx + 1)) || '';
 					const treeRes = vfs.tree(treeTarget, treeDepth);
 					appendOutput(treeRes.output);
 					break;
+				}
 
 				case 'uname':
 					if (args.length === 0) {
@@ -1723,20 +1889,13 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 			closeTerminal();
 			const el = document.getElementById(id);
 			if (el) {
-				if (el instanceof HTMLDetailsElement && !el.open) {
-					el.open = true;
+				openSection(el);
+				const parentAccordion = el.closest('.section-accordion');
+				if (parentAccordion && parentAccordion !== el) {
+					openSection(parentAccordion);
 				}
 				el.scrollIntoView({ behavior: 'smooth' });
 			}
-		}
-
-		function escapeHtml(str: string): string {
-			return str
-				.replace(/&/g, '&amp;')
-				.replace(/</g, '&lt;')
-				.replace(/>/g, '&gt;')
-				.replace(/"/g, '&quot;')
-				.replace(/'/g, '&#039;');
 		}
 
 		// Form submit
@@ -1744,11 +1903,11 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 			e.preventDefault();
 			const cmd = input?.value || '';
 			if (input) input.value = '';
-			executeCommand(cmd);
+			void executeCommand(cmd);
 		});
 
 		// History & Tab completion
-		input?.addEventListener('keydown', (e: KeyboardEvent) => {
+		input?.addEventListener('keydown', async (e: KeyboardEvent) => {
 			if (e.key === 'ArrowUp') {
 				e.preventDefault();
 				if (history.length > 0 && historyIndex > 0) {
@@ -1778,6 +1937,7 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 					}
 				} else {
 					const lastToken = tokens[tokens.length - 1];
+					const vfs = await ensureVfs();
 					const matches = vfs.autocompletePath(lastToken);
 					if (matches.length === 1) {
 						tokens[tokens.length - 1] = matches[0];
@@ -2214,5 +2374,32 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 		height: 10px;
 		border-radius: 2px;
 		display: inline-block;
+	}
+
+	@media (max-width: 640px) {
+		.terminal-modal {
+			padding: max(0.5rem, env(safe-area-inset-top)) 0.5rem max(0.5rem, env(safe-area-inset-bottom));
+		}
+		.terminal-header {
+			height: 38px;
+		}
+		.terminal-title {
+			display: none;
+		}
+		.terminal-header-meta {
+			min-width: 0;
+		}
+		.terminal-wm-btns {
+			min-width: 0;
+			gap: 4px;
+		}
+		.wm-btn,
+		.wm-fx {
+			width: 28px;
+			height: 28px;
+		}
+		.term-input {
+			font-size: 16px;
+		}
 	}
 </style>

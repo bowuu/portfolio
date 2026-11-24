@@ -25,9 +25,15 @@ export function popModalHistory(id: string) {
 	if (typeof window === 'undefined') return;
 	const idx = modalStack.findIndex((m) => m.id === id);
 	if (idx !== -1) {
+		const isTop = idx === modalStack.length - 1;
 		modalStack.splice(idx, 1);
-		// If closed via UI (close button, backdrop, Escape) and not from browser Back button popstate
-		if (!isPoppingFromBrowser && window.history.state && window.history.state.appletModalId) {
+		// Only unwind browser history if this modal is currently on top of the history stack
+		if (
+			!isPoppingFromBrowser &&
+			isTop &&
+			window.history.state &&
+			window.history.state.appletModalId === id
+		) {
 			try {
 				window.history.back();
 			} catch (_) {}

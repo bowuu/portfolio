@@ -23,7 +23,8 @@
 <script>
 	function setupThemeToggle() {
 		const toggleBtn = document.getElementById('theme-toggle');
-		if (!toggleBtn) return;
+		if (!toggleBtn || toggleBtn.dataset.bound === '1') return;
+		toggleBtn.dataset.bound = '1';
 
 		toggleBtn.addEventListener('click', () => {
 			const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -33,6 +34,10 @@
 				document.documentElement.setAttribute('data-theme', 'dark');
 			} else {
 				document.documentElement.removeAttribute('data-theme');
+			}
+			const metaTheme = document.getElementById('meta-theme-color');
+			if (metaTheme) {
+				metaTheme.setAttribute('content', nextTheme === 'dark' ? '#0c0c0e' : '#fafafa');
 			}
 		});
 	}

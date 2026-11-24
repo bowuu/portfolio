@@ -1,11 +1,23 @@
 ---
+import manifest from '../../public/models/manifest.json';
+
+const groupedModels = manifest.reduce<Array<{ category: string; items: typeof manifest }>>((acc, item) => {
+	let group = acc.find((g) => g.category === item.category);
+	if (!group) {
+		group = { category: item.category, items: [] };
+		acc.push(group);
+	}
+	group.items.push(item);
+	return acc;
+}, []);
+const defaultModel = manifest[0];
 ---
 
 <div class="cad-viewer-container" id="cad-viewer">
 	<div class="cad-viewer-header">
 		<div class="cad-viewer-title-row">
 			<div class="cad-viewer-title">
-				<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 					<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
 					<polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
 					<line x1="12" y1="22.08" x2="12" y2="12"/>
@@ -17,39 +29,27 @@
 				</svg>
 			</div>
 
-			<!-- MODEL SELECTOR DROPDOWN -->
+			<!-- MODEL SELECTOR DROPDOWN (Generated from manifest.json) -->
 			<div class="model-select-wrapper">
 				<select id="cad-model-select" class="model-select" aria-label="Select 3D CAD Model">
-					<optgroup label="Networking & Hardware Mounts">
-						<option value="be92u" selected>ASUS RT-BE92U Router Mount</option>
-						<option value="network-switch-stand">Network Switch Vertical Stand</option>
-					</optgroup>
-					<optgroup label="Workstation & Peripherals">
-						<option value="laptop-vertical-stand">Vertical Laptop Workstation Stand</option>
-						<option value="dual-keyboard-mount">Dual Keyboard Under-Desk Bracket</option>
-						<option value="ikea-tertial">IKEA Tertial Desk Lamp Heavy Mount</option>
-					</optgroup>
-					<optgroup label="Audio & Smart Devices">
-						<option value="r70x-headband">Audio-Technica ATH-R70x Headband Joiner</option>
-						<option value="lenovo-clock-stand">Lenovo Smart Clock Essential Riser</option>
-						<option value="remote-mount">Smart Remote Wall Mount</option>
-					</optgroup>
-					<optgroup label="Automotive & Mechanical">
-						<option value="brz-armrest">Subaru BRZ / GR86 Armrest Blocker</option>
-						<option value="skil-battery">Skil 12V Battery Magnetic Holder</option>
-						<option value="gilmour-handle">Gilmour Garden Nozzle Handle</option>
-					</optgroup>
+					{groupedModels.map((group) => (
+						<optgroup label={group.category}>
+							{group.items.map((item) => (
+								<option value={item.id} selected={item.id === defaultModel.id}>{item.name}</option>
+							))}
+						</optgroup>
+					))}
 				</select>
 			</div>
 		</div>
 
 		<div class="cad-controls-top">
 			<button id="cad-reset-cam-btn" class="cad-mini-btn" type="button" title="Reset Viewpoint">Reset View</button>
-			<button id="cad-grid-btn" class="cad-mini-btn" type="button" title="Toggle XY Build Plate Grid">Grid: ON</button>
+			<button id="cad-grid-btn" class="cad-mini-btn active" type="button" title="Toggle XY Build Plate Grid">Grid: ON</button>
 			<button id="cad-wireframe-btn" class="cad-mini-btn" type="button">Wireframe: OFF</button>
 			<button id="cad-centrifuge-btn" class="cad-mini-btn" type="button" title="Centrifuge Stress Test (10,000 RPM)">Centrifuge: OFF</button>
 			<button id="cad-slicer-btn" class="cad-mini-btn" type="button" title="Interactive FDM Slicer Layer View">Slicer: OFF</button>
-			<a id="cad-download-btn" class="cad-mini-btn cad-download-btn" href="/models/BE92UMount.stp" download="BE92UMount.stp" title="Download ASUS RT-BE92U Router Mount (BE92UMount.stp)" aria-label="Download .STP (CAD STEP File)">
+			<a id="cad-download-btn" class="cad-mini-btn cad-download-btn" href={defaultModel.stepFile} download={defaultModel.file} title={`Download ${defaultModel.name} (${defaultModel.file})`} aria-label="Download .STP (CAD STEP File)">
 				<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 					<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
 					<polyline points="7 10 12 15 17 10"></polyline>
@@ -62,19 +62,20 @@
 
 	<!-- MODEL QUICK DESCRIPTION -->
 	<div class="cad-model-meta-strip">
-		<span id="model-desc-text" class="model-desc-text">
-			Wall mount bracket for ASUS RT-BE92U Wi-Fi 7 router with thermal venting.
+		<span id="model-desc-text" class="model-desc-text" title={defaultModel.desc}>
+			{defaultModel.desc}
 		</span>
 	</div>
 
-	<!-- PRINT-ONLY SUMMARY OF 3D MODELS -->
+	<!-- PRINT-ONLY SUMMARY OF 3D MODELS (Generated from manifest.json) -->
 	<div class="print-only cad-print-summary">
 		<p class="print-summary-title"><strong>Selected 3D CAD &amp; Prototyping Designs (MakerWorld @brob):</strong></p>
 		<ul class="print-model-list">
-			<li><strong>Networking &amp; Hardware Mounts:</strong> ASUS RT-BE92U Wi-Fi 7 Router Mount, Multi-Port Network Switch Stand</li>
-			<li><strong>Workstation &amp; Peripherals:</strong> Dual Vertical Laptop Stand, Dual Keyboard Under-Desk Sliding Cradle, IKEA Tertial Heavy Mount</li>
-			<li><strong>Audio &amp; Smart Devices:</strong> ATH-R70x Open-Back Headband Joiner, Lenovo Smart Clock Essential Riser, Smart Remote Wall Mount</li>
-			<li><strong>Automotive &amp; Workshop:</strong> Subaru BRZ / GR86 Console Gap Blocker, Skil 12V Battery Magnetic Mount, Gilmour High-Flow Nozzle Handle</li>
+			{groupedModels.map((group) => (
+				<li>
+					<strong>{group.category}:</strong> {group.items.map((i) => i.name).join(', ')}
+				</li>
+			))}
 		</ul>
 	</div>
 
@@ -98,8 +99,8 @@
 			</div>
 			<div class="slicer-slider-bar">
 				<span class="slicer-bound">0mm</span>
-				<input type="range" id="cad-slicer-slider" min="1" max="100" value="100" class="slicer-range-input" aria-label="Slicer Layer Height">
-				<span class="slicer-bound" id="slicer-bound-max">28mm</span>
+				<input type="range" id="cad-slicer-slider" min="0" max="100" value="100" class="slicer-range-input" aria-label="Slicer Layer Height">
+				<span class="slicer-bound" id="slicer-bound-max">76mm</span>
 			</div>
 		</div>
 		<div id="cad-loading-overlay" class="cad-loading hidden">
@@ -107,26 +108,27 @@
 			<span>Loading 3D CAD Mesh...</span>
 		</div>
 		<div class="cad-drag-hint">
-			<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+			<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
 				<path d="m5 9-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
 			</svg>
-			<span>Orbit: Left-drag ▪ Pan: Right-drag / Two-finger ▪ Zoom: Scroll / Pinch</span>
+			<span class="hint-desktop">Orbit: Left-drag ▪ Pan: Right-drag / Two-finger ▪ Zoom: Scroll / Pinch</span>
+			<span class="hint-mobile">Drag to orbit ▪ Two-finger pan/pinch</span>
 		</div>
 	</div>
 
 	<!-- CONTROLS & SPEC BAR -->
 	<div class="cad-viewer-footer">
-		<div class="cad-color-picker">
+		<div class="cad-color-picker" role="group" aria-label="Filament Color">
 			<span class="color-label">Color:</span>
-			<button class="color-dot active" data-color="#ea580c" title="Signal Orange" style="background: #ea580c;"></button>
-			<button class="color-dot" data-color="#facc15" title="Sunflower Yellow" style="background: #facc15;"></button>
-			<button class="color-dot" data-color="#10b981" title="Cyber Green" style="background: #10b981;"></button>
-			<button class="color-dot" data-color="#2563eb" title="Tech Blue" style="background: #2563eb;"></button>
-			<button class="color-dot" data-color="#9333ea" title="Royal Purple" style="background: #9333ea;"></button>
-			<button class="color-dot" data-color="#f472b6" title="Sakura Pink" style="background: #f472b6;"></button>
-			<button class="color-dot light-dot" data-color="#f8fafc" title="Clean White" style="background: #f8fafc;"></button>
-			<button class="color-dot" data-color="#64748b" title="Cool Gray" style="background: #64748b;"></button>
-			<button class="color-dot" data-color="#1e293b" title="Matte Black PETG" style="background: #1e293b;"></button>
+			<button type="button" class="color-dot active" data-color="#ea580c" title="Signal Orange" aria-label="Signal Orange" aria-pressed="true" style="background: #ea580c;"></button>
+			<button type="button" class="color-dot" data-color="#facc15" title="Sunflower Yellow" aria-label="Sunflower Yellow" aria-pressed="false" style="background: #facc15;"></button>
+			<button type="button" class="color-dot" data-color="#10b981" title="Cyber Green" aria-label="Cyber Green" aria-pressed="false" style="background: #10b981;"></button>
+			<button type="button" class="color-dot" data-color="#2563eb" title="Tech Blue" aria-label="Tech Blue" aria-pressed="false" style="background: #2563eb;"></button>
+			<button type="button" class="color-dot" data-color="#9333ea" title="Royal Purple" aria-label="Royal Purple" aria-pressed="false" style="background: #9333ea;"></button>
+			<button type="button" class="color-dot" data-color="#f472b6" title="Sakura Pink" aria-label="Sakura Pink" aria-pressed="false" style="background: #f472b6;"></button>
+			<button type="button" class="color-dot light-dot" data-color="#f8fafc" title="Clean White" aria-label="Clean White" aria-pressed="false" style="background: #f8fafc;"></button>
+			<button type="button" class="color-dot" data-color="#64748b" title="Cool Gray" aria-label="Cool Gray" aria-pressed="false" style="background: #64748b;"></button>
+			<button type="button" class="color-dot" data-color="#1e293b" title="Matte Black PETG" aria-label="Matte Black PETG" aria-pressed="false" style="background: #1e293b;"></button>
 		</div>
 		<div class="cad-specs" id="cad-specs">
 			<span class="spec-tag" id="spec-dim">241 x 28 x 76 mm</span>
@@ -137,8 +139,7 @@
 </div>
 
 <script>
-	import * as THREE from 'three';
-	import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+	import type * as ThreeTypes from 'three';
 
 	interface ModelMeta {
 		id: string;
@@ -172,6 +173,8 @@
 		const canvas = document.getElementById('cad-canvas') as HTMLCanvasElement | null;
 		const container = document.getElementById('canvas-container');
 		if (!viewerContainer || !canvas || !container) return;
+		if (viewerContainer.dataset.bound === '1') return;
+		viewerContainer.dataset.bound = '1';
 
 		// Clean up previous instance if any
 		if ((canvas as any).__cleanup) {
@@ -179,6 +182,7 @@
 		}
 
 		let isViewerInitialized = false;
+		let isSceneStarting = false;
 		let isViewerVisible = false;
 		let isPausedByEasterEgg = false;
 		let animationFrameId: number | null = null;
@@ -186,563 +190,692 @@
 		let sceneCleanup: (() => void) | null = null;
 		let triggerCentrifugeExternal: ((active?: boolean) => void) | null = null;
 		let toggleGridExternal: (() => void) | null = null;
+		let toggleSlicerExternal: ((layerPct?: number) => void) | null = null;
+		let pendingAction: (() => void) | null = null;
 
 		(window as any).__triggerCadCentrifuge = (active?: boolean) => {
-			if (!isViewerInitialized) startCadScene();
-			if (triggerCentrifugeExternal) triggerCentrifugeExternal(active);
+			if (!isViewerInitialized) {
+				pendingAction = () => triggerCentrifugeExternal?.(active);
+				startCadScene();
+				return;
+			}
+			triggerCentrifugeExternal?.(active);
 		};
 		(window as any).__toggleCadGrid = () => {
-			if (!isViewerInitialized) startCadScene();
-			if (toggleGridExternal) toggleGridExternal();
+			if (!isViewerInitialized) {
+				pendingAction = () => toggleGridExternal?.();
+				startCadScene();
+				return;
+			}
+			toggleGridExternal?.();
 		};
-
-		function startCadScene() {
-			if (isViewerInitialized) return;
-			isViewerInitialized = true;
-
-			const renderer = new THREE.WebGLRenderer({
-			canvas,
-			antialias: true,
-			alpha: true,
-			powerPreference: 'high-performance'
-		});
-		renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-		renderer.toneMapping = THREE.ACESFilmicToneMapping;
-		renderer.toneMappingExposure = 1.15;
-		renderer.localClippingEnabled = true;
-
-		const scene = new THREE.Scene();
-		const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 1000);
-		camera.position.set(45, 38, 55);
-
-		const controls = new OrbitControls(camera, canvas);
-		controls.enableDamping = true;
-		controls.dampingFactor = 0.06;
-		controls.minDistance = 15;
-		controls.maxDistance = 220;
-		controls.maxPolarAngle = Math.PI - 0.02; // Full orbital freedom to inspect underside
-		controls.addEventListener('change', () => {
-			renderer.render(scene, camera);
-		});
-
-		// WebGL context loss recovery (e.g. mobile app backgrounding / memory purge)
-		canvas.addEventListener('webglcontextlost', (e) => {
-			e.preventDefault();
-			if (animationFrameId !== null) {
-				cancelAnimationFrame(animationFrameId);
-				animationFrameId = null;
-			}
-		}, false);
-		canvas.addEventListener('webglcontextrestored', () => {
-			isViewerInitialized = false;
-			startCadScene();
-		}, false);
-
-		// Lighting
-		const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
-		scene.add(ambientLight);
-
-		const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
-		keyLight.position.set(60, 80, 50);
-		scene.add(keyLight);
-
-		const fillLight = new THREE.DirectionalLight(0x93c5fd, 1.2);
-		fillLight.position.set(-60, 40, -50);
-		scene.add(fillLight);
-
-		const rimLight = new THREE.DirectionalLight(0xffedd5, 1.2);
-		rimLight.position.set(0, -50, 40);
-		scene.add(rimLight);
-
-		const underLight = new THREE.DirectionalLight(0xffffff, 1.1);
-		underLight.position.set(0, -70, -30);
-		scene.add(underLight);
-
-		// Build Plate Grid
-		let isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-		function getGridColors(dark: boolean) {
-			return {
-				primary: dark ? 0x64748b : 0x94a3b8,
-				secondary: dark ? 0x384556 : 0xd8dee9
-			};
-		}
-		let { primary: gridPrimary, secondary: gridSecondary } = getGridColors(isDark);
-		let grid = new THREE.GridHelper(80, 20, gridPrimary, gridSecondary);
-		grid.position.y = -18;
-		scene.add(grid);
-
-		function updateGridTheme(dark: boolean) {
-			const colors = getGridColors(dark);
-			const prevY = grid.position.y;
-			const prevVis = grid.visible;
-			scene.remove(grid);
-			grid.geometry.dispose();
-			if (Array.isArray(grid.material)) {
-				grid.material.forEach(m => m.dispose());
-			} else {
-				grid.material.dispose();
-			}
-			grid = new THREE.GridHelper(80, 20, colors.primary, colors.secondary);
-			grid.position.y = prevY;
-			grid.visible = prevVis;
-			scene.add(grid);
-		}
-
-		const cadThemeObserver = new MutationObserver((mutations) => {
-			for (const mutation of mutations) {
-				if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
-					const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-					updateGridTheme(dark);
-					break;
-				}
-			}
-		});
-		cadThemeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-
-		// Slicer Toolpath Plane & Group
-		const slicePlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 1000);
-		const toolpathGroup = new THREE.Group();
-		const toolpathGrid = new THREE.GridHelper(60, 30, 0x38bdf8, 0x0ea5e9);
-		(toolpathGrid.material as THREE.Material).transparent = true;
-		(toolpathGrid.material as THREE.Material).opacity = 0.55;
-		toolpathGroup.add(toolpathGrid);
-		scene.add(toolpathGroup);
-		toolpathGroup.visible = false;
-
-		// Model Group
-		const modelGroup = new THREE.Group();
-		scene.add(modelGroup);
-
-		// Material (Default to vibrant Orange for high contrast)
-		let baseHex = 0xea580c;
-		const material = new THREE.MeshStandardMaterial({
-			color: baseHex,
-			roughness: 0.38,
-			metalness: 0.08,
-			flatShading: false,
-			wireframe: false
-		});
-
-		let currentMeshObj: THREE.Mesh | null = null;
-		const meshCache: Record<string, MeshPayload> = {};
-		let manifestMap: Record<string, ModelMeta> = {};
-
-		// UI Elements
-		const selectEl = document.getElementById('cad-model-select') as HTMLSelectElement | null;
-		const descTextEl = document.getElementById('model-desc-text');
-		const specDimEl = document.getElementById('spec-dim');
-		const specPolyEl = document.getElementById('spec-poly');
-		const specVertsEl = document.getElementById('spec-verts');
-		const downloadBtn = document.getElementById('cad-download-btn') as HTMLAnchorElement | null;
-		const loadingOverlay = document.getElementById('cad-loading-overlay');
-		const gridBtn = document.getElementById('cad-grid-btn');
-		const wireframeBtn = document.getElementById('cad-wireframe-btn');
-		const resetCamBtn = document.getElementById('cad-reset-cam-btn');
-		const centrifugeBtn = document.getElementById('cad-centrifuge-btn');
-		const centrifugeHud = document.getElementById('cad-centrifuge-hud');
-		const colorDots = document.querySelectorAll('.color-dot');
-
-		let centrifugeActive = false;
-		let centrifugeSpeed = 0;
-		let currentRpm = 0;
-		const TARGET_CENTRIFUGE_SPEED = 1.35; // Rapid forward optical rotation
-		const TARGET_RPM = 10000;
-		let activeModelRadiusM = 0.1205; // Default to 120.5mm (half-width of ASUS mount)
-		let activeModelMinY = -18;
-		let activeModelMaxY = 10;
-		let activeModelHeightMm = 28;
-		let activeTotalLayers = 140;
-		let slicerActive = false;
-
-		const hudRpmEl = document.getElementById('hud-rpm-val');
-		const hudGEl = document.getElementById('hud-g-val');
-		const hudVibEl = document.getElementById('hud-vib-val');
-
-		const slicerBtn = document.getElementById('cad-slicer-btn');
-		const slicerHud = document.getElementById('cad-slicer-hud');
-		const slicerSliderEl = document.getElementById('cad-slicer-slider') as HTMLInputElement | null;
-		const slicerHudLayerEl = document.getElementById('slicer-hud-layer');
-		const slicerHudMmEl = document.getElementById('slicer-hud-mm');
-		const slicerHudFilamentEl = document.getElementById('slicer-hud-filament');
-		const slicerHudTimeEl = document.getElementById('slicer-hud-time');
-		const slicerBoundMaxEl = document.getElementById('slicer-bound-max');
-
-		function updateSlicer() {
-			if (!currentMeshObj || !currentMeshObj.geometry.boundingBox) return;
-			const sliderVal = slicerSliderEl ? parseInt(slicerSliderEl.value, 10) : 100;
-			const pct = sliderVal / 100;
-			const currentY = activeModelMinY + pct * (activeModelMaxY - activeModelMinY);
-
-			slicePlane.constant = currentY;
-			toolpathGroup.position.y = currentY;
-
-			const currentLayer = Math.max(1, Math.round(activeTotalLayers * pct));
-			const currentMm = (currentLayer * 0.20).toFixed(1);
-
-			// Standard PETG density (~1.27 g/cm³) vs composite CF filled (~1.22 g/cm³)
-			const estFilamentG = Math.round((activeModelRadiusM * 520) * pct + 12.5);
-			const estHours = Math.floor((activeTotalLayers * 0.45 * pct) / 60);
-			const estMins = Math.round((activeTotalLayers * 0.45 * pct) % 60);
-
-			if (slicerHudLayerEl) slicerHudLayerEl.textContent = `Layer ${currentLayer} / ${activeTotalLayers}`;
-			if (slicerHudMmEl) slicerHudMmEl.textContent = `(${currentMm} mm)`;
-			if (slicerHudFilamentEl) slicerHudFilamentEl.textContent = `PETG: ~${estFilamentG}g`;
-			if (slicerHudTimeEl) slicerHudTimeEl.textContent = `Est: ${estHours > 0 ? `${estHours}h ` : ''}${estMins}m`;
-		}
-
-		function setSlicer(active: boolean) {
-			slicerActive = active;
-			if (centrifugeActive && active) setCentrifuge(false);
-			if (slicerBtn) {
-				slicerBtn.textContent = active ? 'Slicer: ON' : 'Slicer: OFF';
-				slicerBtn.classList.toggle('active-slicer', active);
-			}
-			if (slicerHud) {
-				slicerHud.classList.toggle('hidden', !active);
-			}
-			material.clippingPlanes = active ? [slicePlane] : [];
-			toolpathGroup.visible = active;
-			if (active) updateSlicer();
-		}
-
-		if (slicerBtn) {
-			slicerBtn.addEventListener('click', () => setSlicer(!slicerActive));
-		}
-		if (slicerSliderEl) {
-			slicerSliderEl.addEventListener('input', updateSlicer);
-		}
-
 		(window as any).__toggleCadSlicer = (layerPct?: number) => {
-			if (typeof layerPct === 'number') {
-				if (!slicerActive) setSlicer(true);
-				if (slicerSliderEl) {
-					slicerSliderEl.value = Math.max(1, Math.min(100, layerPct)).toString();
-					updateSlicer();
-				}
-			} else {
-				setSlicer(!slicerActive);
+			if (!isViewerInitialized) {
+				pendingAction = () => toggleSlicerExternal?.(layerPct);
+				startCadScene();
+				return;
 			}
+			toggleSlicerExternal?.(layerPct);
 		};
 
-		function setCentrifuge(active: boolean) {
-			centrifugeActive = active;
-			if (centrifugeBtn) {
-				centrifugeBtn.textContent = active ? 'Centrifuge: ON' : 'Centrifuge: OFF';
-				centrifugeBtn.classList.toggle('active-centrifuge', active);
-			}
-			if (centrifugeHud) {
-				centrifugeHud.classList.toggle('hidden', !active);
-			}
-		}
-
-		function toggleCentrifuge() {
-			setCentrifuge(!centrifugeActive);
-		}
-
-		if (centrifugeBtn) {
-			centrifugeBtn.addEventListener('click', toggleCentrifuge);
-		}
-
-		// Triple-click canvas trigger
-		let clickCount = 0;
-		let clickTimer: any = null;
-		canvas.addEventListener('click', () => {
-			clickCount++;
-			clearTimeout(clickTimer);
-			clickTimer = setTimeout(() => {
-				if (clickCount >= 3) toggleCentrifuge();
-				clickCount = 0;
-			}, 350);
-		});
-
-		// Spacebar shortcut when hovering viewer
-		let isViewerHovered = false;
-		container.addEventListener('mouseenter', () => { isViewerHovered = true; });
-		container.addEventListener('mouseleave', () => { isViewerHovered = false; });
-		window.addEventListener('keydown', (e) => {
-			if (e.code === 'Space' && isViewerHovered) {
-				const activeEl = document.activeElement;
-				if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')) {
-					return;
-				}
-				e.preventDefault();
-				toggleCentrifuge();
-			}
-		});
-
-		// Hook for CLI terminal command
-		triggerCentrifugeExternal = (active?: boolean) => {
-			if (typeof active === 'boolean') {
-				setCentrifuge(active);
-			} else {
-				toggleCentrifuge();
-			}
-		};
-
-		function resize() {
-			const width = container!.clientWidth;
-			const height = container!.clientHeight;
-			camera.aspect = width / height;
-			camera.updateProjectionMatrix();
-			renderer.setSize(width, height, false);
-		}
-		resize();
-		window.addEventListener('resize', resize);
-
-		function applyModelData(data: MeshPayload, meta?: ModelMeta) {
-			if (currentMeshObj) {
-				modelGroup.remove(currentMeshObj);
-				currentMeshObj.geometry.dispose();
-				currentMeshObj = null;
-			}
-
-			const geometry = new THREE.BufferGeometry();
-			geometry.setAttribute('position', new THREE.Float32BufferAttribute(data.positions, 3));
-			if (data.normals && data.normals.length) {
-				geometry.setAttribute('normal', new THREE.Float32BufferAttribute(data.normals, 3));
-			} else {
-				geometry.computeVertexNormals();
-			}
-			geometry.setIndex(data.indices);
-			geometry.computeBoundingBox();
-
-			currentMeshObj = new THREE.Mesh(geometry, material);
-			modelGroup.add(currentMeshObj);
-
-			// Center vertically on build plate
-			if (geometry.boundingBox) {
-				const minY = geometry.boundingBox.min.y;
-				const maxY = geometry.boundingBox.max.y;
-				activeModelMinY = minY;
-				activeModelMaxY = maxY;
-				grid.position.y = minY - 0.2;
-				controls.target.set(0, (maxY + minY) / 2, 0);
-				activeModelHeightMm = Math.max(1, data.bbox?.height || (maxY - minY));
-				activeTotalLayers = Math.max(1, Math.round(activeModelHeightMm / 0.20));
-				if (slicerBoundMaxEl) slicerBoundMaxEl.textContent = `${Math.round(activeModelHeightMm)}mm`;
-				if (slicerActive) updateSlicer();
-			}
-
-			// Update spec labels and active radius for centrifuge physics
-			const w = data.bbox?.width || (meta ? parseInt(meta.dimensions.split('x')[0]) : 0);
-			const h = data.bbox?.height || (meta ? parseInt(meta.dimensions.split('x')[1]) : 0);
-			const d = data.bbox?.depth || (meta ? parseInt(meta.dimensions.split('x')[2]) : 0);
-			activeModelRadiusM = Math.max(w, d) > 0 ? (Math.max(w, d) / 2) / 1000 : 0.05;
-			if (specDimEl) specDimEl.textContent = `${w} x ${h} x ${d} mm`;
-			if (specPolyEl) specPolyEl.textContent = `${(data.indices.length / 3).toLocaleString()} Triangles`;
-			if (specVertsEl) specVertsEl.textContent = `${(data.positions.length / 3).toLocaleString()} Vertices`;
-			if (descTextEl && meta) descTextEl.textContent = meta.desc;
-
-			// Update download button to match active model
-			const activeMeta = meta || manifestMap[data.id];
-			if (downloadBtn && activeMeta) {
-				downloadBtn.href = activeMeta.stepFile;
-				downloadBtn.download = activeMeta.file;
-				downloadBtn.title = `Download ${activeMeta.name} (${activeMeta.file})`;
-			}
-
-			renderer.render(scene, camera);
-			if (startAnimationLoop) {
-				startAnimationLoop();
-			}
-		}
-
-		async function loadModel(id: string) {
-			const meta = manifestMap[id];
+		async function startCadScene() {
+			if (isViewerInitialized || isSceneStarting) return;
+			isSceneStarting = true;
+			const loadingOverlay = document.getElementById('cad-loading-overlay');
 			if (loadingOverlay) loadingOverlay.classList.remove('hidden');
 
-			if (meshCache[id]) {
-				applyModelData(meshCache[id], meta);
+			let THREE: typeof ThreeTypes;
+			let OrbitControls: typeof import('three/examples/jsm/controls/OrbitControls.js').OrbitControls;
+			try {
+				const [threeMod, orbitMod] = await Promise.all([
+					import('three'),
+					import('three/examples/jsm/controls/OrbitControls.js'),
+				]);
+				THREE = threeMod;
+				OrbitControls = orbitMod.OrbitControls;
+			} catch (err) {
+				isSceneStarting = false;
 				if (loadingOverlay) loadingOverlay.classList.add('hidden');
+				console.error('Failed to load Three.js:', err);
 				return;
 			}
 
-			try {
-				const jsonUrl = meta ? meta.jsonFile : `/models/${id}.json`;
-				const res = await fetch(jsonUrl);
-				if (res.ok) {
-					const data: MeshPayload = await res.json();
-					meshCache[id] = data;
-					applyModelData(data, meta);
-				}
-			} catch (err) {
-				console.error('Error loading CAD model:', err);
-			} finally {
-				if (loadingOverlay) loadingOverlay.classList.add('hidden');
+			isSceneStarting = false;
+			isViewerInitialized = true;
+
+			const ac = new AbortController();
+			const { signal } = ac;
+
+			const renderer = new THREE.WebGLRenderer({
+				canvas: canvas!,
+				antialias: true,
+				alpha: true,
+				powerPreference: 'high-performance',
+			});
+			renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+			renderer.toneMapping = THREE.ACESFilmicToneMapping;
+			renderer.toneMappingExposure = 1.15;
+			renderer.localClippingEnabled = true;
+
+			const initW = Math.max(1, container!.clientWidth);
+			const initH = Math.max(1, container!.clientHeight);
+			const scene = new THREE.Scene();
+			const camera = new THREE.PerspectiveCamera(40, initW / initH, 0.1, 1000);
+			camera.position.set(45, 38, 55);
+
+			const controls = new OrbitControls(camera, canvas!);
+			controls.enableDamping = true;
+			controls.dampingFactor = 0.06;
+			controls.minDistance = 15;
+			controls.maxDistance = 220;
+			controls.maxPolarAngle = Math.PI - 0.02;
+
+			controls.addEventListener('change', () => {
+				renderer.render(scene, camera);
+			});
+			controls.addEventListener('start', () => {
+				startAnimationLoop?.();
+			});
+
+			// WebGL context loss recovery
+			canvas!.addEventListener(
+				'webglcontextlost',
+				(e) => {
+					e.preventDefault();
+					if (animationFrameId !== null) {
+						cancelAnimationFrame(animationFrameId);
+						animationFrameId = null;
+					}
+				},
+				{ signal }
+			);
+			canvas!.addEventListener(
+				'webglcontextrestored',
+				() => {
+					sceneCleanup?.();
+					isViewerInitialized = false;
+					startCadScene();
+				},
+				{ signal }
+			);
+
+			// Lighting
+			const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+			scene.add(ambientLight);
+
+			const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+			keyLight.position.set(60, 80, 50);
+			scene.add(keyLight);
+
+			const fillLight = new THREE.DirectionalLight(0x93c5fd, 1.2);
+			fillLight.position.set(-60, 40, -50);
+			scene.add(fillLight);
+
+			const rimLight = new THREE.DirectionalLight(0xffedd5, 1.2);
+			rimLight.position.set(0, -50, 40);
+			scene.add(rimLight);
+
+			const underLight = new THREE.DirectionalLight(0xffffff, 1.1);
+			underLight.position.set(0, -70, -30);
+			scene.add(underLight);
+
+			// Build Plate Grid
+			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+			function getGridColors(dark: boolean) {
+				return {
+					primary: dark ? 0x64748b : 0x94a3b8,
+					secondary: dark ? 0x384556 : 0xd8dee9,
+				};
 			}
-		}
+			const { primary: gridPrimary, secondary: gridSecondary } = getGridColors(isDark);
+			let grid = new THREE.GridHelper(80, 20, gridPrimary, gridSecondary);
+			grid.position.y = -18;
+			scene.add(grid);
 
-		// Fetch manifest
-		fetch('/models/manifest.json')
-			.then(r => r.json())
-			.then((items: ModelMeta[]) => {
-				items.forEach(m => { manifestMap[m.id] = m; });
-				const initialId = selectEl ? selectEl.value : 'be92u';
-				loadModel(initialId);
-			})
-			.catch(() => {
-				loadModel('be92u');
+			function updateGridTheme(dark: boolean) {
+				const colors = getGridColors(dark);
+				const prevY = grid.position.y;
+				const prevVis = grid.visible;
+				scene.remove(grid);
+				grid.geometry.dispose();
+				if (Array.isArray(grid.material)) {
+					grid.material.forEach((m) => m.dispose());
+				} else {
+					grid.material.dispose();
+				}
+				grid = new THREE.GridHelper(80, 20, colors.primary, colors.secondary);
+				grid.position.y = prevY;
+				grid.visible = prevVis;
+				scene.add(grid);
+				renderer.render(scene, camera);
+			}
+
+			const cadThemeObserver = new MutationObserver((mutations) => {
+				for (const mutation of mutations) {
+					if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+						const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+						updateGridTheme(dark);
+						break;
+					}
+				}
+			});
+			cadThemeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+			// Slicer Toolpath Plane & Group
+			const slicePlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 1000);
+			const toolpathGroup = new THREE.Group();
+			const toolpathGrid = new THREE.GridHelper(60, 30, 0x38bdf8, 0x0ea5e9);
+			(toolpathGrid.material as ThreeTypes.Material).transparent = true;
+			(toolpathGrid.material as ThreeTypes.Material).opacity = 0.55;
+			toolpathGroup.add(toolpathGrid);
+			scene.add(toolpathGroup);
+			toolpathGroup.visible = false;
+
+			// Model Group
+			const modelGroup = new THREE.Group();
+			scene.add(modelGroup);
+
+			// Material (Default to vibrant Orange for high contrast)
+			const baseHex = 0xea580c;
+			const material = new THREE.MeshStandardMaterial({
+				color: baseHex,
+				roughness: 0.38,
+				metalness: 0.08,
+				flatShading: false,
+				wireframe: false,
 			});
 
-		if (selectEl) {
-			selectEl.addEventListener('change', () => {
-				loadModel(selectEl.value);
-			});
-		}
+			let currentMeshObj: ThreeTypes.Mesh | null = null;
+			const geometryCache: Record<string, { data: MeshPayload; geometry: ThreeTypes.BufferGeometry }> = {};
+			const manifestMap: Record<string, ModelMeta> = {};
+			let activeLoadController: AbortController | null = null;
+			let activeLoadSeq = 0;
 
-		if (gridBtn) {
-			gridBtn.addEventListener('click', () => {
-				grid.visible = !grid.visible;
-				gridBtn.textContent = `Grid: ${grid.visible ? 'ON' : 'OFF'}`;
-				gridBtn.classList.toggle('active', !grid.visible);
-			});
-		}
+			// UI Elements
+			const selectEl = document.getElementById('cad-model-select') as HTMLSelectElement | null;
+			const descTextEl = document.getElementById('model-desc-text');
+			const specDimEl = document.getElementById('spec-dim');
+			const specPolyEl = document.getElementById('spec-poly');
+			const specVertsEl = document.getElementById('spec-verts');
+			const downloadBtn = document.getElementById('cad-download-btn') as HTMLAnchorElement | null;
+			const gridBtn = document.getElementById('cad-grid-btn');
+			const wireframeBtn = document.getElementById('cad-wireframe-btn');
+			const resetCamBtn = document.getElementById('cad-reset-cam-btn');
+			const centrifugeBtn = document.getElementById('cad-centrifuge-btn');
+			const centrifugeHud = document.getElementById('cad-centrifuge-hud');
+			const colorDots = document.querySelectorAll('.color-dot');
 
-		toggleGridExternal = () => {
-			if (gridBtn) gridBtn.click();
-		};
+			let centrifugeActive = false;
+			let centrifugeSpeed = 0;
+			let currentRpm = 0;
+			const TARGET_CENTRIFUGE_SPEED = 1.35;
+			const TARGET_RPM = 10000;
+			let activeModelRadiusM = 0.1205;
+			let activeModelMinY = -18;
+			let activeModelMaxY = 10;
+			let activeModelHeightMm = 76;
+			let activeModelVolumeCm3 = 513;
+			let activeTotalLayers = 380;
+			let slicerActive = false;
 
-		if (wireframeBtn) {
-			wireframeBtn.addEventListener('click', () => {
-				material.wireframe = !material.wireframe;
-				wireframeBtn.textContent = `Wireframe: ${material.wireframe ? 'ON' : 'OFF'}`;
-				wireframeBtn.classList.toggle('active', material.wireframe);
-			});
-		}
+			const hudRpmEl = document.getElementById('hud-rpm-val');
+			const hudGEl = document.getElementById('hud-g-val');
+			const hudVibEl = document.getElementById('hud-vib-val');
 
-		if (resetCamBtn) {
-			resetCamBtn.addEventListener('click', () => {
-				camera.position.set(45, 38, 55);
-				controls.target.set(0, 0, 0);
+			const slicerBtn = document.getElementById('cad-slicer-btn');
+			const slicerHud = document.getElementById('cad-slicer-hud');
+			const slicerSliderEl = document.getElementById('cad-slicer-slider') as HTMLInputElement | null;
+			const slicerHudLayerEl = document.getElementById('slicer-hud-layer');
+			const slicerHudMmEl = document.getElementById('slicer-hud-mm');
+			const slicerHudFilamentEl = document.getElementById('slicer-hud-filament');
+			const slicerHudTimeEl = document.getElementById('slicer-hud-time');
+			const slicerBoundMaxEl = document.getElementById('slicer-bound-max');
+
+			function updateSlicer() {
+				if (!currentMeshObj || !currentMeshObj.geometry.boundingBox) return;
+				const sliderVal = slicerSliderEl ? parseInt(slicerSliderEl.value, 10) : 100;
+				const pct = Math.max(0, Math.min(1, sliderVal / 100));
+				const currentY = activeModelMinY + pct * (activeModelMaxY - activeModelMinY);
+
+				slicePlane.constant = currentY;
+				toolpathGroup.position.y = currentY;
+
+				const currentLayer = Math.max(1, Math.round(activeTotalLayers * pct));
+				const currentMm = (activeModelHeightMm * pct).toFixed(1);
+
+				// Approximate PETG mass (~1.27 g/cm³ with ~18% effective shell/infill bounding occupancy)
+				const estFilamentG = Math.max(1, Math.round(activeModelVolumeCm3 * 1.27 * 0.18 * pct));
+				const estTotalMins = Math.max(5, Math.round(activeModelVolumeCm3 * 0.22));
+				const elapsedMins = Math.round(estTotalMins * pct);
+				const estHours = Math.floor(elapsedMins / 60);
+				const estMins = elapsedMins % 60;
+
+				if (slicerHudLayerEl) slicerHudLayerEl.textContent = `Layer ${currentLayer} / ${activeTotalLayers}`;
+				if (slicerHudMmEl) slicerHudMmEl.textContent = `(${currentMm} mm)`;
+				if (slicerHudFilamentEl) slicerHudFilamentEl.textContent = `PETG: ~${estFilamentG}g`;
+				if (slicerHudTimeEl) slicerHudTimeEl.textContent = `Est: ${estHours > 0 ? `${estHours}h ` : ''}${estMins}m`;
+				renderer.render(scene, camera);
+			}
+
+			function setSlicer(active: boolean) {
+				slicerActive = active;
+				if (centrifugeActive && active) setCentrifuge(false);
+				if (slicerBtn) {
+					slicerBtn.textContent = active ? 'Slicer: ON' : 'Slicer: OFF';
+					slicerBtn.classList.toggle('active-slicer', active);
+				}
+				if (slicerHud) {
+					slicerHud.classList.toggle('hidden', !active);
+				}
+				material.clippingPlanes = active ? [slicePlane] : [];
+				material.side = active ? THREE.DoubleSide : THREE.FrontSide;
+				material.needsUpdate = true;
+				toolpathGroup.visible = active;
+				if (active) {
+					updateSlicer();
+				} else {
+					renderer.render(scene, camera);
+				}
+			}
+
+			if (slicerBtn) {
+				slicerBtn.addEventListener('click', () => setSlicer(!slicerActive), { signal });
+			}
+			if (slicerSliderEl) {
+				slicerSliderEl.addEventListener('input', updateSlicer, { signal });
+			}
+
+			toggleSlicerExternal = (layerPct?: number) => {
+				if (typeof layerPct === 'number') {
+					if (!slicerActive) setSlicer(true);
+					if (slicerSliderEl) {
+						slicerSliderEl.value = Math.max(0, Math.min(100, layerPct)).toString();
+						updateSlicer();
+					}
+				} else {
+					setSlicer(!slicerActive);
+				}
+			};
+
+			function setCentrifuge(active: boolean) {
+				centrifugeActive = active;
+				if (slicerActive && active) setSlicer(false);
+				if (centrifugeBtn) {
+					centrifugeBtn.textContent = active ? 'Centrifuge: ON' : 'Centrifuge: OFF';
+					centrifugeBtn.classList.toggle('active-centrifuge', active);
+				}
+				if (centrifugeHud) {
+					centrifugeHud.classList.toggle('hidden', !active);
+				}
+				startAnimationLoop?.();
+			}
+
+			function toggleCentrifuge() {
+				setCentrifuge(!centrifugeActive);
+			}
+
+			if (centrifugeBtn) {
+				centrifugeBtn.addEventListener('click', toggleCentrifuge, { signal });
+			}
+
+			// Triple-click canvas trigger
+			let clickCount = 0;
+			let clickTimer: ReturnType<typeof setTimeout> | null = null;
+			canvas!.addEventListener(
+				'click',
+				() => {
+					clickCount++;
+					if (clickTimer) clearTimeout(clickTimer);
+					clickTimer = setTimeout(() => {
+						if (clickCount >= 3) toggleCentrifuge();
+						clickCount = 0;
+					}, 350);
+				},
+				{ signal }
+			);
+
+			// Spacebar shortcut when hovering viewer
+			let isViewerHovered = false;
+			container!.addEventListener('mouseenter', () => { isViewerHovered = true; }, { signal });
+			container!.addEventListener('mouseleave', () => { isViewerHovered = false; }, { signal });
+			window.addEventListener(
+				'keydown',
+				(e) => {
+					if (e.code === 'Space' && isViewerHovered) {
+						const activeEl = document.activeElement;
+						if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')) {
+							return;
+						}
+						e.preventDefault();
+						toggleCentrifuge();
+					}
+				},
+				{ signal }
+			);
+
+			triggerCentrifugeExternal = (active?: boolean) => {
+				if (typeof active === 'boolean') {
+					setCentrifuge(active);
+				} else {
+					toggleCentrifuge();
+				}
+			};
+
+			function resize() {
+				const width = container!.clientWidth;
+				const height = container!.clientHeight;
+				if (width <= 0 || height <= 0) return;
+				camera.aspect = width / height;
+				camera.updateProjectionMatrix();
+				renderer.setSize(width, height, false);
+				renderer.render(scene, camera);
+			}
+			resize();
+			window.addEventListener('resize', resize, { signal });
+
+			const resizeObserver = new ResizeObserver(() => resize());
+			resizeObserver.observe(container!);
+
+			const projectsSection = document.getElementById('projects');
+			projectsSection?.addEventListener('section-toggle', () => {
+				requestAnimationFrame(resize);
+			}, { signal });
+
+			function applyModelData(data: MeshPayload, geometry: ThreeTypes.BufferGeometry, meta?: ModelMeta) {
+				if (currentMeshObj) {
+					modelGroup.remove(currentMeshObj);
+					currentMeshObj = null;
+				}
+
+				currentMeshObj = new THREE.Mesh(geometry, material);
+				modelGroup.add(currentMeshObj);
+
+				const w = data.bbox?.width || (meta ? parseInt(meta.dimensions.split('x')[0]) : 0);
+				const h = data.bbox?.height || (meta ? parseInt(meta.dimensions.split('x')[1]) : 0);
+				const d = data.bbox?.depth || (meta ? parseInt(meta.dimensions.split('x')[2]) : 0);
+				activeModelVolumeCm3 = Math.max(1, (w * h * d) / 1000);
+
+				if (geometry.boundingBox) {
+					const minY = geometry.boundingBox.min.y;
+					const maxY = geometry.boundingBox.max.y;
+					const spanX = geometry.boundingBox.max.x - geometry.boundingBox.min.x;
+					const spanY = maxY - minY;
+					const spanZ = geometry.boundingBox.max.z - geometry.boundingBox.min.z;
+					const maxSpan = Math.max(spanX, spanY, spanZ, 0.001);
+					const maxDimMm = Math.max(w, h, d, 1);
+
+					activeModelMinY = minY;
+					activeModelMaxY = maxY;
+					grid.position.y = minY - 0.2;
+					controls.target.set(0, (maxY + minY) / 2, 0);
+					// Map Three.js Y-axis vertical span proportionally to the real CAD millimeter axis
+					activeModelHeightMm = Math.max(1, (spanY / maxSpan) * maxDimMm);
+					activeTotalLayers = Math.max(1, Math.round(activeModelHeightMm / 0.2));
+					if (slicerBoundMaxEl) slicerBoundMaxEl.textContent = `${Math.round(activeModelHeightMm)}mm`;
+					if (slicerActive) updateSlicer();
+				}
+
+				activeModelRadiusM = Math.max(w, d) > 0 ? Math.max(w, d) / 2 / 1000 : 0.05;
+				if (specDimEl) specDimEl.textContent = `${w} x ${h} x ${d} mm`;
+				if (specPolyEl) specPolyEl.textContent = `${(data.indices.length / 3).toLocaleString()} Triangles`;
+				if (specVertsEl) specVertsEl.textContent = `${(data.positions.length / 3).toLocaleString()} Vertices`;
+				if (descTextEl && meta) {
+					descTextEl.textContent = meta.desc;
+					descTextEl.setAttribute('title', meta.desc);
+				}
+
+				const activeMeta = meta || manifestMap[data.id];
+				if (downloadBtn && activeMeta) {
+					downloadBtn.href = activeMeta.stepFile;
+					downloadBtn.download = activeMeta.file;
+					downloadBtn.title = `Download ${activeMeta.name} (${activeMeta.file})`;
+				}
+
 				controls.update();
-			});
-		}
+				renderer.render(scene, camera);
+				startAnimationLoop?.();
+			}
 
-		colorDots.forEach((dot) => {
-			dot.addEventListener('click', () => {
-				colorDots.forEach((d) => d.classList.remove('active'));
-				dot.classList.add('active');
-				const hexStr = dot.getAttribute('data-color') || '#ea580c';
-				material.color.set(hexStr);
-			});
-		});
+			async function loadModel(id: string) {
+				const seq = ++activeLoadSeq;
+				if (activeLoadController) activeLoadController.abort();
+				const meta = manifestMap[id];
 
-		// Render animation loop with external physics sleep support
-		startAnimationLoop = () => {
-			if (isViewerVisible && !isPausedByEasterEgg) {
+				if (geometryCache[id]) {
+					const cached = geometryCache[id];
+					applyModelData(cached.data, cached.geometry, meta);
+					if (loadingOverlay) loadingOverlay.classList.add('hidden');
+					return;
+				}
+
+				if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+				const fetchCtrl = new AbortController();
+				activeLoadController = fetchCtrl;
+
+				try {
+					const jsonUrl = meta ? meta.jsonFile : `/models/${id}.json`;
+					const res = await fetch(jsonUrl, { signal: fetchCtrl.signal });
+					if (seq !== activeLoadSeq) return;
+					if (res.ok) {
+						const data: MeshPayload = await res.json();
+						if (seq !== activeLoadSeq) return;
+						const geometry = new THREE.BufferGeometry();
+						geometry.setAttribute('position', new THREE.Float32BufferAttribute(data.positions, 3));
+						if (data.normals && data.normals.length) {
+							// Preserve authentic CAD NURBS/STEP normals (AGENTS.md §1.K)
+							geometry.setAttribute('normal', new THREE.Float32BufferAttribute(data.normals, 3));
+						} else {
+							geometry.computeVertexNormals();
+						}
+						geometry.setIndex(data.indices);
+						geometry.computeBoundingBox();
+
+						geometryCache[id] = { data, geometry };
+						applyModelData(data, geometry, meta);
+					}
+				} catch (err: any) {
+					if (err?.name !== 'AbortError') {
+						console.error('Error loading CAD model:', err);
+					}
+				} finally {
+					if (seq === activeLoadSeq && loadingOverlay) {
+						loadingOverlay.classList.add('hidden');
+					}
+				}
+			}
+
+			fetch('/models/manifest.json', { signal })
+				.then((r) => r.json())
+				.then((items: ModelMeta[]) => {
+					items.forEach((m) => { manifestMap[m.id] = m; });
+					const initialId = selectEl ? selectEl.value : 'be92u';
+					loadModel(initialId);
+				})
+				.catch((err: any) => {
+					if (err?.name !== 'AbortError') loadModel('be92u');
+				});
+
+			if (selectEl) {
+				selectEl.addEventListener('change', () => {
+					loadModel(selectEl.value);
+				}, { signal });
+			}
+
+			if (gridBtn) {
+				gridBtn.addEventListener('click', () => {
+					grid.visible = !grid.visible;
+					gridBtn.textContent = `Grid: ${grid.visible ? 'ON' : 'OFF'}`;
+					gridBtn.classList.toggle('active', grid.visible);
+					renderer.render(scene, camera);
+				}, { signal });
+			}
+
+			toggleGridExternal = () => {
+				gridBtn?.click();
+			};
+
+			if (wireframeBtn) {
+				wireframeBtn.addEventListener('click', () => {
+					material.wireframe = !material.wireframe;
+					wireframeBtn.textContent = `Wireframe: ${material.wireframe ? 'ON' : 'OFF'}`;
+					wireframeBtn.classList.toggle('active', material.wireframe);
+					renderer.render(scene, camera);
+				}, { signal });
+			}
+
+			if (resetCamBtn) {
+				resetCamBtn.addEventListener('click', () => {
+					modelGroup.rotation.y = 0;
+					camera.position.set(45, 38, 55);
+					controls.target.set(0, (activeModelMaxY + activeModelMinY) / 2, 0);
+					controls.update();
+					renderer.render(scene, camera);
+					startAnimationLoop?.();
+				}, { signal });
+			}
+
+			colorDots.forEach((dot) => {
+				dot.addEventListener('click', () => {
+					colorDots.forEach((d) => {
+						d.classList.remove('active');
+						d.setAttribute('aria-pressed', 'false');
+					});
+					dot.classList.add('active');
+					dot.setAttribute('aria-pressed', 'true');
+					const hexStr = dot.getAttribute('data-color') || '#ea580c';
+					material.color.set(hexStr);
+					renderer.render(scene, camera);
+				}, { signal });
+			});
+
+			startAnimationLoop = () => {
+				if (isViewerVisible && !isPausedByEasterEgg && animationFrameId === null) {
+					animationFrameId = requestAnimationFrame(animate);
+				}
+			};
+
+			window.addEventListener('pause-cad-render', () => {
+				isPausedByEasterEgg = true;
 				if (animationFrameId !== null) {
 					cancelAnimationFrame(animationFrameId);
+					animationFrameId = null;
 				}
-				animationFrameId = requestAnimationFrame(animate);
-			}
-		};
-
-		window.addEventListener('pause-cad-render', () => {
-			isPausedByEasterEgg = true;
-			if (animationFrameId !== null) {
-				cancelAnimationFrame(animationFrameId);
-				animationFrameId = null;
-			}
-		});
-		window.addEventListener('resume-cad-render', () => {
-			if (isPausedByEasterEgg) {
-				isPausedByEasterEgg = false;
-				if (startAnimationLoop) {
-					startAnimationLoop();
+			}, { signal });
+			window.addEventListener('resume-cad-render', () => {
+				if (isPausedByEasterEgg) {
+					isPausedByEasterEgg = false;
+					startAnimationLoop?.();
 				}
-			}
-		});
+			}, { signal });
 
-		function animate() {
-			if (!isViewerVisible || isPausedByEasterEgg) {
+			function animate() {
 				animationFrameId = null;
-				return;
-			}
-			animationFrameId = requestAnimationFrame(animate);
-			controls.update();
+				if (!isViewerVisible || isPausedByEasterEgg) return;
 
-			if (centrifugeActive) {
-				centrifugeSpeed = THREE.MathUtils.lerp(centrifugeSpeed, TARGET_CENTRIFUGE_SPEED, 0.06);
-				currentRpm = THREE.MathUtils.lerp(currentRpm, TARGET_RPM, 0.06);
+				const dampingMoving = controls.update();
+				let physicsActive = false;
 
-				// True Centripetal Acceleration: a_c = omega^2 * r
-				const omega = (currentRpm * 2 * Math.PI) / 60;
-				const currentG = (omega * omega * activeModelRadiusM) / 9.80665;
-				const vibG = (currentRpm / TARGET_RPM) * (18.2 + (Math.random() - 0.5) * 3.4);
+				if (centrifugeActive) {
+					physicsActive = true;
+					centrifugeSpeed = THREE.MathUtils.lerp(centrifugeSpeed, TARGET_CENTRIFUGE_SPEED, 0.06);
+					currentRpm = THREE.MathUtils.lerp(currentRpm, TARGET_RPM, 0.06);
 
-				// Harmonic micro-vibration
-				const vib = (Math.random() - 0.5) * 0.08;
-				modelGroup.position.x = vib;
-				modelGroup.position.z = vib;
-
-				if (hudRpmEl) hudRpmEl.textContent = Math.round(currentRpm).toLocaleString() + ' RPM';
-				if (hudGEl) hudGEl.textContent = Math.round(currentG).toLocaleString() + 'G';
-				if (hudVibEl) hudVibEl.textContent = (currentRpm > 100 ? vibG.toFixed(1) : '0.0') + 'G';
-			} else {
-				centrifugeSpeed = THREE.MathUtils.lerp(centrifugeSpeed, 0, 0.06);
-				currentRpm = THREE.MathUtils.lerp(currentRpm, 0, 0.09);
-				modelGroup.position.x = THREE.MathUtils.lerp(modelGroup.position.x, 0, 0.1);
-				modelGroup.position.z = THREE.MathUtils.lerp(modelGroup.position.z, 0, 0.1);
-				if (hudRpmEl) hudRpmEl.textContent = Math.round(currentRpm).toLocaleString() + ' RPM';
-				if (hudGEl) {
 					const omega = (currentRpm * 2 * Math.PI) / 60;
 					const currentG = (omega * omega * activeModelRadiusM) / 9.80665;
-					hudGEl.textContent = Math.round(currentG).toLocaleString() + 'G';
+					const vibG = (currentRpm / TARGET_RPM) * (18.2 + (Math.random() - 0.5) * 3.4);
+					const vib = (Math.random() - 0.5) * 0.08;
+					modelGroup.position.x = vib;
+					modelGroup.position.z = vib;
+
+					if (hudRpmEl) hudRpmEl.textContent = Math.round(currentRpm).toLocaleString() + ' RPM';
+					if (hudGEl) hudGEl.textContent = Math.round(currentG).toLocaleString() + 'G';
+					if (hudVibEl) hudVibEl.textContent = (currentRpm > 100 ? vibG.toFixed(1) : '0.0') + 'G';
+				} else if (centrifugeSpeed > 0.0005 || currentRpm > 1 || Math.abs(modelGroup.position.x) > 0.001) {
+					physicsActive = true;
+					centrifugeSpeed = THREE.MathUtils.lerp(centrifugeSpeed, 0, 0.06);
+					currentRpm = THREE.MathUtils.lerp(currentRpm, 0, 0.09);
+					modelGroup.position.x = THREE.MathUtils.lerp(modelGroup.position.x, 0, 0.1);
+					modelGroup.position.z = THREE.MathUtils.lerp(modelGroup.position.z, 0, 0.1);
+					if (centrifugeSpeed <= 0.0005) {
+						centrifugeSpeed = 0;
+						currentRpm = 0;
+						modelGroup.position.set(0, 0, 0);
+					}
+					if (hudRpmEl) hudRpmEl.textContent = Math.round(currentRpm).toLocaleString() + ' RPM';
+					if (hudGEl) {
+						const omega = (currentRpm * 2 * Math.PI) / 60;
+						const currentG = (omega * omega * activeModelRadiusM) / 9.80665;
+						hudGEl.textContent = Math.round(currentG).toLocaleString() + 'G';
+					}
+					if (hudVibEl) {
+						const vibG = (currentRpm / TARGET_RPM) * 18.2;
+						hudVibEl.textContent = (currentRpm > 100 ? vibG.toFixed(1) : '0.0') + 'G';
+					}
 				}
-				if (hudVibEl) {
-					const vibG = (currentRpm / TARGET_RPM) * 18.2;
-					hudVibEl.textContent = (currentRpm > 100 ? vibG.toFixed(1) : '0.0') + 'G';
+
+				if (centrifugeSpeed > 0.0005) {
+					modelGroup.rotation.y += centrifugeSpeed;
+				}
+
+				renderer.render(scene, camera);
+
+				// Only keep rAF alive when OrbitControls damping or centrifuge spin is active (0% idle GPU)
+				if (dampingMoving || physicsActive) {
+					animationFrameId = requestAnimationFrame(animate);
 				}
 			}
-			if (centrifugeSpeed > 0.0005) {
-				modelGroup.rotation.y += centrifugeSpeed;
+
+			if (pendingAction) {
+				const fn = pendingAction;
+				pendingAction = null;
+				fn();
 			}
 
-			renderer.render(scene, camera);
+			sceneCleanup = () => {
+				ac.abort();
+				if (activeLoadController) activeLoadController.abort();
+				if (clickTimer) clearTimeout(clickTimer);
+				resizeObserver.disconnect();
+				cadThemeObserver.disconnect();
+				if (animationFrameId !== null) {
+					cancelAnimationFrame(animationFrameId);
+					animationFrameId = null;
+				}
+				Object.values(geometryCache).forEach((entry) => entry.geometry.dispose());
+				material.dispose();
+				renderer.dispose();
+				controls.dispose();
+			};
 		}
 
-		if (startAnimationLoop) {
-			startAnimationLoop();
-		}
+		const viewerObserver = new IntersectionObserver(
+			(entries) => {
+				const entry = entries[0];
+				isViewerVisible = entry.isIntersecting;
+				if (isViewerVisible) {
+					if (!isViewerInitialized) {
+						startCadScene();
+					} else {
+						startAnimationLoop?.();
+					}
+				} else if (animationFrameId !== null) {
+					cancelAnimationFrame(animationFrameId);
+					animationFrameId = null;
+				}
+			},
+			{ rootMargin: '300px' }
+		);
+		viewerObserver.observe(viewerContainer);
 
-		sceneCleanup = () => {
-			cadThemeObserver.disconnect();
+		(canvas as any).__cleanup = () => {
+			viewerObserver.disconnect();
 			if (animationFrameId !== null) {
 				cancelAnimationFrame(animationFrameId);
 				animationFrameId = null;
 			}
-			window.removeEventListener('resize', resize);
-			renderer.dispose();
-			controls.dispose();
+			sceneCleanup?.();
 		};
 	}
-
-	const viewerObserver = new IntersectionObserver((entries) => {
-		const entry = entries[0];
-		isViewerVisible = entry.isIntersecting;
-		if (isViewerVisible) {
-			if (!isViewerInitialized) {
-				startCadScene();
-			} else if (startAnimationLoop) {
-				startAnimationLoop();
-			}
-		} else if (animationFrameId !== null) {
-			cancelAnimationFrame(animationFrameId);
-			animationFrameId = null;
-		}
-	}, { rootMargin: '300px' });
-	viewerObserver.observe(viewerContainer);
-
-	// Cleanup handle for HMR / page changes
-	(canvas as any).__cleanup = () => {
-		viewerObserver.disconnect();
-		if (animationFrameId !== null) {
-			cancelAnimationFrame(animationFrameId);
-			animationFrameId = null;
-		}
-		if (sceneCleanup) sceneCleanup();
-	};
-}
 
 	initCadViewer();
 	document.addEventListener('astro:page-load', initCadViewer);
@@ -891,6 +1024,8 @@
 		top: 14px;
 		left: 50%;
 		transform: translateX(-50%);
+		width: max-content;
+		max-width: 92%;
 		background: rgba(15, 23, 42, 0.88);
 		backdrop-filter: blur(8px);
 		-webkit-backdrop-filter: blur(8px);
@@ -1125,13 +1260,18 @@
 		color: rgb(var(--gray));
 		margin-right: 0.2em;
 	}
+	.cad-drag-hint .hint-mobile {
+		display: none;
+	}
 	.color-dot {
-		width: 19px;
-		height: 19px;
+		width: 27px;
+		height: 27px;
 		border-radius: 50%;
 		border: 2px solid transparent;
 		cursor: pointer;
-		padding: 0;
+		padding: 4px;
+		background-clip: content-box;
+		box-sizing: border-box;
 		transition: transform 0.15s ease, border-color 0.15s ease;
 	}
 	.color-dot.light-dot {
@@ -1187,10 +1327,30 @@
 		}
 		.canvas-wrapper {
 			height: 350px;
-			touch-action: pan-y;
+			touch-action: none;
 		}
 		#cad-canvas {
-			touch-action: pan-y;
+			touch-action: none;
+		}
+		.cad-model-meta-strip {
+			min-height: auto;
+			padding: 0.65em 1em;
+		}
+		.model-desc-text {
+			white-space: normal;
+			overflow: visible;
+			text-overflow: clip;
+		}
+		.cad-centrifuge-hud {
+			font-size: 0.68em;
+			padding: 0.4em 0.75em;
+			text-align: center;
+		}
+		.cad-drag-hint .hint-desktop {
+			display: none;
+		}
+		.cad-drag-hint .hint-mobile {
+			display: inline;
 		}
 		.cad-viewer-footer {
 			flex-direction: column;

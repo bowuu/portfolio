@@ -877,7 +877,6 @@
 
 	:global(html[data-theme="dark"]) .telemetry-btn {
 		background: rgba(255, 255, 255, 0.05);
-		border: 1px solid var(--border-color);
 		color: rgba(255, 255, 255, 0.85);
 	}
 
@@ -887,6 +886,19 @@
 		background: rgba(var(--accent-rgb), 0.12);
 		box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.35);
 		transform: translateY(-1px);
+	}
+
+	:global(html[data-theme="dark"]) .telemetry-btn:hover {
+		border-color: var(--accent);
+		color: #ffffff;
+		background: rgba(255, 255, 255, 0.08);
+		box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.35);
+		transform: translateY(-1px);
+	}
+
+	.telemetry-btn:active {
+		transform: translateY(0);
+		box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.3);
 	}
 
 	/* BENCHMARK BUTTON (Prominent primary action) */

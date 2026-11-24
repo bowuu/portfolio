@@ -19,7 +19,7 @@
 		</div>
 
 		<div class="card-summary-right">
-			<button id="reset-input-lab-btn" class="telemetry-btn" title="Reset all polling, reflex, and mouse button measurements">
+			<button id="reset-input-lab-btn" class="telemetry-btn" type="button" title="Reset all polling, reflex, and mouse button measurements">
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
 					<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
 					<path d="M3 3v5h5"/>
@@ -882,6 +882,19 @@
 		background: rgba(var(--accent-rgb), 0.12);
 		box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.35);
 		transform: translateY(-1px);
+	}
+
+	:global(html[data-theme="dark"]) .telemetry-btn:hover {
+		border-color: var(--accent);
+		color: #ffffff;
+		background: rgba(255, 255, 255, 0.08);
+		box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.35);
+		transform: translateY(-1px);
+	}
+
+	.telemetry-btn:active {
+		transform: translateY(0);
+		box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.3);
 	}
 
 	.benchmark-desc {

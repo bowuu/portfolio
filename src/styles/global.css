@@ -354,6 +354,58 @@ html[data-theme="dark"] .card-summary-left:hover .card-chevron-btn {
   flex-wrap: wrap;
 }
 
+/* Secondary Header Buttons (Pixel Checker, Reset Metrics, Sound, Reset Matrix) */
+.telemetry-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45em;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid var(--border-color);
+  color: rgb(var(--gray-dark));
+  padding: 0 10px;
+  height: 31px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.78em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.telemetry-btn svg {
+  flex-shrink: 0;
+}
+
+html[data-theme="dark"] .telemetry-btn {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.telemetry-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.12);
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.35);
+  transform: translateY(-1px);
+}
+
+html[data-theme="dark"] .telemetry-btn:hover {
+  border-color: var(--accent);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.35);
+  transform: translateY(-1px);
+}
+
+.telemetry-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.3);
+}
+
 .section-summary-badge {
   display: inline-flex;
   align-items: center;

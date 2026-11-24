@@ -96,7 +96,7 @@
 		max-width: none;
 	}
 	:global(html[data-theme="dark"]) .codec-spotlight-desc {
-		color: #94a3b8;
+		color: rgb(var(--gray-dark));
 	}
 
 	/* WARNING & FULLSCREEN RECOMMENDATION BANNER */
@@ -182,12 +182,12 @@
 	}
 	.warn-pill-blue {
 		background: rgba(var(--accent-rgb), 0.14);
-		color: var(--accent);
+		color: var(--accent-text);
 		border: 1px solid rgba(var(--accent-rgb), 0.4);
 	}
 	:global(html[data-theme="dark"]) .warn-pill-blue {
 		background: rgba(var(--accent-rgb), 0.20);
-		color: var(--accent);
+		color: var(--accent-text);
 		border-color: rgba(var(--accent-rgb), 0.5);
 	}
 	.codec-warning-desc {

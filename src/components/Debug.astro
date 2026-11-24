@@ -711,7 +711,7 @@
 
 	/* SUBSECTIONS (INSET PANELS) */
 	.telemetry-group {
-		background: rgba(0, 0, 0, 0.015);
+		background: var(--bg-panel);
 		border: 1px solid var(--border-color);
 		border-radius: 10px;
 		padding: 0.85em 0.95em 0.9em 0.95em;
@@ -719,7 +719,7 @@
 		transition: border-color 0.15s ease, background 0.15s ease;
 	}
 	:global(html[data-theme="dark"]) .telemetry-group {
-		background: rgba(255, 255, 255, 0.02);
+		background: var(--bg-panel);
 	}
 	.telemetry-group:hover {
 		border-color: rgba(var(--accent-rgb), 0.25);
@@ -765,12 +765,12 @@
 		transition: background 0.12s ease-out, border-color 0.12s ease-out;
 	}
 	.telemetry-item:hover {
-		background: rgba(0, 0, 0, 0.045);
+		background: var(--bg-control);
 		border-color: rgba(var(--accent-rgb), 0.38);
 		transition: none;
 	}
 	:global(html[data-theme="dark"]) .telemetry-item:hover {
-		background: rgba(255, 255, 255, 0.05);
+		background: var(--bg-control);
 		border-color: rgba(var(--accent-rgb), 0.42);
 		transition: none;
 	}
@@ -851,7 +851,6 @@
 		font-style: normal;
 		font-weight: 500 !important;
 		font-family: inherit;
-		opacity: 0.8;
 	}
 	.sr-only {
 		position: absolute;
@@ -875,8 +874,8 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.35em;
-		background: rgba(var(--accent-rgb), 0.1);
-		border: 1px solid rgba(var(--accent-rgb), 0.35);
+		background: rgba(var(--accent-rgb), 0.12);
+		border: 1px solid rgba(var(--accent-rgb), 0.42);
 		color: var(--accent-text);
 		border-radius: 999px;
 		padding: 0.08em 0.5em;

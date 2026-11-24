@@ -731,7 +731,7 @@
 		margin-bottom: 1.2em;
 	}
 	.b-tile {
-		background: rgba(0, 0, 0, 0.02);
+		background: var(--bg-panel);
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
 		padding: 0.9em 1.05em;
@@ -741,7 +741,7 @@
 		transition: border-color 0.2s ease, background 0.2s ease;
 	}
 	:global(html[data-theme="dark"]) .b-tile {
-		background: rgba(255, 255, 255, 0.02);
+		background: var(--bg-panel);
 	}
 	.b-tile-label {
 		font-size: 0.74em;
@@ -755,9 +755,9 @@
 		font-weight: 700;
 		padding: 0.15em 0.5em;
 		border-radius: 4px;
-		background: rgba(0, 0, 0, 0.05);
-		color: rgb(var(--gray));
-		border: 1px solid var(--border-color);
+		background: var(--bg-control);
+		color: rgb(var(--gray-dark));
+		border: 1px solid var(--border-strong);
 		letter-spacing: 0.02em;
 		line-height: 1.2;
 		align-self: center;
@@ -767,9 +767,9 @@
 		transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 	}
 	:global(html[data-theme="dark"]) .loss-badge {
-		background: rgba(255, 255, 255, 0.05);
-		color: #94a3b8;
-		border-color: rgba(255, 255, 255, 0.1);
+		background: var(--bg-control);
+		color: rgb(var(--gray-dark));
+		border-color: var(--border-strong);
 	}
 	.loss-badge.loss-optimal {
 		background: rgba(34, 197, 94, 0.1);
@@ -822,12 +822,12 @@
 	.progress-track {
 		width: 100%;
 		height: 5px;
-		background: rgba(0, 0, 0, 0.06);
+		background: var(--bg-well);
 		border-radius: 999px;
 		overflow: hidden;
 	}
 	:global(html[data-theme="dark"]) .progress-track {
-		background: rgba(255, 255, 255, 0.08);
+		background: var(--bg-well);
 	}
 	.progress-bar {
 		width: 0%;

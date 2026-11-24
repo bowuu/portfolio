@@ -1219,21 +1219,21 @@ ${escapeHtml(cadList)}
 					const metaTheme = document.getElementById('meta-theme-color');
 					if (sub === 'dark') {
 						document.documentElement.setAttribute('data-theme', 'dark');
-						metaTheme?.setAttribute('content', '#0c0c0e');
+						metaTheme?.setAttribute('content', '#0a0b0e');
 						appendOutput('Theme switched to: <span class="term-hl">Obsidian Dark</span>');
 					} else if (sub === 'light') {
 						document.documentElement.removeAttribute('data-theme');
-						metaTheme?.setAttribute('content', '#fafafa');
-						appendOutput('Theme switched to: <span class="term-hl">Clean Light</span>');
+						metaTheme?.setAttribute('content', '#e0e4e9');
+						appendOutput('Theme switched to: <span class="term-hl">Daylight Neutral</span>');
 					} else {
 						const current = document.documentElement.getAttribute('data-theme');
 						if (current === 'dark') {
 							document.documentElement.removeAttribute('data-theme');
-							metaTheme?.setAttribute('content', '#fafafa');
-							appendOutput('Theme toggled to: <span class="term-hl">Clean Light</span>');
+							metaTheme?.setAttribute('content', '#e0e4e9');
+							appendOutput('Theme toggled to: <span class="term-hl">Daylight Neutral</span>');
 						} else {
 							document.documentElement.setAttribute('data-theme', 'dark');
-							metaTheme?.setAttribute('content', '#0c0c0e');
+							metaTheme?.setAttribute('content', '#0a0b0e');
 							appendOutput('Theme toggled to: <span class="term-hl">Obsidian Dark</span>');
 						}
 					}

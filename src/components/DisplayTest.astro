@@ -253,8 +253,8 @@
 			}
 
 			// Main Square IC Epoxy/Ceramic Package Body
-			ctx.fillStyle = isDark ? '#1e293b' : '#ffffff';
-			ctx.strokeStyle = isDark ? '#475569' : '#94a3b8';
+			ctx.fillStyle = isDark ? '#1e293b' : '#f8fafb';
+			ctx.strokeStyle = isDark ? '#64748b' : '#475569';
 			ctx.lineWidth = Math.max(1, Math.round(2 * dpr));
 			ctx.beginPath();
 			const cornerRadius = Math.round(8 * dpr);
@@ -345,11 +345,11 @@
 			ctx.clearRect(0, 0, w, h);
 
 			// Background track
-			ctx.fillStyle = isDark ? '#09090b' : '#f8fafc';
+			ctx.fillStyle = isDark ? '#090a0d' : '#d9dee5';
 			ctx.fillRect(0, 0, w, h);
 
 			// Grid guide lines
-			ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+			ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.09)' : 'rgba(15, 23, 42, 0.11)';
 			ctx.lineWidth = 1;
 			const gridSpacing = 40 * dpr;
 			for (let gx = 0; gx < w; gx += gridSpacing) {
@@ -360,7 +360,7 @@
 			}
 
 			// Center tracking line
-			ctx.strokeStyle = isDark ? 'rgba(234, 88, 12, 0.25)' : 'rgba(234, 88, 12, 0.2)';
+			ctx.strokeStyle = isDark ? 'rgba(234, 88, 12, 0.35)' : 'rgba(217, 72, 15, 0.32)';
 			ctx.beginPath();
 			ctx.moveTo(0, h / 2);
 			ctx.lineTo(w, h / 2);
@@ -800,22 +800,22 @@
 	.segmented-control {
 		display: inline-flex;
 		align-items: center;
-		background: rgba(148, 163, 184, 0.12);
+		background: var(--bg-well);
 		border-radius: 8px;
 		padding: 2px;
-		border: 1px solid var(--border-color);
+		border: 1px solid var(--border-strong);
 		height: 31px;
 		box-sizing: border-box;
 	}
 
 	:global(html[data-theme="dark"]) .segmented-control {
-		background: rgba(255, 255, 255, 0.05);
+		background: var(--bg-well);
 	}
 
 	.seg-btn {
 		background: transparent;
 		border: none;
-		color: rgb(var(--gray));
+		color: rgb(var(--gray-dark));
 		font-family: inherit;
 		font-size: 0.78em;
 		font-weight: 700;
@@ -1008,7 +1008,7 @@
 		position: relative;
 		width: 100%;
 		border-radius: 10px;
-		background: #f8fafc;
+		background: var(--bg-well);
 		background-clip: padding-box;
 		overflow: hidden;
 		margin-bottom: 1.2em;
@@ -1016,14 +1016,14 @@
 	}
 
 	:global(html[data-theme="dark"]) .motion-viewport-wrap {
-		background: #09090b;
+		background: var(--bg-well);
 	}
 
 	.motion-viewport-wrap::after {
 		content: '';
 		position: absolute;
 		inset: 0;
-		border: 1px solid var(--border-color);
+		border: 1px solid var(--border-strong);
 		border-radius: 10px;
 		pointer-events: none;
 		z-index: 2;
@@ -1035,12 +1035,12 @@
 		height: 150px;
 		user-select: none;
 		-webkit-user-select: none;
-		background-color: #f8fafc;
+		background-color: var(--bg-well);
 		border-radius: 10px;
 	}
 
 	:global(html[data-theme="dark"]) .motion-canvas {
-		background-color: #09090b;
+		background-color: var(--bg-well);
 	}
 
 	/* HUD TILES */
@@ -1077,7 +1077,7 @@
 	}
 
 	.hud-item {
-		background: rgba(148, 163, 184, 0.05);
+		background: var(--bg-panel);
 		border: 1px solid var(--border-color);
 		border-radius: 10px;
 		padding: 0.85em 1em;
@@ -1088,7 +1088,7 @@
 	}
 
 	:global(html[data-theme="dark"]) .hud-item {
-		background: rgba(255, 255, 255, 0.02);
+		background: var(--bg-panel);
 	}
 
 	.hud-label {

@@ -1305,11 +1305,11 @@
 			const cy = h / 2;
 
 			heroCtx.clearRect(0, 0, w, h);
-			heroCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
+			heroCtx.fillStyle = isDark ? '#090a0d' : '#d9dee5';
 			heroCtx.fillRect(0, 0, w, h);
 
 			// Oscilloscope Grid Divisions
-			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)';
+			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.09)' : 'rgba(15, 23, 42, 0.11)';
 			heroCtx.lineWidth = 1;
 
 			// Horizontal division lines (±1.0, ±0.5, 0 baseline)
@@ -1333,7 +1333,7 @@
 			}
 
 			// Center baseline (0V reference)
-			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.18)';
+			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.18)' : 'rgba(15, 23, 42, 0.22)';
 			heroCtx.beginPath();
 			heroCtx.moveTo(0, cy);
 			heroCtx.lineTo(w, cy);
@@ -1496,7 +1496,7 @@
 			const plotH = bottomY - topPad;
 
 			heroCtx.clearRect(0, 0, w, h);
-			heroCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
+			heroCtx.fillStyle = isDark ? '#090a0d' : '#d9dee5';
 			heroCtx.fillRect(0, 0, w, h);
 
 			const minFreq = 20;
@@ -1511,7 +1511,7 @@
 			};
 
 			// Horizontal divider above bottom gutter
-			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)';
+			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.09)' : 'rgba(15, 23, 42, 0.11)';
 			heroCtx.lineWidth = 1;
 			heroCtx.beginPath();
 			heroCtx.moveTo(0, bottomY);
@@ -1519,7 +1519,7 @@
 			heroCtx.stroke();
 
 			// Landmark grid lines: 100 Hz, 1 kHz, 10 kHz
-			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.1)';
+			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(15, 23, 42, 0.14)';
 			heroCtx.lineWidth = 1;
 			heroCtx.setLineDash([2, 4]);
 			[100, 1000, 10000].forEach((hz) => {
@@ -1534,7 +1534,7 @@
 			// Frequency labels matching Spectrogram (20 Hz, 100 Hz, 1 kHz, 10 kHz, 20 kHz)
 			const fontSize = Math.round(9.5 * dpr);
 			heroCtx.font = `${fontSize}px monospace`;
-			heroCtx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.55)';
+			heroCtx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.68)' : 'rgba(15, 23, 42, 0.74)';
 
 			heroCtx.textAlign = 'left';
 			heroCtx.fillText('20 Hz', 6 * dpr, labelY);
@@ -1548,7 +1548,7 @@
 			heroCtx.fillText('20 kHz', w - 6 * dpr, labelY);
 
 			// Horizontal dB guide lines
-			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.05)';
+			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.09)';
 			[0.25, 0.5, 0.75].forEach(ratio => {
 				const y = bottomY - ratio * plotH;
 				heroCtx.beginPath();
@@ -1669,7 +1669,7 @@
 			if (currentThemeIsDark !== isDark) {
 				currentThemeIsDark = isDark;
 				if (specHistoryCtx && specHistoryCanvas) {
-					specHistoryCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
+					specHistoryCtx.fillStyle = isDark ? '#090a0d' : '#d9dee5';
 					specHistoryCtx.fillRect(0, 0, specHistoryCanvas.width, specHistoryCanvas.height);
 				}
 			}
@@ -1680,7 +1680,7 @@
 				specHistoryCanvas.height = waterfallH;
 				specHistoryCtx = specHistoryCanvas.getContext('2d');
 				if (specHistoryCtx) {
-					specHistoryCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
+					specHistoryCtx.fillStyle = isDark ? '#090a0d' : '#d9dee5';
 					specHistoryCtx.fillRect(0, 0, w, waterfallH);
 				}
 			}
@@ -1706,7 +1706,7 @@
 				);
 
 				// Blank new top row
-				specHistoryCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
+				specHistoryCtx.fillStyle = isDark ? '#090a0d' : '#d9dee5';
 				specHistoryCtx.fillRect(0, 0, w, scrollSpeed);
 
 				if (fftAnalyser && audioCtx && spectrumDecayFactor > 0) {
@@ -1772,7 +1772,7 @@
 
 			// Clear and fill canvas background
 			heroCtx.clearRect(0, 0, w, h);
-			heroCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
+			heroCtx.fillStyle = isDark ? '#090a0d' : '#d9dee5';
 			heroCtx.fillRect(0, 0, w, h);
 
 			// Blit waterfall history
@@ -1789,7 +1789,7 @@
 			};
 
 			// Horizontal divider above bottom gutter
-			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)';
+			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.09)' : 'rgba(15, 23, 42, 0.11)';
 			heroCtx.lineWidth = 1;
 			heroCtx.beginPath();
 			heroCtx.moveTo(0, bottomY);
@@ -1797,7 +1797,7 @@
 			heroCtx.stroke();
 
 			// Vertical grid lines (100 Hz, 1 kHz, 10 kHz)
-			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.1)';
+			heroCtx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(15, 23, 42, 0.14)';
 			heroCtx.lineWidth = 1;
 			heroCtx.setLineDash([2, 4]);
 			[100, 1000, 10000].forEach((hz) => {
@@ -1812,7 +1812,7 @@
 			// Frequency labels matching Frequency Generator (20 Hz, 100 Hz, 1 kHz, 10 kHz, 20 kHz)
 			const fontSize = Math.round(9.5 * dpr);
 			heroCtx.font = `${fontSize}px monospace`;
-			heroCtx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.55)';
+			heroCtx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.68)' : 'rgba(15, 23, 42, 0.74)';
 
 			heroCtx.textAlign = 'left';
 			heroCtx.fillText('20 Hz', 6 * dpr, labelY);
@@ -1850,7 +1850,7 @@
 			const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
 			meterCtx.clearRect(0, 0, w, h);
-			meterCtx.fillStyle = isDark ? '#09090b' : '#f8fafc';
+			meterCtx.fillStyle = isDark ? '#090a0d' : '#d9dee5';
 			meterCtx.fillRect(0, 0, w, h);
 
 			const now = performance.now();
@@ -2240,8 +2240,8 @@
 		display: flex;
 		align-items: center;
 		gap: 0.45em;
-		background: rgba(148, 163, 184, 0.12);
-		border: 1px solid var(--border-color);
+		background: var(--bg-well);
+		border: 1px solid var(--border-strong);
 		border-radius: 8px;
 		padding: 0 0.65em;
 		height: 31px;
@@ -2250,7 +2250,7 @@
 	}
 
 	:global(html[data-theme="dark"]) .volume-control-wrap {
-		background: rgba(255, 255, 255, 0.05);
+		background: var(--bg-well);
 	}
 
 	.vol-btn {
@@ -2353,7 +2353,7 @@
 	}
 
 	.audio-col {
-		background: #f8fafc;
+		background: var(--bg-panel);
 		border: 1px solid var(--border-color);
 		border-radius: 10px;
 		padding: 1.1em;
@@ -2365,7 +2365,7 @@
 	}
 
 	:global(html[data-theme="dark"]) .audio-col {
-		background: #151518;
+		background: var(--bg-panel);
 	}
 
 	.col-head {
@@ -2398,10 +2398,10 @@
 	.segmented-control {
 		display: inline-flex;
 		align-items: center;
-		background: #eef2f6;
+		background: var(--bg-well);
 		border-radius: 8px;
 		padding: 2px;
-		border: 1px solid var(--border-color);
+		border: 1px solid var(--border-strong);
 		height: 31px;
 		box-sizing: border-box;
 		background-clip: padding-box;
@@ -2409,13 +2409,13 @@
 	}
 
 	:global(html[data-theme="dark"]) .segmented-control {
-		background: #1f1f23;
+		background: var(--bg-well);
 	}
 
 	.seg-btn {
 		background: transparent;
 		border: none;
-		color: rgb(var(--gray));
+		color: rgb(var(--gray-dark));
 		font-family: inherit;
 		font-size: 0.78em;
 		font-weight: 700;
@@ -2466,20 +2466,20 @@
 		min-height: 280px;
 		border-radius: 8px;
 		overflow: hidden;
-		background: #f8fafc;
+		background: var(--bg-well);
 		background-clip: padding-box;
 		box-sizing: border-box;
 	}
 
 	:global(html[data-theme="dark"]) .hero-canvas-box {
-		background: #09090b;
+		background: var(--bg-well);
 	}
 
 	.hero-canvas-box::after {
 		content: '';
 		position: absolute;
 		inset: 0;
-		border: 1px solid var(--border-color);
+		border: 1px solid var(--border-strong);
 		border-radius: 8px;
 		pointer-events: none;
 		z-index: 2;
@@ -2498,11 +2498,11 @@
 		width: 100%;
 		height: 100%;
 		border-radius: 8px;
-		background-color: #f8fafc;
+		background-color: var(--bg-well);
 	}
 
 	:global(html[data-theme="dark"]) #audio-hero-canvas {
-		background-color: #09090b;
+		background-color: var(--bg-well);
 	}
 
 	/* HORIZONTAL STEREO PEAK / VU METER BOX */
@@ -2512,21 +2512,21 @@
 		height: 58px;
 		border-radius: 8px;
 		overflow: hidden;
-		background: #f8fafc;
+		background: var(--bg-well);
 		background-clip: padding-box;
 		box-sizing: border-box;
 		flex-shrink: 0;
 	}
 
 	:global(html[data-theme="dark"]) .stereo-meter-box {
-		background: #09090b;
+		background: var(--bg-well);
 	}
 
 	.stereo-meter-box::after {
 		content: '';
 		position: absolute;
 		inset: 0;
-		border: 1px solid var(--border-color);
+		border: 1px solid var(--border-strong);
 		border-radius: 8px;
 		pointer-events: none;
 		z-index: 2;
@@ -2537,11 +2537,11 @@
 		width: 100%;
 		height: 100%;
 		border-radius: 8px;
-		background-color: #f8fafc;
+		background-color: var(--bg-well);
 	}
 
 	:global(html[data-theme="dark"]) #audio-meter-canvas {
-		background-color: #09090b;
+		background-color: var(--bg-well);
 	}
 
 	/* CARD HEADER HUD BADGE */
@@ -2553,11 +2553,11 @@
 	.hud-badge-wrap {
 		font-size: clamp(0.72em, 2vw, 0.76em);
 		font-weight: 600;
-		color: #09090b;
-		background: rgba(0, 0, 0, 0.05);
+		color: rgb(var(--black));
+		background: var(--bg-panel);
 		backdrop-filter: blur(6px);
 		-webkit-backdrop-filter: blur(6px);
-		border: 1px solid rgba(0, 0, 0, 0.12);
+		border: 1px solid var(--border-strong);
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 		padding: 3px 9px;
 		border-radius: 6px;
@@ -2570,16 +2570,16 @@
 	}
 
 	:global(html[data-theme="dark"]) .hud-badge-wrap {
-		background: rgba(255, 255, 255, 0.06);
-		border: 1px solid rgba(255, 255, 255, 0.12);
-		color: rgba(255, 255, 255, 0.92);
+		background: var(--bg-panel);
+		border: 1px solid var(--border-strong);
+		color: rgb(var(--black));
 		box-shadow: none;
 	}
 
 	.hud-main-text {
 		font-size: 1.05em;
 		font-weight: 800;
-		color: #09090b;
+		color: rgb(var(--black));
 		line-height: 1;
 		white-space: nowrap;
 	}
@@ -2589,17 +2589,17 @@
 	}
 
 	.hud-sep {
-		color: rgba(0, 0, 0, 0.35);
+		color: rgb(var(--gray));
 		font-size: 0.85em;
 	}
 
 	:global(html[data-theme="dark"]) .hud-sep {
-		color: rgba(255, 255, 255, 0.35);
+		color: rgb(var(--gray));
 	}
 
 	.hud-sub-text {
 		font-size: 0.9em;
-		color: var(--accent);
+		color: var(--accent-text);
 		font-weight: 700;
 		white-space: nowrap;
 		overflow: hidden;
@@ -2731,7 +2731,7 @@
 
 
 	.control-group {
-		background: rgba(148, 163, 184, 0.06);
+		background: var(--bg-card);
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
 		padding: 0.85em;
@@ -2741,7 +2741,7 @@
 	}
 
 	:global(html[data-theme="dark"]) .control-group {
-		background: rgba(255, 255, 255, 0.02);
+		background: var(--bg-card);
 	}
 
 	.group-header {
@@ -2809,8 +2809,8 @@
 		display: flex;
 		align-items: center;
 		gap: 0.6em;
-		background: var(--bg-card);
-		border: 1px solid var(--border-color);
+		background: var(--bg-control);
+		border: 1px solid var(--border-strong);
 		border-radius: 7px;
 		padding: 0.65em 0.75em;
 		min-height: 44px;
@@ -2821,7 +2821,7 @@
 	}
 
 	:global(html[data-theme="dark"]) .tone-btn {
-		background: #18181b;
+		background: var(--bg-control);
 	}
 
 	.tone-btn:hover {
@@ -2855,26 +2855,46 @@
 	}
 
 	.tone-pill.cyan {
+		background: rgba(2, 132, 199, 0.16) !important;
+		color: #0369a1 !important;
+	}
+	:global(html[data-theme="dark"]) .tone-pill.cyan {
 		background: rgba(56, 189, 248, 0.2) !important;
 		color: #38bdf8 !important;
 	}
 
 	.tone-pill.amber {
+		background: rgba(217, 119, 6, 0.16) !important;
+		color: #b45309 !important;
+	}
+	:global(html[data-theme="dark"]) .tone-pill.amber {
 		background: rgba(245, 158, 11, 0.2) !important;
 		color: #f59e0b !important;
 	}
 
 	.tone-pill.green {
+		background: rgba(22, 163, 74, 0.16) !important;
+		color: #15803d !important;
+	}
+	:global(html[data-theme="dark"]) .tone-pill.green {
 		background: rgba(34, 197, 94, 0.2) !important;
 		color: #22c55e !important;
 	}
 
 	.tone-pill.warn {
+		background: rgba(220, 38, 38, 0.16) !important;
+		color: #dc2626 !important;
+	}
+	:global(html[data-theme="dark"]) .tone-pill.warn {
 		background: rgba(239, 68, 68, 0.2) !important;
 		color: #ef4444 !important;
 	}
 
 	.tone-pill.pink {
+		background: rgba(219, 39, 119, 0.16) !important;
+		color: #be185d !important;
+	}
+	:global(html[data-theme="dark"]) .tone-pill.pink {
 		background: rgba(236, 72, 153, 0.2) !important;
 		color: #ec4899 !important;
 	}
@@ -2982,13 +3002,13 @@
 	.slider-hint {
 		font-size: 0.74em;
 		font-weight: 600;
-		color: rgb(var(--gray));
+		color: rgb(var(--gray-dark));
 	}
 
 	.slider-hz-val {
 		font-size: 0.85em;
 		font-weight: 800;
-		color: var(--accent);
+		color: var(--accent-text);
 	}
 
 	.slider-input-wrap {
@@ -3002,8 +3022,8 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.45em;
-		background: var(--bg-card);
-		border: 1px solid var(--border-color);
+		background: var(--bg-control);
+		border: 1px solid var(--border-strong);
 		color: rgb(var(--black));
 		border-radius: 6px;
 		padding: 0.35em 0.75em;

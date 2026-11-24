@@ -377,7 +377,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		display: flex;
 		flex-direction: column;
 		gap: 0.35em;
-		background: rgba(var(--gray-light), 0.25);
+		background: var(--bg-panel);
 		padding: 1.1em 1.25em;
 		border-radius: 8px;
 		border: 1px solid var(--border-color);
@@ -406,7 +406,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 	}
 	.project-box {
 		padding: clamp(1em, 2vw, 1.5em);
-		background: var(--bg-card);
+		background: var(--bg-panel);
 		border: 1px solid var(--border-color);
 		border-radius: 10px;
 		width: 100%;
@@ -436,19 +436,20 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.03em;
-		background: rgba(var(--gray-light), 0.8);
+		background: var(--bg-control);
+		border: 1px solid var(--border-color);
 		color: rgb(var(--gray-dark));
 		padding: 0.2em 0.55em;
 		border-radius: 4px;
 	}
 	:global(html[data-theme="dark"]) .proj-badge {
-		background: #27272a;
-		color: #d4d4d8;
+		background: var(--bg-control);
+		color: rgb(var(--gray-dark));
 	}
 	.project-meta-strip {
 		margin-top: 0.6em;
 		padding: 0.6em 0.9em;
-		background: rgba(var(--gray-light), 0.35);
+		background: var(--bg-control);
 		border-radius: 6px;
 		border: 1px solid var(--border-color);
 		font-size: 0.85em;
@@ -471,9 +472,9 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		font-weight: 600;
 		padding: 0.2em 0.55em;
 		border-radius: 4px;
-		background: rgba(var(--accent-rgb), 0.08);
+		background: rgba(var(--accent-rgb), 0.12);
 		color: var(--accent-text);
-		border: 1px solid rgba(var(--accent-rgb), 0.18);
+		border: 1px solid rgba(var(--accent-rgb), 0.28);
 	}
 
 	.sub-link {

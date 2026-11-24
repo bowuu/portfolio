@@ -161,9 +161,9 @@ const commitUrl = commitHash ? `https://github.com/bowuu/portfolio/commit/${comm
 	footer {
 		padding: clamp(2rem, 4vw, 3rem) clamp(1rem, 4vw, 2rem) 3.5rem clamp(1rem, 4vw, 2rem);
 		background: var(--bg-page);
-		color: rgb(var(--gray));
+		color: rgb(var(--gray-dark));
 		text-align: center;
-		border-top: 1px solid var(--border-color);
+		border-top: 1px solid var(--border-strong);
 		width: 100%;
 		transition: background-color 0.2s ease, border-color 0.2s ease;
 	}
@@ -176,7 +176,7 @@ const commitUrl = commitHash ? `https://github.com/bowuu/portfolio/commit/${comm
 		margin: 0;
 		font-size: 0.86em;
 		font-weight: 400;
-		color: rgb(var(--gray));
+		color: rgb(var(--gray-dark));
 		opacity: 0.95;
 		letter-spacing: 0.01em;
 	}
@@ -209,7 +209,7 @@ const commitUrl = commitHash ? `https://github.com/bowuu/portfolio/commit/${comm
 		margin-left: 0.25em;
 	}
 	.commit-link:hover {
-		color: var(--accent);
+		color: var(--accent-text);
 		opacity: 1;
 		text-decoration: underline;
 	}
@@ -217,9 +217,9 @@ const commitUrl = commitHash ? `https://github.com/bowuu/portfolio/commit/${comm
 		display: inline-flex;
 		align-items: center;
 		gap: 0.35em;
-		background: transparent;
-		border: 1px solid var(--border-color);
-		color: rgb(var(--gray));
+		background: var(--bg-control);
+		border: 1px solid var(--border-strong);
+		color: rgb(var(--gray-dark));
 		border-radius: 12px;
 		padding: 0.15em 0.55em;
 		font-size: 0.88em;
@@ -229,8 +229,8 @@ const commitUrl = commitHash ? `https://github.com/bowuu/portfolio/commit/${comm
 	}
 	.footer-extras-btn:hover {
 		border-color: var(--accent);
-		color: var(--accent);
-		background: rgba(var(--accent-rgb), 0.08);
+		color: var(--accent-text);
+		background: rgba(var(--accent-rgb), 0.12);
 	}
 	.extras-sparkle-icon {
 		color: var(--accent);

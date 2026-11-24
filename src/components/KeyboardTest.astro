@@ -1027,14 +1027,14 @@
 	.metric-mini {
 		display: flex;
 		flex-direction: column;
-		background: rgba(0, 0, 0, 0.02);
+		background: var(--bg-panel);
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
 		padding: 0.75em 0.9em;
 		transition: border-color 0.15s ease;
 	}
 	:global(html[data-theme="dark"]) .metric-mini {
-		background: rgba(255, 255, 255, 0.02);
+		background: var(--bg-panel);
 	}
 	.metric-mini:hover {
 		border-color: rgba(234, 88, 12, 0.3);
@@ -1129,8 +1129,8 @@
 	/* KEYBOARD CHASSIS (SOLID, CONTRASTY HARDWARE BASE) */
 	.kb-chassis {
 		position: relative;
-		background: #e2e8f0;
-		border: 1px solid #cbd5e1;
+		background: #cbd5e1;
+		border: 1px solid #94a3b8;
 		border-radius: 10px;
 		padding: 1.1em 1.2em 1.2em 1.2em;
 		box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -1427,8 +1427,8 @@
 	}
 	.mobile-type-field {
 		width: 100%;
-		background: #ffffff;
-		border: 1px solid #cbd5e1;
+		background: var(--bg-control);
+		border: 1px solid var(--border-strong);
 		border-radius: 6px;
 		padding: 0.5em 0.8em;
 		font-size: 0.78em;
@@ -1438,9 +1438,9 @@
 		box-sizing: border-box;
 	}
 	:global(html[data-theme="dark"]) .mobile-type-field {
-		background: #141720;
-		border-color: rgba(255, 255, 255, 0.1);
-		color: #e2e8f0;
+		background: var(--bg-control);
+		border-color: var(--border-strong);
+		color: rgb(var(--black));
 	}
 	.mobile-type-field:focus {
 		border-color: var(--accent);
@@ -1470,8 +1470,8 @@
 		align-items: center;
 		gap: 1.1em;
 		padding: 0.55em 0.85em;
-		background: #f8fafc;
-		border: 1px solid #cbd5e1;
+		background: var(--bg-well);
+		border: 1px solid var(--border-strong);
 		border-radius: 6px;
 		font-size: 0.72em;
 		overflow-x: auto;
@@ -1485,8 +1485,8 @@
 		height: 0 !important;
 	}
 	:global(html[data-theme="dark"]) .event-inspector {
-		background: #08090d;
-		border-color: rgba(255, 255, 255, 0.08);
+		background: var(--bg-well);
+		border-color: var(--border-strong);
 	}
 
 	.event-item {
@@ -1501,7 +1501,7 @@
 	}
 
 	.e-val {
-		color: var(--accent);
+		color: var(--accent-text);
 		font-weight: 700;
 	}
 </style>

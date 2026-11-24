@@ -1302,8 +1302,9 @@ export function initCodecStudio(options: CodecStudioOptions = {}): void {
 
 		codecModal.classList.remove('is-maximized');
 		closeModalFocus(codecModal);
+		codecModal.classList.add('hidden');
 		updateMaximizeUi(false);
-		document.body.style.overflow = '';
+		document.documentElement.style.overflow = '';
 		forceHideLoupe();
 		window.__popModalHistory?.('codec-modal');
 	}
@@ -1805,8 +1806,9 @@ export function initCodecStudio(options: CodecStudioOptions = {}): void {
 			if (srcVideo.readyState === 0) srcVideo.load();
 		}
 		if (defaultPipeline) setPipeline(defaultPipeline);
+		codecModal?.classList.remove('hidden');
 		openModalFocus(codecModal, runBtn || codecCloseBtn);
-		document.body.style.overflow = 'hidden';
+		document.documentElement.style.overflow = 'hidden';
 		setScene(selectedScene);
 		probeCodecCapabilities();
 		updateStatusHint();

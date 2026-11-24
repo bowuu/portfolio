@@ -369,8 +369,9 @@ export function initTelemetry(): void {
 			loader.style.display = isMapIframeLoaded ? 'none' : 'flex';
 		}
 
+		modal.classList.remove('hidden');
 		openModalFocus(modal, closeBtn);
-		document.body.style.overflow = 'hidden';
+		document.documentElement.style.overflow = 'hidden';
 		window.__pushModalHistory?.('map-modal', closeMapApplet);
 	}
 
@@ -378,7 +379,8 @@ export function initTelemetry(): void {
 		const modal = document.getElementById('map-applet-modal');
 		if (!modal || modal.classList.contains('hidden')) return;
 		closeModalFocus(modal);
-		document.body.style.overflow = '';
+		modal.classList.add('hidden');
+		document.documentElement.style.overflow = '';
 		window.__popModalHistory?.('map-modal');
 	}
 
@@ -406,7 +408,8 @@ export function initTelemetry(): void {
 	function closeWebgpuModal() {
 		if (!webgpuModal || webgpuModal.classList.contains('hidden')) return;
 		closeModalFocus(webgpuModal);
-		document.body.style.overflow = '';
+		webgpuModal.classList.add('hidden');
+		document.documentElement.style.overflow = '';
 		window.__popModalHistory?.('webgpu-modal');
 	}
 
@@ -513,9 +516,10 @@ export function initTelemetry(): void {
 	function openWebgpuInspector() {
 		renderWebgpuSpecs();
 		if (webgpuModal) {
+			webgpuModal.classList.remove('hidden');
 			openModalFocus(webgpuModal, webgpuCloseBtn);
 		}
-		document.body.style.overflow = 'hidden';
+		document.documentElement.style.overflow = 'hidden';
 		window.__pushModalHistory?.('webgpu-modal', closeWebgpuModal);
 	}
 

@@ -5,6 +5,7 @@ const FOCUSABLE_SELECTOR =
 	'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 const openerStack: Array<{ modal: HTMLElement; opener: HTMLElement | null }> = [];
+const hiddenClassModals = new WeakSet<HTMLElement>();
 let focusTrapBound = false;
 
 export function escapeHtml(value: unknown): string {
@@ -125,6 +126,10 @@ export function openModalFocus(modalEl: HTMLElement | null, initialFocus?: HTMLE
 	}
 	openerStack.push({ modal: modalEl, opener: active && !modalEl.contains(active) ? active : null });
 
+	if (modalEl.classList.contains('hidden')) {
+		hiddenClassModals.add(modalEl);
+		modalEl.classList.remove('hidden');
+	}
 	modalEl.removeAttribute('inert');
 	modalEl.setAttribute('aria-hidden', 'false');
 	if (!modalEl.hasAttribute('tabindex')) {
@@ -144,6 +149,9 @@ export function openModalFocus(modalEl: HTMLElement | null, initialFocus?: HTMLE
 
 export function closeModalFocus(modalEl: HTMLElement | null): void {
 	if (!modalEl) return;
+	if (hiddenClassModals.has(modalEl)) {
+		modalEl.classList.add('hidden');
+	}
 	modalEl.setAttribute('aria-hidden', 'true');
 	modalEl.setAttribute('inert', '');
 

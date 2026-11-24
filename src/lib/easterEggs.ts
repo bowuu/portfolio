@@ -763,6 +763,7 @@ function initWaferInspector() {
 
 	function openWaferModal() {
 		window.__closeAllEasterEggs?.();
+		modal!.classList.remove('hidden');
 		modal!.style.display = 'flex';
 		openModalFocus(modal, closeBtn);
 		window.__pushModalHistory?.('wafer-modal', closeWaferModal);
@@ -777,6 +778,7 @@ function initWaferInspector() {
 	function closeWaferModal() {
 		if (!modal || modal.classList.contains('hidden')) return;
 		closeModalFocus(modal);
+		modal.classList.add('hidden');
 		modal.style.display = 'none';
 		window.__updateDrawerActiveUI?.();
 		window.__popModalHistory?.('wafer-modal');
@@ -935,10 +937,10 @@ export function initAllEasterEggs(): void {
 		if (restoreFocus) {
 			closeModalFocus(extrasModal);
 		} else {
-			extrasModal.classList.add('hidden');
 			extrasModal.setAttribute('aria-hidden', 'true');
 			extrasModal.setAttribute('inert', '');
 		}
+		extrasModal.classList.add('hidden');
 		extrasModal.style.display = 'none';
 		window.__popModalHistory?.('lab-extras-modal');
 	}
@@ -2728,6 +2730,7 @@ export function initAllEasterEggs(): void {
 		closeAllActiveModes();
 		isMultiplier = true;
 		if (multiplierModal) {
+			multiplierModal.classList.remove('hidden');
 			multiplierModal.style.display = 'flex';
 			openModalFocus(multiplierModal, multCloseBtn);
 		}
@@ -2743,6 +2746,7 @@ export function initAllEasterEggs(): void {
 		pinnedMultiplierTargetId = null;
 		if (multiplierModal) {
 			closeModalFocus(multiplierModal);
+			multiplierModal.classList.add('hidden');
 			multiplierModal.style.display = 'none';
 		}
 		updateDrawerActiveUI();
@@ -2768,6 +2772,7 @@ export function initAllEasterEggs(): void {
 		if (!extrasModal) return;
 		if (extrasModal.classList.contains('hidden')) {
 			updateDrawerActiveUI();
+			extrasModal.classList.remove('hidden');
 			extrasModal.style.display = 'block';
 			openModalFocus(extrasModal, document.getElementById('trigger-sphere-btn') || extrasCloseBtn);
 			window.__pushModalHistory?.('lab-extras-modal', closeLabExtras);

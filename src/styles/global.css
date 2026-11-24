@@ -226,20 +226,6 @@ html {
   overflow: hidden;
 }
 
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  opacity: 0.7;
-  pointer-events: none;
-  z-index: 1;
-  transition: opacity 0.15s ease;
-}
-
 .card-title {
   display: flex;
   align-items: center;
@@ -300,11 +286,6 @@ details.card.section-accordion:hover,
 .card:hover {
   border-color: rgba(var(--accent-rgb), 0.38);
   box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.08), var(--box-shadow);
-}
-
-details.card.section-accordion:hover::before,
-.card:hover::before {
-  opacity: 1;
 }
 
 details.card.section-accordion:not([open]):hover .card-chevron-btn,

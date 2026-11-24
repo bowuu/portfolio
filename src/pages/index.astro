@@ -200,7 +200,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 			import '../lib/modalHistory';
 
 			function setupCardAccordions() {
-				document.querySelectorAll('.card-header-summary button, .card-header-summary a, .card-header-summary input, .card-header-summary select, .card-header-summary .segmented-control').forEach((el) => {
+				document.querySelectorAll('.card-header-summary button, .card-header-summary a, .card-header-summary input, .card-header-summary select, .card-header-summary .segmented-control, .card-header-summary .header-volume-wrapper').forEach((el) => {
 					el.addEventListener('click', (e) => {
 						if (!el.classList.contains('card-chevron-btn')) {
 							if (el.id === 'launch-codec-spotlight-btn' || el.closest('#launch-codec-spotlight-btn')) {

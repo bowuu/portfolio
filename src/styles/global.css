@@ -248,6 +248,7 @@ html {
    GLOBAL CARD ACCORDION SYSTEM (All Major Sections)
    ========================================================================== */
 details.card.section-accordion {
+  padding: 0;
   transition: all 0.2s ease;
 }
 
@@ -259,10 +260,12 @@ details.card.section-accordion > summary.card-header-summary {
   align-items: center;
   justify-content: space-between;
   gap: 0.75em;
-  padding-bottom: 0.75em;
-  margin-bottom: 1.2em;
+  padding: clamp(1.1em, 2.5vw, 1.4em) clamp(1.2em, 3vw, 2em);
+  margin: 0;
   border-bottom: 1.5px solid var(--border-color);
   flex-wrap: wrap;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 details.card.section-accordion > summary::-webkit-details-marker {
@@ -270,14 +273,11 @@ details.card.section-accordion > summary::-webkit-details-marker {
 }
 
 details.card.section-accordion:not([open]) > summary.card-header-summary {
-  padding-bottom: 0;
-  margin-bottom: 0;
+  padding: clamp(0.9em, 2vw, 1.2em) clamp(1.2em, 3vw, 2em);
   border-bottom: none;
 }
 
 details.card.section-accordion:not([open]) {
-  padding-top: clamp(0.9em, 2vw, 1.2em);
-  padding-bottom: clamp(0.9em, 2vw, 1.2em);
   cursor: pointer;
 }
 
@@ -288,6 +288,7 @@ details.card.section-accordion:hover,
   box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.08), var(--box-shadow);
 }
 
+details.card.section-accordion > summary.card-header-summary:hover .card-chevron-btn,
 details.card.section-accordion:not([open]):hover .card-chevron-btn,
 .card-summary-left:hover .card-chevron-btn {
   color: var(--accent);
@@ -301,6 +302,7 @@ html[data-theme="dark"] .card:hover {
   box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.12), var(--box-shadow);
 }
 
+html[data-theme="dark"] details.card.section-accordion > summary.card-header-summary:hover .card-chevron-btn,
 html[data-theme="dark"] details.card.section-accordion:not([open]):hover .card-chevron-btn,
 html[data-theme="dark"] .card-summary-left:hover .card-chevron-btn {
   color: var(--accent);
@@ -442,6 +444,7 @@ details.card.section-accordion:not([open]) .card-chevron-btn svg {
 }
 
 .section-content {
+  padding: 1.2em clamp(1.2em, 3vw, 2em) clamp(1.2em, 3vw, 2em) clamp(1.2em, 3vw, 2em);
   animation: sectionExpand 0.2s ease-out;
 }
 

@@ -726,13 +726,13 @@ export function initCodecStudio(options: CodecStudioOptions = {}): void {
 	}
 
 	function handleFrameClick(e: MouseEvent, wrap: HTMLElement) {
-		const wrapRect = wrap.getBoundingClientRect();
-		const normX = Math.max(0, Math.min(1, (e.clientX - wrapRect.left) / wrapRect.width));
-		const normY = Math.max(0, Math.min(1, (e.clientY - wrapRect.top) / wrapRect.height));
-		if (isLoupePinned && Math.hypot(normX - pinnedNormX, normY - pinnedNormY) < 0.05) {
+		if (isLoupePinned) {
 			setLoupePinned(false);
 			return;
 		}
+		const wrapRect = wrap.getBoundingClientRect();
+		const normX = Math.max(0, Math.min(1, (e.clientX - wrapRect.left) / wrapRect.width));
+		const normY = Math.max(0, Math.min(1, (e.clientY - wrapRect.top) / wrapRect.height));
 		setLoupePinned(true, normX, normY);
 	}
 

@@ -475,7 +475,8 @@ export function initCodecStudio(options: CodecStudioOptions = {}): void {
 
 	function toggleMaximize() {
 		if (!codecModal) return;
-		const target = !isMaximized;
+		const currentlyMaximized = !!document.fullscreenElement || codecModal.classList.contains('is-maximized');
+		const target = !currentlyMaximized;
 		if (target) {
 			if (codecModal.requestFullscreen) {
 				codecModal.requestFullscreen().catch(() => updateMaximizeUi(true));
@@ -2384,9 +2385,7 @@ export function initCodecStudio(options: CodecStudioOptions = {}): void {
 			const modal = document.getElementById('codec-applet-modal');
 			if (!modal) return;
 			const inFs = !!document.fullscreenElement;
-			modal.classList.toggle('is-maximized', inFs);
-			document.getElementById('codec-icon-maximize')?.classList.toggle('hidden', inFs);
-			document.getElementById('codec-icon-restore')?.classList.toggle('hidden', !inFs);
+			updateMaximizeUi(inFs);
 		});
 
 		document.addEventListener('click', (e) => {

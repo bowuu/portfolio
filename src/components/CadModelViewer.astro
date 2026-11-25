@@ -417,7 +417,7 @@ const defaultModel = manifest[0];
 			let activeModelMinY = -18;
 			let activeModelMaxY = 10;
 			let activeModelHeightMm = 76;
-			let activeModelVolumeCm3 = 513;
+			let activePlasticVolumeCm3 = 34;
 			let activeTotalLayers = 380;
 			let slicerActive = false;
 
@@ -446,9 +446,9 @@ const defaultModel = manifest[0];
 				const currentLayer = Math.max(1, Math.round(activeTotalLayers * pct));
 				const currentMm = (activeModelHeightMm * pct).toFixed(1);
 
-				// Approximate PETG mass (~1.27 g/cm³ with ~18% effective shell/infill bounding occupancy)
-				const estFilamentG = Math.max(1, Math.round(activeModelVolumeCm3 * 1.27 * 0.18 * pct));
-				const estTotalMins = Math.max(5, Math.round(activeModelVolumeCm3 * 0.22));
+				// PETG mass (~1.27 g/cm³) from actual mesh shell (6 walls) + 20% crosshatch infill volume
+				const estFilamentG = Math.max(1, Math.round(activePlasticVolumeCm3 * 1.27 * pct));
+				const estTotalMins = Math.max(5, Math.round(activePlasticVolumeCm3 * 2.2));
 				const elapsedMins = Math.round(estTotalMins * pct);
 				const estHours = Math.floor(elapsedMins / 60);
 				const estMins = elapsedMins % 60;
@@ -586,6 +586,52 @@ const defaultModel = manifest[0];
 				requestAnimationFrame(resize);
 			}, { signal });
 
+			/**
+			 * Estimates extruded plastic volume (cm³) from triangle mesh geometry assuming
+			 * 6 perimeter walls (~2.1mm effective average shell) + 20% crosshatch infill.
+			 */
+			function estimatePlasticVolumeCm3(
+				positions: number[],
+				indices: number[],
+				scaleToMm: number,
+				fallbackBboxCm3: number
+			): number {
+				if (!positions.length || !indices.length || scaleToMm <= 0) {
+					return fallbackBboxCm3 * 0.25;
+				}
+				let signedVol = 0;
+				let surfArea = 0;
+				for (let i = 0; i < indices.length; i += 3) {
+					const a = indices[i] * 3;
+					const b = indices[i + 1] * 3;
+					const c = indices[i + 2] * 3;
+					const ax = positions[a], ay = positions[a + 1], az = positions[a + 2];
+					const bx = positions[b], by = positions[b + 1], bz = positions[b + 2];
+					const cx = positions[c], cy = positions[c + 1], cz = positions[c + 2];
+
+					signedVol += (ax * (by * cz - bz * cy) - ay * (bx * cz - bz * cx) + az * (bx * cy - by * cx)) / 6;
+
+					const ux = bx - ax, uy = by - ay, uz = bz - az;
+					const vx = cx - ax, vy = cy - ay, vz = cz - az;
+					const nx = uy * vz - uz * vy;
+					const ny = uz * vx - ux * vz;
+					const nz = ux * vy - uy * vx;
+					surfArea += 0.5 * Math.sqrt(nx * nx + ny * ny + nz * nz);
+				}
+
+				const meshVolCm3 = (Math.abs(signedVol) * Math.pow(scaleToMm, 3)) / 1000;
+				const meshAreaCm2 = (surfArea * Math.pow(scaleToMm, 2)) / 100;
+				if (meshVolCm3 <= 0.01) {
+					return fallbackBboxCm3 * 0.25;
+				}
+
+				// 6 walls (~2.52mm @ 0.42mm line width) & top/bottom layers (~1.2mm) -> ~2.1mm avg shell
+				const avgShellCm = 0.21;
+				const shellVolCm3 = meshVolCm3 * (1 - Math.exp(-(meshAreaCm2 * avgShellCm) / meshVolCm3));
+				const infillVolCm3 = 0.20 * (meshVolCm3 - shellVolCm3);
+				return Math.max(0.5, shellVolCm3 + infillVolCm3);
+			}
+
 			function applyModelData(data: MeshPayload, geometry: ThreeTypes.BufferGeometry, meta?: ModelMeta) {
 				if (currentMeshObj) {
 					modelGroup.remove(currentMeshObj);
@@ -598,7 +644,7 @@ const defaultModel = manifest[0];
 				const w = data.bbox?.width || (meta ? parseInt(meta.dimensions.split('x')[0]) : 0);
 				const h = data.bbox?.height || (meta ? parseInt(meta.dimensions.split('x')[1]) : 0);
 				const d = data.bbox?.depth || (meta ? parseInt(meta.dimensions.split('x')[2]) : 0);
-				activeModelVolumeCm3 = Math.max(1, (w * h * d) / 1000);
+				const bboxVolumeCm3 = Math.max(1, (w * h * d) / 1000);
 
 				if (geometry.boundingBox) {
 					const minY = geometry.boundingBox.min.y;
@@ -609,6 +655,12 @@ const defaultModel = manifest[0];
 					const maxSpan = Math.max(spanX, spanY, spanZ, 0.001);
 					const maxDimMm = Math.max(w, h, d, 1);
 
+					activePlasticVolumeCm3 = estimatePlasticVolumeCm3(
+						data.positions,
+						data.indices,
+						maxDimMm / maxSpan,
+						bboxVolumeCm3
+					);
 					activeModelMinY = minY;
 					activeModelMaxY = maxY;
 					grid.position.y = minY - 0.2;
@@ -618,6 +670,8 @@ const defaultModel = manifest[0];
 					activeTotalLayers = Math.max(1, Math.round(activeModelHeightMm / 0.2));
 					if (slicerBoundMaxEl) slicerBoundMaxEl.textContent = `${Math.round(activeModelHeightMm)}mm`;
 					if (slicerActive) updateSlicer();
+				} else {
+					activePlasticVolumeCm3 = bboxVolumeCm3 * 0.25;
 				}
 
 				activeModelRadiusM = Math.max(w, d) > 0 ? Math.max(w, d) / 2 / 1000 : 0.05;

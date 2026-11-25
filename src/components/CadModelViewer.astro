@@ -52,7 +52,7 @@ const defaultModel = manifest[0];
 					<polyline points="7 10 12 15 17 10"></polyline>
 					<line x1="12" y1="15" x2="12" y2="3"></line>
 				</svg>
-				<span>Download .STP</span>
+				<span><span class="cad-dl-prefix">Download </span>.STP</span>
 			</a>
 		</div>
 	</div>
@@ -1274,8 +1274,8 @@ const defaultModel = manifest[0];
 	.cad-mini-btn.active .cad-toggle-dot,
 	.cad-mini-btn.active-centrifuge .cad-toggle-dot,
 	.cad-mini-btn.active-slicer .cad-toggle-dot {
-		background: #ffffff;
-		box-shadow: 0 0 6px rgba(255, 255, 255, 0.85);
+		background: #4ade80;
+		box-shadow: 0 0 6px rgba(74, 222, 128, 0.9);
 	}
 	.cad-mini-btn:hover, .cad-mini-btn.active {
 		background: var(--accent-fill);
@@ -1529,7 +1529,7 @@ const defaultModel = manifest[0];
 		backdrop-filter: blur(6px);
 		-webkit-backdrop-filter: blur(6px);
 	}
-	:global(html[data-theme="dark"]) .cad-viewport-overlay .cad-mini-btn {
+	:global(html[data-theme="dark"]) .cad-viewport-overlay .cad-mini-btn:not(.active):not(:hover) {
 		background: rgba(22, 22, 25, 0.85);
 	}
 	.cad-viewport-overlay .cad-mini-btn:hover,
@@ -1667,6 +1667,9 @@ const defaultModel = manifest[0];
 		.cad-mini-btn {
 			font-size: 0.74em;
 			padding: 0.32em 0.56em;
+		}
+		.cad-dl-prefix {
+			display: none;
 		}
 		.cad-viewport-overlay {
 			top: 10px;

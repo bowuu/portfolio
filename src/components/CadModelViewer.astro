@@ -39,6 +39,12 @@ const defaultModel = manifest[0];
 			</div>
 			<button id="cad-upload-btn" class="cad-mini-btn" type="button" title="Upload local STEP, IGES, STL, OBJ, 3MF, or GLB/GLTF file">Upload CAD</button>
 			<input id="cad-upload-input" type="file" accept=".stp,.step,.igs,.iges,.stl,.obj,.3mf,.glb,.gltf" class="cad-sr-only" aria-label="Upload 3D CAD File" />
+		</div>
+
+		<div class="cad-controls-top">
+			<button id="cad-centrifuge-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Centrifuge Stress Test (10,000 RPM)"><span class="cad-toggle-dot" aria-hidden="true"></span>Centrifuge</button>
+			<button id="cad-slicer-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Interactive FDM Slicer Layer View"><span class="cad-toggle-dot" aria-hidden="true"></span>Slicer</button>
+			<button id="cad-orient-btn" class="cad-mini-btn hidden" type="button" aria-pressed="false" title="Toggle CAD Z-Up vs Three.js Y-Up axis">Axis: Y-Up</button>
 			<button id="cad-export-json-btn" class="cad-mini-btn cad-download-btn hidden" type="button" title="Export converted high-quality mesh as .JSON">Export .JSON</button>
 			<a id="cad-download-btn" class="cad-mini-btn cad-download-btn" href={defaultModel.stepFile} download={defaultModel.file} title={`Download ${defaultModel.name} (${defaultModel.file})`} aria-label="Download .STP (CAD STEP File)">
 				<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -48,15 +54,6 @@ const defaultModel = manifest[0];
 				</svg>
 				<span>Download .STP</span>
 			</a>
-		</div>
-
-		<div class="cad-controls-top">
-			<button id="cad-reset-cam-btn" class="cad-mini-btn" type="button" title="Reset Viewpoint">Reset View</button>
-			<button id="cad-grid-btn" class="cad-mini-btn active" type="button" aria-pressed="true" title="Toggle XY Build Plate Grid"><span class="cad-toggle-dot" aria-hidden="true"></span>Grid</button>
-			<button id="cad-wireframe-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Toggle Wireframe Overlay"><span class="cad-toggle-dot" aria-hidden="true"></span>Wireframe</button>
-			<button id="cad-centrifuge-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Centrifuge Stress Test (10,000 RPM)"><span class="cad-toggle-dot" aria-hidden="true"></span>Centrifuge</button>
-			<button id="cad-slicer-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Interactive FDM Slicer Layer View"><span class="cad-toggle-dot" aria-hidden="true"></span>Slicer</button>
-			<button id="cad-orient-btn" class="cad-mini-btn hidden" type="button" aria-pressed="false" title="Toggle CAD Z-Up vs Three.js Y-Up axis">Axis: Y-Up</button>
 		</div>
 	</div>
 
@@ -82,6 +79,11 @@ const defaultModel = manifest[0];
 	<!-- 3D WEBGL CANVAS -->
 	<div class="canvas-wrapper" id="canvas-container">
 		<canvas id="cad-canvas" tabindex="0" aria-label="Interactive 3D CAD model viewer. Drag to orbit or use arrow keys to rotate and R to reset view."></canvas>
+		<div class="cad-viewport-overlay" role="group" aria-label="Viewport Controls">
+			<button id="cad-reset-cam-btn" class="cad-mini-btn" type="button" title="Reset Viewpoint (R)">Reset</button>
+			<button id="cad-grid-btn" class="cad-mini-btn active" type="button" aria-pressed="true" title="Toggle XY Build Plate Grid"><span class="cad-toggle-dot" aria-hidden="true"></span>Grid</button>
+			<button id="cad-wireframe-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Toggle Wireframe Overlay"><span class="cad-toggle-dot" aria-hidden="true"></span>Wireframe</button>
+		</div>
 		<div id="cad-centrifuge-hud" class="cad-centrifuge-hud hidden">
 			<span class="hud-pulse-dot"></span>
 			<span>CENTRIFUGE STRESS TEST: <strong id="hud-rpm-val">0 RPM</strong> ▪ PEAK LOAD: <strong id="hud-g-val">0G</strong> ▪ DYNAMIC IMBALANCE: <span id="hud-vib-val">0.0G</span></span>
@@ -1289,7 +1291,7 @@ const defaultModel = manifest[0];
 
 	.cad-centrifuge-hud {
 		position: absolute;
-		top: 14px;
+		top: 50px;
 		left: 50%;
 		transform: translateX(-50%);
 		width: max-content;
@@ -1347,7 +1349,7 @@ const defaultModel = manifest[0];
 	}
 	.cad-slicer-hud {
 		position: absolute;
-		top: 14px;
+		top: 50px;
 		left: 50%;
 		transform: translateX(-50%);
 		background: rgba(15, 23, 42, 0.92);
@@ -1513,6 +1515,30 @@ const defaultModel = manifest[0];
 		to { transform: rotate(360deg); }
 	}
 
+	.cad-viewport-overlay {
+		position: absolute;
+		top: 12px;
+		left: 14px;
+		display: flex;
+		align-items: center;
+		gap: 0.35em;
+		z-index: 10;
+	}
+	.cad-viewport-overlay .cad-mini-btn {
+		background: rgba(255, 255, 255, 0.85);
+		backdrop-filter: blur(6px);
+		-webkit-backdrop-filter: blur(6px);
+	}
+	:global(html[data-theme="dark"]) .cad-viewport-overlay .cad-mini-btn {
+		background: rgba(22, 22, 25, 0.85);
+	}
+	.cad-viewport-overlay .cad-mini-btn:hover,
+	.cad-viewport-overlay .cad-mini-btn.active {
+		background: var(--accent-fill);
+		color: #ffffff;
+		border-color: var(--accent-fill);
+	}
+
 	.cad-drag-hint {
 		position: absolute;
 		bottom: 12px;
@@ -1622,12 +1648,8 @@ const defaultModel = manifest[0];
 		#cad-upload-btn {
 			order: 2;
 		}
-		#cad-download-btn,
-		#cad-export-json-btn {
-			order: 3;
-		}
 		.model-select-wrapper {
-			order: 4;
+			order: 3;
 			flex: 1 0 100%;
 			width: 100%;
 			max-width: none;
@@ -1638,21 +1660,17 @@ const defaultModel = manifest[0];
 		}
 		.cad-controls-top {
 			justify-content: flex-start;
-			flex-wrap: nowrap;
-			overflow-x: auto;
-			scrollbar-width: none;
-			-webkit-overflow-scrolling: touch;
+			flex-wrap: wrap;
 			gap: 0.35em;
 			width: 100%;
-			padding-bottom: 1px;
-		}
-		.cad-controls-top::-webkit-scrollbar {
-			display: none;
 		}
 		.cad-mini-btn {
 			font-size: 0.74em;
-			padding: 0.32em 0.58em;
-			flex-shrink: 0;
+			padding: 0.32em 0.56em;
+		}
+		.cad-viewport-overlay {
+			top: 10px;
+			left: 10px;
 		}
 		.canvas-wrapper {
 			height: 350px;

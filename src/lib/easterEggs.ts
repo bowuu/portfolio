@@ -942,6 +942,7 @@ export function initAllEasterEggs(): void {
 		}
 		extrasModal.classList.add('hidden');
 		extrasModal.style.display = 'none';
+		document.getElementById('footer-extras-btn')?.setAttribute('aria-expanded', 'false');
 		window.__popModalHistory?.('lab-extras-modal');
 	}
 
@@ -2774,6 +2775,7 @@ export function initAllEasterEggs(): void {
 			updateDrawerActiveUI();
 			extrasModal.classList.remove('hidden');
 			extrasModal.style.display = 'block';
+			document.getElementById('footer-extras-btn')?.setAttribute('aria-expanded', 'true');
 			openModalFocus(extrasModal, document.getElementById('trigger-sphere-btn') || extrasCloseBtn);
 			window.__pushModalHistory?.('lab-extras-modal', closeLabExtras);
 		} else {
@@ -2872,6 +2874,7 @@ export function initAllEasterEggs(): void {
 				}
 				if (handled) {
 					e.preventDefault();
+					e.stopPropagation();
 					updateDrawerActiveUI();
 				}
 				return;

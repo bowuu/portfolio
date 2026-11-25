@@ -13,7 +13,7 @@ const groupedModels = manifest.reduce<Array<{ category: string; items: typeof ma
 const defaultModel = manifest[0];
 ---
 
-<div class="cad-viewer-container" id="cad-viewer">
+<div class="cad-viewer-container" id="cad-viewer" data-manifest={JSON.stringify(manifest)}>
 	<div class="cad-viewer-header">
 		<div class="cad-viewer-title-row">
 			<div class="cad-viewer-title">
@@ -45,10 +45,10 @@ const defaultModel = manifest[0];
 
 		<div class="cad-controls-top">
 			<button id="cad-reset-cam-btn" class="cad-mini-btn" type="button" title="Reset Viewpoint">Reset View</button>
-			<button id="cad-grid-btn" class="cad-mini-btn active" type="button" title="Toggle XY Build Plate Grid">Grid: ON</button>
-			<button id="cad-wireframe-btn" class="cad-mini-btn" type="button">Wireframe: OFF</button>
-			<button id="cad-centrifuge-btn" class="cad-mini-btn" type="button" title="Centrifuge Stress Test (10,000 RPM)">Centrifuge: OFF</button>
-			<button id="cad-slicer-btn" class="cad-mini-btn" type="button" title="Interactive FDM Slicer Layer View">Slicer: OFF</button>
+			<button id="cad-grid-btn" class="cad-mini-btn active" type="button" aria-pressed="true" title="Toggle XY Build Plate Grid">Grid: ON</button>
+			<button id="cad-wireframe-btn" class="cad-mini-btn" type="button" aria-pressed="false">Wireframe: OFF</button>
+			<button id="cad-centrifuge-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Centrifuge Stress Test (10,000 RPM)">Centrifuge: OFF</button>
+			<button id="cad-slicer-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Interactive FDM Slicer Layer View">Slicer: OFF</button>
 			<a id="cad-download-btn" class="cad-mini-btn cad-download-btn" href={defaultModel.stepFile} download={defaultModel.file} title={`Download ${defaultModel.name} (${defaultModel.file})`} aria-label="Download .STP (CAD STEP File)">
 				<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 					<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -81,7 +81,7 @@ const defaultModel = manifest[0];
 
 	<!-- 3D WEBGL CANVAS -->
 	<div class="canvas-wrapper" id="canvas-container">
-		<canvas id="cad-canvas"></canvas>
+		<canvas id="cad-canvas" tabindex="0" aria-label="Interactive 3D CAD model viewer. Drag to orbit or use arrow keys to rotate and R to reset view."></canvas>
 		<div id="cad-centrifuge-hud" class="cad-centrifuge-hud hidden">
 			<span class="hud-pulse-dot"></span>
 			<span>CENTRIFUGE STRESS TEST: <strong id="hud-rpm-val">0 RPM</strong> ▪ PEAK LOAD: <strong id="hud-g-val">0G</strong> ▪ DYNAMIC IMBALANCE: <span id="hud-vib-val">0.0G</span></span>
@@ -103,9 +103,9 @@ const defaultModel = manifest[0];
 				<span class="slicer-bound" id="slicer-bound-max">76mm</span>
 			</div>
 		</div>
-		<div id="cad-loading-overlay" class="cad-loading hidden">
-			<div class="spinner"></div>
-			<span>Loading 3D CAD Mesh...</span>
+		<div id="cad-loading-overlay" class="cad-loading hidden" role="status" aria-live="polite">
+			<div class="spinner" id="cad-loading-spinner"></div>
+			<span id="cad-loading-text">Loading 3D CAD Mesh...</span>
 		</div>
 		<div class="cad-drag-hint">
 			<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -466,6 +466,7 @@ const defaultModel = manifest[0];
 				if (slicerBtn) {
 					slicerBtn.textContent = active ? 'Slicer: ON' : 'Slicer: OFF';
 					slicerBtn.classList.toggle('active-slicer', active);
+					slicerBtn.setAttribute('aria-pressed', String(active));
 				}
 				if (slicerHud) {
 					slicerHud.classList.toggle('hidden', !active);
@@ -506,6 +507,7 @@ const defaultModel = manifest[0];
 				if (centrifugeBtn) {
 					centrifugeBtn.textContent = active ? 'Centrifuge: ON' : 'Centrifuge: OFF';
 					centrifugeBtn.classList.toggle('active-centrifuge', active);
+					centrifugeBtn.setAttribute('aria-pressed', String(active));
 				}
 				if (centrifugeHud) {
 					centrifugeHud.classList.toggle('hidden', !active);
@@ -643,6 +645,9 @@ const defaultModel = manifest[0];
 				const seq = ++activeLoadSeq;
 				if (activeLoadController) activeLoadController.abort();
 				const meta = manifestMap[id];
+				const loadingSpinner = document.getElementById('cad-loading-spinner');
+				const loadingText = document.getElementById('cad-loading-text');
+				let hadError = false;
 
 				if (geometryCache[id]) {
 					const cached = geometryCache[id];
@@ -651,6 +656,8 @@ const defaultModel = manifest[0];
 					return;
 				}
 
+				if (loadingSpinner) loadingSpinner.style.display = '';
+				if (loadingText) loadingText.textContent = 'Loading 3D CAD Mesh...';
 				if (loadingOverlay) loadingOverlay.classList.remove('hidden');
 				const fetchCtrl = new AbortController();
 				activeLoadController = fetchCtrl;
@@ -659,44 +666,83 @@ const defaultModel = manifest[0];
 					const jsonUrl = meta ? meta.jsonFile : `/models/${id}.json`;
 					const res = await fetch(jsonUrl, { signal: fetchCtrl.signal });
 					if (seq !== activeLoadSeq) return;
-					if (res.ok) {
-						const data: MeshPayload = await res.json();
-						if (seq !== activeLoadSeq) return;
-						const geometry = new THREE.BufferGeometry();
-						geometry.setAttribute('position', new THREE.Float32BufferAttribute(data.positions, 3));
-						if (data.normals && data.normals.length) {
-							// Preserve authentic CAD NURBS/STEP normals (AGENTS.md §1.K)
-							geometry.setAttribute('normal', new THREE.Float32BufferAttribute(data.normals, 3));
-						} else {
-							geometry.computeVertexNormals();
-						}
-						geometry.setIndex(data.indices);
-						geometry.computeBoundingBox();
-
-						geometryCache[id] = { data, geometry };
-						applyModelData(data, geometry, meta);
+					if (!res.ok) throw new Error(`HTTP ${res.status}`);
+					const data: MeshPayload = await res.json();
+					if (seq !== activeLoadSeq) return;
+					const geometry = new THREE.BufferGeometry();
+					geometry.setAttribute('position', new THREE.Float32BufferAttribute(data.positions, 3));
+					if (data.normals && data.normals.length) {
+						// Preserve authentic CAD NURBS/STEP normals (AGENTS.md §1.K)
+						geometry.setAttribute('normal', new THREE.Float32BufferAttribute(data.normals, 3));
+					} else {
+						geometry.computeVertexNormals();
 					}
+					geometry.setIndex(data.indices);
+					geometry.computeBoundingBox();
+
+					geometryCache[id] = { data, geometry };
+					applyModelData(data, geometry, meta);
 				} catch (err: any) {
 					if (err?.name !== 'AbortError') {
+						hadError = true;
 						console.error('Error loading CAD model:', err);
+						if (seq === activeLoadSeq && loadingOverlay) {
+							if (loadingSpinner) loadingSpinner.style.display = 'none';
+							if (loadingText) loadingText.textContent = 'Unable to load CAD mesh. Select another model or retry.';
+							loadingOverlay.classList.remove('hidden');
+						}
 					}
 				} finally {
-					if (seq === activeLoadSeq && loadingOverlay) {
+					if (!hadError && seq === activeLoadSeq && loadingOverlay) {
 						loadingOverlay.classList.add('hidden');
 					}
 				}
 			}
 
-			fetch('/models/manifest.json', { signal })
-				.then((r) => r.json())
-				.then((items: ModelMeta[]) => {
+			const inlineManifestRaw = viewerContainer?.getAttribute('data-manifest');
+			let loadedInlineManifest = false;
+			if (inlineManifestRaw) {
+				try {
+					const items: ModelMeta[] = JSON.parse(inlineManifestRaw);
 					items.forEach((m) => { manifestMap[m.id] = m; });
 					const initialId = selectEl ? selectEl.value : 'be92u';
+					loadedInlineManifest = true;
 					loadModel(initialId);
-				})
-				.catch((err: any) => {
-					if (err?.name !== 'AbortError') loadModel('be92u');
-				});
+				} catch (_) {
+					loadedInlineManifest = false;
+				}
+			}
+			if (!loadedInlineManifest) {
+				fetch('/models/manifest.json', { signal })
+					.then((r) => r.json())
+					.then((items: ModelMeta[]) => {
+						items.forEach((m) => { manifestMap[m.id] = m; });
+						const initialId = selectEl ? selectEl.value : 'be92u';
+						loadModel(initialId);
+					})
+					.catch((err: any) => {
+						if (err?.name !== 'AbortError') loadModel('be92u');
+					});
+			}
+
+			canvas!.addEventListener(
+				'keydown',
+				(e: KeyboardEvent) => {
+					if (e.key === 'ArrowLeft') {
+						e.preventDefault();
+						modelGroup.rotation.y -= 0.15;
+						renderer.render(scene, camera);
+					} else if (e.key === 'ArrowRight') {
+						e.preventDefault();
+						modelGroup.rotation.y += 0.15;
+						renderer.render(scene, camera);
+					} else if (e.key === 'r' || e.key === 'R') {
+						e.preventDefault();
+						resetCamBtn?.click();
+					}
+				},
+				{ signal }
+			);
 
 			if (selectEl) {
 				selectEl.addEventListener('change', () => {
@@ -709,6 +755,7 @@ const defaultModel = manifest[0];
 					grid.visible = !grid.visible;
 					gridBtn.textContent = `Grid: ${grid.visible ? 'ON' : 'OFF'}`;
 					gridBtn.classList.toggle('active', grid.visible);
+					gridBtn.setAttribute('aria-pressed', String(grid.visible));
 					renderer.render(scene, camera);
 				}, { signal });
 			}
@@ -722,6 +769,7 @@ const defaultModel = manifest[0];
 					material.wireframe = !material.wireframe;
 					wireframeBtn.textContent = `Wireframe: ${material.wireframe ? 'ON' : 'OFF'}`;
 					wireframeBtn.classList.toggle('active', material.wireframe);
+					wireframeBtn.setAttribute('aria-pressed', String(material.wireframe));
 					renderer.render(scene, camera);
 				}, { signal });
 			}
@@ -1001,18 +1049,18 @@ const defaultModel = manifest[0];
 		font-weight: 700;
 	}
 	.cad-download-btn:hover {
-		background: var(--accent);
+		background: var(--accent-fill);
 		color: #ffffff;
-		border-color: var(--accent);
+		border-color: var(--accent-fill);
 		box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.3);
 	}
 	.cad-download-btn svg {
 		flex-shrink: 0;
 	}
 	.cad-mini-btn:hover, .cad-mini-btn.active {
-		background: var(--accent);
+		background: var(--accent-fill);
 		color: #ffffff;
-		border-color: var(--accent);
+		border-color: var(--accent-fill);
 	}
 	.cad-mini-btn.active-centrifuge {
 		background: rgba(234, 88, 12, 0.16);

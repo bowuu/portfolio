@@ -360,6 +360,7 @@ const cadCatalogList = manifest.map((m, idx) => `  ${String(idx + 1).padStart(2,
 				toggleTerminal();
 			} else if ((e.key === 'Escape' || e.key === 'Esc') && modal.classList.contains('open')) {
 				e.preventDefault();
+				e.stopPropagation();
 				closeTerminal();
 			}
 		});
@@ -702,7 +703,7 @@ const cadCatalogList = manifest.map((m, idx) => `  ${String(idx + 1).padStart(2,
     <span class="term-hl">network</span>
 
 <span class="term-head">DESCRIPTION</span>
-    Navigate to the Anycast edge throughput benchmark with unloaded ping, jitter, and bufferbloat (#benchmark).`,
+    Navigate to the Anycast edge throughput benchmark with unloaded ping, jitter, and bufferbloat (#lab).`,
 
 			mouse: `
 <span class="term-head">NAME</span>
@@ -1097,9 +1098,9 @@ Focus:
   ▪ Production 3D CAD parametric modeling in Autodesk Inventor
 
 Verified Profiles:
-  ▪ LinkedIn:   <a href="https://www.linkedin.com/in/bowu/" target="_blank" class="term-link">https://www.linkedin.com/in/bowu/</a>
-  ▪ GitHub:     <a href="https://github.com/bowuu" target="_blank" class="term-link">https://github.com/bowuu</a>
-  ▪ MakerWorld: <a href="https://makerworld.com/en/@brob" target="_blank" class="term-link">https://makerworld.com/en/@brob</a>`);
+  ▪ LinkedIn:   <a href="https://www.linkedin.com/in/bowu/" target="_blank" rel="noopener noreferrer" class="term-link">https://www.linkedin.com/in/bowu/</a>
+  ▪ GitHub:     <a href="https://github.com/bowuu" target="_blank" rel="noopener noreferrer" class="term-link">https://github.com/bowuu</a>
+  ▪ MakerWorld: <a href="https://makerworld.com/en/@brob" target="_blank" rel="noopener noreferrer" class="term-link">https://makerworld.com/en/@brob</a>`);
 					break;
 
 				case 'skills':
@@ -1121,7 +1122,7 @@ Verified Profiles:
   <span class="term-cyan">[03] Hardware Test Triad</span>
        Anycast edge benchmark, mouse polling oscilloscope, 104-key switch matrix.
   <span class="term-cyan">[04] D1 Visitor Counter</span>
-       Zero-logging engagement-verified counter with daily rotating volatile salt.`);
+       Zero-logging engagement-verified counter with 30-day rotating epoch salt.`);
 					break;
 
 				case 'tests':
@@ -2376,7 +2377,7 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 		display: inline-block;
 	}
 
-	@media (max-width: 640px) {
+	@media (max-width: 768px), (hover: none) and (pointer: coarse) {
 		.terminal-modal {
 			padding: max(0.5rem, env(safe-area-inset-top)) 0.5rem max(0.5rem, env(safe-area-inset-bottom));
 		}

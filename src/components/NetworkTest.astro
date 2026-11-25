@@ -21,6 +21,9 @@
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon" id="btn-icon-play" aria-hidden="true">
 					<polygon points="5 3 19 12 5 21 5 3"/>
 				</svg>
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="play-icon hidden" id="btn-icon-stop" aria-hidden="true">
+					<rect x="5" y="5" width="14" height="14" rx="2"/>
+				</svg>
 				<span id="speedtest-btn-text">Start</span>
 			</button>
 		</div>
@@ -81,45 +84,18 @@
 				<div class="progress-bar" id="benchmark-progress-bar"></div>
 			</div>
 			<div class="status-wrap">
-				<span id="speedtest-status" class="status-text">Click "Start" to measure real-time latency, jitter, packet loss, and sustained throughput.</span>
+				<span id="speedtest-status" class="status-text" aria-live="polite">Click "Start" to measure real-time latency, jitter, packet loss, and sustained throughput.</span>
 			</div>
 		</div>
 	</div>
 </section>
 
 <script>
-	let isBenchmarking = false;
+	import { COLO_NAMES, getVisitorInfoCached } from '../lib/colo';
+	import { escapeHtml } from '../lib/ui';
 
-	const COLO_MAP: Record<string, string> = {
-		MIA: 'Miami, FL',
-		TPA: 'Tampa, FL',
-		MCO: 'Orlando, FL',
-		ATL: 'Atlanta, GA',
-		IAD: 'Ashburn, VA',
-		DCA: 'Washington, DC',
-		CLT: 'Charlotte, NC',
-		RDU: 'Raleigh, NC',
-		ORD: 'Chicago, IL',
-		DFW: 'Dallas, TX',
-		IAH: 'Houston, TX',
-		DEN: 'Denver, CO',
-		PHX: 'Phoenix, AZ',
-		LAX: 'Los Angeles, CA',
-		SFO: 'San Francisco, CA',
-		SJC: 'San Jose, CA',
-		SEA: 'Seattle, WA',
-		PDX: 'Portland, OR',
-		EWR: 'Newark, NJ',
-		JFK: 'New York, NY',
-		BOS: 'Boston, MA',
-		YYZ: 'Toronto, ON',
-		LHR: 'London, UK',
-		FRA: 'Frankfurt, DE',
-		AMS: 'Amsterdam, NL',
-		NRT: 'Tokyo, JP',
-		SIN: 'Singapore',
-		SYD: 'Sydney, AU',
-	};
+	let isBenchmarking = false;
+	let benchmarkAbortCtrl: AbortController | null = null;
 
 	const COLO_COORDS: Record<string, { lat: number; lon: number }> = {
 		MIA: { lat: 25.7617, lon: -80.1918 },
@@ -170,22 +146,16 @@
 
 	async function resolveEdgeDatacenter() {
 		try {
-			const win = window as any;
-			if (!win.__visitorInfoPromise) {
-				win.__visitorInfoPromise = fetch('/api/visitor-info', { cache: 'no-store' })
-					.then((res) => (res.ok ? res.json() : null))
-					.catch(() => null);
-			}
-			const data = await win.__visitorInfoPromise;
+			const data = await getVisitorInfoCached();
 			if (data) {
 				if (data.coloCode) {
 					detectedColo = data.coloCode.toUpperCase();
-					detectedCity = COLO_MAP[detectedColo] || (data.city ? `${data.city}` : 'Edge Datacenter');
+					detectedCity = COLO_NAMES[detectedColo] || (data.city ? `${data.city}` : 'Edge Datacenter');
 					updateColoTargetUI();
 				}
 				if (data.latitude && data.longitude) {
-					clientLat = parseFloat(data.latitude);
-					clientLon = parseFloat(data.longitude);
+					clientLat = parseFloat(String(data.latitude));
+					clientLon = parseFloat(String(data.longitude));
 				}
 			}
 		} catch (_) {
@@ -201,11 +171,18 @@
 	}
 
 	async function runBenchmark() {
-		if (isBenchmarking) return;
+		if (isBenchmarking) {
+			benchmarkAbortCtrl?.abort();
+			return;
+		}
 		isBenchmarking = true;
+		benchmarkAbortCtrl = new AbortController();
+		const runSignal = benchmarkAbortCtrl.signal;
 
 		const btn = document.getElementById('run-speedtest-btn') as HTMLButtonElement | null;
 		const btnText = document.getElementById('speedtest-btn-text');
+		const playIcon = document.getElementById('btn-icon-play');
+		const stopIcon = document.getElementById('btn-icon-stop');
 		const progressBar = document.getElementById('benchmark-progress-bar');
 		const statusText = document.getElementById('speedtest-status');
 
@@ -222,8 +199,13 @@
 		const bloatEl = document.getElementById('speed-bloat');
 		const bloatSubEl = document.getElementById('speed-bloat-sub');
 
-		if (btn) btn.disabled = true;
-		if (btnText) btnText.textContent = 'Testing';
+		if (btn) {
+			btn.setAttribute('aria-label', 'Stop network benchmark');
+			btn.setAttribute('title', 'Stop network benchmark');
+		}
+		playIcon?.classList.add('hidden');
+		stopIcon?.classList.remove('hidden');
+		if (btnText) btnText.textContent = 'Stop';
 		if (progressBar) progressBar.style.width = '5%';
 
 		// Reset values
@@ -273,7 +255,7 @@
 							const coloMatch = traceText.match(/colo=([A-Za-z0-9]+)/);
 							if (coloMatch) {
 								detectedColo = coloMatch[1].toUpperCase();
-								detectedCity = COLO_MAP[detectedColo] || 'Edge Datacenter';
+								detectedCity = COLO_NAMES[detectedColo] || 'Edge Datacenter';
 							}
 						}
 					}
@@ -297,14 +279,18 @@
 			const pings: number[] = [];
 
 			for (let i = 0; i < totalProbes; i++) {
+				if (runSignal.aborted) break;
 				const t0 = performance.now();
 				try {
 					const ctrl = new AbortController();
+					const onCancel = () => ctrl.abort();
+					runSignal.addEventListener('abort', onCancel, { once: true });
 					const timeout = setTimeout(() => ctrl.abort(), 1200);
 					const res = await fetch(`${pingEndpoint}?_p=${i}_${Date.now()}`, {
 						signal: ctrl.signal,
 						cache: 'no-store',
 					});
+					runSignal.removeEventListener('abort', onCancel);
 					if (res.ok) {
 						if (pingEndpoint === '/cdn-cgi/trace') {
 							await res.text();
@@ -318,6 +304,7 @@
 						failed++;
 					}
 				} catch (_) {
+					if (runSignal.aborted) break;
 					failed++;
 				}
 
@@ -358,6 +345,12 @@
 					lossBadge.classList.add('loss-warn');
 					lossBadge.classList.remove('loss-optimal');
 				}
+			}
+
+			if (runSignal.aborted) {
+				if (statusText) statusText.textContent = 'Network benchmark cancelled.';
+				if (progressBar) progressBar.style.width = '0%';
+				return;
 			}
 
 			// ==========================================
@@ -450,19 +443,28 @@
 				}
 			};
 
-			const downTimeout = setTimeout(() => {
+			const abortAllDown = () => {
 				isDownDone = true;
-				downControllers.forEach(c => {
-					try { c.abort(); } catch (_) {}
-				});
-			}, (downDurationSec + 0.15) * 1000);
+				downControllers.forEach(c => { try { c.abort(); } catch (_) {} });
+				downBloatControllers.forEach(c => { try { c.abort(); } catch (_) {} });
+			};
+			runSignal.addEventListener('abort', abortAllDown, { once: true });
+
+			const downTimeout = setTimeout(abortAllDown, (downDurationSec + 0.15) * 1000);
 
 			await Promise.allSettled(Array.from({ length: downStreams }, (_, i) => runDownWorker(i)));
 			isDownDone = true;
+			runSignal.removeEventListener('abort', abortAllDown);
 			clearTimeout(downTimeout);
 			clearInterval(downTicker);
 			clearInterval(downBloatInterval);
 			downBloatControllers.forEach(c => { try { c.abort(); } catch (_) {} });
+
+			if (runSignal.aborted) {
+				if (statusText) statusText.textContent = 'Network benchmark cancelled.';
+				if (progressBar) progressBar.style.width = '0%';
+				return;
+			}
 
 			const downBytesToCount = downSteadyBytes > 0 ? downSteadyBytes : downTotalBytes;
 			const finalDownElapsed =
@@ -576,19 +578,28 @@
 				}
 			};
 
-			const upTimeout = setTimeout(() => {
+			const abortAllUp = () => {
 				isUpDone = true;
-				upControllers.forEach(c => {
-					try { c.abort(); } catch (_) {}
-				});
-			}, (upDurationSec + 0.15) * 1000);
+				upControllers.forEach(c => { try { c.abort(); } catch (_) {} });
+				upBloatControllers.forEach(c => { try { c.abort(); } catch (_) {} });
+			};
+			runSignal.addEventListener('abort', abortAllUp, { once: true });
+
+			const upTimeout = setTimeout(abortAllUp, (upDurationSec + 0.15) * 1000);
 
 			await Promise.allSettled(Array.from({ length: upStreams }, (_, i) => runUpWorker(i)));
 			isUpDone = true;
+			runSignal.removeEventListener('abort', abortAllUp);
 			clearTimeout(upTimeout);
 			clearInterval(upTicker);
 			clearInterval(upBloatInterval);
 			upBloatControllers.forEach(c => { try { c.abort(); } catch (_) {} });
+
+			if (runSignal.aborted) {
+				if (statusText) statusText.textContent = 'Network benchmark cancelled.';
+				if (progressBar) progressBar.style.width = '0%';
+				return;
+			}
 
 			const upBytesToCount = upSteadyBytes > 0 ? upSteadyBytes : upTotalBytes;
 			const finalUpElapsed =
@@ -661,7 +672,9 @@
 			} else if (upTotalBytes === 0) {
 				if (statusText) statusText.innerHTML = '<span style="color: rgb(245, 158, 11); font-weight: 600;">Partial:</span> Download measured, but upload endpoint timed out or was blocked.';
 			} else {
-				const targetSummary = detectedColo ? ` via Cloudflare ${detectedColo} Edge (${detectedCity})` : ' via Cloudflare Anycast';
+				const targetSummary = detectedColo
+					? ` via Cloudflare ${escapeHtml(detectedColo)} Edge (${escapeHtml(detectedCity)})`
+					: ' via Cloudflare Anycast';
 				const physicsSummary = distanceKm > 0 ? ` ▪ ~${distanceKm} km (fiber limit: ~${fiberRttMs} ms RTT)` : '';
 				if (statusText) statusText.innerHTML = `Test complete${targetSummary}${physicsSummary}.`;
 			}
@@ -671,7 +684,13 @@
 			if (statusText) statusText.textContent = 'Test interrupted or blocked by browser extensions.';
 		} finally {
 			isBenchmarking = false;
-			if (btn) btn.disabled = false;
+			benchmarkAbortCtrl = null;
+			if (btn) {
+				btn.setAttribute('aria-label', 'Start network benchmark');
+				btn.setAttribute('title', 'Start network benchmark');
+			}
+			playIcon?.classList.remove('hidden');
+			stopIcon?.classList.add('hidden');
 			if (btnText) btnText.textContent = 'Start';
 		}
 	}
@@ -725,7 +744,7 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.5em;
-		background: var(--accent);
+		background: var(--accent-fill);
 		color: #ffffff;
 		border: 1px solid transparent;
 		padding: 0 1.1em;

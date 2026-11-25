@@ -126,7 +126,7 @@
 						</g>
 
 						<!-- ==================== 1. RIGHT BUTTON (Right - Button 2) ==================== -->
-						<g id="btn-rmb" class="interactive mouse-btn btn-rmb-group" role="button" aria-label="Right Mouse Button (Right)">
+						<g id="btn-rmb" class="interactive mouse-btn btn-rmb-group" role="button" tabindex="0" aria-label="Right Mouse Button (Right)">
 							<title>Right Button</title>
 							<path class="part-outline btn-surface" fill="#8c919b" d="M 426,298
 								 C 355,328 275,380 218,435
@@ -137,7 +137,7 @@
 						</g>
 
 						<!-- ==================== 2. LEFT BUTTON (Left - Button 0) ==================== -->
-						<g id="btn-lmb" class="interactive mouse-btn btn-lmb-group" role="button" aria-label="Left Mouse Button (Left)">
+						<g id="btn-lmb" class="interactive mouse-btn btn-lmb-group" role="button" tabindex="0" aria-label="Left Mouse Button (Left)">
 							<title>Left Button</title>
 							<path class="part-outline btn-surface" fill="#8c919b" d="M 220,538
 								 C 256,564 306,575 352,578
@@ -150,7 +150,7 @@
 						</g>
 
 						<!-- ==================== 3. SCROLL WHEEL & MMB (Button 1) ==================== -->
-						<g id="btn-wheel" class="interactive mouse-btn btn-wheel-group" role="button" aria-label="Scroll Wheel and Middle Button (Wheel)">
+						<g id="btn-wheel" class="interactive mouse-btn btn-wheel-group" role="button" tabindex="0" aria-label="Scroll Wheel and Middle Button (Wheel)">
 							<title>Scroll Wheel / Middle Button (Wheel)</title>
 							<path class="part-outline wheel-surface" fill="#464952" d="M 286,474
 								 C 298,408 356,374 408,404
@@ -171,7 +171,7 @@
 						</g>
 
 						<!-- ==================== 4. FORWARD BUTTON (Forward - Button 4) ==================== -->
-						<g id="btn-thumb2" class="interactive mouse-btn btn-thumb2-group" role="button" aria-label="Forward Button (Forward)">
+						<g id="btn-thumb2" class="interactive mouse-btn btn-thumb2-group" role="button" tabindex="0" aria-label="Forward Button (Forward)">
 							<title>Forward Button</title>
 							<path class="part-outline btn-surface" fill="#70757e" d="M 496,500
 								 C 532,474 574,448 610,430
@@ -184,7 +184,7 @@
 						</g>
 
 						<!-- ==================== 5. BACK BUTTON (Back - Button 3) ==================== -->
-						<g id="btn-thumb1" class="interactive mouse-btn btn-thumb1-group" role="button" aria-label="Back Button (Back)">
+						<g id="btn-thumb1" class="interactive mouse-btn btn-thumb1-group" role="button" tabindex="0" aria-label="Back Button (Back)">
 							<title>Back Button</title>
 							<path class="part-outline btn-surface" fill="#70757e" d="M 644,414
 								 C 678,397 716,383 750,373
@@ -275,11 +275,12 @@
 		function drawSparkline() {
 			if (!ctx || !canvas) return;
 
-			// Handle crisp HiDPI scaling
+			// Handle crisp HiDPI scaling (skip allocation while collapsed/hidden)
 			const dpr = window.devicePixelRatio || 1;
 			const rect = canvas.getBoundingClientRect();
-			const w = rect.width || 460;
-			const h = rect.height || 120;
+			if (rect.width <= 0 || rect.height <= 0) return;
+			const w = rect.width;
+			const h = rect.height;
 
 			if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
 				canvas.width = Math.round(w * dpr);
@@ -400,6 +401,11 @@
 		}
 
 		function handlePointerMove(e: PointerEvent) {
+			if (e.pointerType === 'touch') {
+				if (peakHz === 0 && pollCurrentHz) pollCurrentHz.textContent = '--';
+				if (peakHz === 0 && tierBadgeEl) tierBadgeEl.textContent = 'Touch (Mouse Req)';
+				return;
+			}
 			const events: PointerEvent[] = (typeof (e as any).getCoalescedEvents === 'function')
 				? (e as any).getCoalescedEvents()
 				: [e];
@@ -732,6 +738,22 @@
 			btnZone.addEventListener('contextmenu', (e) => e.preventDefault());
 			btnZone.addEventListener('auxclick', (e) => e.preventDefault());
 			btnZone.addEventListener('wheel', onWheel, { passive: false });
+			btnZone.querySelectorAll<SVGGElement>('.mouse-btn[role="button"]').forEach((svgBtn) => {
+				svgBtn.addEventListener('keydown', (e: KeyboardEvent) => {
+					if (e.key !== 'Enter' && e.key !== ' ') return;
+					e.preventDefault();
+					const info = getButtonInfo(0, svgBtn);
+					testedButtons.add(info.id);
+					activateButton(info.el, info.id);
+					if (lastBtnEl) lastBtnEl.textContent = info.name;
+					if (btnCountEl) btnCountEl.textContent = `${testedButtons.size} / 5 tested`;
+					if (mouseBadge) {
+						mouseBadge.textContent = `${testedButtons.size} / 5 tested`;
+						if (testedButtons.size === 5) mouseBadge.className = 'badge mono badge-orange';
+					}
+					setTimeout(() => deactivateButton(info.el, info.id), 160);
+				});
+			});
 		}
 
 		// Ensure all buttons deactivate even if pointerup occurs outside btnZone or window blurs
@@ -1158,7 +1180,7 @@
 	}
 
 	.mouse-btn-label {
-		font-family: Atkinson Hyperlegible, system-ui, -apple-system, sans-serif;
+		font-family: "Atkinson", system-ui, -apple-system, sans-serif;
 		font-size: 26px;
 		font-weight: 800;
 		letter-spacing: 0.04em;

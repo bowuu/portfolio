@@ -18,7 +18,7 @@
 			</h2>
 
 			<!-- Telemetry HUD Badge -->
-			<div class="header-hud-badge" id="hero-hud-overlay">
+			<div class="header-hud-badge" id="hero-hud-overlay" aria-live="polite">
 				<div class="hud-badge-wrap" id="hud-badge-wrap">
 					<span id="hero-hud-main" class="hud-main-text mono">Standby</span>
 					<span class="hud-sep">▪</span>
@@ -30,7 +30,7 @@
 		<div class="card-summary-right">
 			<!-- VISUALIZER INPUT SOURCE SWITCHER (Mic | Sim | Both) -->
 			<div class="segmented-control source-control" role="group" aria-label="Audio Input Source">
-				<button class="seg-btn" id="btn-src-mic" data-src-mode="mic" type="button" title="Microphone Input (Live Capture)">
+				<button class="seg-btn" id="btn-src-mic" data-src-mode="mic" aria-pressed="false" type="button" title="Microphone Input (Live Capture)">
 					<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" class="source-mic-icon" aria-hidden="true">
 						<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
 						<path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -39,8 +39,8 @@
 					</svg>
 					Mic
 				</button>
-				<button class="seg-btn active" id="btn-src-sim" data-src-mode="sim" type="button" title="Simulated Synthesizer & Tone Generator">Sim</button>
-				<button class="seg-btn" id="btn-src-both" data-src-mode="both" type="button" title="Combine Microphone & Simulated Audio">Both</button>
+				<button class="seg-btn active" id="btn-src-sim" data-src-mode="sim" aria-pressed="true" type="button" title="Simulated Synthesizer & Tone Generator">Sim</button>
+				<button class="seg-btn" id="btn-src-both" data-src-mode="both" aria-pressed="false" type="button" title="Combine Microphone & Simulated Audio">Both</button>
 			</div>
 
 			<div class="volume-control-wrap" title="Output Volume (Soft-Knee Compressor Ceiling -18 dBFS)">
@@ -80,9 +80,9 @@
 				</div>
 				<!-- MODE SWITCHER -->
 				<div class="segmented-control" role="group" aria-label="Hero Visualizer Mode">
-					<button class="seg-btn" id="btn-hero-waveform" data-hero-mode="waveform" type="button">Waveform</button>
-					<button class="seg-btn active" id="btn-hero-spectrum" data-hero-mode="spectrum" type="button">Spectrum</button>
-					<button class="seg-btn" id="btn-hero-spectrogram" data-hero-mode="spectrogram" type="button">Spectrogram</button>
+					<button class="seg-btn" id="btn-hero-waveform" data-hero-mode="waveform" aria-pressed="false" type="button">Waveform</button>
+					<button class="seg-btn active" id="btn-hero-spectrum" data-hero-mode="spectrum" aria-pressed="true" type="button">Spectrum</button>
+					<button class="seg-btn" id="btn-hero-spectrogram" data-hero-mode="spectrogram" aria-pressed="false" type="button">Spectrogram</button>
 				</div>
 			</div>
 
@@ -606,8 +606,11 @@
 		function setHeroVisualizerMode(mode: 'waveform' | 'spectrum' | 'spectrogram') {
 			activeHeroMode = mode;
 			modeWaveformBtn?.classList.toggle('active', mode === 'waveform');
+			modeWaveformBtn?.setAttribute('aria-pressed', String(mode === 'waveform'));
 			modeSpectrumBtn?.classList.toggle('active', mode === 'spectrum');
+			modeSpectrumBtn?.setAttribute('aria-pressed', String(mode === 'spectrum'));
 			modeSpectrogramBtn?.classList.toggle('active', mode === 'spectrogram');
+			modeSpectrogramBtn?.setAttribute('aria-pressed', String(mode === 'spectrogram'));
 
 			if (waveformHudBar) {
 				waveformHudBar.style.display = mode === 'waveform' ? 'flex' : 'none';
@@ -764,6 +767,7 @@
 				if (!b) return;
 				const active = b.getAttribute('data-src-mode') === mode;
 				b.classList.toggle('active', active);
+				b.setAttribute('aria-pressed', String(active));
 			});
 
 			if (simVisualizerGain && micVisualizerGain && audioCtx) {
@@ -2430,7 +2434,7 @@
 	}
 
 	.seg-btn.active {
-		background: var(--accent);
+		background: var(--accent-fill);
 		color: #ffffff;
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 	}
@@ -2911,7 +2915,7 @@
 	}
 
 	.tone-btn.active .tone-pill.mono {
-		background: var(--accent) !important;
+		background: var(--accent-fill) !important;
 		color: #ffffff !important;
 	}
 
@@ -2941,8 +2945,8 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.6em;
-		background: #ea580c;
-		border: 1px solid #c2410c;
+		background: var(--accent-fill);
+		border: 1px solid var(--accent-dark);
 		color: #ffffff;
 		border-radius: 8px;
 		padding: 0.65em 1em;

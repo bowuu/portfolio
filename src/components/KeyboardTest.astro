@@ -111,7 +111,7 @@
 				<span>Click inside or press any key to test switches (104 ANSI layout) <span class="kb-scroll-cue">&bull; Swipe horizontally for nav/numpad</span></span>
 			</div>
 
-			<div class="keyboard-board" id="kb-board">
+			<div class="keyboard-board" id="kb-board" role="region" aria-label="Interactive 104-key ANSI switch matrix">
 				<!-- ================= SECTION 1: MAIN ALPHANUMERIC & FUNCTION BLOCK ================= -->
 				<div class="kb-section kb-main">
 					<!-- F-ROW (Row 0) -->
@@ -811,7 +811,7 @@
 			}
 			if (testedCountEl) testedCountEl.textContent = '0';
 			if (coveragePctEl) coveragePctEl.textContent = '0% matrix verified';
-			if (summaryTagEl) summaryTagEl.textContent = `▪ 0 / ${totalKeys} keys tested`;
+			if (summaryTagEl) summaryTagEl.textContent = `▪ 0 / ${totalKeys} keys tested (Peak NKRO: 0)`;
 			if (evCodeEl) evCodeEl.textContent = 'None';
 			if (evKeyEl) evKeyEl.textContent = '--';
 			if (evWhichEl) evWhichEl.textContent = '--';
@@ -872,6 +872,7 @@
 		function updateSoundUI(on: boolean) {
 			if (!soundLabel) return;
 			soundLabel.textContent = on ? 'Sound: On' : 'Sound: Off';
+			soundBtn?.setAttribute('aria-pressed', String(on));
 			if (on) {
 				soundWaves?.classList.remove('hidden');
 				soundMute1?.classList.add('hidden');
@@ -1409,7 +1410,7 @@
 
 	/* PRESSED / ACTIVE STATE */
 	.key.key-pressed {
-		background: var(--accent) !important;
+		background: var(--accent-fill) !important;
 		color: #ffffff !important;
 		border-color: #d95b00 !important;
 		border-bottom-width: 1px !important;

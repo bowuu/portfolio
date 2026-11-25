@@ -20,6 +20,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
 	const location = locParts.length > 0 ? locParts.join(', ') : 'Location unavailable';
 
 	const isp = cf.asOrganization || (cf.asn ? `AS${cf.asn}` : 'Standard ISP');
+	const asn = cf.asn || '';
 	const rawColo = cf.colo || (request.headers.get('cf-ray') ? request.headers.get('cf-ray')!.split('-')[1] : '') || '';
 	const colo = rawColo ? `${rawColo} Edge Datacenter` : 'Cloudflare Edge Node';
 	const protocol = cf.httpProtocol || 'HTTP/2';
@@ -36,6 +37,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
 			country,
 			postalCode,
 			isp,
+			asn,
 			colo,
 			coloCode: rawColo,
 			latitude: cf.latitude || '',

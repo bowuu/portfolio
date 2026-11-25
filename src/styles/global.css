@@ -5,6 +5,7 @@
 :root {
   --accent: #d9480f;
   --accent-dark: #b83b07;
+  --accent-fill: #b83b07;
   --accent-text: #b83b07;
   --accent-rgb: 217, 72, 15;
   --black: 18, 24, 34;
@@ -26,6 +27,7 @@
 html[data-theme="dark"] {
   --accent: #ea580c;
   --accent-dark: #c2410c;
+  --accent-fill: #c2410c;
   --accent-text: #fb923c;
   --accent-rgb: 234, 88, 12;
   --black: 248, 250, 252;
@@ -238,6 +240,24 @@ hr {
 
 html {
   scroll-behavior: smooth;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 #about,

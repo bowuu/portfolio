@@ -188,8 +188,8 @@ export const GET: APIRoute = async ({ locals }) => {
 		});
 	} catch (err: any) {
 		console.error('Failed to read visitor count from D1:', err);
-		return new Response(JSON.stringify({ count: BASELINE_COUNT, error: 'Database read error' }), {
-			status: 200,
+		return new Response(JSON.stringify({ error: 'Database read error' }), {
+			status: 503,
 			headers: {
 				'Content-Type': 'application/json',
 				'Cache-Control': 'no-store, no-cache, must-revalidate',
@@ -225,8 +225,27 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	try {
 		await ensureTables(db);
 
-		// 2. Keep preview/staging hostnames read-only so test deploys don't inflate production tally
-		const hostname = new URL(request.url).hostname.toLowerCase();
+		// 2. Keep preview/staging hostnames read-only and verify same-origin POST requests
+		const reqUrl = new URL(request.url);
+		const hostname = reqUrl.hostname.toLowerCase();
+		const originHeader = request.headers.get('origin');
+		if (originHeader) {
+			try {
+				const originHost = new URL(originHeader).hostname.toLowerCase();
+				if (originHost !== hostname) {
+					return new Response(JSON.stringify({ status: 'ignored', reason: 'cross_origin' }), {
+						status: 403,
+						headers: { 'Content-Type': 'application/json' },
+					});
+				}
+			} catch {
+				return new Response(JSON.stringify({ status: 'ignored', reason: 'invalid_origin' }), {
+					status: 403,
+					headers: { 'Content-Type': 'application/json' },
+				});
+			}
+		}
+
 		if (!PRODUCTION_HOSTS.has(hostname)) {
 			const row = await db.prepare(`SELECT count FROM site_counter WHERE id = 'visitors'`).first<{ count: number }>();
 			const count = row ? row.count : BASELINE_COUNT;
@@ -239,8 +258,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			});
 		}
 
-		// Extract and normalize connection IP (IPv4 or IPv6 /64 prefix) in volatile memory
-		const rawIp = request.headers.get('cf-connecting-ip') ||
+		// Extract and normalize connection IP (prefer Cloudflare's verified cf-connecting-ip edge header)
+		const cfIp = request.headers.get('cf-connecting-ip');
+		const rawIp = cfIp ||
 			(request.headers.get('x-forwarded-for')?.split(',')[0].trim()) ||
 			'127.0.0.1';
 		const normalizedIp = normalizeIpForHash(rawIp);
@@ -312,8 +332,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		});
 	} catch (err: any) {
 		console.error('Failed to process visitor count in D1:', err);
-		return new Response(JSON.stringify({ count: BASELINE_COUNT, error: 'Database write error' }), {
-			status: 200,
+		return new Response(JSON.stringify({ error: 'Database write error' }), {
+			status: 503,
 			headers: {
 				'Content-Type': 'application/json',
 				'Cache-Control': 'no-store, no-cache, must-revalidate',

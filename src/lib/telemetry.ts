@@ -2,6 +2,7 @@
 // Real-time client-side hardware, display, media, GPU & Cloudflare edge telemetry inspector
 
 import { escapeHtml, isSectionOpen, openModalFocus, closeModalFocus } from './ui';
+import { COLO_NAMES, getVisitorInfoCached } from './colo';
 
 declare global {
 	interface Window {
@@ -9,46 +10,6 @@ declare global {
 		__popModalHistory?: (id: string) => void;
 	}
 }
-
-const COLO_NAMES: Record<string, string> = {
-	MIA: 'Miami, FL',
-	TPA: 'Tampa, FL',
-	MCO: 'Orlando, FL',
-	ATL: 'Atlanta, GA',
-	IAD: 'Ashburn, VA',
-	DCA: 'Washington, DC',
-	CLT: 'Charlotte, NC',
-	RDU: 'Raleigh, NC',
-	ORD: 'Chicago, IL',
-	DFW: 'Dallas, TX',
-	IAH: 'Houston, TX',
-	DEN: 'Denver, CO',
-	PHX: 'Phoenix, AZ',
-	LAX: 'Los Angeles, CA',
-	SFO: 'San Francisco, CA',
-	SJC: 'San Jose, CA',
-	SEA: 'Seattle, WA',
-	PDX: 'Portland, OR',
-	EWR: 'Newark, NJ',
-	JFK: 'New York, NY',
-	BOS: 'Boston, MA',
-	YYZ: 'Toronto, ON',
-	YVR: 'Vancouver, BC',
-	LHR: 'London, UK',
-	FRA: 'Frankfurt, DE',
-	AMS: 'Amsterdam, NL',
-	CDG: 'Paris, FR',
-	MAD: 'Madrid, ES',
-	NRT: 'Tokyo, JP',
-	HND: 'Tokyo, JP',
-	KIX: 'Osaka, JP',
-	ICN: 'Seoul, KR',
-	HKG: 'Hong Kong',
-	SIN: 'Singapore',
-	SYD: 'Sydney, AU',
-	MEL: 'Melbourne, AU',
-	GRU: 'São Paulo, BR',
-};
 
 const STANDARD_SCALES = [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 3];
 const STANDARD_RATES = [60, 75, 90, 100, 120, 144, 165, 180, 200, 240, 280, 360, 480, 500, 540];
@@ -1379,9 +1340,8 @@ export function initTelemetry(): void {
 	// --- 13. Cloudflare Edge & Dual-Stack IP ---
 	async function probeVisitorInfo() {
 		try {
-			const res = await fetch('/api/visitor-info', { cache: 'no-store' });
-			if (!res.ok) throw new Error('Edge endpoint responded with non-200');
-			const data = (await res.json()) as Record<string, any>;
+			const data = await getVisitorInfoCached();
+			if (!data) throw new Error('Edge endpoint responded with non-200');
 			const edgeIp = (data.ip || '').trim();
 			if (edgeIp.includes(':')) currentIpv6 = edgeIp;
 			else if (edgeIp) currentIpv4 = edgeIp;
@@ -1424,8 +1384,8 @@ export function initTelemetry(): void {
 				locEl.title = 'Approximate geolocation resolved from Cloudflare edge IP headers (no device GPS accessed).';
 			}
 
-			const lat = parseFloat(data.latitude);
-			const lon = parseFloat(data.longitude);
+			const lat = parseFloat(String(data.latitude ?? ''));
+			const lon = parseFloat(String(data.longitude ?? ''));
 			const itemLocation = document.getElementById('item-location');
 
 			if (!Number.isNaN(lat) && !Number.isNaN(lon) && (lat !== 0 || lon !== 0)) {

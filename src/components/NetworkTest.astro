@@ -38,7 +38,7 @@
 				<div class="b-tile-value-wrap">
 					<span id="speed-ping" class="b-tile-num mono">--</span>
 					<span class="b-tile-unit">ms</span>
-					<span class="loss-badge mono" id="speed-loss-badge" title="Drop rate across 16 sequential HTTP 204 Anycast edge ping requests.">
+					<span class="loss-badge mono" id="speed-loss-badge" title="Drop rate across 16 sequential Anycast edge ping requests.">
 						<span id="speed-loss">0</span>% loss
 					</span>
 				</div>
@@ -239,7 +239,7 @@
 		if (lossSubEl) lossSubEl.textContent = 'Probing...';
 		if (lossBadge) {
 			lossBadge.classList.remove('loss-optimal', 'loss-warn');
-			lossBadge.title = 'Measuring drop rate across sequential HTTP 204 edge ping requests...';
+			lossBadge.title = 'Measuring drop rate across sequential Anycast edge ping requests...';
 		}
 		if (bloatEl) {
 			bloatEl.textContent = '--';
@@ -253,6 +253,45 @@
 			// ==========================================
 			if (statusText) statusText.textContent = 'Transmitting 16 probes to analyze latency, jitter, and packet loss...';
 
+			// Prefer Cloudflare's native edge-local /cdn-cgi/trace (zero Worker/SSR dispatch overhead)
+			// and fall back to /api/ping on local dev or non-Cloudflare origins.
+			// Using 1 warmup probe also primes TCP/TLS/HTTP2 before measuring latency & jitter.
+			let pingEndpoint = '/api/ping';
+			try {
+				const warmCtrl = new AbortController();
+				const warmTimer = setTimeout(() => warmCtrl.abort(), 1200);
+				const traceRes = await fetch(`/cdn-cgi/trace?_w=${Date.now()}`, {
+					signal: warmCtrl.signal,
+					cache: 'no-store',
+				});
+				clearTimeout(warmTimer);
+				if (traceRes.ok) {
+					const traceText = await traceRes.text();
+					if (traceText.includes('colo=')) {
+						pingEndpoint = '/cdn-cgi/trace';
+						if (!detectedColo) {
+							const coloMatch = traceText.match(/colo=([A-Za-z0-9]+)/);
+							if (coloMatch) {
+								detectedColo = coloMatch[1].toUpperCase();
+								detectedCity = COLO_MAP[detectedColo] || 'Edge Datacenter';
+							}
+						}
+					}
+				}
+			} catch (_) {
+				// Fall back to /api/ping warmup below
+			}
+			if (pingEndpoint === '/api/ping') {
+				try {
+					const warmCtrl = new AbortController();
+					const warmTimer = setTimeout(() => warmCtrl.abort(), 1200);
+					await fetch(`/api/ping?_w=${Date.now()}`, { signal: warmCtrl.signal, cache: 'no-store' });
+					clearTimeout(warmTimer);
+				} catch (_) {
+					// Ignore warmup failure; probes will record actual reachability
+				}
+			}
+
 			const totalProbes = 16;
 			let failed = 0;
 			const pings: number[] = [];
@@ -262,16 +301,20 @@
 				try {
 					const ctrl = new AbortController();
 					const timeout = setTimeout(() => ctrl.abort(), 1200);
-					const res = await fetch(`/api/ping?_p=${i}_${Date.now()}`, {
+					const res = await fetch(`${pingEndpoint}?_p=${i}_${Date.now()}`, {
 						signal: ctrl.signal,
 						cache: 'no-store',
 					});
-					clearTimeout(timeout);
 					if (res.ok) {
+						if (pingEndpoint === '/cdn-cgi/trace') {
+							await res.text();
+						}
+						clearTimeout(timeout);
 						const rtt = performance.now() - t0;
 						pings.push(rtt);
 						if (pingEl) pingEl.textContent = Math.round(rtt).toString();
 					} else {
+						clearTimeout(timeout);
 						failed++;
 					}
 				} catch (_) {
@@ -282,7 +325,7 @@
 				if (lossEl) lossEl.textContent = currentLossRate;
 				if (lossSubEl) lossSubEl.textContent = `${failed}/${i + 1} lost`;
 				if (lossBadge) {
-					lossBadge.title = `Drop rate across ${i + 1} sequential HTTP 204 Anycast edge ping requests.`;
+					lossBadge.title = `Drop rate across ${i + 1} sequential Anycast edge ping requests.`;
 					if (failed > 0) {
 						lossBadge.classList.add('loss-warn');
 						lossBadge.classList.remove('loss-optimal');
@@ -291,14 +334,14 @@
 				if (progressBar) progressBar.style.width = `${5 + Math.round(((i + 1) / totalProbes) * 25)}%`;
 			}
 
-			// Finalize latency, jitter, loss
-			pings.sort((a, b) => a - b);
-			const hasPingBaseline = pings.length > 0;
-			const medianPing = hasPingBaseline ? Math.round(pings[Math.floor(pings.length / 2)]) : 0;
+			// Compute sequential jitter in arrival order BEFORE sorting for median
 			let diffSum = 0;
 			for (let i = 1; i < pings.length; i++) {
 				diffSum += Math.abs(pings[i] - pings[i - 1]);
 			}
+			const sortedPings = [...pings].sort((a, b) => a - b);
+			const hasPingBaseline = sortedPings.length > 0;
+			const medianPing = hasPingBaseline ? Math.round(sortedPings[Math.floor(sortedPings.length / 2)]) : 0;
 			const jitter = pings.length > 1 ? (diffSum / (pings.length - 1)).toFixed(1) : (hasPingBaseline ? '0.0' : '--');
 			const finalLossRate = ((failed / totalProbes) * 100).toFixed(0);
 
@@ -307,7 +350,7 @@
 			if (lossEl) lossEl.textContent = finalLossRate;
 			if (lossSubEl) lossSubEl.textContent = `${failed}/${totalProbes} lost`;
 			if (lossBadge) {
-				lossBadge.title = `Drop rate across ${totalProbes} sequential HTTP 204 Anycast edge ping requests.`;
+				lossBadge.title = `Drop rate across ${totalProbes} sequential Anycast edge ping requests.`;
 				if (failed === 0) {
 					lossBadge.classList.add('loss-optimal');
 					lossBadge.classList.remove('loss-warn');
@@ -359,8 +402,11 @@
 				const timer = setTimeout(() => ctrl.abort(), 1200);
 				const t0 = performance.now();
 				try {
-					const res = await fetch(`/api/ping?_bld=${Date.now()}`, { signal: ctrl.signal, cache: 'no-store' });
-					if (res.ok && !isDownDone) downLoadedPings.push(performance.now() - t0);
+					const res = await fetch(`${pingEndpoint}?_bld=${Date.now()}`, { signal: ctrl.signal, cache: 'no-store' });
+					if (res.ok && !isDownDone) {
+						if (pingEndpoint === '/cdn-cgi/trace') await res.text();
+						downLoadedPings.push(performance.now() - t0);
+					}
 				} catch (_) {
 				} finally {
 					clearTimeout(timer);
@@ -484,8 +530,11 @@
 				const timer = setTimeout(() => ctrl.abort(), 1200);
 				const t0 = performance.now();
 				try {
-					const res = await fetch(`/api/ping?_blu=${Date.now()}`, { signal: ctrl.signal, cache: 'no-store' });
-					if (res.ok && !isUpDone) upLoadedPings.push(performance.now() - t0);
+					const res = await fetch(`${pingEndpoint}?_blu=${Date.now()}`, { signal: ctrl.signal, cache: 'no-store' });
+					if (res.ok && !isUpDone) {
+						if (pingEndpoint === '/cdn-cgi/trace') await res.text();
+						upLoadedPings.push(performance.now() - t0);
+					}
 				} catch (_) {
 				} finally {
 					clearTimeout(timer);
@@ -693,8 +742,8 @@
 		white-space: nowrap;
 	}
 	#run-speedtest-btn {
-		width: 86px;
-		min-width: 86px;
+		width: 104px;
+		min-width: 104px;
 		justify-content: center;
 		padding: 0 0.75em;
 	}

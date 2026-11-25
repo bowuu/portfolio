@@ -946,10 +946,18 @@
 	}
 
 	#toggle-display-btn {
-		width: 86px;
-		min-width: 86px;
+		width: 104px;
+		min-width: 104px;
 		justify-content: center;
 		padding: 0 0.75em;
+	}
+
+	@media (max-width: 520px) {
+		.display-test-card .card-summary-right #toggle-display-btn {
+			flex: 1;
+			width: auto;
+			min-width: 0;
+		}
 	}
 
 	#toggle-display-text {

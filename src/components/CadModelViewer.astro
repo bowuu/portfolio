@@ -1151,6 +1151,9 @@ const defaultModel = manifest[0];
 
 <style>
 	.cad-viewer-container {
+		width: 100%;
+		min-width: 0;
+		box-sizing: border-box;
 		background: var(--bg-card);
 		border: 1px solid var(--border-color);
 		border-radius: 12px;
@@ -1176,6 +1179,8 @@ const defaultModel = manifest[0];
 		align-items: center;
 		gap: 0.9em;
 		flex-wrap: wrap;
+		min-width: 0;
+		max-width: 100%;
 	}
 	.cad-viewer-title {
 		display: flex;
@@ -1202,11 +1207,18 @@ const defaultModel = manifest[0];
 	/* MODEL SELECTOR DROPDOWN */
 	.model-select-wrapper {
 		display: inline-block;
+		min-width: 0;
+		max-width: 100%;
 	}
 	.model-select {
 		font-size: 0.85em;
 		font-weight: 600;
 		padding: 0.4em 0.85em;
+		max-width: 260px;
+		width: 100%;
+		text-overflow: ellipsis;
+		overflow: hidden;
+		white-space: nowrap;
 		border-radius: 6px;
 		border: 1px solid var(--border-strong);
 		background: var(--bg-control);

@@ -87,6 +87,30 @@ const commitUrl = commitHash ? `https://github.com/bowuu/portfolio/commit/${comm
 			wrapEl!.classList.remove('hidden');
 		}
 
+		function fetchReadOnlyCount() {
+			fetch('/api/visitor-counter', { method: 'GET' })
+				.then((r) => (r.ok ? r.json() : null))
+				.then((data) => {
+					if (data && typeof data.count === 'number') updateDisplay(data.count);
+				})
+				.catch(() => {});
+		}
+
+		// Allow read-only preview/owner visits (#notrack, #preview, ?notrack, ?preview) and automated webdriver runs
+		const hash = window.location.hash.toLowerCase();
+		const params = new URLSearchParams(window.location.search);
+		const isReadOnlyVisit =
+			navigator.webdriver === true ||
+			hash === '#notrack' ||
+			hash === '#preview' ||
+			params.has('notrack') ||
+			params.has('preview');
+
+		if (isReadOnlyVisit) {
+			fetchReadOnlyCount();
+			return;
+		}
+
 		// Wait for verified human engagement (visible tab + active dwell time or scroll) to filter automated crawlers
 		let triggered = false;
 		let fallbackTimer: ReturnType<typeof setTimeout> | null = null;

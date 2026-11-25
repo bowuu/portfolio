@@ -1288,8 +1288,8 @@ ${escapeHtml(cadList)}
 					appendOutput(`
 <span class="term-head">Cloudflare D1 Engagement Counter:</span>
   Total Verified Visitors: <span class="term-hl">${escapeHtml(currentCount)}</span>
-  Architecture: Edge-computed SHA-256 with volatile daily rotating salt
-  Privacy: Zero IP persistence; hashes purged at UTC midnight rollover.`);
+  Architecture: Edge-computed SHA-256 with volatile 30-day rotating epoch
+  Privacy: Zero IP/UA persistence; hashes purged on epoch rollover.`);
 					break;
 
 				case 'whoami':
@@ -1305,7 +1305,7 @@ ${escapeHtml(cadList)}
   EDGE POP:   <span class="term-cyan">${escapeHtml(colo)} ▪ ${escapeHtml(loc)}</span>
   CLIENT IP:  <span class="term-dim">${escapeHtml(ip)} (ephemeral, zero persistence)</span>
   HOST:       brob.uk (Cloudflare Workers Anycast)
-  SECURITY:   Zero-logging, volatile daily rotating salt`);
+  SECURITY:   Zero-logging, volatile 30-day rotating epoch salt`);
 					break;
 
 				case 'date':

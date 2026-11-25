@@ -39,15 +39,6 @@ const defaultModel = manifest[0];
 			</div>
 			<button id="cad-upload-btn" class="cad-mini-btn" type="button" title="Upload local STEP, IGES, STL, OBJ, 3MF, or GLB/GLTF file">Upload CAD</button>
 			<input id="cad-upload-input" type="file" accept=".stp,.step,.igs,.iges,.stl,.obj,.3mf,.glb,.gltf" class="cad-sr-only" aria-label="Upload 3D CAD File" />
-		</div>
-
-		<div class="cad-controls-top">
-			<button id="cad-reset-cam-btn" class="cad-mini-btn" type="button" title="Reset Viewpoint">Reset View</button>
-			<button id="cad-grid-btn" class="cad-mini-btn active" type="button" aria-pressed="true" title="Toggle XY Build Plate Grid"><span class="cad-toggle-dot" aria-hidden="true"></span>Grid</button>
-			<button id="cad-wireframe-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Toggle Wireframe Overlay"><span class="cad-toggle-dot" aria-hidden="true"></span>Wireframe</button>
-			<button id="cad-centrifuge-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Centrifuge Stress Test (10,000 RPM)"><span class="cad-toggle-dot" aria-hidden="true"></span>Centrifuge</button>
-			<button id="cad-slicer-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Interactive FDM Slicer Layer View"><span class="cad-toggle-dot" aria-hidden="true"></span>Slicer</button>
-			<button id="cad-orient-btn" class="cad-mini-btn hidden" type="button" aria-pressed="false" title="Toggle CAD Z-Up vs Three.js Y-Up axis">Axis: Y-Up</button>
 			<button id="cad-export-json-btn" class="cad-mini-btn cad-download-btn hidden" type="button" title="Export converted high-quality mesh as .JSON">Export .JSON</button>
 			<a id="cad-download-btn" class="cad-mini-btn cad-download-btn" href={defaultModel.stepFile} download={defaultModel.file} title={`Download ${defaultModel.name} (${defaultModel.file})`} aria-label="Download .STP (CAD STEP File)">
 				<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -57,6 +48,15 @@ const defaultModel = manifest[0];
 				</svg>
 				<span>Download .STP</span>
 			</a>
+		</div>
+
+		<div class="cad-controls-top">
+			<button id="cad-reset-cam-btn" class="cad-mini-btn" type="button" title="Reset Viewpoint">Reset View</button>
+			<button id="cad-grid-btn" class="cad-mini-btn active" type="button" aria-pressed="true" title="Toggle XY Build Plate Grid"><span class="cad-toggle-dot" aria-hidden="true"></span>Grid</button>
+			<button id="cad-wireframe-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Toggle Wireframe Overlay"><span class="cad-toggle-dot" aria-hidden="true"></span>Wireframe</button>
+			<button id="cad-centrifuge-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Centrifuge Stress Test (10,000 RPM)"><span class="cad-toggle-dot" aria-hidden="true"></span>Centrifuge</button>
+			<button id="cad-slicer-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Interactive FDM Slicer Layer View"><span class="cad-toggle-dot" aria-hidden="true"></span>Slicer</button>
+			<button id="cad-orient-btn" class="cad-mini-btn hidden" type="button" aria-pressed="false" title="Toggle CAD Z-Up vs Three.js Y-Up axis">Axis: Y-Up</button>
 		</div>
 	</div>
 
@@ -132,6 +132,7 @@ const defaultModel = manifest[0];
 		</div>
 		<div class="cad-specs" id="cad-specs">
 			<span class="spec-tag" id="spec-dim">241 x 28 x 76 mm</span>
+			<span class="spec-tag" id="spec-vol" title="Actual solid mesh volume">— cm³</span>
 		</div>
 	</div>
 </div>
@@ -398,6 +399,7 @@ const defaultModel = manifest[0];
 			const selectEl = document.getElementById('cad-model-select') as HTMLSelectElement | null;
 			const descTextEl = document.getElementById('model-desc-text');
 			const specDimEl = document.getElementById('spec-dim');
+			const specVolEl = document.getElementById('spec-vol');
 			const downloadBtn = document.getElementById('cad-download-btn') as HTMLAnchorElement | null;
 			const uploadBtn = document.getElementById('cad-upload-btn');
 			const uploadInput = document.getElementById('cad-upload-input') as HTMLInputElement | null;
@@ -588,17 +590,17 @@ const defaultModel = manifest[0];
 			}, { signal });
 
 			/**
-			 * Estimates extruded plastic volume (cm³) from triangle mesh geometry assuming
-			 * 6 perimeter walls (~2.1mm effective average shell) + 20% crosshatch infill.
+			 * Computes actual solid mesh volume (cm³) via signed tetrahedron integration and
+			 * estimates extruded plastic volume (cm³) assuming 6 perimeter walls + 20% crosshatch infill.
 			 */
-			function estimatePlasticVolumeCm3(
+			function computeMeshMetrics(
 				positions: number[],
 				indices: number[],
 				scaleToMm: number,
 				fallbackBboxCm3: number
-			): number {
+			): { meshVolCm3: number; plasticVolCm3: number } {
 				if (!positions.length || !indices.length || scaleToMm <= 0) {
-					return fallbackBboxCm3 * 0.25;
+					return { meshVolCm3: 0, plasticVolCm3: fallbackBboxCm3 * 0.25 };
 				}
 				let signedVol = 0;
 				let surfArea = 0;
@@ -623,14 +625,24 @@ const defaultModel = manifest[0];
 				const meshVolCm3 = (Math.abs(signedVol) * Math.pow(scaleToMm, 3)) / 1000;
 				const meshAreaCm2 = (surfArea * Math.pow(scaleToMm, 2)) / 100;
 				if (meshVolCm3 <= 0.01) {
-					return fallbackBboxCm3 * 0.25;
+					return { meshVolCm3: 0, plasticVolCm3: fallbackBboxCm3 * 0.25 };
 				}
 
 				// 6 walls (~2.52mm @ 0.42mm line width) & top/bottom layers (~1.2mm) -> ~2.1mm avg shell
 				const avgShellCm = 0.21;
 				const shellVolCm3 = meshVolCm3 * (1 - Math.exp(-(meshAreaCm2 * avgShellCm) / meshVolCm3));
 				const infillVolCm3 = 0.20 * (meshVolCm3 - shellVolCm3);
-				return Math.max(0.5, shellVolCm3 + infillVolCm3);
+				return {
+					meshVolCm3,
+					plasticVolCm3: Math.max(0.5, shellVolCm3 + infillVolCm3),
+				};
+			}
+
+			function formatVolumeCm3(volCm3: number): string {
+				if (volCm3 <= 0.01) return '— cm³';
+				if (volCm3 < 1) return `${volCm3.toFixed(2)} cm³`;
+				if (volCm3 < 100) return `${volCm3.toFixed(1)} cm³`;
+				return `${Math.round(volCm3)} cm³`;
 			}
 
 			function updateBoundsFromOrientation(
@@ -680,6 +692,7 @@ const defaultModel = manifest[0];
 				const uploadedEntry = uploadedModels[data.id];
 				const isZUp = uploadedEntry ? uploadedEntry.zUp : false;
 
+				let meshVolCm3 = 0;
 				if (geometry.boundingBox) {
 					const spanX = geometry.boundingBox.max.x - geometry.boundingBox.min.x;
 					const spanY = geometry.boundingBox.max.y - geometry.boundingBox.min.y;
@@ -687,12 +700,14 @@ const defaultModel = manifest[0];
 					const maxSpan = Math.max(spanX, spanY, spanZ, 0.001);
 					const maxDimMm = Math.max(w, h, d, 1);
 
-					activePlasticVolumeCm3 = estimatePlasticVolumeCm3(
+					const metrics = computeMeshMetrics(
 						data.positions,
 						data.indices,
 						maxDimMm / maxSpan,
 						bboxVolumeCm3
 					);
+					meshVolCm3 = metrics.meshVolCm3;
+					activePlasticVolumeCm3 = metrics.plasticVolCm3;
 					updateBoundsFromOrientation(data, geometry, isZUp, w, h, d);
 				} else {
 					modelGroup.rotation.x = 0;
@@ -701,6 +716,7 @@ const defaultModel = manifest[0];
 
 				activeModelRadiusM = Math.max(w, d) > 0 ? Math.max(w, d) / 2 / 1000 : 0.05;
 				if (specDimEl) specDimEl.textContent = `${w} x ${h} x ${d} mm`;
+				if (specVolEl) specVolEl.textContent = formatVolumeCm3(meshVolCm3);
 				const desc = meta?.desc || data.desc;
 				if (descTextEl && desc) {
 					descTextEl.textContent = desc;
@@ -1589,21 +1605,31 @@ const defaultModel = manifest[0];
 		.cad-viewer-header {
 			flex-direction: column;
 			align-items: stretch;
-			gap: 0.55em;
-			padding: 0.65em 0.85em;
+			gap: 0.45em;
+			padding: 0.6em 0.8em;
 		}
 		.cad-viewer-title-row {
 			flex-direction: row;
 			flex-wrap: wrap;
 			align-items: center;
-			gap: 0.5em;
+			gap: 0.4em;
 		}
 		.cad-viewer-title {
-			width: 100%;
+			width: auto;
+			margin-right: auto;
+			order: 1;
+		}
+		#cad-upload-btn {
+			order: 2;
+		}
+		#cad-download-btn,
+		#cad-export-json-btn {
+			order: 3;
 		}
 		.model-select-wrapper {
-			flex: 1 1 160px;
-			width: auto;
+			order: 4;
+			flex: 1 0 100%;
+			width: 100%;
 			max-width: none;
 		}
 		.model-select {
@@ -1612,8 +1638,21 @@ const defaultModel = manifest[0];
 		}
 		.cad-controls-top {
 			justify-content: flex-start;
-			gap: 0.4em;
+			flex-wrap: nowrap;
+			overflow-x: auto;
+			scrollbar-width: none;
+			-webkit-overflow-scrolling: touch;
+			gap: 0.35em;
 			width: 100%;
+			padding-bottom: 1px;
+		}
+		.cad-controls-top::-webkit-scrollbar {
+			display: none;
+		}
+		.cad-mini-btn {
+			font-size: 0.74em;
+			padding: 0.32em 0.58em;
+			flex-shrink: 0;
 		}
 		.canvas-wrapper {
 			height: 350px;

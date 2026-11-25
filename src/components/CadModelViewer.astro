@@ -41,6 +41,8 @@ const defaultModel = manifest[0];
 					))}
 				</select>
 			</div>
+			<button id="cad-upload-btn" class="cad-mini-btn" type="button" title="Upload local STEP, IGES, STL, OBJ, 3MF, or GLB/GLTF file">Upload CAD</button>
+			<input id="cad-upload-input" type="file" accept=".stp,.step,.igs,.iges,.stl,.obj,.3mf,.glb,.gltf" class="cad-sr-only" aria-label="Upload 3D CAD File" />
 		</div>
 
 		<div class="cad-controls-top">
@@ -49,8 +51,6 @@ const defaultModel = manifest[0];
 			<button id="cad-wireframe-btn" class="cad-mini-btn" type="button" aria-pressed="false">Wireframe: OFF</button>
 			<button id="cad-centrifuge-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Centrifuge Stress Test (10,000 RPM)">Centrifuge: OFF</button>
 			<button id="cad-slicer-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Interactive FDM Slicer Layer View">Slicer: OFF</button>
-			<button id="cad-upload-btn" class="cad-mini-btn" type="button" title="Upload local STEP, IGES, STL, OBJ, 3MF, or GLB/GLTF file">Upload CAD</button>
-			<input id="cad-upload-input" type="file" accept=".stp,.step,.igs,.iges,.stl,.obj,.3mf,.glb,.gltf" class="cad-sr-only" aria-label="Upload 3D CAD File" />
 			<button id="cad-orient-btn" class="cad-mini-btn hidden" type="button" aria-pressed="false" title="Toggle CAD Z-Up vs Three.js Y-Up axis">Axis: Y-Up</button>
 			<button id="cad-export-json-btn" class="cad-mini-btn cad-download-btn hidden" type="button" title="Export converted high-quality mesh as .JSON">Export .JSON</button>
 			<a id="cad-download-btn" class="cad-mini-btn cad-download-btn" href={defaultModel.stepFile} download={defaultModel.file} title={`Download ${defaultModel.name} (${defaultModel.file})`} aria-label="Download .STP (CAD STEP File)">
@@ -1179,6 +1179,7 @@ const defaultModel = manifest[0];
 		align-items: center;
 		gap: 0.9em;
 		flex-wrap: wrap;
+		width: 100%;
 		min-width: 0;
 		max-width: 100%;
 	}
@@ -1207,15 +1208,16 @@ const defaultModel = manifest[0];
 	/* MODEL SELECTOR DROPDOWN */
 	.model-select-wrapper {
 		display: inline-block;
+		flex: 1 1 280px;
+		max-width: 380px;
 		min-width: 0;
-		max-width: 100%;
 	}
 	.model-select {
 		font-size: 0.85em;
 		font-weight: 600;
 		padding: 0.4em 0.85em;
-		max-width: 260px;
 		width: 100%;
+		max-width: 100%;
 		text-overflow: ellipsis;
 		overflow: hidden;
 		white-space: nowrap;

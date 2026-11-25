@@ -52,7 +52,7 @@ const defaultModel = manifest[0];
 					<polyline points="7 10 12 15 17 10"></polyline>
 					<line x1="12" y1="15" x2="12" y2="3"></line>
 				</svg>
-				<span><span class="cad-dl-prefix">Download </span>.STP</span>
+				<span><span class="cad-dl-prefix">Download </span><span class="cad-dl-prefix-mobile">DL </span>.STP</span>
 			</a>
 		</div>
 	</div>
@@ -1257,6 +1257,9 @@ const defaultModel = manifest[0];
 	.cad-download-btn svg {
 		flex-shrink: 0;
 	}
+	.cad-dl-prefix-mobile {
+		display: none;
+	}
 	.cad-mini-btn.active {
 		background: var(--accent-fill);
 		color: #ffffff;
@@ -1670,6 +1673,9 @@ const defaultModel = manifest[0];
 		}
 		.cad-dl-prefix {
 			display: none;
+		}
+		.cad-dl-prefix-mobile {
+			display: inline;
 		}
 		.cad-viewport-overlay {
 			top: 10px;

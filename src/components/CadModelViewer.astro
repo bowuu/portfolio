@@ -42,8 +42,8 @@ const defaultModel = manifest[0];
 		</div>
 
 		<div class="cad-controls-top">
-			<button id="cad-centrifuge-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Centrifuge Stress Test (10,000 RPM)"><span class="cad-toggle-dot" aria-hidden="true"></span>Centrifuge</button>
-			<button id="cad-slicer-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Interactive FDM Slicer Layer View"><span class="cad-toggle-dot" aria-hidden="true"></span>Slicer</button>
+			<button id="cad-centrifuge-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Centrifuge Stress Test (10,000 RPM)">Centrifuge</button>
+			<button id="cad-slicer-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Interactive FDM Slicer Layer View">Slicer</button>
 			<button id="cad-orient-btn" class="cad-mini-btn hidden" type="button" aria-pressed="false" title="Toggle CAD Z-Up vs Three.js Y-Up axis">Axis: Y-Up</button>
 			<button id="cad-export-json-btn" class="cad-mini-btn cad-download-btn hidden" type="button" title="Export converted high-quality mesh as .JSON">Export .JSON</button>
 			<a id="cad-download-btn" class="cad-mini-btn cad-download-btn" href={defaultModel.stepFile} download={defaultModel.file} title={`Download ${defaultModel.name} (${defaultModel.file})`} aria-label="Download .STP (CAD STEP File)">
@@ -81,8 +81,8 @@ const defaultModel = manifest[0];
 		<canvas id="cad-canvas" tabindex="0" aria-label="Interactive 3D CAD model viewer. Drag to orbit or use arrow keys to rotate and R to reset view."></canvas>
 		<div class="cad-viewport-overlay" role="group" aria-label="Viewport Controls">
 			<button id="cad-reset-cam-btn" class="cad-mini-btn" type="button" title="Reset Viewpoint (R)">Reset</button>
-			<button id="cad-grid-btn" class="cad-mini-btn active" type="button" aria-pressed="true" title="Toggle XY Build Plate Grid"><span class="cad-toggle-dot" aria-hidden="true"></span>Grid</button>
-			<button id="cad-wireframe-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Toggle Wireframe Overlay"><span class="cad-toggle-dot" aria-hidden="true"></span>Wireframe</button>
+			<button id="cad-grid-btn" class="cad-mini-btn active" type="button" aria-pressed="true" title="Toggle XY Build Plate Grid">Grid</button>
+			<button id="cad-wireframe-btn" class="cad-mini-btn" type="button" aria-pressed="false" title="Toggle Wireframe Overlay">Wireframe</button>
 		</div>
 		<div id="cad-centrifuge-hud" class="cad-centrifuge-hud hidden">
 			<span class="hud-pulse-dot"></span>
@@ -1254,30 +1254,10 @@ const defaultModel = manifest[0];
 		border-color: rgba(var(--accent-rgb), 0.4);
 		font-weight: 700;
 	}
-	.cad-download-btn:hover {
-		background: var(--accent-fill);
-		color: #ffffff;
-		border-color: var(--accent-fill);
-		box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.3);
-	}
 	.cad-download-btn svg {
 		flex-shrink: 0;
 	}
-	.cad-toggle-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: rgba(148, 163, 184, 0.55);
-		flex-shrink: 0;
-		transition: background 0.15s ease, box-shadow 0.15s ease;
-	}
-	.cad-mini-btn.active .cad-toggle-dot,
-	.cad-mini-btn.active-centrifuge .cad-toggle-dot,
-	.cad-mini-btn.active-slicer .cad-toggle-dot {
-		background: #4ade80;
-		box-shadow: 0 0 6px rgba(74, 222, 128, 0.9);
-	}
-	.cad-mini-btn:hover, .cad-mini-btn.active {
+	.cad-mini-btn.active {
 		background: var(--accent-fill);
 		color: #ffffff;
 		border-color: var(--accent-fill);
@@ -1287,6 +1267,19 @@ const defaultModel = manifest[0];
 		border-color: var(--accent-fill);
 		color: #ffffff;
 		box-shadow: 0 0 10px rgba(234, 88, 12, 0.35);
+	}
+	@media (hover: hover) {
+		.cad-download-btn:hover {
+			background: var(--accent-fill);
+			color: #ffffff;
+			border-color: var(--accent-fill);
+			box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.3);
+		}
+		.cad-mini-btn:hover {
+			background: var(--accent-fill);
+			color: #ffffff;
+			border-color: var(--accent-fill);
+		}
 	}
 
 	.cad-centrifuge-hud {
@@ -1529,14 +1522,21 @@ const defaultModel = manifest[0];
 		backdrop-filter: blur(6px);
 		-webkit-backdrop-filter: blur(6px);
 	}
-	:global(html[data-theme="dark"]) .cad-viewport-overlay .cad-mini-btn:not(.active):not(:hover) {
+	:global(html[data-theme="dark"]) .cad-viewport-overlay .cad-mini-btn:not(.active) {
 		background: rgba(22, 22, 25, 0.85);
 	}
-	.cad-viewport-overlay .cad-mini-btn:hover,
 	.cad-viewport-overlay .cad-mini-btn.active {
 		background: var(--accent-fill);
 		color: #ffffff;
 		border-color: var(--accent-fill);
+	}
+	@media (hover: hover) {
+		.cad-viewport-overlay .cad-mini-btn:hover,
+		:global(html[data-theme="dark"]) .cad-viewport-overlay .cad-mini-btn:hover {
+			background: var(--accent-fill);
+			color: #ffffff;
+			border-color: var(--accent-fill);
+		}
 	}
 
 	.cad-drag-hint {

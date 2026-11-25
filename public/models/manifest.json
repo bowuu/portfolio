@@ -8,8 +8,8 @@
     "dimensions": "241 x 28 x 76 mm",
     "jsonFile": "/models/be92u.json",
     "stepFile": "/models/BE92UMount.stp",
-    "triangles": 12602,
-    "vertices": 9224
+    "triangles": 26272,
+    "vertices": 17971
   },
   {
     "id": "network-switch-stand",
@@ -20,8 +20,8 @@
     "dimensions": "54 x 120 x 30 mm",
     "jsonFile": "/models/network-switch-stand.json",
     "stepFile": "/models/NetworkSwitchStand.stp",
-    "triangles": 7040,
-    "vertices": 5141
+    "triangles": 13418,
+    "vertices": 9249
   },
   {
     "id": "laptop-vertical-stand",
@@ -32,8 +32,8 @@
     "dimensions": "210 x 60 x 150 mm",
     "jsonFile": "/models/laptop-vertical-stand.json",
     "stepFile": "/models/LaptopDivider.stp",
-    "triangles": 14988,
-    "vertices": 9781
+    "triangles": 23076,
+    "vertices": 14984
   },
   {
     "id": "dual-keyboard-mount",
@@ -44,8 +44,8 @@
     "dimensions": "308 x 30 x 122 mm",
     "jsonFile": "/models/dual-keyboard-mount.json",
     "stepFile": "/models/K380_KZ450_Both.stp",
-    "triangles": 5012,
-    "vertices": 4050
+    "triangles": 14296,
+    "vertices": 9772
   },
   {
     "id": "ikea-tertial",
@@ -56,8 +56,8 @@
     "dimensions": "100 x 90 x 40 mm",
     "jsonFile": "/models/ikea-tertial.json",
     "stepFile": "/models/IkeaTertialMount.stp",
-    "triangles": 12936,
-    "vertices": 8870
+    "triangles": 27810,
+    "vertices": 17769
   },
   {
     "id": "r70x-headband",
@@ -68,8 +68,8 @@
     "dimensions": "28 x 9 x 30 mm",
     "jsonFile": "/models/r70x-headband.json",
     "stepFile": "/models/R70XHeadbandJoiner.stp",
-    "triangles": 11727,
-    "vertices": 7401
+    "triangles": 20477,
+    "vertices": 12671
   },
   {
     "id": "lenovo-clock-stand",
@@ -80,8 +80,8 @@
     "dimensions": "85 x 69 x 20 mm",
     "jsonFile": "/models/lenovo-clock-stand.json",
     "stepFile": "/models/LenovoClockEssential.stp",
-    "triangles": 840,
-    "vertices": 920
+    "triangles": 1360,
+    "vertices": 1440
   },
   {
     "id": "remote-mount",
@@ -92,8 +92,8 @@
     "dimensions": "59 x 15 x 70 mm",
     "jsonFile": "/models/remote-mount.json",
     "stepFile": "/models/RemoteMountImproved.stp",
-    "triangles": 3024,
-    "vertices": 2396
+    "triangles": 8920,
+    "vertices": 5956
   },
   {
     "id": "brz-armrest",
@@ -104,8 +104,8 @@
     "dimensions": "60 x 24 x 120 mm",
     "jsonFile": "/models/brz-armrest.json",
     "stepFile": "/models/BRZArtwrestBlocker.stp",
-    "triangles": 6354,
-    "vertices": 4763
+    "triangles": 13978,
+    "vertices": 9295
   },
   {
     "id": "skil-battery",
@@ -116,8 +116,8 @@
     "dimensions": "60 x 18 x 60 mm",
     "jsonFile": "/models/skil-battery.json",
     "stepFile": "/models/Skil12VBatteryHolderMagnetBar.stp",
-    "triangles": 5768,
-    "vertices": 4387
+    "triangles": 12414,
+    "vertices": 8752
   },
   {
     "id": "gilmour-handle",
@@ -128,7 +128,7 @@
     "dimensions": "38 x 20 x 45 mm",
     "jsonFile": "/models/gilmour-handle.json",
     "stepFile": "/models/Gilmour3PatternHandleFULL.stp",
-    "triangles": 12740,
-    "vertices": 8074
+    "triangles": 23848,
+    "vertices": 14299
   }
 ]

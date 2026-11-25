@@ -8,6 +8,7 @@
     "@astrojs/sitemap": "^3.7.6",
     "@types/three": "^0.187.0",
     "astro": "^7.4.13",
+    "occt-import-js": "^0.0.23",
     "three": "^0.187.0",
     "typescript": "^7.0.2"
   },
@@ -19,6 +20,7 @@
     "build": "astro build",
     "cf-typegen": "wrangler types",
     "check": "astro build && tsc && wrangler deploy --dry-run",
+    "convert-cad": "node scripts/convert-cad.mjs",
     "deploy": "node scripts/deploy.mjs",
     "dev": "astro dev",
     "preview": "astro build && wrangler dev"

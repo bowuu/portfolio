@@ -332,7 +332,7 @@ export function initTelemetry(): void {
 		}
 
 		if (titleEl) {
-			titleEl.textContent = isRoute ? 'Edge Datacenter Route' : 'Edge Geolocation Map';
+			titleEl.textContent = isRoute ? 'Edge Datacenter Distance' : 'Edge Geolocation Map';
 		}
 
 		if (coordsEl) {

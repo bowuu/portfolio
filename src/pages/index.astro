@@ -134,7 +134,27 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 						<div class="project-box">
 							<div class="project-head">
 								<div class="project-title-group">
-									<h3 class="project-name">Playkeys for Plex Web</h3>
+									<h3 class="project-name">
+										<svg class="project-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="24" height="24" aria-hidden="true">
+											<defs>
+												<linearGradient id="playkeys-keycapBody" x1="0%" y1="0%" x2="0%" y2="100%">
+													<stop offset="0%" stop-color="#242834" />
+													<stop offset="100%" stop-color="#12141a" />
+												</linearGradient>
+												<linearGradient id="playkeys-amberPlay" x1="0%" y1="0%" x2="100%" y2="100%">
+													<stop offset="0%" stop-color="#fbbf24" />
+													<stop offset="100%" stop-color="#d97706" />
+												</linearGradient>
+												<filter id="playkeys-amberGlow" x="-10%" y="-10%" width="120%" height="120%">
+													<feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#e5a00d" flood-opacity="0.3" />
+												</filter>
+											</defs>
+											<rect x="4" y="4" width="120" height="120" rx="26" fill="url(#playkeys-keycapBody)" stroke="#e5a00d" stroke-width="6" />
+											<polygon points="31,31 72,61 31,91" fill="url(#playkeys-amberPlay)" stroke="url(#playkeys-amberPlay)" stroke-width="6" stroke-linejoin="round" filter="url(#playkeys-amberGlow)" />
+											<rect x="88" y="28" width="12" height="66" rx="6" fill="#f8fafc" />
+										</svg>
+										<span>Playkeys for Plex Web</span>
+									</h3>
 									<span class="proj-badge">Chrome Extension</span>
 								</div>
 								<div class="project-links">
@@ -491,10 +511,17 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		flex-wrap: wrap;
 	}
 	.project-name {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45em;
 		font-size: 1.15em;
 		font-weight: 700;
 		margin: 0;
 		color: rgb(var(--black));
+	}
+	.project-icon {
+		flex-shrink: 0;
+		display: block;
 	}
 	.proj-badge {
 		font-size: 0.72em;

@@ -291,29 +291,19 @@ export function initTelemetry(): void {
 		return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 	}
 
-	function ensureLeaflet(): Promise<any> {
-		if ((window as any).L) return Promise.resolve((window as any).L);
-		if (leafletPromise) return leafletPromise;
-		leafletPromise = new Promise((resolve, reject) => {
-			if (!document.querySelector('link[href*="leaflet.css"]')) {
-				const css = document.createElement('link');
-				css.rel = 'stylesheet';
-				css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-				document.head.appendChild(css);
-			}
-			const script = document.createElement('script');
-			script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-			script.async = true;
-			script.onload = () => resolve((window as any).L);
-			script.onerror = () => reject(new Error('Failed to load Leaflet'));
-			document.head.appendChild(script);
-		});
+	function ensureLeaflet(): Promise<typeof import('leaflet')> {
+		if (!leafletPromise) {
+			leafletPromise = Promise.all([
+				import('leaflet'),
+				import('leaflet/dist/leaflet.css'),
+			]).then(([L]) => (L as any).default ?? L);
+		}
 		return leafletPromise;
 	}
 
 	function prewarmMapDns() {
 		if (document.querySelector('link[rel="dns-prefetch"][href*="openstreetmap.org"]')) return;
-		['https://www.openstreetmap.org', 'https://tile.openstreetmap.org', 'https://unpkg.com'].forEach((href) => {
+		['https://www.openstreetmap.org', 'https://tile.openstreetmap.org'].forEach((href) => {
 			const link = document.createElement('link');
 			link.rel = 'dns-prefetch';
 			link.href = href;
@@ -1571,12 +1561,12 @@ export function initTelemetry(): void {
 				edgeEl.title = 'Nearest Cloudflare Anycast point of presence (PoP) terminating the TLS connection (IATA airport code).';
 
 				const openEdgeMapBtn = document.getElementById('open-edge-map-btn') as HTMLButtonElement | null;
+				const itemEdge = document.getElementById('item-edge');
 				const edgeCoords = coloCode ? COLO_COORDS[coloCode] : undefined;
 				const lat = parseFloat(data.latitude);
 				const lon = parseFloat(data.longitude);
 				if (openEdgeMapBtn && edgeCoords && !isNaN(lat) && !isNaN(lon)) {
-					openEdgeMapBtn.disabled = false;
-					openEdgeMapBtn.onclick = (e) => {
+					const openEdgeHandler = (e: Event) => {
 						e.stopPropagation();
 						openMapApplet({
 							lat,
@@ -1587,6 +1577,13 @@ export function initTelemetry(): void {
 							edgeName: edgeLabel,
 						});
 					};
+					openEdgeMapBtn.disabled = false;
+					openEdgeMapBtn.onclick = openEdgeHandler;
+					if (itemEdge) {
+						itemEdge.classList.add('telemetry-item-clickable');
+						itemEdge.title = `View ${edgeLabel} route on interactive OpenStreetMap`;
+						itemEdge.onclick = openEdgeHandler;
+					}
 				}
 			}
 

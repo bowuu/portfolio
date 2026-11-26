@@ -3,6 +3,7 @@
 
 import { escapeHtml, isSectionOpen, openModalFocus, closeModalFocus } from './ui';
 import { COLO_NAMES, getVisitorInfoCached } from './colo';
+import { COLO_COORDS } from './coloCoords';
 
 declare global {
 	interface Window {
@@ -267,20 +268,52 @@ export function initTelemetry(): void {
 	});
 	mapThemeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-	function computeMapEmbedUrl(lat: number, lon: number): { embedUrl: string; fullUrl: string } {
-		const delta = 0.045;
-		const minLon = (lon - delta).toFixed(5);
-		const minLat = (lat - delta).toFixed(5);
-		const maxLon = (lon + delta).toFixed(5);
-		const maxLat = (lat + delta).toFixed(5);
-		const embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${minLon}%2C${minLat}%2C${maxLon}%2C${maxLat}&layer=mapnik&marker=${lat.toFixed(5)}%2C${lon.toFixed(5)}`;
-		const fullUrl = `https://www.openstreetmap.org/?mlat=${lat.toFixed(5)}&mlon=${lon.toFixed(5)}#map=13/${lat.toFixed(5)}/${lon.toFixed(5)}`;
-		return { embedUrl, fullUrl };
+	interface MapAppletOptions {
+		lat: number;
+		lon: number;
+		locName: string;
+		edgeLat?: number;
+		edgeLon?: number;
+		edgeName?: string;
+	}
+
+	let leafletMap: any = null;
+	let leafletLayerGroup: any = null;
+	let leafletPromise: Promise<any> | null = null;
+
+	function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+		const R = 6371;
+		const dLat = ((lat2 - lat1) * Math.PI) / 180;
+		const dLon = ((lon2 - lon1) * Math.PI) / 180;
+		const a =
+			Math.sin(dLat / 2) ** 2 +
+			Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+		return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+	}
+
+	function ensureLeaflet(): Promise<any> {
+		if ((window as any).L) return Promise.resolve((window as any).L);
+		if (leafletPromise) return leafletPromise;
+		leafletPromise = new Promise((resolve, reject) => {
+			if (!document.querySelector('link[href*="leaflet.css"]')) {
+				const css = document.createElement('link');
+				css.rel = 'stylesheet';
+				css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+				document.head.appendChild(css);
+			}
+			const script = document.createElement('script');
+			script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+			script.async = true;
+			script.onload = () => resolve((window as any).L);
+			script.onerror = () => reject(new Error('Failed to load Leaflet'));
+			document.head.appendChild(script);
+		});
+		return leafletPromise;
 	}
 
 	function prewarmMapDns() {
 		if (document.querySelector('link[rel="dns-prefetch"][href*="openstreetmap.org"]')) return;
-		['https://www.openstreetmap.org', 'https://tile.openstreetmap.org'].forEach((href) => {
+		['https://www.openstreetmap.org', 'https://tile.openstreetmap.org', 'https://unpkg.com'].forEach((href) => {
 			const link = document.createElement('link');
 			link.rel = 'dns-prefetch';
 			link.href = href;
@@ -288,15 +321,18 @@ export function initTelemetry(): void {
 		});
 	}
 
-	function openMapApplet(lat: number, lon: number, locName: string) {
+	async function openMapApplet(opts: MapAppletOptions) {
+		const { lat, lon, locName, edgeLat, edgeLon, edgeName } = opts;
+		const isRoute = edgeLat !== undefined && edgeLon !== undefined && !!edgeName;
 		const modal = document.getElementById('map-applet-modal');
-		const iframe = document.getElementById('map-applet-iframe') as HTMLIFrameElement | null;
+		const canvas = document.getElementById('map-applet-canvas');
 		const loader = document.getElementById('map-applet-loader');
+		const titleEl = document.getElementById('map-applet-title');
 		const coordsEl = document.getElementById('map-coords-badge');
 		const footerLocEl = document.getElementById('map-footer-loc');
 		const extLink = document.getElementById('map-external-link') as HTMLAnchorElement | null;
 		const closeBtn = document.getElementById('map-applet-close-btn') as HTMLElement | null;
-		if (!modal || !iframe) return;
+		if (!modal || !canvas) return;
 
 		if (!userOverrodeMapTheme) {
 			const isSiteDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -305,35 +341,91 @@ export function initTelemetry(): void {
 			setMapTheme(currentMapTheme, false);
 		}
 
-		const latDir = lat >= 0 ? 'N' : 'S';
-		const lonDir = lon >= 0 ? 'E' : 'W';
-		if (coordsEl) {
-			coordsEl.textContent = `${Math.abs(lat).toFixed(4)}° ${latDir}, ${Math.abs(lon).toFixed(4)}° ${lonDir}`;
+		if (titleEl) {
+			titleEl.textContent = isRoute ? 'Edge Datacenter Route' : 'Edge Geolocation Map';
 		}
-		if (footerLocEl) footerLocEl.textContent = locName;
 
-		const { embedUrl, fullUrl } = computeMapEmbedUrl(lat, lon);
-		if (extLink) extLink.href = fullUrl;
+		if (coordsEl) {
+			if (isRoute) {
+				const km = haversineKm(lat, lon, edgeLat!, edgeLon!);
+				const mi = km * 0.621371;
+				coordsEl.textContent = `~${Math.round(km)} km (${Math.round(mi)} mi)`;
+			} else {
+				const latDir = lat >= 0 ? 'N' : 'S';
+				const lonDir = lon >= 0 ? 'E' : 'W';
+				coordsEl.textContent = `${Math.abs(lat).toFixed(4)}° ${latDir}, ${Math.abs(lon).toFixed(4)}° ${lonDir}`;
+			}
+		}
 
-		if (iframe.src !== embedUrl) {
-			if (loader) loader.style.display = 'flex';
-			isMapIframeLoaded = false;
-			iframe.onload = () => {
-				isMapIframeLoaded = true;
-				if (loader) loader.style.display = 'none';
-			};
-			window.setTimeout(() => {
-				if (!isMapIframeLoaded && loader) loader.style.display = 'none';
-			}, 5000);
-			iframe.src = embedUrl;
-		} else if (loader) {
-			loader.style.display = isMapIframeLoaded ? 'none' : 'flex';
+		if (footerLocEl) {
+			footerLocEl.textContent = isRoute ? `${edgeName} ↔ ${locName}` : locName;
+		}
+		if (extLink) {
+			const targetLat = isRoute ? edgeLat! : lat;
+			const targetLon = isRoute ? edgeLon! : lon;
+			extLink.href = `https://www.openstreetmap.org/?mlat=${targetLat.toFixed(5)}&mlon=${targetLon.toFixed(5)}#map=10/${targetLat.toFixed(5)}/${targetLon.toFixed(5)}`;
 		}
 
 		modal.classList.remove('hidden');
 		openModalFocus(modal, closeBtn);
 		document.documentElement.style.overflow = 'hidden';
 		window.__pushModalHistory?.('map-modal', closeMapApplet);
+
+		if (loader) loader.style.display = 'flex';
+		try {
+			const L = await ensureLeaflet();
+			if (!leafletMap) {
+				leafletMap = L.map(canvas, { zoomControl: true, attributionControl: true });
+				L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+					maxZoom: 18,
+					attribution: '&copy; OpenStreetMap',
+				}).addTo(leafletMap);
+				leafletLayerGroup = L.layerGroup().addTo(leafletMap);
+			}
+			leafletLayerGroup.clearLayers();
+
+			const userMarker = L.circleMarker([lat, lon], {
+				radius: 7,
+				color: '#38bdf8',
+				fillColor: '#0ea5e9',
+				fillOpacity: 0.9,
+				weight: 2,
+			}).bindPopup(`<strong>Your Approximate Location</strong><br>${escapeHtml(locName)}`);
+			userMarker.addTo(leafletLayerGroup);
+
+			if (isRoute) {
+				const edgeMarker = L.circleMarker([edgeLat!, edgeLon!], {
+					radius: 8,
+					color: '#fb923c',
+					fillColor: '#f97316',
+					fillOpacity: 0.95,
+					weight: 2,
+				}).bindPopup(`<strong>${escapeHtml(edgeName!)}</strong><br>Cloudflare Anycast PoP`);
+				edgeMarker.addTo(leafletLayerGroup);
+
+				L.polyline(
+					[
+						[lat, lon],
+						[edgeLat!, edgeLon!],
+					],
+					{ color: '#f97316', weight: 3, dashArray: '6, 8', opacity: 0.9 }
+				).addTo(leafletLayerGroup);
+
+				const bounds = L.latLngBounds([
+					[lat, lon],
+					[edgeLat!, edgeLon!],
+				]);
+				leafletMap.fitBounds(bounds, { padding: [48, 48], maxZoom: 11 });
+			} else {
+				leafletMap.setView([lat, lon], 12);
+			}
+
+			setTimeout(() => leafletMap?.invalidateSize(), 60);
+		} catch {
+			// Ignore map load errors silently
+		} finally {
+			if (loader) loader.style.display = 'none';
+		}
 	}
 
 	function updateMapMaximizeUi(maximized: boolean) {
@@ -1448,7 +1540,7 @@ export function initTelemetry(): void {
 					openMapBtn.title = `View ${locString} on interactive OpenStreetMap`;
 					openMapBtn.onclick = (e) => {
 						e.stopPropagation();
-						openMapApplet(lat, lon, locString);
+						openMapApplet({ lat, lon, locName: locString });
 					};
 				}
 				if (itemLocation) {
@@ -1456,7 +1548,7 @@ export function initTelemetry(): void {
 					itemLocation.title = `View ${locString} on interactive OpenStreetMap`;
 					itemLocation.onclick = (e) => {
 						if ((e.target as HTMLElement)?.closest('button')) return;
-						openMapApplet(lat, lon, locString);
+						openMapApplet({ lat, lon, locName: locString });
 					};
 				}
 			} else {
@@ -1474,10 +1566,28 @@ export function initTelemetry(): void {
 			if (edgeEl) {
 				const coloCode = (data.coloCode || (data.colo ? data.colo.split(' ')[0] : '')).toUpperCase();
 				const coloCity = coloCode && COLO_NAMES[coloCode];
-				if (coloCity) edgeEl.textContent = `${coloCode} (${coloCity})`;
-				else if (data.colo) edgeEl.textContent = data.colo;
-				else edgeEl.textContent = 'Cloudflare Anycast Edge';
+				const edgeLabel = coloCity ? `${coloCode} (${coloCity})` : data.colo || 'Cloudflare Anycast Edge';
+				edgeEl.textContent = edgeLabel;
 				edgeEl.title = 'Nearest Cloudflare Anycast point of presence (PoP) terminating the TLS connection (IATA airport code).';
+
+				const openEdgeMapBtn = document.getElementById('open-edge-map-btn') as HTMLButtonElement | null;
+				const edgeCoords = coloCode ? COLO_COORDS[coloCode] : undefined;
+				const lat = parseFloat(data.latitude);
+				const lon = parseFloat(data.longitude);
+				if (openEdgeMapBtn && edgeCoords && !isNaN(lat) && !isNaN(lon)) {
+					openEdgeMapBtn.disabled = false;
+					openEdgeMapBtn.onclick = (e) => {
+						e.stopPropagation();
+						openMapApplet({
+							lat,
+							lon,
+							locName: data.location || 'Current Location',
+							edgeLat: edgeCoords[0],
+							edgeLon: edgeCoords[1],
+							edgeName: edgeLabel,
+						});
+					};
+				}
 			}
 
 			if (ispEl) {

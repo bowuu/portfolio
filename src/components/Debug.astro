@@ -86,8 +86,13 @@
 					</div>
 					<span id="t-location" class="t-val">Detecting...</span>
 				</div>
-				<div class="telemetry-item">
-					<span class="t-label">Edge Datacenter</span>
+				<div class="telemetry-item" id="item-edge">
+					<div class="t-subhead-pill-wrap">
+						<button id="open-edge-map-btn" class="t-subhead-pill-btn" type="button" disabled title="Click to view Edge Datacenter & route on OpenStreetMap">
+							<span>Edge Datacenter</span>
+							<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+						</button>
+					</div>
 					<span id="t-edge" class="t-val">Detecting...</span>
 				</div>
 				<div class="telemetry-item">
@@ -269,13 +274,11 @@
 				<div class="map-spinner"></div>
 				<span>Loading OpenStreetMap...</span>
 			</div>
-			<iframe
-				id="map-applet-iframe"
+			<div
+				id="map-applet-canvas"
 				class="map-applet-iframe"
-				title="OpenStreetMap Location Applet"
-				loading="lazy"
-				src="about:blank"
-			></iframe>
+				aria-label="OpenStreetMap Location Applet"
+			></div>
 		</div>
 
 		<div class="map-applet-footer">

@@ -661,6 +661,32 @@
 		];
 
 		let currentPixelIdx = 0;
+		let hudHideTimer: number | null = null;
+		const HUD_HIDE_DELAY_MS = 3500;
+		const pixelHud = document.getElementById('pixel-hud');
+
+		function showPixelHud() {
+			if (!pixelHud) return;
+			pixelHud.classList.remove('hud-hidden');
+			if (hudHideTimer !== null) {
+				window.clearTimeout(hudHideTimer);
+			}
+			hudHideTimer = window.setTimeout(() => {
+				if (pixelModal && !pixelModal.classList.contains('hidden')) {
+					pixelHud.classList.add('hud-hidden');
+				}
+			}, HUD_HIDE_DELAY_MS);
+		}
+
+		function clearPixelHudTimer() {
+			if (hudHideTimer !== null) {
+				window.clearTimeout(hudHideTimer);
+				hudHideTimer = null;
+			}
+			if (pixelHud) {
+				pixelHud.classList.remove('hud-hidden');
+			}
+		}
 
 		function applyPixelColor() {
 			if (!pixelPlane || !pixelColorName) return;
@@ -718,6 +744,7 @@
 			document.body.style.overflow = 'hidden';
 			currentPixelIdx = 0;
 			applyPixelColor();
+			showPixelHud();
 			(window as any).__pushModalHistory?.('pixel-checker-modal', closePixelChecker);
 
 			// Attempt fullscreen on modal element for true edge-to-edge inspection with 0 scrollbar
@@ -746,6 +773,7 @@
 			document.documentElement.style.overflow = '';
 			document.body.style.overflow = '';
 			exitFs();
+			clearPixelHudTimer();
 			(window as any).__popModalHistory?.('pixel-checker-modal');
 		}
 
@@ -769,8 +797,8 @@
 		if (openPixelBtn) openPixelBtn.addEventListener('click', openPixelChecker);
 		if (closePixelBtn) closePixelBtn.addEventListener('click', closePixelChecker);
 		if (pixelPlane) pixelPlane.addEventListener('click', nextPixelColor);
-		const pixelHud = document.getElementById('pixel-hud');
 		if (pixelHud) pixelHud.addEventListener('click', (e) => e.stopPropagation());
+		if (pixelModal) pixelModal.addEventListener('mousemove', showPixelHud, { passive: true });
 
 		document.addEventListener('keydown', (e) => {
 			if (!pixelModal || pixelModal.classList.contains('hidden')) return;
@@ -1253,6 +1281,13 @@
 		gap: 0.8em;
 		z-index: 100000;
 		pointer-events: auto;
+		transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+	}
+
+	.pixel-hud.hud-hidden {
+		transform: translateY(calc(100% + 48px));
+		opacity: 0;
+		pointer-events: none;
 	}
 
 	.pixel-hud-pill {

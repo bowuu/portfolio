@@ -228,12 +228,6 @@
 			</div>
 			<div class="map-applet-header-actions">
 				<div class="map-theme-segmented" role="group" aria-label="Map theme">
-					<button id="map-theme-dark-btn" class="map-theme-seg-btn active" type="button" data-theme-val="dark" title="Dark theme map" aria-label="Dark theme map" aria-pressed="true">
-						<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" stroke="none" aria-hidden="true">
-							<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-						</svg>
-						<span class="seg-label">Dark</span>
-					</button>
 					<button id="map-theme-light-btn" class="map-theme-seg-btn" type="button" data-theme-val="light" title="Light theme map" aria-label="Light theme map" aria-pressed="false">
 						<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 							<circle cx="12" cy="12" r="4" fill="currentColor"></circle>
@@ -248,13 +242,25 @@
 						</svg>
 						<span class="seg-label">Light</span>
 					</button>
+					<button id="map-theme-dark-btn" class="map-theme-seg-btn active" type="button" data-theme-val="dark" title="Dark theme map" aria-label="Dark theme map" aria-pressed="true">
+						<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" stroke="none" aria-hidden="true">
+							<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+						</svg>
+						<span class="seg-label">Dark</span>
+					</button>
 				</div>
-				<button id="map-applet-close-btn" class="map-close-btn" type="button" aria-label="Close Map Applet" title="Close (Esc)">
-					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-						<line x1="18" y1="6" x2="6" y2="18"></line>
-						<line x1="6" y1="6" x2="18" y2="18"></line>
-					</svg>
-				</button>
+				<div class="terminal-wm-btns" aria-label="Window controls">
+					<button class="wm-btn wm-min" id="map-applet-min-btn" type="button" title="Minimize / Close (Esc)" aria-label="Minimize">
+						<svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><line x1="1" y1="5" x2="9" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+					</button>
+					<button class="wm-btn wm-max" id="map-applet-maximize-btn" type="button" title="Maximize to Fullscreen" aria-label="Maximize to Fullscreen">
+						<svg id="map-icon-maximize" viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><rect x="1.5" y="1.5" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+						<svg id="map-icon-restore" class="hidden" viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><rect x="3.5" y="1.5" width="5" height="5" rx="0.8" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 3.5v5h5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+					</button>
+					<button class="wm-btn wm-close" id="map-applet-close-btn" type="button" title="Close (Esc)" aria-label="Close Map Applet">
+						<svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+					</button>
+				</div>
 			</div>
 		</div>
 
@@ -1142,6 +1148,24 @@
 	#codec-applet-modal.is-maximized #codec-applet-maximize-btn:hover {
 		background: var(--accent-fill) !important;
 		color: #ffffff !important;
+	}
+	#map-applet-modal.is-maximized {
+		padding: 0 !important;
+	}
+	#map-applet-modal.is-maximized .map-applet-dialog {
+		width: 100vw !important;
+		max-width: 100vw !important;
+		height: 100vh !important;
+		max-height: 100vh !important;
+		border-radius: 0 !important;
+		border: none !important;
+		margin: 0 !important;
+		display: flex;
+		flex-direction: column;
+	}
+	#map-applet-modal.is-maximized .map-applet-frame-wrap {
+		flex: 1 1 auto;
+		height: auto !important;
 	}
 
 	.map-applet-frame-wrap {

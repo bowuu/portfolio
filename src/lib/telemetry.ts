@@ -336,15 +336,67 @@ export function initTelemetry(): void {
 		window.__pushModalHistory?.('map-modal', closeMapApplet);
 	}
 
+	function updateMapMaximizeUi(maximized: boolean) {
+		const modal = document.getElementById('map-applet-modal');
+		const maxBtn = document.getElementById('map-applet-maximize-btn');
+		const iconMax = document.getElementById('map-icon-maximize');
+		const iconRestore = document.getElementById('map-icon-restore');
+		modal?.classList.toggle('is-maximized', maximized);
+		iconMax?.classList.toggle('hidden', maximized);
+		iconRestore?.classList.toggle('hidden', !maximized);
+		if (maxBtn) {
+			maxBtn.title = maximized ? 'Restore window size' : 'Maximize to Fullscreen';
+			maxBtn.setAttribute('aria-label', maxBtn.title);
+		}
+	}
+
+	function toggleMapMaximize() {
+		const modal = document.getElementById('map-applet-modal');
+		if (!modal) return;
+		const currentlyMaximized = !!document.fullscreenElement || modal.classList.contains('is-maximized');
+		const target = !currentlyMaximized;
+		if (target) {
+			if (modal.requestFullscreen) {
+				modal.requestFullscreen().catch(() => updateMapMaximizeUi(true));
+			} else if ((modal as any).webkitRequestFullscreen) {
+				(modal as any).webkitRequestFullscreen();
+				updateMapMaximizeUi(true);
+			} else {
+				updateMapMaximizeUi(true);
+			}
+		} else {
+			if (document.fullscreenElement) {
+				if (document.exitFullscreen) document.exitFullscreen().catch(() => updateMapMaximizeUi(false));
+				else if ((document as any).webkitExitFullscreen) (document as any).webkitExitFullscreen();
+			}
+			updateMapMaximizeUi(false);
+		}
+	}
+
 	function closeMapApplet() {
 		const modal = document.getElementById('map-applet-modal');
 		if (!modal || modal.classList.contains('hidden')) return;
+		if (document.fullscreenElement === modal) {
+			try {
+				if (document.exitFullscreen) document.exitFullscreen();
+				else if ((document as any).webkitExitFullscreen) (document as any).webkitExitFullscreen();
+			} catch { /* ignore */ }
+		}
+		updateMapMaximizeUi(false);
 		closeModalFocus(modal);
 		modal.classList.add('hidden');
 		document.documentElement.style.overflow = '';
 		window.__popModalHistory?.('map-modal');
 	}
 
+	document.addEventListener('fullscreenchange', () => {
+		const modal = document.getElementById('map-applet-modal');
+		if (!modal || modal.classList.contains('hidden')) return;
+		updateMapMaximizeUi(document.fullscreenElement === modal);
+	});
+
+	document.getElementById('map-applet-min-btn')?.addEventListener('click', closeMapApplet);
+	document.getElementById('map-applet-maximize-btn')?.addEventListener('click', toggleMapMaximize);
 	document.getElementById('map-applet-close-btn')?.addEventListener('click', closeMapApplet);
 	document.getElementById('map-applet-backdrop')?.addEventListener('click', closeMapApplet);
 

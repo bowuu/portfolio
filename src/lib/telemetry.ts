@@ -1571,13 +1571,14 @@ export function initTelemetry(): void {
 						openMapApplet({
 							lat,
 							lon,
-							locName: data.location || 'Current Location',
+							locName: [data.city, data.region].filter(Boolean).join(', ') || data.location || 'Current Location',
 							edgeLat: edgeCoords[0],
 							edgeLon: edgeCoords[1],
 							edgeName: edgeLabel,
 						});
 					};
 					openEdgeMapBtn.disabled = false;
+					openEdgeMapBtn.classList.add('interactive');
 					openEdgeMapBtn.onclick = openEdgeHandler;
 					if (itemEdge) {
 						itemEdge.classList.add('telemetry-item-clickable');

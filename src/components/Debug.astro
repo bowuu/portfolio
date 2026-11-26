@@ -345,7 +345,7 @@
 					<rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
 				</svg>
 				<div class="map-applet-heading-row">
-					<h3 id="codec-applet-title" class="map-applet-title">Video Codec Studio</h3>
+					<h3 id="codec-applet-title" class="map-applet-title">WebCodecs Studio</h3>
 				</div>
 			</div>
 			<div class="terminal-wm-btns" aria-label="Window controls">
@@ -395,7 +395,7 @@
 						<span class="codec-ctrl-label">Source:</span>
 						<div class="codec-segmented" id="scene-selector" role="group" aria-label="Source frame selection">
 							<button type="button" class="codec-seg-btn" data-scene="smpte" title="SMPTE BT.709 color calibration &amp; alignment pattern">Test</button>
-							<button type="button" class="codec-seg-btn active" data-scene="1080p" title="Blender 'Charge' sci-fi action master (1920×1080)">1080</button>
+							<button type="button" class="codec-seg-btn active" data-scene="1080p" title="Blender Studio 'Charge' (2022) 1080p excerpt — CC BY 4.0">1080</button>
 							<button type="button" class="codec-seg-btn" data-scene="4k" title="Chief Morale Officer (Samoyed) 4K UHD Master (3840×2160)">4K</button>
 							<button type="button" class="codec-seg-btn" data-scene="custom" id="codec-source-custom-btn" title="Drop or select local video clip (Zero Egress)">Custom</button>
 						</div>
@@ -561,10 +561,11 @@
 
 		<div class="map-applet-footer">
 			<div class="map-footer-info">
-				<span class="map-footer-loc">WebCodecs Hardware Pipeline</span>
+				<span class="map-footer-loc" id="codec-footer-source-label">Charge (2022)</span>
 				<span class="map-footer-sep" aria-hidden="true">▪</span>
-				<span class="map-footer-note">In-Memory Zero Egress</span>
+				<span class="map-footer-note codec-footer-credit" id="codec-footer-source-detail">1080p excerpt by Blender Studio (<a href="https://studio.blender.org/films/charge/" target="_blank" rel="noopener noreferrer">Source</a> &middot; <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>)</span>
 			</div>
+			<div class="map-footer-note">In-Memory Zero Egress</div>
 		</div>
 	</div>
 </div>
@@ -1262,6 +1263,23 @@
 		color: rgb(var(--gray));
 		opacity: 0.85;
 	}
+	.codec-footer-credit {
+		font-size: 0.74em;
+		color: rgb(var(--gray));
+		opacity: 0.85;
+	}
+	.codec-footer-credit a {
+		color: inherit;
+		text-decoration: underline;
+		text-decoration-color: rgba(148, 163, 184, 0.45);
+		text-underline-offset: 2px;
+	}
+	.codec-footer-credit a:hover {
+		color: rgb(var(--black));
+	}
+	:global(html[data-theme="dark"]) .codec-footer-credit a:hover {
+		color: #f1f5f9;
+	}
 	.map-ext-link {
 		display: inline-flex;
 		align-items: center;
@@ -1687,14 +1705,16 @@
 	}
 	:global(.codec-badge-dot) {
 		display: inline-block;
-		width: 5px;
-		height: 5px;
+		box-sizing: border-box;
+		width: 6px;
+		height: 6px;
 		border-radius: 50%;
-		margin-left: 3px;
+		margin-left: 4px;
 		vertical-align: middle;
 	}
 	:global(.codec-badge-dot.hw) { background: #22c55e; box-shadow: 0 0 4px #22c55e; }
-	:global(.codec-badge-dot.sw) { background: #38bdf8; }
+	:global(.codec-badge-dot.hw-dec) { background: linear-gradient(90deg, #facc15 50%, transparent 50%); border: 1.5px solid #facc15; }
+	:global(.codec-badge-dot.sw) { background: transparent; border: 1.5px solid #38bdf8; }
 	:global(.codec-badge-dot.na) { background: #ef4444; opacity: 0.8; }
 	.codec-seg-btn.unsupported { opacity: 0.45; text-decoration: line-through; }
 

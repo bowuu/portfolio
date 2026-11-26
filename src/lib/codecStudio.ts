@@ -889,22 +889,30 @@ export function initCodecStudio(options: CodecStudioOptions = {}): void {
 			const cap = codecCapabilities[cKey];
 			btn.querySelector('.codec-badge-dot')?.remove();
 
+			const baseTitle = btn.getAttribute('data-base-title') ?? btn.getAttribute('title') ?? '';
+			if (!btn.hasAttribute('data-base-title') && baseTitle) {
+				btn.setAttribute('data-base-title', baseTitle);
+			}
+
 			const dot = document.createElement('span');
 			dot.className = 'codec-badge-dot';
+			let statusDesc = '';
 			if (cap.encHw && cap.decHw) {
 				dot.classList.add('hw');
-				dot.title = 'Full Hardware ASIC acceleration supported (Encode + Decode)';
+				statusDesc = 'Full HW: Hardware ASIC Encode + Decode supported';
 			} else if (cap.decHw) {
-				dot.classList.add('hw');
-				dot.title = 'Hardware Decode supported (NVDEC/VDU); Encode via CPU/SW';
+				dot.classList.add('hw-dec');
+				statusDesc = 'Decode-only HW: Hardware Decode (NVDEC/VDU); Encode via CPU/SW';
 			} else if (cap.encSw || cap.decSw) {
 				dot.classList.add('sw');
-				dot.title = 'Software CPU fallback only (No hardware ASIC detected)';
+				statusDesc = 'Software Only: CPU/WASM fallback (No hardware ASIC detected)';
 			} else {
 				dot.classList.add('na');
-				dot.title = 'Unsupported in this browser';
+				statusDesc = 'Unsupported in this browser';
 				btn.classList.add('unsupported');
 			}
+			dot.title = statusDesc;
+			btn.setAttribute('title', baseTitle ? `${baseTitle} — ${statusDesc}` : statusDesc);
 			btn.appendChild(dot);
 		});
 	}
@@ -1126,6 +1134,7 @@ export function initCodecStudio(options: CodecStudioOptions = {}): void {
 		customVideoUrl = URL.createObjectURL(file);
 		customFileName = file.name;
 		selectedScene = 'custom';
+		updateFooterSourceInfo();
 		sceneSegBtns.forEach((b) => b.classList.toggle('active', b.getAttribute('data-scene') === 'custom'));
 
 		sourceBitmaps.forEach((b) => { try { b?.close(); } catch {} });
@@ -1719,9 +1728,30 @@ export function initCodecStudio(options: CodecStudioOptions = {}): void {
 		updateStatusHint();
 	}
 
+	function updateFooterSourceInfo() {
+		const labelEl = document.getElementById('codec-footer-source-label');
+		const detailEl = document.getElementById('codec-footer-source-detail');
+		if (!labelEl || !detailEl) return;
+
+		if (selectedScene === '1080p') {
+			labelEl.textContent = 'Charge (2022)';
+			detailEl.innerHTML = '1080p excerpt by Blender Studio (<a href="https://studio.blender.org/films/charge/" target="_blank" rel="noopener noreferrer">Source</a> &middot; <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>)';
+		} else if (selectedScene === '4k') {
+			labelEl.textContent = 'Chief Morale Officer';
+			detailEl.textContent = '3840\u00d72160 UHD Master';
+		} else if (selectedScene === 'smpte') {
+			labelEl.textContent = 'SMPTE BT.709';
+			detailEl.textContent = '1920\u00d71080 Procedural Calibration Pattern';
+		} else {
+			labelEl.textContent = customFileName || 'Custom Clip';
+			detailEl.textContent = 'Local file (100% client-side)';
+		}
+	}
+
 	function setScene(scene: '4k' | '1080p' | 'smpte' | 'custom') {
 		stopPlayback();
 		selectedScene = scene;
+		updateFooterSourceInfo();
 		sceneSegBtns.forEach((b) => b.classList.toggle('active', b.getAttribute('data-scene') === scene));
 
 		sourceBitmaps.forEach((b) => { try { b?.close(); } catch {} });

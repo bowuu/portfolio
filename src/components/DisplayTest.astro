@@ -114,7 +114,9 @@
 
 	<!-- PIXEL CHECKER FULLSCREEN MODAL -->
 	<div id="pixel-checker-modal" class="pixel-modal hidden" aria-hidden="true" inert role="dialog" aria-modal="true" aria-label="Dead Pixel Checker">
-		<div id="pixel-canvas-plane" class="pixel-plane"></div>
+		<div id="pixel-canvas-plane" class="pixel-plane">
+			<div id="pixel-moving-dot" class="pixel-moving-dot hidden"></div>
+		</div>
 		<div class="pixel-hud" id="pixel-hud">
 			<div class="pixel-hud-pill">
 				<span id="pixel-color-name">Black (Stuck Pixel Check)</span>
@@ -657,13 +659,65 @@
 			{ name: 'Pure Red (Red Subpixel Health)', color: '#ff0000', textLight: true },
 			{ name: 'Pure Green (Green Subpixel Health)', color: '#00ff00', textLight: false },
 			{ name: 'Pure Blue (Blue Subpixel Health)', color: '#0000ff', textLight: true },
-			{ name: '50% Neutral Gray (Panel Uniformity & DSE)', color: '#7f7f7f', textLight: true }
+			{ name: '50% Neutral Gray (Panel Uniformity & DSE)', color: '#7f7f7f', textLight: true },
+			{ name: 'Local Dimming (Checkerboard Blooming Check)', color: '#000000', textLight: true, pattern: 'checkerboard' },
+			{ name: 'Local Dimming (Moving White Circle)', color: '#000000', textLight: true, pattern: 'moving-dot' }
 		];
 
 		let currentPixelIdx = 0;
 		let hudHideTimer: number | null = null;
+		let dotRafId: number | null = null;
+		let dotX = 0;
+		let dotY = 0;
+		let dotLastTs = 0;
+		const DOT_SIZE = 56;
+		const DOT_SPEED_PX_PER_SEC = 420;
 		const HUD_HIDE_DELAY_MS = 3500;
 		const pixelHud = document.getElementById('pixel-hud');
+		const pixelMovingDot = document.getElementById('pixel-moving-dot');
+
+		function stopMovingDot() {
+			if (dotRafId !== null) {
+				cancelAnimationFrame(dotRafId);
+				dotRafId = null;
+			}
+			if (pixelMovingDot) {
+				pixelMovingDot.classList.add('hidden');
+			}
+		}
+
+		function startMovingDot() {
+			if (!pixelMovingDot) return;
+			stopMovingDot();
+			dotX = 0;
+			dotY = 0;
+			dotLastTs = performance.now();
+			pixelMovingDot.style.transform = `translate3d(${dotX}px, ${dotY}px, 0)`;
+			pixelMovingDot.classList.remove('hidden');
+
+			function step(now: number) {
+				if (!pixelModal || pixelModal.classList.contains('hidden')) {
+					stopMovingDot();
+					return;
+				}
+				const dt = Math.min((now - dotLastTs) / 1000, 0.1);
+				dotLastTs = now;
+				dotX += DOT_SPEED_PX_PER_SEC * dt;
+				if (dotX > window.innerWidth) {
+					dotX = -DOT_SIZE;
+					dotY += DOT_SIZE;
+					if (dotY >= window.innerHeight) {
+						dotY = 0;
+					}
+				}
+				if (pixelMovingDot) {
+					pixelMovingDot.style.transform = `translate3d(${dotX}px, ${dotY}px, 0)`;
+				}
+				dotRafId = requestAnimationFrame(step);
+			}
+
+			dotRafId = requestAnimationFrame(step);
+		}
 
 		function showPixelHud() {
 			if (!pixelHud) return;
@@ -691,8 +745,15 @@
 		function applyPixelColor() {
 			if (!pixelPlane || !pixelColorName) return;
 			const mode = PIXEL_MODES[currentPixelIdx];
+			stopMovingDot();
+			pixelPlane.classList.remove('pixel-checkerboard');
 			pixelPlane.style.backgroundColor = mode.color;
 			pixelColorName.textContent = mode.name;
+			if (mode.pattern === 'checkerboard') {
+				pixelPlane.classList.add('pixel-checkerboard');
+			} else if (mode.pattern === 'moving-dot') {
+				startMovingDot();
+			}
 		}
 
 		function nextPixelColor() {
@@ -773,6 +834,7 @@
 			document.documentElement.style.overflow = '';
 			document.body.style.overflow = '';
 			exitFs();
+			stopMovingDot();
 			clearPixelHudTimer();
 			(window as any).__popModalHistory?.('pixel-checker-modal');
 		}
@@ -1268,6 +1330,33 @@
 		height: 100%;
 		cursor: pointer;
 		transition: background-color 0.15s ease;
+	}
+
+	.pixel-plane.pixel-checkerboard {
+		background-color: #000000;
+		background-image: conic-gradient(
+			#ffffff 90deg,
+			#000000 90deg 180deg,
+			#ffffff 180deg 270deg,
+			#000000 270deg
+		);
+		background-size: 160px 160px;
+	}
+
+	.pixel-moving-dot {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 56px;
+		height: 56px;
+		border-radius: 50%;
+		background: #ffffff;
+		pointer-events: none;
+		will-change: transform;
+	}
+
+	.pixel-moving-dot.hidden {
+		display: none;
 	}
 
 	.pixel-hud {

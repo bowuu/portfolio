@@ -2879,27 +2879,6 @@ export function initAllEasterEggs(): void {
 				}
 				return;
 			}
-
-			const hasModifiers = (e.ctrlKey || e.metaKey) && e.altKey;
-			if (!hasModifiers) return;
-			const activeTag = document.activeElement?.tagName;
-			if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return;
-			if (document.getElementById('terminal-modal')?.classList.contains('open')) return;
-
-			const kbLabEl = document.getElementById('keyboard-lab');
-			if (kbLabEl) {
-				const rect = kbLabEl.getBoundingClientRect();
-				if (rect.bottom > -80 && rect.top < window.innerHeight + 80) return;
-				if (document.activeElement?.closest('#keyboard-lab')) return;
-			}
-
-			if (e.code === 'KeyG') {
-				e.preventDefault();
-				window.__toggleZeroG?.();
-			} else if (e.code === 'KeyH') {
-				e.preventDefault();
-				window.__toggleTilt?.();
-			}
 		});
 	}
 }

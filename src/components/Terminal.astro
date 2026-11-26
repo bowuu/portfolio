@@ -1644,7 +1644,7 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 					if (typeof (window as any).__toggleZeroG === 'function') {
 						closeTerminal();
 						(window as any).__toggleZeroG();
-						appendOutput('<span class="term-hl">[Zero-G Verlet Physics]</span> Gravity simulation toggled. Drag or fling cards across the screen. Press <span class="term-cyan">Ctrl+Alt+G</span> or click <span class="term-cyan">Resolder</span> to reassemble.');
+						appendOutput('<span class="term-hl">[Zero-G Verlet Physics]</span> Gravity simulation toggled. Drag or fling cards across the screen. Press <span class="term-cyan">Esc</span> or click <span class="term-cyan">Resolder</span> to reassemble.');
 					} else {
 						appendOutput('<span class="term-err">Zero-G physics engine not initialized.</span>');
 					}
@@ -1654,7 +1654,7 @@ Status:     Extruder pressure advance nominal ▪ Cooling fan 60%`);
 					if (typeof (window as any).__toggleTilt === 'function') {
 						closeTerminal();
 						(window as any).__toggleTilt();
-						appendOutput('<span class="term-hl">[3D Parallax Hologram]</span> Viewport tilt toggled. Move your mouse or tilt your device to view perspective depth. Press <span class="term-cyan">Ctrl+Alt+H</span> or <span class="term-cyan">Esc</span> to exit.');
+						appendOutput('<span class="term-hl">[3D Parallax Hologram]</span> Viewport tilt toggled. Move your mouse or tilt your device to view perspective depth. Press <span class="term-cyan">Esc</span> to exit.');
 					} else {
 						appendOutput('<span class="term-err">3D Tilt module not initialized.</span>');
 					}

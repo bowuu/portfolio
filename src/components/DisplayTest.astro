@@ -702,10 +702,12 @@
 
 				const swatch = document.createElement('span');
 				swatch.className = 'pixel-mode-swatch';
-				if (mode.pattern === 'checkerboard' || mode.pattern === 'checkerboard-lg') {
+				if (mode.pattern === 'checkerboard') {
 					swatch.classList.add('swatch-checker');
+				} else if (mode.pattern === 'checkerboard-lg') {
+					swatch.classList.add('swatch-checker-lg');
 				} else if (mode.pattern === 'moving-dot') {
-					swatch.classList.add('swatch-dot');
+					swatch.classList.add((mode.dotSize ?? 56) > 80 ? 'swatch-dot-lg' : 'swatch-dot');
 				} else {
 					swatch.style.backgroundColor = mode.color;
 				}
@@ -1529,12 +1531,12 @@
 		display: none;
 	}
 
-	.pixel-mode-item {
+	:global(.pixel-mode-item) {
 		display: flex;
 		align-items: center;
-		gap: 0.65em;
+		gap: 0.7em;
 		width: 100%;
-		padding: 0.55em 0.85em;
+		padding: 0.55em 0.9em;
 		border: none;
 		border-radius: 9px;
 		background: transparent;
@@ -1547,32 +1549,43 @@
 		transition: background 0.12s ease, color 0.12s ease;
 	}
 
-	.pixel-mode-item:hover {
+	:global(.pixel-mode-item:hover) {
 		background: rgba(255, 255, 255, 0.1);
 		color: #ffffff;
 	}
 
-	.pixel-mode-item.active {
-		background: rgba(249, 115, 22, 0.2);
+	:global(.pixel-mode-item.active) {
+		background: rgba(249, 115, 22, 0.22);
 		color: #ffffff;
 		font-weight: 600;
 	}
 
-	.pixel-mode-swatch {
-		width: 14px;
-		height: 14px;
+	:global(.pixel-mode-swatch) {
+		width: 16px;
+		height: 16px;
 		border-radius: 4px;
-		border: 1px solid rgba(255, 255, 255, 0.28);
+		border: 1px solid rgba(255, 255, 255, 0.35);
 		flex-shrink: 0;
 	}
 
-	.pixel-mode-swatch.swatch-checker {
-		background-image: conic-gradient(#fff 90deg, #000 90deg 180deg, #fff 180deg 270deg, #000 270deg);
-		background-size: 100% 100%;
+	:global(.pixel-mode-swatch.swatch-checker) {
+		background-color: #000000;
+		background-image: conic-gradient(#ffffff 90deg, #000000 90deg 180deg, #ffffff 180deg 270deg, #000000 270deg);
+		background-size: 8px 8px;
 	}
 
-	.pixel-mode-swatch.swatch-dot {
-		background: radial-gradient(circle, #ffffff 42%, #000000 46%);
+	:global(.pixel-mode-swatch.swatch-checker-lg) {
+		background-color: #000000;
+		background-image: conic-gradient(#ffffff 90deg, #000000 90deg 180deg, #ffffff 180deg 270deg, #000000 270deg);
+		background-size: 16px 16px;
+	}
+
+	:global(.pixel-mode-swatch.swatch-dot) {
+		background: radial-gradient(circle, #ffffff 32%, #000000 36%);
+	}
+
+	:global(.pixel-mode-swatch.swatch-dot-lg) {
+		background: radial-gradient(circle, #ffffff 52%, #000000 56%);
 	}
 
 	.hud-sep {

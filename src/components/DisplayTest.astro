@@ -118,11 +118,15 @@
 			<div id="pixel-moving-dot" class="pixel-moving-dot hidden"></div>
 		</div>
 		<div class="pixel-hud" id="pixel-hud">
-			<div class="pixel-hud-pill">
+			<div id="pixel-mode-menu" class="pixel-mode-menu hidden" role="menu" aria-label="Select Pixel Checker Mode"></div>
+			<button id="pixel-hud-pill" class="pixel-hud-pill" type="button" aria-haspopup="true" aria-expanded="false">
 				<span id="pixel-color-name">Black (Stuck Pixel Check)</span>
 				<span class="hud-sep">▪</span>
 				<span class="hud-hint">Click / Space to cycle ▪ Esc to exit</span>
-			</div>
+				<svg class="hud-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+					<polyline points="18 15 12 9 6 15"></polyline>
+				</svg>
+			</button>
 			<button id="close-pixel-btn" class="pixel-close-btn" type="button" aria-label="Exit Pixel Checker">
 				<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
 					<line x1="18" y1="6" x2="6" y2="18"></line>
@@ -661,7 +665,9 @@
 			{ name: 'Pure Blue (Blue Subpixel Health)', color: '#0000ff', textLight: true },
 			{ name: '50% Neutral Gray (Panel Uniformity & DSE)', color: '#7f7f7f', textLight: true },
 			{ name: 'Local Dimming (Checkerboard Blooming Check)', color: '#000000', textLight: true, pattern: 'checkerboard' },
-			{ name: 'Local Dimming (Moving White Circle)', color: '#000000', textLight: true, pattern: 'moving-dot' }
+			{ name: 'Local Dimming (Large Checkerboard)', color: '#000000', textLight: true, pattern: 'checkerboard-lg' },
+			{ name: 'Local Dimming (Moving White Circle)', color: '#000000', textLight: true, pattern: 'moving-dot', dotSize: 56 },
+			{ name: 'Local Dimming (Large Moving White Circle)', color: '#000000', textLight: true, pattern: 'moving-dot', dotSize: 112 }
 		];
 
 		let currentPixelIdx = 0;
@@ -670,11 +676,73 @@
 		let dotX = 0;
 		let dotY = 0;
 		let dotLastTs = 0;
-		const DOT_SIZE = 56;
+		let isModeMenuOpen = false;
 		const DOT_SPEED_PX_PER_SEC = 420;
 		const HUD_HIDE_DELAY_MS = 3500;
 		const pixelHud = document.getElementById('pixel-hud');
+		const pixelHudPill = document.getElementById('pixel-hud-pill');
+		const pixelModeMenu = document.getElementById('pixel-mode-menu');
 		const pixelMovingDot = document.getElementById('pixel-moving-dot');
+
+		function closeModeMenu() {
+			if (!pixelModeMenu || !pixelHudPill) return;
+			isModeMenuOpen = false;
+			pixelModeMenu.classList.add('hidden');
+			pixelHudPill.setAttribute('aria-expanded', 'false');
+		}
+
+		function renderModeMenu() {
+			if (!pixelModeMenu) return;
+			pixelModeMenu.innerHTML = '';
+			PIXEL_MODES.forEach((mode, idx) => {
+				const btn = document.createElement('button');
+				btn.type = 'button';
+				btn.className = `pixel-mode-item${idx === currentPixelIdx ? ' active' : ''}`;
+				btn.setAttribute('role', 'menuitem');
+
+				const swatch = document.createElement('span');
+				swatch.className = 'pixel-mode-swatch';
+				if (mode.pattern === 'checkerboard' || mode.pattern === 'checkerboard-lg') {
+					swatch.classList.add('swatch-checker');
+				} else if (mode.pattern === 'moving-dot') {
+					swatch.classList.add('swatch-dot');
+				} else {
+					swatch.style.backgroundColor = mode.color;
+				}
+
+				const label = document.createElement('span');
+				label.textContent = mode.name;
+
+				btn.appendChild(swatch);
+				btn.appendChild(label);
+				btn.addEventListener('click', (e) => {
+					e.stopPropagation();
+					currentPixelIdx = idx;
+					applyPixelColor();
+					closeModeMenu();
+					showPixelHud();
+				});
+				pixelModeMenu.appendChild(btn);
+			});
+		}
+
+		function toggleModeMenu(e: Event) {
+			e.stopPropagation();
+			if (!pixelModeMenu || !pixelHudPill) return;
+			isModeMenuOpen = !isModeMenuOpen;
+			if (isModeMenuOpen) {
+				renderModeMenu();
+				pixelModeMenu.classList.remove('hidden');
+				pixelHudPill.setAttribute('aria-expanded', 'true');
+				if (hudHideTimer !== null) {
+					window.clearTimeout(hudHideTimer);
+					hudHideTimer = null;
+				}
+			} else {
+				closeModeMenu();
+				showPixelHud();
+			}
+		}
 
 		function stopMovingDot() {
 			if (dotRafId !== null) {
@@ -686,12 +754,14 @@
 			}
 		}
 
-		function startMovingDot() {
+		function startMovingDot(dotSize: number) {
 			if (!pixelMovingDot) return;
 			stopMovingDot();
 			dotX = 0;
 			dotY = 0;
 			dotLastTs = performance.now();
+			pixelMovingDot.style.width = `${dotSize}px`;
+			pixelMovingDot.style.height = `${dotSize}px`;
 			pixelMovingDot.style.transform = `translate3d(${dotX}px, ${dotY}px, 0)`;
 			pixelMovingDot.classList.remove('hidden');
 
@@ -704,8 +774,8 @@
 				dotLastTs = now;
 				dotX += DOT_SPEED_PX_PER_SEC * dt;
 				if (dotX > window.innerWidth) {
-					dotX = -DOT_SIZE;
-					dotY += DOT_SIZE;
+					dotX = -dotSize;
+					dotY += dotSize;
 					if (dotY >= window.innerHeight) {
 						dotY = 0;
 					}
@@ -724,9 +794,11 @@
 			pixelHud.classList.remove('hud-hidden');
 			if (hudHideTimer !== null) {
 				window.clearTimeout(hudHideTimer);
+				hudHideTimer = null;
 			}
+			if (isModeMenuOpen) return;
 			hudHideTimer = window.setTimeout(() => {
-				if (pixelModal && !pixelModal.classList.contains('hidden')) {
+				if (pixelModal && !pixelModal.classList.contains('hidden') && !isModeMenuOpen) {
 					pixelHud.classList.add('hud-hidden');
 				}
 			}, HUD_HIDE_DELAY_MS);
@@ -746,13 +818,18 @@
 			if (!pixelPlane || !pixelColorName) return;
 			const mode = PIXEL_MODES[currentPixelIdx];
 			stopMovingDot();
-			pixelPlane.classList.remove('pixel-checkerboard');
+			pixelPlane.classList.remove('pixel-checkerboard', 'pixel-checkerboard-lg');
 			pixelPlane.style.backgroundColor = mode.color;
 			pixelColorName.textContent = mode.name;
 			if (mode.pattern === 'checkerboard') {
 				pixelPlane.classList.add('pixel-checkerboard');
+			} else if (mode.pattern === 'checkerboard-lg') {
+				pixelPlane.classList.add('pixel-checkerboard-lg');
 			} else if (mode.pattern === 'moving-dot') {
-				startMovingDot();
+				startMovingDot(mode.dotSize ?? 56);
+			}
+			if (isModeMenuOpen) {
+				renderModeMenu();
 			}
 		}
 
@@ -835,6 +912,7 @@
 			document.body.style.overflow = '';
 			exitFs();
 			stopMovingDot();
+			closeModeMenu();
 			clearPixelHudTimer();
 			(window as any).__popModalHistory?.('pixel-checker-modal');
 		}
@@ -858,7 +936,15 @@
 
 		if (openPixelBtn) openPixelBtn.addEventListener('click', openPixelChecker);
 		if (closePixelBtn) closePixelBtn.addEventListener('click', closePixelChecker);
-		if (pixelPlane) pixelPlane.addEventListener('click', nextPixelColor);
+		if (pixelPlane) pixelPlane.addEventListener('click', () => {
+			if (isModeMenuOpen) {
+				closeModeMenu();
+				showPixelHud();
+				return;
+			}
+			nextPixelColor();
+		});
+		if (pixelHudPill) pixelHudPill.addEventListener('click', toggleModeMenu);
 		if (pixelHud) pixelHud.addEventListener('click', (e) => e.stopPropagation());
 		if (pixelModal) pixelModal.addEventListener('mousemove', showPixelHud, { passive: true });
 
@@ -1332,7 +1418,8 @@
 		transition: background-color 0.15s ease;
 	}
 
-	.pixel-plane.pixel-checkerboard {
+	.pixel-plane.pixel-checkerboard,
+	.pixel-plane.pixel-checkerboard-lg {
 		background-color: #000000;
 		background-image: conic-gradient(
 			#ffffff 90deg,
@@ -1341,6 +1428,10 @@
 			#000000 270deg
 		);
 		background-size: 160px 160px;
+	}
+
+	.pixel-plane.pixel-checkerboard-lg {
+		background-size: 320px 320px;
 	}
 
 	.pixel-moving-dot {
@@ -1393,6 +1484,95 @@
 		font-size: 0.86em;
 		font-weight: 600;
 		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+		cursor: pointer;
+		font-family: inherit;
+		transition: background 0.15s ease, border-color 0.15s ease;
+	}
+
+	.pixel-hud-pill:hover {
+		background: rgba(28, 28, 34, 0.92);
+		border-color: rgba(255, 255, 255, 0.32);
+	}
+
+	.hud-chevron {
+		opacity: 0.7;
+		transition: transform 0.2s ease;
+	}
+
+	.pixel-hud-pill[aria-expanded='true'] .hud-chevron {
+		transform: rotate(180deg);
+	}
+
+	.pixel-mode-menu {
+		position: absolute;
+		bottom: calc(100% + 10px);
+		left: 50%;
+		transform: translateX(-50%);
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 310px;
+		max-width: calc(100vw - 24px);
+		max-height: 60vh;
+		overflow-y: auto;
+		background: rgba(18, 18, 22, 0.94);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
+		border: 1px solid rgba(255, 255, 255, 0.18);
+		border-radius: 14px;
+		padding: 6px;
+		box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65);
+		z-index: 100001;
+	}
+
+	.pixel-mode-menu.hidden {
+		display: none;
+	}
+
+	.pixel-mode-item {
+		display: flex;
+		align-items: center;
+		gap: 0.65em;
+		width: 100%;
+		padding: 0.55em 0.85em;
+		border: none;
+		border-radius: 9px;
+		background: transparent;
+		color: rgba(255, 255, 255, 0.88);
+		font-family: inherit;
+		font-size: 0.84em;
+		font-weight: 500;
+		text-align: left;
+		cursor: pointer;
+		transition: background 0.12s ease, color 0.12s ease;
+	}
+
+	.pixel-mode-item:hover {
+		background: rgba(255, 255, 255, 0.1);
+		color: #ffffff;
+	}
+
+	.pixel-mode-item.active {
+		background: rgba(249, 115, 22, 0.2);
+		color: #ffffff;
+		font-weight: 600;
+	}
+
+	.pixel-mode-swatch {
+		width: 14px;
+		height: 14px;
+		border-radius: 4px;
+		border: 1px solid rgba(255, 255, 255, 0.28);
+		flex-shrink: 0;
+	}
+
+	.pixel-mode-swatch.swatch-checker {
+		background-image: conic-gradient(#fff 90deg, #000 90deg 180deg, #fff 180deg 270deg, #000 270deg);
+		background-size: 100% 100%;
+	}
+
+	.pixel-mode-swatch.swatch-dot {
+		background: radial-gradient(circle, #ffffff 42%, #000000 46%);
 	}
 
 	.hud-sep {

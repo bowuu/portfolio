@@ -150,9 +150,30 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 									<h3 class="project-name">Playkeys for Plex Web</h3>
 									<span class="proj-badge">Chrome Extension</span>
 								</div>
-								<div class="project-links" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-									<a href="https://chromewebstore.google.com/detail/playkeys-for-plex-web/pmkoebhamaccefjlpmjgnfckibhmfdpa" target="_blank" rel="noopener noreferrer" class="sub-link">Chrome Web Store &rarr;</a>
-									<a href="https://github.com/bowuu/playkeys" target="_blank" rel="noopener noreferrer" class="sub-link">GitHub Repository &rarr;</a>
+								<div class="project-links">
+									<a href="https://chromewebstore.google.com/detail/playkeys-for-plex-web/pmkoebhamaccefjlpmjgnfckibhmfdpa" target="_blank" rel="noopener noreferrer" class="shield-badge shield-cws" title="View Playkeys on the Chrome Web Store" aria-label="Chrome Web Store: Install Playkeys for Plex Web">
+										<span class="shield-label">
+											<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">
+												<path fill="#e2e8f0" d="M3 4a2 2 0 0 0-2 2v13a3 3 0 0 0 3 3h16a3 3 0 0 0 3-3V6a2 2 0 0 0-2-2H3zm6 3h6a1 1 0 1 1 0 2H9a1 1 0 1 1 0-2z"/>
+												<circle cx="12" cy="14.5" r="4.8" fill="#ffffff"/>
+												<path fill="#EA4335" d="M12 9.7a4.8 4.8 0 0 1 4.16 2.4H12v2.4l-2.08-3.6A4.78 4.78 0 0 1 12 9.7z"/>
+												<path fill="#FBBC05" d="M16.16 12.1A4.8 4.8 0 0 1 12 19.3l2.08-3.6L12 12.1h4.16z"/>
+												<path fill="#34A853" d="M12 19.3a4.8 4.8 0 0 1-4.16-7.2l2.08 3.6L12 19.3z"/>
+												<circle cx="12" cy="14.5" r="2.1" fill="#1A73E8" stroke="#ffffff" stroke-width="0.6"/>
+											</svg>
+											<span>Chrome Web Store</span>
+										</span>
+										<span class="shield-value">Install</span>
+									</a>
+									<a href="https://github.com/bowuu/playkeys" target="_blank" rel="noopener noreferrer" class="shield-badge shield-gh" title="View Playkeys source code on GitHub" aria-label="GitHub Repository: bowuu/playkeys">
+										<span class="shield-label">
+											<svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor" aria-hidden="true">
+												<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+											</svg>
+											<span>GitHub</span>
+										</span>
+										<span class="shield-value">bowuu/playkeys</span>
+									</a>
 								</div>
 							</div>
 							<p class="project-text">
@@ -414,10 +435,72 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 	.project-head {
 		display: flex;
 		justify-content: space-between;
-		align-items: baseline;
+		align-items: center;
 		flex-wrap: wrap;
-		gap: 0.4em;
+		gap: 0.55em;
 		margin-bottom: 0.8em;
+	}
+	.project-links {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+	.shield-badge {
+		display: inline-flex;
+		align-items: stretch;
+		height: 24px;
+		border-radius: 5px;
+		overflow: hidden;
+		text-decoration: none;
+		font-size: 0.75em;
+		font-weight: 600;
+		line-height: 1;
+		border: 1px solid rgba(0, 0, 0, 0.16);
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+		transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+	}
+	.shield-badge:hover {
+		transform: translateY(-1px);
+		box-shadow: 0 3px 8px rgba(0, 0, 0, 0.16);
+		filter: brightness(1.06);
+	}
+	.shield-badge:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+	.shield-label,
+	.shield-value {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.38em;
+		padding: 0 0.58em;
+		white-space: nowrap;
+	}
+	.shield-label {
+		background: #2b3137;
+		color: #f8fafc;
+	}
+	.shield-cws .shield-value {
+		background: #1a73e8;
+		color: #ffffff;
+	}
+	.shield-gh .shield-value {
+		background: #475569;
+		color: #f8fafc;
+	}
+	:global(html[data-theme="dark"]) .shield-badge {
+		border-color: rgba(255, 255, 255, 0.14);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+	}
+	:global(html[data-theme="dark"]) .shield-badge:hover {
+		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+	}
+	:global(html[data-theme="dark"]) .shield-label {
+		background: #1f242a;
+	}
+	:global(html[data-theme="dark"]) .shield-gh .shield-value {
+		background: #374151;
 	}
 	.project-title-group {
 		display: flex;

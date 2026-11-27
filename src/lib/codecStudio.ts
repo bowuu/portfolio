@@ -784,7 +784,6 @@ export function initCodecStudio(options: CodecStudioOptions = {}): void {
 		) {
 			return;
 		}
-		capabilityProbed = true;
 
 		const probeList: Record<string, { codecs: string[]; mime: string }> = {
 			avc: { codecs: ['avc1.640028', 'avc1.4d0028', 'avc1.420028'], mime: 'video/mp4' },
@@ -878,6 +877,7 @@ export function initCodecStudio(options: CodecStudioOptions = {}): void {
 			}
 		}
 
+		capabilityProbed = true;
 		renderCapabilityBadges();
 		updateStatusHint();
 	}
@@ -1675,13 +1675,6 @@ export function initCodecStudio(options: CodecStudioOptions = {}): void {
 			return;
 		}
 
-		if (selectedCodec === 'av1' && selectedMode === 'prefer-hardware' && selectedPipeline !== 'decode') {
-			statusText.innerHTML = '⚠️ <strong>AV1 HW Encode</strong> requires RTX 40 / Arc; select <strong>Decode</strong> to test NVDEC.';
-			statusText.style.color = '#f97316';
-			if (runBtn) runBtn.disabled = false;
-			return;
-		}
-
 		if (selectedCodec === 'hevc' && selectedMode === 'prefer-software') {
 			statusText.innerHTML = '⚠️ <strong>HEVC Software CPU</strong> is unsupported in browser; select <strong>Hardware ASIC</strong>.';
 			statusText.style.color = '#f97316';
@@ -1704,10 +1697,7 @@ export function initCodecStudio(options: CodecStudioOptions = {}): void {
 			const cap = codecCapabilities[selectedCodec];
 			if (cap) {
 				if (selectedPipeline !== 'decode' && selectedMode === 'prefer-hardware' && !cap.encHw) {
-					statusText.innerHTML =
-						selectedCodec === 'av1'
-							? '⚠️ <strong>AV1 HW Encode</strong> requires RTX 40 / Intel Arc / RDNA3. Select <strong>Decode</strong> or switch to <strong>Software</strong>.'
-							: `⚠️ <strong>${codecName} HW Encode</strong> not detected on this GPU. Switch Engine to <strong>Software</strong>.`;
+					statusText.innerHTML = `⚠️ <strong>${codecName} HW Encode</strong> not detected on this GPU. Switch to <strong>Decode</strong> or <strong>Software</strong>.`;
 					statusText.style.color = '#f97316';
 				} else if (selectedPipeline !== 'encode' && selectedMode === 'prefer-hardware' && !cap.decHw) {
 					statusText.innerHTML = `⚠️ <strong>${codecName} HW Decode</strong> not detected on this GPU. Switch Engine to <strong>Software</strong>.`;
@@ -2200,13 +2190,14 @@ export function initCodecStudio(options: CodecStudioOptions = {}): void {
 					} catch {}
 				}
 				if (!encSupported) {
-					if (selectedCodec === 'av1' && selectedMode === 'prefer-hardware') {
-						throw new Error('AV1 Hardware Encoding requires RTX 40 series (Ada Lovelace) or Intel Arc. Select "Decode" pipeline to test ASIC acceleration.');
-					}
 					if (selectedCodec === 'hevc' && selectedMode === 'prefer-software') {
 						throw new Error('HEVC Software Fallback is not supported by Chromium due to MPEG licensing (requires Hardware ASIC)');
 					}
-					throw new Error(`${selectedCodec.toUpperCase()} Encoder not supported with ${selectedMode === 'prefer-hardware' ? 'Hardware Acceleration' : 'Software Fallback'}`);
+					const codecLabel = selectedCodec === 'avc' ? 'H.264' : selectedCodec.toUpperCase();
+					if (selectedMode === 'prefer-hardware') {
+						throw new Error(`${codecLabel} HW Encode is not available on this GPU. Switch to "Decode" or "Software".`);
+					}
+					throw new Error(`${codecLabel} Encoder not supported with Software Fallback`);
 				}
 			}
 

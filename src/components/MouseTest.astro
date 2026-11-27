@@ -944,14 +944,14 @@
 	/* TWO-COLUMN LAB WORKBENCH */
 	.lab-grid {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		gap: 1.25em;
 		align-items: stretch;
 	}
 
 	@media (max-width: 820px) {
 		.lab-grid {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 		}
 	}
 
@@ -965,6 +965,7 @@
 		padding: 1.1em;
 		box-sizing: border-box;
 		height: 100%;
+		min-width: 0;
 	}
 	:global(html[data-theme="dark"]) .lab-col {
 		background: var(--bg-panel);
@@ -977,6 +978,7 @@
 		min-height: 28px;
 		margin-bottom: 0.85em;
 		gap: 0.5em;
+		min-width: 0;
 	}
 
 	.col-head-left {
@@ -984,6 +986,7 @@
 		align-items: center;
 		gap: 0.5em;
 		min-width: 0;
+		overflow: hidden;
 	}
 
 	.col-icon {
@@ -1032,6 +1035,7 @@
 		overflow: hidden;
 		user-select: none;
 		-webkit-user-select: none;
+		-webkit-tap-highlight-color: transparent;
 		touch-action: none;
 		margin-bottom: 0.85em;
 		display: flex;
@@ -1118,6 +1122,7 @@
 		overflow: hidden;
 		user-select: none;
 		-webkit-user-select: none;
+		-webkit-tap-highlight-color: transparent;
 		touch-action: manipulation;
 		margin-bottom: 0.85em;
 		display: flex;
@@ -1153,6 +1158,7 @@
 		display: block;
 		user-select: none;
 		-webkit-user-select: none;
+		-webkit-tap-highlight-color: transparent;
 		touch-action: manipulation;
 	}
 
@@ -1171,6 +1177,7 @@
 		cursor: pointer;
 		user-select: none;
 		-webkit-user-select: none;
+		-webkit-tap-highlight-color: transparent;
 		touch-action: manipulation;
 		outline: none;
 	}

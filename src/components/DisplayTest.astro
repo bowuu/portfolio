@@ -827,7 +827,7 @@
 			const vh = window.innerHeight;
 			const now0 = performance.now();
 
-			const makeCircle = (el: HTMLElement, size: number, baseSpeed: number) => {
+			const makeCircle = (el: HTMLElement, size: number, initialSpeed: number, minSpeed: number, maxSpeed: number) => {
 				const maxX = Math.max(1, vw - size);
 				const maxY = Math.max(1, vh - size);
 				el.style.width = `${size}px`;
@@ -840,21 +840,23 @@
 				return {
 					el,
 					size,
-					baseSpeed,
+					speed: initialSpeed,
+					targetSpeed: minSpeed + Math.random() * (maxSpeed - minSpeed),
+					minSpeed,
+					maxSpeed,
+					nextSpeedAt: now0 + 1400 + Math.random() * 1800,
 					x,
 					y,
 					theta: Math.random() * Math.PI * 2,
 					omega: 0,
 					targetOmega: (Math.random() * 2 - 1) * 4.5,
-					nextTurnAt: now0 + 350 + Math.random() * 850,
-					phase: Math.random() * Math.PI * 2,
-					freq: 1.1 + Math.random() * 1.2
+					nextTurnAt: now0 + 350 + Math.random() * 850
 				};
 			};
 
 			const circles = [
-				makeCircle(pixelShape1, 44, 480),
-				makeCircle(pixelShape2, 96, 270)
+				makeCircle(pixelShape1, 44, 480, 240, 680),
+				makeCircle(pixelShape2, 96, 270, 140, 420)
 			];
 			let lastTs = now0;
 
@@ -876,6 +878,12 @@
 					}
 					c.omega += (c.targetOmega - c.omega) * Math.min(1, dt * 3.8);
 
+					if (now >= c.nextSpeedAt) {
+						c.targetSpeed = c.minSpeed + Math.random() * (c.maxSpeed - c.minSpeed);
+						c.nextSpeedAt = now + 1400 + Math.random() * 1800;
+					}
+					c.speed += (c.targetSpeed - c.speed) * Math.min(1, dt * 0.9);
+
 					const cx = c.x + c.size * 0.5;
 					const cy = c.y + c.size * 0.5;
 					if (cx < margin || cx > curW - margin || cy < margin || cy > curH - margin) {
@@ -885,9 +893,8 @@
 					}
 
 					c.theta += c.omega * dt;
-					const speed = c.baseSpeed * (1 + 0.25 * Math.sin((now / 1000) * c.freq + c.phase));
-					c.x = Math.max(0, Math.min(Math.max(0, curW - c.size), c.x + Math.cos(c.theta) * speed * dt));
-					c.y = Math.max(0, Math.min(Math.max(0, curH - c.size), c.y + Math.sin(c.theta) * speed * dt));
+					c.x = Math.max(0, Math.min(Math.max(0, curW - c.size), c.x + Math.cos(c.theta) * c.speed * dt));
+					c.y = Math.max(0, Math.min(Math.max(0, curH - c.size), c.y + Math.sin(c.theta) * c.speed * dt));
 					c.el.style.transform = `translate3d(${c.x}px, ${c.y}px, 0)`;
 				}
 

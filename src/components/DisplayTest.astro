@@ -115,7 +115,8 @@
 	<!-- PIXEL CHECKER FULLSCREEN MODAL -->
 	<div id="pixel-checker-modal" class="pixel-modal hidden" aria-hidden="true" inert role="dialog" aria-modal="true" aria-label="Dead Pixel Checker">
 		<div id="pixel-canvas-plane" class="pixel-plane">
-			<div id="pixel-moving-dot" class="pixel-moving-dot hidden"></div>
+			<div id="pixel-shape-1" class="pixel-moving-shape hidden"></div>
+			<div id="pixel-shape-2" class="pixel-moving-shape hidden"></div>
 		</div>
 		<div class="pixel-hud" id="pixel-hud">
 			<div id="pixel-mode-menu" class="pixel-mode-menu hidden" role="menu" aria-label="Select Pixel Checker Mode"></div>
@@ -666,23 +667,22 @@
 			{ name: '50% Neutral Gray (Panel Uniformity & DSE)', color: '#7f7f7f', textLight: true },
 			{ name: 'Local Dimming (Checkerboard Blooming Check)', color: '#000000', textLight: true, pattern: 'checkerboard' },
 			{ name: 'Local Dimming (Large Checkerboard)', color: '#000000', textLight: true, pattern: 'checkerboard-lg' },
-			{ name: 'Local Dimming (Moving White Circle)', color: '#000000', textLight: true, pattern: 'moving-dot', dotSize: 56 },
-			{ name: 'Local Dimming (Large Moving White Circle)', color: '#000000', textLight: true, pattern: 'moving-dot', dotSize: 112 }
+			{ name: 'Local Dimming (Moving White Rectangles)', color: '#000000', textLight: true, pattern: 'moving-rect', rectW: 72, rectH: 48 },
+			{ name: 'Local Dimming (Large Moving White Rectangles)', color: '#000000', textLight: true, pattern: 'moving-rect', rectW: 144, rectH: 96 },
+			{ name: 'Local Dimming (Erratic White Circles)', color: '#000000', textLight: true, pattern: 'loopy-circles' }
 		];
 
 		let currentPixelIdx = 0;
 		let hudHideTimer: number | null = null;
-		let dotRafId: number | null = null;
-		let dotX = 0;
-		let dotY = 0;
-		let dotLastTs = 0;
+		let shapeRafId: number | null = null;
 		let isModeMenuOpen = false;
-		const DOT_SPEED_PX_PER_SEC = 420;
+		const RECT_SPEED_PX_PER_SEC = 420;
 		const HUD_HIDE_DELAY_MS = 3500;
 		const pixelHud = document.getElementById('pixel-hud');
 		const pixelHudPill = document.getElementById('pixel-hud-pill');
 		const pixelModeMenu = document.getElementById('pixel-mode-menu');
-		const pixelMovingDot = document.getElementById('pixel-moving-dot');
+		const pixelShape1 = document.getElementById('pixel-shape-1');
+		const pixelShape2 = document.getElementById('pixel-shape-2');
 
 		function closeModeMenu() {
 			if (!pixelModeMenu || !pixelHudPill) return;
@@ -706,8 +706,10 @@
 					swatch.classList.add('swatch-checker');
 				} else if (mode.pattern === 'checkerboard-lg') {
 					swatch.classList.add('swatch-checker-lg');
-				} else if (mode.pattern === 'moving-dot') {
-					swatch.classList.add((mode.dotSize ?? 56) > 80 ? 'swatch-dot-lg' : 'swatch-dot');
+				} else if (mode.pattern === 'moving-rect') {
+					swatch.classList.add((mode.rectW ?? 72) > 100 ? 'swatch-rect-lg' : 'swatch-rect');
+				} else if (mode.pattern === 'loopy-circles') {
+					swatch.classList.add('swatch-loopy-circles');
 				} else {
 					swatch.style.backgroundColor = mode.color;
 				}
@@ -746,49 +748,153 @@
 			}
 		}
 
-		function stopMovingDot() {
-			if (dotRafId !== null) {
-				cancelAnimationFrame(dotRafId);
-				dotRafId = null;
+		function stopMovingShapes() {
+			if (shapeRafId !== null) {
+				cancelAnimationFrame(shapeRafId);
+				shapeRafId = null;
 			}
-			if (pixelMovingDot) {
-				pixelMovingDot.classList.add('hidden');
+			for (const el of [pixelShape1, pixelShape2]) {
+				if (el) {
+					el.classList.add('hidden');
+					el.classList.remove('is-circle');
+				}
 			}
 		}
 
-		function startMovingDot(dotSize: number) {
-			if (!pixelMovingDot) return;
-			stopMovingDot();
-			dotX = 0;
-			dotY = 0;
-			dotLastTs = performance.now();
-			pixelMovingDot.style.width = `${dotSize}px`;
-			pixelMovingDot.style.height = `${dotSize}px`;
-			pixelMovingDot.style.transform = `translate3d(${dotX}px, ${dotY}px, 0)`;
-			pixelMovingDot.classList.remove('hidden');
+		function startMovingRects(rectW: number, rectH: number) {
+			if (!pixelShape1 || !pixelShape2) return;
+			stopMovingShapes();
+
+			const vw = window.innerWidth;
+			const vh = window.innerHeight;
+			let x1 = 0;
+			let y1 = 0;
+			let x2 = 0;
+			let y2 = Math.max(0, vh - rectH);
+			let lastTs = performance.now();
+
+			for (const el of [pixelShape1, pixelShape2]) {
+				el.style.width = `${rectW}px`;
+				el.style.height = `${rectH}px`;
+				el.classList.remove('is-circle', 'hidden');
+			}
+			pixelShape1.style.transform = `translate3d(${x1}px, ${y1}px, 0)`;
+			pixelShape2.style.transform = `translate3d(${x2}px, ${y2}px, 0)`;
 
 			function step(now: number) {
 				if (!pixelModal || pixelModal.classList.contains('hidden')) {
-					stopMovingDot();
+					stopMovingShapes();
 					return;
 				}
-				const dt = Math.min((now - dotLastTs) / 1000, 0.1);
-				dotLastTs = now;
-				dotX += DOT_SPEED_PX_PER_SEC * dt;
-				if (dotX > window.innerWidth) {
-					dotX = -dotSize;
-					dotY += dotSize;
-					if (dotY >= window.innerHeight) {
-						dotY = 0;
+				const dt = Math.min((now - lastTs) / 1000, 0.1);
+				lastTs = now;
+				const curW = window.innerWidth;
+				const curH = window.innerHeight;
+
+				// Rectangle 1: left to right, stepping down row by row
+				x1 += RECT_SPEED_PX_PER_SEC * dt;
+				if (x1 > curW) {
+					x1 = -rectW;
+					y1 += rectH;
+					if (y1 >= curH) {
+						y1 = 0;
 					}
 				}
-				if (pixelMovingDot) {
-					pixelMovingDot.style.transform = `translate3d(${dotX}px, ${dotY}px, 0)`;
+
+				// Rectangle 2: bottom to top, stepping right column by column
+				y2 -= RECT_SPEED_PX_PER_SEC * dt;
+				if (y2 < -rectH) {
+					y2 = curH;
+					x2 += rectW;
+					if (x2 >= curW) {
+						x2 = 0;
+					}
 				}
-				dotRafId = requestAnimationFrame(step);
+
+				if (pixelShape1) pixelShape1.style.transform = `translate3d(${x1}px, ${y1}px, 0)`;
+				if (pixelShape2) pixelShape2.style.transform = `translate3d(${x2}px, ${y2}px, 0)`;
+				shapeRafId = requestAnimationFrame(step);
 			}
 
-			dotRafId = requestAnimationFrame(step);
+			shapeRafId = requestAnimationFrame(step);
+		}
+
+		function startLoopyCircles() {
+			if (!pixelShape1 || !pixelShape2) return;
+			stopMovingShapes();
+
+			const vw = window.innerWidth;
+			const vh = window.innerHeight;
+			const now0 = performance.now();
+
+			const makeCircle = (el: HTMLElement, size: number, baseSpeed: number) => {
+				const maxX = Math.max(1, vw - size);
+				const maxY = Math.max(1, vh - size);
+				el.style.width = `${size}px`;
+				el.style.height = `${size}px`;
+				el.classList.add('is-circle');
+				el.classList.remove('hidden');
+				const x = Math.random() * maxX;
+				const y = Math.random() * maxY;
+				el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+				return {
+					el,
+					size,
+					baseSpeed,
+					x,
+					y,
+					theta: Math.random() * Math.PI * 2,
+					omega: 0,
+					targetOmega: (Math.random() * 2 - 1) * 4.5,
+					nextTurnAt: now0 + 350 + Math.random() * 850,
+					phase: Math.random() * Math.PI * 2,
+					freq: 1.1 + Math.random() * 1.2
+				};
+			};
+
+			const circles = [
+				makeCircle(pixelShape1, 44, 480),
+				makeCircle(pixelShape2, 96, 270)
+			];
+			let lastTs = now0;
+
+			function step(now: number) {
+				if (!pixelModal || pixelModal.classList.contains('hidden')) {
+					stopMovingShapes();
+					return;
+				}
+				const dt = Math.min((now - lastTs) / 1000, 0.05);
+				lastTs = now;
+				const curW = window.innerWidth;
+				const curH = window.innerHeight;
+				const margin = Math.min(120, Math.min(curW, curH) * 0.2);
+
+				for (const c of circles) {
+					if (now >= c.nextTurnAt) {
+						c.targetOmega = (Math.random() * 2 - 1) * 5.2;
+						c.nextTurnAt = now + 350 + Math.random() * 1050;
+					}
+					c.omega += (c.targetOmega - c.omega) * Math.min(1, dt * 3.8);
+
+					const cx = c.x + c.size * 0.5;
+					const cy = c.y + c.size * 0.5;
+					if (cx < margin || cx > curW - margin || cy < margin || cy > curH - margin) {
+						const toCenter = Math.atan2(curH * 0.5 - cy, curW * 0.5 - cx);
+						const diff = Math.atan2(Math.sin(toCenter - c.theta), Math.cos(toCenter - c.theta));
+						c.theta += diff * Math.min(1, dt * 4.5);
+					}
+
+					c.theta += c.omega * dt;
+					const speed = c.baseSpeed * (1 + 0.25 * Math.sin((now / 1000) * c.freq + c.phase));
+					c.x = Math.max(0, Math.min(Math.max(0, curW - c.size), c.x + Math.cos(c.theta) * speed * dt));
+					c.y = Math.max(0, Math.min(Math.max(0, curH - c.size), c.y + Math.sin(c.theta) * speed * dt));
+					c.el.style.transform = `translate3d(${c.x}px, ${c.y}px, 0)`;
+				}
+
+				shapeRafId = requestAnimationFrame(step);
+			}
+
+			shapeRafId = requestAnimationFrame(step);
 		}
 
 		function showPixelHud() {
@@ -819,7 +925,7 @@
 		function applyPixelColor() {
 			if (!pixelPlane || !pixelColorName) return;
 			const mode = PIXEL_MODES[currentPixelIdx];
-			stopMovingDot();
+			stopMovingShapes();
 			pixelPlane.classList.remove('pixel-checkerboard', 'pixel-checkerboard-lg');
 			pixelPlane.style.backgroundColor = mode.color;
 			pixelColorName.textContent = mode.name;
@@ -827,8 +933,10 @@
 				pixelPlane.classList.add('pixel-checkerboard');
 			} else if (mode.pattern === 'checkerboard-lg') {
 				pixelPlane.classList.add('pixel-checkerboard-lg');
-			} else if (mode.pattern === 'moving-dot') {
-				startMovingDot(mode.dotSize ?? 56);
+			} else if (mode.pattern === 'moving-rect') {
+				startMovingRects(mode.rectW ?? 72, mode.rectH ?? 48);
+			} else if (mode.pattern === 'loopy-circles') {
+				startLoopyCircles();
 			}
 			if (isModeMenuOpen) {
 				renderModeMenu();
@@ -913,7 +1021,7 @@
 			document.documentElement.style.overflow = '';
 			document.body.style.overflow = '';
 			exitFs();
-			stopMovingDot();
+			stopMovingShapes();
 			closeModeMenu();
 			clearPixelHudTimer();
 			(window as any).__popModalHistory?.('pixel-checker-modal');
@@ -1436,19 +1544,20 @@
 		background-size: 320px 320px;
 	}
 
-	.pixel-moving-dot {
+	.pixel-moving-shape {
 		position: absolute;
 		top: 0;
 		left: 0;
-		width: 56px;
-		height: 56px;
-		border-radius: 50%;
 		background: #ffffff;
 		pointer-events: none;
 		will-change: transform;
 	}
 
-	.pixel-moving-dot.hidden {
+	.pixel-moving-shape.is-circle {
+		border-radius: 50%;
+	}
+
+	.pixel-moving-shape.hidden {
 		display: none;
 	}
 
@@ -1580,12 +1689,27 @@
 		background-size: 16px 16px;
 	}
 
-	:global(.pixel-mode-swatch.swatch-dot) {
-		background: radial-gradient(circle, #ffffff 32%, #000000 36%);
+	:global(.pixel-mode-swatch.swatch-rect) {
+		background-color: #000000;
+		background-image: linear-gradient(#ffffff, #ffffff);
+		background-size: 8px 5px;
+		background-repeat: no-repeat;
+		background-position: center;
 	}
 
-	:global(.pixel-mode-swatch.swatch-dot-lg) {
-		background: radial-gradient(circle, #ffffff 52%, #000000 56%);
+	:global(.pixel-mode-swatch.swatch-rect-lg) {
+		background-color: #000000;
+		background-image: linear-gradient(#ffffff, #ffffff);
+		background-size: 12px 8px;
+		background-repeat: no-repeat;
+		background-position: center;
+	}
+
+	:global(.pixel-mode-swatch.swatch-loopy-circles) {
+		background-color: #000000;
+		background-image:
+			radial-gradient(circle at 32% 62%, #ffffff 2.5px, transparent 3px),
+			radial-gradient(circle at 68% 36%, #ffffff 4px, transparent 4.5px);
 	}
 
 	.hud-sep {
